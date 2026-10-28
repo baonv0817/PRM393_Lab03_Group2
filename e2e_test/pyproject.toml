@@ -1,0 +1,13 @@
+[project]
+name = "breakbite-e2e"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    # Ghim commit ARTEMIS đang dùng, ví dụ:
+    # "artemis @ git+https://github.com/google/artemis@<commit>",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
