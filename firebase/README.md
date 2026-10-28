@@ -33,7 +33,7 @@ npm test        # cần Java 21; Firestore Emulator tải khoảng 140 MB lần 
 Nếu Emulator thoát với mã 1 và `firestore-debug.log` hoặc log Java ghi `Unable to establish loopback connection`, Java không tạo được socket nội bộ ở thư mục tạm mặc định. Cách sửa (đã áp dụng cho máy dựng):
 
 ```powershell
-mkdir D:	mp\java
+mkdir D:\tmp\java
 setx JAVA_TOOL_OPTIONS "-Djava.io.tmpdir=D:/tmp/java -Djdk.net.unixdomain.tmpdir=D:/tmp/java"
 ```
 

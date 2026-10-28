@@ -5,9 +5,10 @@ requires-python = ">=3.12"
 dependencies = [
     "pytest",
     "pytest-asyncio",
-    # Ghim commit ARTEMIS đang dùng, ví dụ:
-    # "artemis @ git+https://github.com/google/artemis@<commit>",
+    # Client Python của ARTEMIS, ghim đúng commit đang dùng (xem README mục phiên bản).
+    "artemis-client @ git+https://github.com/google/artemis.git@351ca8422f7b5b54e80a9c1ce03a222e02415b6b#subdirectory=packages/artemis-client",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
