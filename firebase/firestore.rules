@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// BẢN NHÁP: chặn mặc định, theo vai trò. Phải kiểm bằng Firebase Emulator
+// (ít nhất một ca được phép và một ca bị từ chối cho mỗi vai trò, mỗi collection)
+// trước khi triển khai. Vai trò: user, staff, admin (khớp bài Final).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function role() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isStaff() { return signedIn() && (role() == 'staff' || role() == 'admin'); }
+    function isAdmin() { return signedIn() && role() == 'admin'; }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isStaff());
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+      allow update: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;   // không tự đổi role
+      allow update: if isAdmin();
+      match /favorites/{id} { allow read, write: if signedIn() && request.auth.uid == uid; }
+      match /notifications/{id} { allow read, write: if signedIn() && request.auth.uid == uid; }
+    }
+
+    match /menu_items/{id} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if false;
+    }
+    match /kiosks/{id} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+    match /vouchers/{code} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /carts/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /orders/{id} {
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isStaff());
+      // Khách chỉ huỷ khi đơn còn pending; staff đổi trạng thái theo tiến trình.
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+                    && resource.data.status == 'pending'
+                    && request.resource.data.status in ['pending', 'cancelled'];
+      allow update: if isStaff()
+                    && request.resource.data.status in ['preparing', 'ready', 'delivered', 'cancelled'];
+      allow delete: if false;
+    }
+
+    match /reviews/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if signedIn();
+    }
+    match /incidents/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isStaff());
+      allow update: if isStaff();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
