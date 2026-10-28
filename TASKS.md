@@ -129,7 +129,7 @@ Phần nền để 4 người làm song song đã có trong repo. Cần review c
 | T20 | Xong khung | Khung MVVM, router, DI, `ViewState`; `docs/architecture.md` cần P1 cập nhật cho khớp code |
 | T21 | Xong khung | Theme từ token Lab 2 và widget chung; **chưa có font Nunito** (thêm vào `assets/fonts/`) |
 | T22 | Một phần | Đã có interface và model; **P3 cần viết bản cài đặt Firebase** trong `lib/firebase/` |
-| T31 | Một phần | Mô hình dữ liệu đã chốt khung (`docs/data-model.md`), rules và chỉ mục đã đẩy lên, **82/82 test rules đạt**. **Còn:** script nạp dữ liệu mẫu thật (kiosk, món, slot, voucher, tài khoản staff) |
+| T31 | Một phần | Mô hình dữ liệu đã chốt khung (`docs/data-model.md`), rules và chỉ mục đã đẩy lên, **82/82 test rules đạt**. Script nạp dữ liệu mẫu và gán vai trò đã viết và kiểm trên Emulator (`firebase/seed/`). **Còn:** nạp vào project thật (cần khoá service account), gán vai trò staff và admin cho thành viên |
 | T01 | Một phần | Project `breakbite-1315b` (Spark): app Android, SHA-1 máy P1, Auth Google, Firestore (`asia-southeast1`), rules và Remote Config đã đẩy lên. **Còn:** Storage (console đòi gói Blaze), Crashlytics, SHA-1 của 3 máy còn lại, mời 3 người vào project |
 | T02 | Chưa | Cần thiết bị Android và API key ARTEMIS |
 

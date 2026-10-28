@@ -40,3 +40,24 @@ setx JAVA_TOOL_OPTIONS "-Djava.io.tmpdir=D:/tmp/java -Djdk.net.unixdomain.tmpdir
 ```
 
 Mở lại terminal rồi chạy lại. Biến này cũng cần cho `sdkmanager` và Gradle trên máy bị lỗi tương tự.
+
+## Dữ liệu mẫu và vai trò (`firebase/seed/`)
+
+Cài một lần: `cd firebase/seed && npm install`.
+
+| Việc | Lệnh |
+|---|---|
+| Thử trên Emulator (tự dựng, nạp, kiểm tra, tắt) | `npm run seed:emulator` |
+| Nạp vào project thật | `node seed.mjs --project=breakbite-1315b --yes` |
+| Gán vai trò | `node set-role.mjs <email> <user\|staff\|admin> [kioskId] --project=breakbite-1315b --yes` |
+
+Script dùng Admin SDK (bỏ qua Security Rules) nên project thật cần **khoá service account**: console, Project settings, Service accounts, Generate new private key. Lưu file **ngoài repo** (ví dụ `D:\secretsreakbite-admin.json`; `.gitignore` đã chặn `*firebase-adminsdk*.json`), rồi trong PowerShell:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "D:\secretsreakbite-admin.json"
+cd firebase\seed
+node seed.mjs --project=breakbite-1315b --yes
+node set-role.mjs email-nhan-vien@gmail.com staff q9-t2 --project=breakbite-1315b --yes
+```
+
+Không gửi nội dung file khoá cho ai, kể cả trong chat. `set-role.mjs` chỉ gán được cho tài khoản đã đăng nhập app ít nhất một lần.

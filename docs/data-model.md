@@ -241,11 +241,13 @@ Hạn chế vì **không có máy chủ riêng** (Spark, không dùng Cloud Func
 
 ## 8. Dữ liệu mẫu (T31)
 
-Script nạp dữ liệu sẽ sinh, để mọi người có dữ liệu giống nhau:
-- 3 kiosk (`q9-t2`, `q9-t4` mở; `nvh-t1` đóng để thử S21), mỗi kiosk có slot các ngày tới.
-- Khoảng 10 món mỗi kiosk, trong đó có món `soldOut: true` (thử S22), món `prepMinutes <= 5` (thử mục nhanh).
-- 3 voucher: một còn hạn (`BBSTUDENT`), một hết hạn (thử S05-VOUCHER-ERR), một theo %.
-- Tài khoản thử: 1 admin, 1 staff cho mỗi kiosk (đã gán `kioskId`), khách do đăng nhập Google tạo.
+Script ở `firebase/seed/` (hướng dẫn chạy: `firebase/README.md`) nạp:
+- 3 kiosk (`q9-t2`, `q9-t4` mở; `nvh-t1` đóng để thử S21) và slot nhận món 4 khung giờ mỗi ngày làm việc trong 7 ngày tới cho kiosk đang mở (giờ ra chơi chỉnh trong `data.mjs`).
+- 25 món: 10 món mỗi kiosk mở (có món `soldOut: true` để thử S22 và món `prepMinutes <= 5` cho mục "nhanh") và 5 món cho kiosk đóng cửa.
+- 3 voucher: `BBSTUDENT` (còn hạn), `GIOVANG` (giảm theo %), `BB20` (hết hạn, thử S05-VOUCHER-ERR).
+- Tài khoản staff và admin **không nạp được bằng script dữ liệu** vì cần uid của Firebase Auth: người đó đăng nhập Google một lần, rồi chạy `set-role.mjs` để gán vai trò (staff gán thêm `kioskId`).
+
+Mặc định script không ghi đè tài liệu đã có, nên chạy lại không làm mất `soldOut` hay `booked` mà nhân viên và khách đã đổi.
 
 ## 9. Quy trình đổi cấu trúc
 
