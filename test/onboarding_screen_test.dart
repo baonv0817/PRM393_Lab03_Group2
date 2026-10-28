@@ -2,6 +2,7 @@ import 'package:breakbite/dev/dev_services.dart';
 import 'package:breakbite/screens/onboarding_screen.dart';
 import 'package:breakbite/theme/app_theme.dart';
 import 'package:breakbite/viewmodels/auth_view_model.dart';
+import 'package:breakbite/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -19,17 +20,18 @@ Future<AuthViewModel> pumpOnboarding(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('hiện đủ nội dung theo Figma S01', (tester) async {
+  testWidgets('chỉ có logo, tên BreakBite, một dòng giới thiệu và các lối vào', (tester) async {
     await pumpOnboarding(tester);
-    expect(find.text('Campus Q9 · Tầng 2'), findsOneWidget);
-    expect(find.text('Bỏ qua'), findsOneWidget);
+    expect(find.byType(BreakBiteLogo), findsOneWidget);
+    expect(find.bySemanticsLabel('BreakBite'), findsOneWidget);
     expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsOneWidget);
-    expect(find.textContaining('Không phải xếp hàng'), findsOneWidget);
-    expect(find.text('Chuẩn bị dự kiến 3–5 phút'), findsOneWidget);
-    expect(find.text('Đặt trước, quét mã nhận món'), findsOneWidget);
-    expect(find.text('Trả bằng ví hoặc tiền mặt'), findsOneWidget);
+    expect(find.text('Bỏ qua'), findsOneWidget);
     expect(find.text('Bắt đầu đặt món'), findsOneWidget);
     expect(find.text('Đăng nhập bằng Google'), findsOneWidget);
+    // Đã bỏ các chữ phụ không cần thiết.
+    expect(find.textContaining('Không phải xếp hàng'), findsNothing);
+    expect(find.text('Chuẩn bị dự kiến 3–5 phút'), findsNothing);
+    expect(find.text('Campus Q9 · Tầng 2'), findsNothing);
   });
 
   for (final label in ['Bỏ qua', 'Bắt đầu đặt món', 'Đăng nhập bằng Google']) {

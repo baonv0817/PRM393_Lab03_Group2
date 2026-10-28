@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>BreakBite</title>
+  <rect width="512" height="512" rx="112" fill="#F3F0EA"/>
+  <circle cx="256" cy="268" r="168" fill="#F9CF98"/>
+  <circle cx="313.5" cy="110.1" r="40" fill="#F3F0EA"/>
+  <circle cx="374.8" cy="149.2" r="52" fill="#F3F0EA"/>
+  <circle cx="413.9" cy="210.5" r="40" fill="#F3F0EA"/>
+  <path d="M205 185 V361 M205 185 H255 A42 42 0 0 1 255 269 H205 M205 269 H265 A46 46 0 0 1 265 361 H205" fill="none" stroke="#8A5D48" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

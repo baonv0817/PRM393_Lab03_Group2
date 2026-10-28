@@ -43,7 +43,7 @@ Chạy test E2E: xem `e2e_test/README.md`.
 | Flutter (stable) | 3.47.5 |
 | Dart | 3.13.4 |
 | Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_storage 14.0.1, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1, firebase_remote_config 7.0.1, google_sign_in 7.2.0 (xem `pubspec.yaml`) |
-| provider, go_router | 6.1.5+1, 18.1.1 |
+| provider, go_router, flutter_svg | 6.1.5+1, 18.1.1, 2.3.2 |
 | Google ARTEMIS | commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b` (main, 2026-10-01) |
 | Python, uv | Python 3.12, uv 0.13.6 |
 | Android SDK | platform 36 và 35, build-tools 36.0.0, NDK 28.2.13676358 (xem `docs/setup.md`) |

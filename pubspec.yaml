@@ -18,6 +18,7 @@ dependencies:
   firebase_storage: ^14.0.1
   flutter:
     sdk: flutter
+  flutter_svg: ^2.3.2
   go_router: ^18.1.1
   google_sign_in: ^7.2.0
   intl: ^0.20.3
@@ -32,6 +33,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Logo BreakBite (SVG; bản PNG và script sinh logo: assets/brand/README.md).
+  assets:
+    - assets/brand/breakbite_logo.svg
+    - assets/brand/breakbite_logo_soft.svg
 
   # Nunito (SIL OFL, xem assets/fonts/OFL.txt): font biến thiên, một file cho mọi độ đậm.
   fonts:

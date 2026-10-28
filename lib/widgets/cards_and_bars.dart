@@ -4,10 +4,8 @@ import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../utils/format.dart';
+import 'brand.dart';
 import 'buttons.dart';
-
-/// Icon đại diện cho loại món khi chưa có ảnh (Figma: đồ uống dùng cốc, còn lại dùng dao nĩa).
-IconData menuCategoryIcon(String category) => category == 'Đồ uống' ? Icons.local_cafe : Icons.restaurant;
 
 /// Card/Food của Lab 2: món, đồ uống, hết hàng.
 class FoodCard extends StatelessWidget {
@@ -35,14 +33,10 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: colors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(AppRadius.input),
-                  ),
-                  child: Icon(menuCategoryIcon(item.category), size: 32, color: colors.muted),
+                // Chưa có ảnh món (Storage): dùng logo bản nhạt làm ảnh giữ chỗ.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  child: const BreakBiteLogo(size: 72, variant: LogoVariant.soft),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
