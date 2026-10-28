@@ -51,6 +51,32 @@ Nếu `flutter build apk` báo `Could not close incremental caches ... this and 
 3. `adb devices` phải liệt kê thiết bị ở trạng thái `device` (không phải `unauthorized`).
 4. Cài app: `flutter run --dart-define=USE_DEV_SERVICES=true`.
 
+### Không có điện thoại Android (máy ảo, Chrome, iPhone)
+
+Không thể chạy app lên iPhone từ máy Windows (build iOS cần máy Mac và Xcode). Người dùng Windows chọn một trong hai cách dưới đây. Điện thoại Android thật chỉ cần khi thử Google Sign-in thật và chạy ARTEMIS, máy dùng chung của nhóm.
+
+**Cách 1: Chrome với khung điện thoại (nhẹ nhất).**
+
+1. Trong VS Code cài extension **Flutter** (Dart Code), chọn thiết bị **Chrome (web)** ở góc dưới bên phải rồi bấm **F5**. Cấu hình `.vscode/launch.json` đã chạy với dữ liệu giả (`USE_DEV_SERVICES=true`).
+2. Trong cửa sổ trình duyệt bấm `F12`, rồi `Ctrl+Shift+M` và chọn iPhone hoặc Pixel để thấy khung điện thoại.
+
+Bản web chỉ để xem giao diện: Firebase mới cấu hình cho Android, nên chạy với dữ liệu giả.
+
+**Cách 2: Android Emulator (giống máy thật, cần khoảng 3 GB và 8 GB RAM trống).**
+
+```powershell
+$a = "D:\src\android-sdk\cmdline-tools\latest\bin\android.exe"
+& $a --sdk=D:\src\android-sdk sdk install "emulator" "system-images/android-35/google_apis_playstore/x86_64"
+mkdir D:\src\android-avd
+setx ANDROID_AVD_HOME D:\src\android-avd
+$env:ANDROID_AVD_HOME = "D:\src\android-avd"
+D:\src\android-sdk\cmdline-tools\latest\bin\avdmanager.bat create avd -n Pixel8_API35 -k "system-images;android-35;google_apis_playstore;x86_64" -d pixel_8
+```
+
+Mở lại terminal và VS Code, bật máy ảo bằng `flutter emulators --launch Pixel8_API35`, rồi chạy `flutter run --dart-define=USE_DEV_SERVICES=true`. Bật **một** emulator thôi: mở thêm một cái nữa sẽ báo `The Android emulator exited with code 1` hoặc làm máy ảo kẹt ở trạng thái `offline`. Nếu kẹt, tắt tiến trình `emulator` và `qemu-system-x86_64` trong Task Manager rồi bật lại. Lần đầu boot mất vài phút.
+
+Máy ảo của mỗi người dùng khoá debug của máy đó: gửi SHA-1 của máy bạn cho người giữ Firebase project (xem mục 4) để Google Sign-in chạy.
+
 ## 4. Firebase
 
 ```powershell
@@ -59,6 +85,16 @@ dart pub global activate flutterfire_cli # 1.4.1; thêm %LOCALAPPDATA%\Pub\Cache
 firebase login
 flutterfire configure --project <id-project-firebase>   # sinh lib/firebase_options.dart (task T01, T03)
 ```
+
+Project của nhóm là `breakbite-1315b` (gói Spark). `lib/firebase_options.dart` và `android/app/google-services.json` đã nằm trong repo, nên người mới **không cần** chạy lại `flutterfire configure`; chỉ cần được mời vào project (Project settings, Users and permissions, vai trò Editor).
+
+**SHA-1 cho Google Sign-in.** Mỗi máy có khoá debug riêng, nên mỗi người lấy SHA-1 của máy mình và gửi cho người giữ project để thêm vào Project settings, Your apps, BreakBite, Add fingerprint. Chưa thêm thì đăng nhập Google báo `ApiException: 10`.
+
+```powershell
+keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android | Select-String "SHA1"
+```
+
+Nếu báo không thấy file keystore, chạy app Flutter một lần để máy tự tạo. SHA-1 là dấu vân tay công khai nên gửi qua nhóm chat được; **không** chia sẻ file keystore hay file service account `*-adminsdk-*.json`.
 
 Chạy test rules: xem `firebase/README.md`.
 

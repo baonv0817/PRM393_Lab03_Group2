@@ -6,7 +6,8 @@ build/
 .flutter-plugins-dependencies
 *.iml
 .idea/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 
 # Android
 android/.gradle/

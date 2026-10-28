@@ -5,3 +5,4 @@ analyzer:
     - build/**
     - android/**
     - firebase/tests/node_modules/**
+    - web/**
