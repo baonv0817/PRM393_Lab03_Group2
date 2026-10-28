@@ -62,7 +62,7 @@ def svg(v):
 """
 
 
-def stamp_path(draw, scale, color):
+def stamp_path(draw, scale, color, ox=0, oy=0):
     """Vẽ nét chữ B bằng cách đóng dấu hình tròn dày đặc dọc đường đi (giống nét SVG đầu tròn)."""
     rr = STROKE / 2 * scale
     for seg in B_SEGMENTS:
@@ -76,7 +76,7 @@ def stamp_path(draw, scale, color):
             n = int(math.pi * r * scale / 2) + 1
             pts = [(cx + r * math.cos(math.radians(-90 + 180 * i / n)), cy + r * math.sin(math.radians(-90 + 180 * i / n))) for i in range(n + 1)]
         for x, y in pts:
-            draw.ellipse([x * scale - rr, y * scale - rr, x * scale + rr, y * scale + rr], fill=color)
+            draw.ellipse([x * scale + ox - rr, y * scale + oy - rr, x * scale + ox + rr, y * scale + oy + rr], fill=color)
 
 
 def png(v, size):
@@ -94,6 +94,25 @@ def png(v, size):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def foreground(px):
+    """Lớp nền trước của icon thích ứng Android: khung 108 dp, trong suốt, bánh nằm gọn vùng an toàn 66 dp.
+    Lớp nền sau là màu cam thương hiệu (values/ic_launcher_background.xml)."""
+    c = VARIANTS["brand"]
+    s = 4
+    size = px * s
+    u = (62 / (2 * DISC_R)) * (px / 108) * s     # đơn vị logo sang điểm ảnh: bánh rộng 62 dp
+    ox = size / 2 - DISC_C[0] * u                # đưa tâm bánh về giữa khung
+    oy = size / 2 - DISC_C[1] * u
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([ox + (DISC_C[0] - DISC_R) * u, oy + (DISC_C[1] - DISC_R) * u,
+               ox + (DISC_C[0] + DISC_R) * u, oy + (DISC_C[1] + DISC_R) * u], fill=c["disc"])
+    for x, y, r in bite_circles():               # miếng cắn là lỗ trong suốt, lộ nền cam phía sau
+        d.ellipse([ox + (x - r) * u, oy + (y - r) * u, ox + (x + r) * u, oy + (y + r) * u], fill=(0, 0, 0, 0))
+    stamp_path(d, u, c["ink"], ox, oy)
+    return img.resize((px, px), Image.LANCZOS)
+
+
 def write(path, data, mode="w"):
     p = os.path.join(R, path)
     os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -109,4 +128,18 @@ png("brand", 1024).save(os.path.join(R, "assets/brand/breakbite_logo.png"))
 for folder, size in [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)]:
     png("brand", size).save(os.path.join(R, f"android/app/src/main/res/mipmap-{folder}/ic_launcher.png"))
 
-print("Đã ghi assets/brand/ và icon app trong android/app/src/main/res/mipmap-*")
+for folder, px in [("mdpi", 108), ("hdpi", 162), ("xhdpi", 216), ("xxhdpi", 324), ("xxxhdpi", 432)]:
+    foreground(px).save(os.path.join(R, f"android/app/src/main/res/mipmap-{folder}/ic_launcher_foreground.png"))
+
+write("android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml", """<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+""")
+write("android/app/src/main/res/values/ic_launcher_background.xml", """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#F69D39</color>
+</resources>
+""")
+print("Đã ghi assets/brand/ và icon app (kiểu cũ và adaptive) trong android/app/src/main/res/")

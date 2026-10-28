@@ -35,7 +35,12 @@ void main() {
   test('icon app Android đã thay icon Flutter mặc định', () {
     for (final d in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
       expect(File('android/app/src/main/res/mipmap-$d/ic_launcher.png').existsSync(), isTrue, reason: d);
+      expect(File('android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png').existsSync(), isTrue, reason: 'adaptive $d');
     }
+    final adaptive = File('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml').readAsStringSync();
+    expect(adaptive, contains('@color/ic_launcher_background'));
+    expect(adaptive, contains('@mipmap/ic_launcher_foreground'));
+    expect(File('android/app/src/main/res/values/ic_launcher_background.xml').readAsStringSync(), contains('#F69D39'));
     expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(), contains('android:label="BreakBite"'));
   });
 }
