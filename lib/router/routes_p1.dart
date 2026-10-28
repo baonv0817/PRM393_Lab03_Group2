@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../screens/home_screen.dart';
+import '../screens/onboarding_screen.dart';
 import '../services/app_services.dart';
 import '../viewmodels/auth_view_model.dart';
 import '../viewmodels/home_view_model.dart';
@@ -35,7 +36,7 @@ final GoRoute ordersRoute = placeholderRoute('/orders', 'S08', 'Đơn hàng', 'P
 
 /// Route toàn màn hình của P1.
 final List<GoRoute> p1Routes = [
-  placeholderRoute('/onboarding', 'S01', 'Onboarding', 'P1'),
+  GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
   placeholderRoute('/menu/:id', 'S04', 'Chi tiết món', 'P1'),
   placeholderRoute('/cart', 'S05', 'Giỏ hàng', 'P1'),
   placeholderRoute('/checkout', 'S06', 'Thanh toán', 'P1'),

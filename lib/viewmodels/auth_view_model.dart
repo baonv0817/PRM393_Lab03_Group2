@@ -34,6 +34,7 @@ class AuthViewModel extends ChangeNotifier {
   AppUser? _user;
   bool _initialized = false;
   bool _busy = false;
+  bool _onboardingDone = false;
   String? _message;
 
   AppUser? get user => _user;
@@ -41,6 +42,16 @@ class AuthViewModel extends ChangeNotifier {
   /// Đã biết trạng thái đăng nhập lần đầu (để router không đẩy người dùng đi nhầm).
   bool get initialized => _initialized;
   bool get busy => _busy;
+
+  /// Đã qua Onboarding (S01) trong phiên này. Chưa qua thì người chưa đăng nhập thấy S01 trước
+  /// màn đăng nhập; đã đăng nhập rồi thì không bao giờ thấy S01.
+  bool get onboardingDone => _onboardingDone;
+
+  void completeOnboarding() {
+    if (_onboardingDone) return;
+    _onboardingDone = true;
+    notifyListeners();
+  }
 
   /// Thông báo lỗi hoặc huỷ để màn đăng nhập hiển thị.
   String? get message => _message;

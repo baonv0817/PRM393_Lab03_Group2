@@ -29,7 +29,8 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
-    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16);
+    // Không đặt màu ở đây: chữ lấy `foregroundColor` của từng loại nút (và màu mờ khi vô hiệu).
+    const textStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.43);
     final height = variant == AppButtonVariant.primary ? 56.0 : AppA11y.minTouchTarget;
     final enabled = onPressed != null && !loading;
     final onTap = enabled ? onPressed : null;

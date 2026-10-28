@@ -10,7 +10,7 @@ Quy ước: trạng thái (loading, empty, error, biến thể chọn) không ph
 
 | Mã Figma | Màn hình | Route | Widget (màn) | ViewModel | Nguồn dữ liệu | Phụ trách | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| S01 | Onboarding | /onboarding | OnboardingScreen | OnboardingViewModel | Remote Config | P1 | Chưa làm |
+| S01 | Onboarding | /onboarding | OnboardingScreen | AuthViewModel (onboardingDone) | — | P1 | Xong |
 | S02 | Trang chủ | /home | HomeScreen | HomeViewModel | Firestore menu_items, kiosks | P1 | Xong |
 | S02-LOADING | Đang tải Trang chủ | (state của /home) | LoadingView | HomeViewModel | — | P1 | Xong |
 | S02-ADDED | Trang chủ, đã thêm vào giỏ | (state của /home) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Xong |
@@ -117,6 +117,7 @@ Mọi chỗ khác Figma ghi ở đây kèm lý do và **cập nhật lại Figma
 | D02 | S06-GATEWAY là màn mô phỏng cổng bên thứ ba | Giữ màn mô phỏng, không gọi cổng thật | Không có tài khoản cổng thanh toán; ghi rõ là mô phỏng | Không cần |
 | D03 | Đăng nhập không bắt buộc (S01 mở thẳng Trang chủ) | Chưa đăng nhập thì chỉ thấy màn đăng nhập (S26); sau đăng nhập vào Trang chủ | Handout Lab 3: người chưa đăng nhập không được vào màn của app | Chưa |
 | D04 | App khách và app người bán là hai khu riêng, Figma không nêu cách chọn | Tài khoản có vai trò staff hoặc admin vào app người bán; khách không mở được `/seller/*` | Handout Lab 3 mục kiến trúc và rules theo vai trò | Chưa |
+| D05 | S01 có liên kết "Đăng nhập bằng email @fpt.edu.vn"; "Bắt đầu đặt món" và "Bỏ qua" mở thẳng Trang chủ | Liên kết ghi "Đăng nhập bằng Google"; cả ba nút đều sang màn đăng nhập S26 (S01 chỉ hiện với người chưa đăng nhập, mỗi lần mở app) | Hệ quả của D01 và D03 | Chưa |
 | | | | | |
 
 Thêm dòng khi gặp sai lệch mới.

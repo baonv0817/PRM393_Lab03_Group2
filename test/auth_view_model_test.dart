@@ -49,6 +49,18 @@ void main() {
     vm.dispose();
   });
 
+  test('Onboarding: mặc định chưa xem, hoàn tất thì báo cho router một lần', () async {
+    final vm = AuthViewModel(DevAuthService(), DevAnalyticsService(), DevCrashService());
+    var notified = 0;
+    vm.addListener(() => notified++);
+    expect(vm.onboardingDone, isFalse);
+    vm.completeOnboarding();
+    vm.completeOnboarding();
+    expect(vm.onboardingDone, isTrue);
+    expect(notified, 1);
+    vm.dispose();
+  });
+
   test('đăng xuất ghi sự kiện logout và xoá user', () async {
     final analytics = DevAnalyticsService();
     final vm = AuthViewModel(DevAuthService(signedIn: true), analytics, DevCrashService());

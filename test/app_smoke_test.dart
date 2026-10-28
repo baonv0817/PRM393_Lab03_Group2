@@ -5,10 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('chưa đăng nhập thì vào màn đăng nhập (S26)', (tester) async {
+  testWidgets('chưa đăng nhập: thấy Onboarding (S01) trước, bấm Bỏ qua mới sang đăng nhập (S26)', (tester) async {
     await tester.pumpWidget(BreakBiteApp(services: createDevServices()));
     await tester.pumpAndSettle();
+    expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsOneWidget);
+    expect(find.text('S26'), findsNothing);
+    await tester.tap(find.text('Bỏ qua'));
+    await tester.pumpAndSettle();
     expect(find.text('S26'), findsOneWidget);
+    expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsNothing);
     expect(find.text('Món nhanh dưới 5 phút'), findsNothing);
   });
 

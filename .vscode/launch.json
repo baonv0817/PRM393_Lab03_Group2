@@ -16,7 +16,7 @@
       "args": ["--dart-define=USE_DEV_SERVICES=true", "--dart-define=DEV_SIGNED_IN=true", "--dart-define=DEV_ROLE=staff"]
     },
     {
-      "name": "BreakBite (dữ liệu giả, từ màn đăng nhập)",
+      "name": "BreakBite (dữ liệu giả, từ đầu: Onboarding rồi Đăng nhập)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
