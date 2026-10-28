@@ -81,17 +81,6 @@ sequenceDiagram
 | `SellerOrdersViewModel`, `SellerOrderDetailViewModel`, `ScanViewModel` | `OrderService`, `AuthService` |
 | `SellerMenuViewModel`, `MenuItemFormViewModel`, `ShopViewModel`, `ShiftStatsViewModel` | `MenuService`, `KioskService`, `OrderService` |
 
-## 6. Mô hình dữ liệu Firestore (nháp)
+## 6. Mô hình dữ liệu Firestore
 
-| Collection | Trường chính | Ai ghi |
-|---|---|---|
-| `users/{uid}` | `role` (user, staff, admin), `displayName` | Chính chủ khi đăng nhập lần đầu (role = user); chỉ admin đổi role |
-| `menu_items/{id}` | `name`, `priceVnd`, `category`, `soldOut`, `prepMinutes` | Staff |
-| `kiosks/{id}` | `name` (Q9 tầng 2, tầng 4, Nhà văn hóa SV), `open`, `waitMinutes` | Staff |
-| `vouchers/{code}` | `discountVnd`, `expiresAt`, `minOrderVnd` | Staff |
-| `carts/{uid}` | `items[]` | Chính chủ |
-| `orders/{id}` | `uid`, `items[]`, `totalVnd`, `paymentMethod`, `status` (pending, preparing, ready, delivered, cancelled), `kioskId` | Khách tạo; staff đổi trạng thái |
-| `users/{uid}/favorites`, `users/{uid}/notifications` | | Chính chủ |
-| `reviews`, `incidents` | `orderId`, `uid`, nội dung | Khách tạo; staff đọc |
-
-Trạng thái và quyền chi tiết viết lại ở `firebase/firestore.rules`; kiểm thử trong Emulator.
+Đã chốt khung và chuyển sang [`docs/data-model.md`](data-model.md): collection, từng trường, vòng đời đơn, truy vấn theo màn hình, chỉ mục, Storage và hạn chế. Quyền chi tiết ở `firebase/firestore.rules`, kiểm bằng `firebase/tests/rules.test.mjs`.

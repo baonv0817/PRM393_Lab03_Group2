@@ -1,15 +1,41 @@
 rules_version = '2';
 
 // Mỗi người dùng chỉ đọc và ghi thư mục của chính mình; mọi đường dẫn khác bị từ chối.
+// Đường dẫn và người ghi: xem docs/data-model.md mục Storage.
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    function userDoc() { return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data; }
+    function isStaffOf(kioskId) {
+      return signedIn() && (userDoc().role == 'admin'
+        || (userDoc().role == 'staff' && 'kioskId' in userDoc() && userDoc().kioskId == kioskId));
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*') && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Biên lai PDF do khách xuất (T43).
     match /reports/{uid}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn()
                    && request.auth.uid == uid
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType == 'application/pdf';
     }
+
+    // Ảnh minh chứng khi báo sự cố (S24): khách ghi; khách, nhân viên và admin đọc.
+    match /incidents/{uid}/{file} {
+      allow read: if signedIn() && (request.auth.uid == uid || userDoc().role in ['staff', 'admin']);
+      allow write: if signedIn() && request.auth.uid == uid && isImage();
+    }
+
+    // Ảnh món (K14, K15): ai đăng nhập cũng xem; chỉ nhân viên của kiosk đó tải lên.
+    match /menu/{kioskId}/{file} {
+      allow read: if signedIn();
+      allow write: if isStaffOf(kioskId) && isImage();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

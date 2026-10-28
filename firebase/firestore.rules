@@ -1,66 +1,175 @@
 rules_version = '2';
 
-// BẢN NHÁP: chặn mặc định, theo vai trò. Phải kiểm bằng Firebase Emulator
-// (ít nhất một ca được phép và một ca bị từ chối cho mỗi vai trò, mỗi collection)
-// trước khi triển khai. Vai trò: user, staff, admin (khớp bài Final).
+// Quy tắc cho mô hình dữ liệu ở docs/data-model.md. Mặc định từ chối; quyền theo vai trò
+// (user, staff, admin) và nhân viên chỉ thao tác trên kiosk của mình (users/{uid}.kioskId).
+// Mỗi quy tắc có test được phép và bị từ chối trong firebase/tests/rules.test.mjs.
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ---------- Hàm dùng chung ----------
     function signedIn() { return request.auth != null; }
-    function role() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
-    function isStaff() { return signedIn() && (role() == 'staff' || role() == 'admin'); }
+    function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function role() { return userDoc().role; }
     function isAdmin() { return signedIn() && role() == 'admin'; }
+    // Nhân viên của đúng kiosk; admin được mọi kiosk.
+    function staffOf(kioskId) {
+      return signedIn() && (role() == 'admin'
+        || (role() == 'staff' && 'kioskId' in userDoc() && userDoc().kioskId == kioskId));
+    }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
 
+    // ---------- users ----------
     match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isStaff());
-      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
-      allow update: if signedIn() && request.auth.uid == uid
-                    && request.resource.data.role == resource.data.role;   // không tự đổi role
+      allow read: if isOwner(uid) || isAdmin();
+      // Tự tạo hồ sơ chỉ với role user và không tự gán kiosk.
+      allow create: if isOwner(uid)
+                    && request.resource.data.role == 'user'
+                    && !('kioskId' in request.resource.data);
+      // Chủ hồ sơ sửa tên, MSSV, cài đặt, FCM token; không đổi role và kioskId.
+      allow update: if isOwner(uid) && !changedKeys().hasAny(['role', 'kioskId']);
       allow update: if isAdmin();
-      match /favorites/{id} { allow read, write: if signedIn() && request.auth.uid == uid; }
-      match /notifications/{id} { allow read, write: if signedIn() && request.auth.uid == uid; }
+
+      match /favorites/{itemId} { allow read, write: if isOwner(uid); }
+      match /notifications/{id} { allow read, write: if isOwner(uid); }
     }
 
+    // ---------- kiosks và slot nhận món ----------
+    match /kiosks/{kioskId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if staffOf(kioskId);
+      allow delete: if false;
+
+      match /slots/{slotId} {
+        allow read: if signedIn();
+        allow create, update: if staffOf(kioskId);
+        // Khách đặt chỗ hoặc huỷ chỗ: chỉ đổi `booked` đúng 1 đơn vị, trong [0, capacity].
+        allow update: if signedIn()
+                      && changedKeys().hasOnly(['booked'])
+                      && request.resource.data.booked >= 0
+                      && request.resource.data.booked <= resource.data.capacity
+                      && math.abs(request.resource.data.booked - resource.data.booked) == 1;
+      }
+    }
+
+    // ---------- menu_items ----------
+    function validMenuItem(d) {
+      return d.name is string && d.name.size() > 0
+          && d.priceVnd is int && d.priceVnd > 0
+          && d.prepMinutes is int && d.prepMinutes >= 0
+          && d.soldOut is bool;
+    }
     match /menu_items/{id} {
       allow read: if signedIn();
-      allow create, update: if isStaff();
-      allow delete: if false;
+      allow create: if staffOf(request.resource.data.kioskId) && validMenuItem(request.resource.data);
+      allow update: if staffOf(resource.data.kioskId)
+                    && request.resource.data.kioskId == resource.data.kioskId
+                    && validMenuItem(request.resource.data);
+      allow delete: if false;   // dùng soldOut thay vì xoá
     }
-    match /kiosks/{id} {
-      allow read: if signedIn();
-      allow write: if isStaff();
-    }
+
+    // ---------- vouchers ----------
     match /vouchers/{code} {
       allow read: if signedIn();
-      allow write: if isStaff();
+      allow write: if isAdmin();
     }
 
+    // ---------- carts ----------
     match /carts/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+                            && request.resource.data.items is list
+                            && request.resource.data.items.size() <= 30;
     }
 
+    // ---------- orders ----------
+    function validNewOrder(d) {
+      return d.uid == request.auth.uid
+          && d.status == 'pending'
+          && d.keys().hasAll(['uid', 'kioskId', 'items', 'subtotalVnd', 'discountVnd', 'totalVnd',
+                              'paymentMethod', 'paymentStatus', 'pickupCode', 'createdAt'])
+          && d.items is list && d.items.size() >= 1 && d.items.size() <= 30
+          && d.subtotalVnd is int && d.discountVnd is int
+          && d.discountVnd >= 0 && d.discountVnd <= d.subtotalVnd
+          && d.totalVnd == d.subtotalVnd - d.discountVnd
+          && d.paymentMethod in ['momo', 'vnpay', 'card', 'cash']
+          // Tiền mặt trả tại quầy (unpaid); các cổng mô phỏng ghi nhận paid.
+          && ((d.paymentMethod == 'cash') == (d.paymentStatus == 'unpaid'))
+          && d.createdAt == request.time;
+    }
+    function validTransition(from, to) {
+      return (from == 'pending' && to in ['preparing', 'cancelled'])
+          || (from == 'preparing' && to in ['ready', 'cancelled'])
+          || (from == 'ready' && to in ['delivered', 'cancelled']);
+    }
     match /orders/{id} {
-      allow create: if signedIn()
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.status == 'pending';
-      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isStaff());
-      // Khách chỉ huỷ khi đơn còn pending; staff đổi trạng thái theo tiến trình.
-      allow update: if signedIn() && resource.data.uid == request.auth.uid
+      // Chỉ đặt được ở kiosk đang mở. Nhân viên phải truy vấn có where kioskId == kiosk của mình.
+      allow create: if signedIn() && validNewOrder(request.resource.data)
+                    && get(/databases/$(database)/documents/kiosks/$(request.resource.data.kioskId)).data.open == true;
+      allow read: if isOwner(resource.data.uid) || staffOf(resource.data.kioskId);
+
+      // Khách sửa nội dung hoặc huỷ khi đơn còn pending (S09, S07-DIALOG); không đổi cách thanh toán.
+      allow update: if isOwner(resource.data.uid)
                     && resource.data.status == 'pending'
-                    && request.resource.data.status in ['pending', 'cancelled'];
-      allow update: if isStaff()
-                    && request.resource.data.status in ['preparing', 'ready', 'delivered', 'cancelled'];
+                    && request.resource.data.status in ['pending', 'cancelled']
+                    && changedKeys().hasOnly(['items', 'subtotalVnd', 'discountVnd', 'totalVnd', 'voucherCode',
+                         'pickupSlotId', 'pickupAt', 'note', 'status', 'cancelReason', 'cancelledBy',
+                         'cancelledAt', 'updatedAt'])
+                    && request.resource.data.totalVnd == request.resource.data.subtotalVnd - request.resource.data.discountVnd
+                    && (request.resource.data.status == 'pending' || request.resource.data.cancelledBy == 'customer');
+
+      // Nhân viên đi đúng chuỗi pending → preparing → ready → delivered, hoặc từ chối kèm lý do.
+      allow update: if staffOf(resource.data.kioskId)
+                    && changedKeys().hasOnly(['status', 'acceptedAt', 'readyAt', 'deliveredAt',
+                         'cancelledAt', 'cancelReason', 'cancelledBy', 'paymentStatus', 'updatedAt'])
+                    && (request.resource.data.status == resource.data.status
+                        || validTransition(resource.data.status, request.resource.data.status))
+                    && (request.resource.data.status != 'cancelled'
+                        || (request.resource.data.cancelledBy == 'staff' && request.resource.data.cancelReason is string))
+                    // Giao đơn tiền mặt thì phải ghi nhận đã thu tiền.
+                    && (request.resource.data.status != 'delivered' || resource.data.paymentMethod != 'cash'
+                        || request.resource.data.paymentStatus == 'paid')
+                    && (request.resource.data.paymentStatus == resource.data.paymentStatus
+                        || (resource.data.paymentMethod == 'cash' && request.resource.data.paymentStatus == 'paid'));
       allow delete: if false;
     }
 
-    match /reviews/{id} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    // ---------- reviews ----------
+    // Id = {orderId}_{itemId}: mỗi món trong một đơn chỉ đánh giá một lần, và chỉ khi đơn đã giao.
+    match /reviews/{reviewId} {
       allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && reviewId == request.resource.data.orderId + '_' + request.resource.data.itemId
+                    && request.resource.data.rating is int
+                    && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+                    && request.resource.data.createdAt == request.time
+                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.uid == request.auth.uid
+                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
+      allow update: if isOwner(resource.data.uid)
+                    && changedKeys().hasOnly(['rating', 'comment', 'updatedAt'])
+                    && request.resource.data.rating is int
+                    && request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+      allow delete: if false;
     }
+
+    // ---------- incidents ----------
     match /incidents/{id} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isStaff());
-      allow update: if isStaff();
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'open'
+                    && request.resource.data.type in ['wrong_item', 'missing_item', 'quality', 'late', 'other']
+                    && request.resource.data.description is string
+                    && request.resource.data.description.size() <= 500
+                    && request.resource.data.createdAt == request.time
+                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.uid == request.auth.uid
+                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.kioskId == request.resource.data.kioskId;
+      allow read: if isOwner(resource.data.uid) || staffOf(resource.data.kioskId);
+      allow update: if staffOf(resource.data.kioskId)
+                    && changedKeys().hasOnly(['status', 'resolution', 'resolvedAt', 'handledBy'])
+                    && request.resource.data.status in ['open', 'in_progress', 'resolved'];
+      allow delete: if false;
     }
 
     match /{document=**} {

@@ -2,8 +2,10 @@
 
 | File | Vai trò |
 |---|---|
-| `storage.rules` | Mỗi người dùng chỉ đọc và ghi `reports/{uid}/…` (PDF ≤ 5 MB) |
-| `firestore.rules` | Bản nháp theo vai trò (user, staff, admin); phải kiểm trong Emulator |
+| `storage.rules` | `reports/{uid}` (PDF ≤ 5 MB), `incidents/{uid}` (ảnh sự cố), `menu/{kioskId}` (ảnh món, chỉ nhân viên kiosk đó ghi) |
+| `firestore.rules` | Theo vai trò (user, staff, admin) và theo kiosk của nhân viên; mô hình dữ liệu ở `docs/data-model.md` |
+| `firestore.indexes.json` | Chỉ mục tổng hợp cho các truy vấn ở `docs/data-model.md` mục 5 |
+| `remote-config-template.json` | Mẫu để đẩy Remote Config lên (`firebase deploy --only remoteconfig`) |
 | `remote-config-defaults.json` | Giá trị mặc định trong app; đổi trên console là đổi hành vi, không cần build lại |
 
 Tham số Remote Config và nơi dùng:
@@ -14,13 +16,13 @@ Tham số Remote Config và nơi dùng:
 | `promo_banner_enabled` | Hiện hoặc ẩn banner Combo Giờ Vàng (S02) |
 | `pickup_slot_enabled` | Hiện hoặc ẩn dòng chọn giờ nhận ở giỏ hàng (S05, S25) |
 
-Triển khai rules: `firebase deploy --only firestore:rules,storage` (cần Firebase CLI và đăng nhập).
+Triển khai: `firebase deploy --only firestore:rules,firestore:indexes,remoteconfig` (cần Firebase CLI và đăng nhập). Thêm `storage` sau khi Storage được bật (cần gói Blaze).
 
 ## Test rules (Emulator)
 
-`firebase/tests/rules.test.mjs` có ca được phép và bị từ chối cho từng vai trò (user, staff, admin) và từng collection, cộng quy tắc Storage (chủ thư mục, PDF, ≤ 5 MB).
+`firebase/tests/rules.test.mjs` có ca được phép và bị từ chối cho từng vai trò (user, staff, admin) và từng collection, cộng quy tắc Storage (chủ thư mục, PDF, ảnh, ≤ 5 MB, nhân viên theo kiosk).
 
-**Kết quả chạy ngày 28/10/2026 trên Emulator: 37 test, 37 đạt, 0 lỗi.** Dòng `Unexpected rules runtime error ... NullPointerException` in ra lúc tắt Emulator là vô hại.
+**Kết quả chạy ngày 29/10/2026 trên Emulator: 82 test, 82 đạt, 0 lỗi.** Dòng `Unexpected rules runtime error ... NullPointerException` in ra lúc tắt Emulator là vô hại.
 
 ```bash
 cd firebase/tests
