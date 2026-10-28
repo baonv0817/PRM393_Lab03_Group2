@@ -1,6 +1,6 @@
 # Kế hoạch task (nhóm 4 người)
 
-Thứ tự bám đúng quy trình handout: **Plan, Architect, Integrate, Instrument, Test, Review, Report**. Git history phải cho thấy các bước này theo thứ tự, và commit của từng người phải thấy được.
+Phân công theo người: [`PHAN-CONG.md`](PHAN-CONG.md). Thứ tự bám đúng quy trình handout: **Plan, Architect, Integrate, Instrument, Test, Review, Report**. Git history phải cho thấy các bước này theo thứ tự, và commit của từng người phải thấy được.
 
 Hạn nộp: `[điền ngày]`. Số commit và số ngày tối thiểu: `[điền khi thầy công bố]`.
 
@@ -9,12 +9,12 @@ Hạn nộp: `[điền ngày]`. Số commit và số ngày tối thiểu: `[đi�
 | Người | Vai trò | Phụ trách chính | Điểm rubric gánh chính |
 |---|---|---|---|
 | **P1** | Kiến trúc, design system, luồng đặt món | Repo, khung MVVM, theme và thư viện widget, `design-traceability.md`, `architecture.md`, màn S01–S08 và biến thể | Kiến trúc 0,75, UI/UX 0,75, một phần Chức năng |
-| **P2** | App khách phần còn lại và dữ liệu | Màn S09–S14, S19–S25, S27–S30; tầng dữ liệu Firestore phía khách; sinh PDF và tải lên | Chức năng 2,5 |
-| **P3** | Firebase và tài khoản, đầu app người bán | Auth, Storage, FCM, Analytics, Crashlytics, Remote Config; S15–S18, S26; khu demo Firebase; app người bán K01–K06 | Firebase 2,0 |
-| **P4** | App người bán phần còn lại, test, review, báo cáo | K08–K15; ARTEMIS, test plan; AI code review; báo cáo, slide, video | Test 1,5, Review 0,5, Slide và video 2,0 |
+| **P2** | App khách mở rộng, thông báo, test E2E | Màn S09–S14, S19–S25, S27–S30; sinh PDF và tải lên; FCM và trung tâm thông báo; bộ test ARTEMIS | Chức năng, FCM 0,5, Test 1,5 |
+| **P3** | Firebase và tài khoản | Auth, Storage, Analytics, Crashlytics, Remote Config, tầng service bọc SDK; S15–S18, S26; khu demo Firebase | Firebase 2,0 |
+| **P4** | App người bán, code review, báo cáo | Toàn bộ app người bán K01–K15; AI code review; gom báo cáo, slide, video | Chức năng (người bán), Review 0,5, Slide và video 2,0 |
 
 Quy tắc chung:
-- Mỗi người **tự viết test case (bước, kết quả mong đợi) cho màn mình làm** vào `docs/test-plan.md`; P4 gom, chạy và đánh giá độ tin cậy.
+- Mỗi người **tự viết test case (bước, kết quả mong đợi) cho màn mình làm** vào `docs/test-plan.md`; P2 gom, chạy và đánh giá độ tin cậy.
 - Mỗi người **tự đặt `Semantics` label** cho màn mình để ARTEMIS đọc được.
 - Mỗi người **viết phần báo cáo và quay đoạn video của phần mình**; P4 ghép.
 - Ai cũng phải giải thích được code của mình và một quyết định review (có thể bị hỏi vấn đáp 5 phút).
@@ -36,7 +36,7 @@ Cột "Phụ thuộc" cho biết task nào phải xong trước.
 |---|---|---|---|---|
 | T00 | P1 | Tạo repo GitHub `PRM393_Lab03_<MSSV>`, mời 3 thành viên, bật bắt buộc PR cho `main`, đẩy khung repo này lên | Cả 4 người clone và push được | — |
 | T01 | P3 | Tạo Firebase project (Spark), đăng ký app Android, bật Auth (Google), Firestore, Storage, Cloud Messaging, Analytics, Crashlytics, Remote Config; thêm SHA-1 máy của từng người; mời 3 người vào project | Cả nhóm đăng nhập console được; có `google-services.json` | T00 |
-| T02 | P4 | Chuẩn bị máy test: thiết bị Android hoặc emulator, ADB, ARTEMIS (Python 3.12, uv), API key mô hình đặt trong biến môi trường, tài khoản Google dành riêng cho test; ghi commit ARTEMIS đã ghim | Chạy được 1 lệnh ARTEMIS mẫu | T00 |
+| T02 | P2 | Chuẩn bị máy test: thiết bị Android hoặc emulator, ADB, ARTEMIS (Python 3.12, uv), API key mô hình đặt trong biến môi trường, tài khoản Google dành riêng cho test; ghi commit ARTEMIS đã ghim | Chạy được 1 lệnh ARTEMIS mẫu | T00 |
 | T03 | P1 | `flutter create`, ghim phiên bản trong `pubspec.yaml`, `flutterfire configure`, cập nhật `README.md` mục phiên bản | App rỗng chạy trên thiết bị, Firebase khởi tạo không lỗi | T01 |
 
 ### Giai đoạn 1 · Plan
@@ -70,7 +70,7 @@ Cột "Phụ thuộc" cho biết task nào phải xong trước.
 | T41 | P2 | S09–S14, S19–S25, S27–S30: sửa và huỷ đơn, lịch sử, yêu thích, đặt lại, thông báo, mã QR nhận món, đánh giá, báo sự cố, hẹn giờ, chọn kiosk, tìm kiếm, mã giảm giá, mất kết nối | F2 chạy trọn; mọi màn có loading, empty, error có thử lại | T21, T31 |
 | T42 | P3 | S15–S18, S26 và khu demo Firebase trong Profile (trung tâm thông báo, xuất file và tải lên, giá trị Remote Config, nút thử Crashlytics) | Khu demo thao tác được đủ các mục | T30 |
 | T43 | P2 | Sinh PDF (biên lai hoặc tóm tắt đơn đang xem), tải lên qua `StorageService`, hiện tiến trình và URL | File tải lên đúng thư mục `reports/{uid}/…` | T32, T41 |
-| T44 | P3 | App người bán K01–K06: cổng vai trò, hàng đợi đơn thời gian thực, chi tiết, đang chuẩn bị, quét mã, giao món và thu tiền mặt | Một đơn của khách xuất hiện và xử lý được ở app người bán | T31, T40 |
+| T44 | P4 | App người bán K01–K06: cổng vai trò, hàng đợi đơn thời gian thực, chi tiết, đang chuẩn bị, quét mã, giao món và thu tiền mặt | Một đơn của khách xuất hiện và xử lý được ở app người bán | T31, T40 |
 | T45 | P4 | K08–K15: quản lý món, đánh dấu hết món, trạng thái quán, thống kê ca, từ chối đơn, sự cố, thêm và sửa món | Đổi món ở app người bán thấy ngay ở app khách | T31, T44 |
 
 ### Giai đoạn 5 · Instrument
@@ -80,16 +80,16 @@ Cột "Phụ thuộc" cho biết task nào phải xong trước.
 | T50 | P3 | `docs/analytics-plan.md` và code ghi sự kiện (≥ 7, đặt `userId` sau đăng nhập, không dữ liệu cá nhân) | Mỗi sự kiện có ảnh DebugView | T30 |
 | T51 | P3 | Crashlytics: 1 lỗi không gây crash từ đường lỗi thật, 1 crash thử, kèm user ID và custom key | Dashboard thấy cả hai, kèm key | T30 |
 | T52 | P3 | Remote Config ≥ 2 tham số đổi hành vi nhìn thấy trên màn (ví dụ số món "nhanh dưới 5 phút", bật tắt banner Combo Giờ Vàng); `firebase/remote-config-defaults.json` | Ảnh trước và sau, giá trị trên console | T40 |
-| T53 | P3 + P2 | FCM: nhận ở 3 trạng thái, xin quyền Android 13+, danh sách thông báo trong app, chạm vào mở màn liên quan | Tin thử từ console tới được ở mỗi trạng thái | T41 |
+| T53 | P2 (dùng `MessagingService` của P3) | FCM: nhận ở 3 trạng thái, xin quyền Android 13+, danh sách thông báo trong app, chạm vào mở màn liên quan | Tin thử từ console tới được ở mỗi trạng thái | T41 |
 
 ### Giai đoạn 6 · Test
 
 | ID | Người | Việc | Xong khi | Phụ thuộc |
 |---|---|---|---|---|
-| T60 | P4 (mỗi người nộp case của mình) | `docs/test-plan.md`: ≥ 10 test case, đủ phủ nội dung mục 7 handout (có nhánh lỗi, tương tác native, phiên khám phá) | Mọi flow Lab 2 và đường lỗi có test | T10 |
+| T60 | P2 (mỗi người nộp case của mình) | `docs/test-plan.md`: ≥ 10 test case, đủ phủ nội dung mục 7 handout (có nhánh lỗi, tương tác native, phiên khám phá) | Mọi flow Lab 2 và đường lỗi có test | T10 |
 | T61 | Tất cả | Thêm `Semantics` label cho nút, ô danh sách, biểu đồ của màn mình | ARTEMIS đọc được cây trợ năng của màn | T40–T45 |
-| T62 | P4 | Viết test ARTEMIS bằng pytest trong `e2e_test/`, kiểm theo giá trị agent trả về, ≥ 3 lần mỗi test, bảng tỉ lệ đạt, phân tích test chập chờn; 1 test kiểm sự kiện analytics đã ghi | Bảng kết quả, dấu vết hoặc ảnh cho mỗi lần chạy | T61, T50 |
-| T63 | P4 | Phiên khám phá hồ sơ Pro 15 đến 30 phút, danh sách lỗi tìm được | Báo cáo phiên khám phá | T62 |
+| T62 | P2 | Viết test ARTEMIS bằng pytest trong `e2e_test/`, kiểm theo giá trị agent trả về, ≥ 3 lần mỗi test, bảng tỉ lệ đạt, phân tích test chập chờn; 1 test kiểm sự kiện analytics đã ghi | Bảng kết quả, dấu vết hoặc ảnh cho mỗi lần chạy | T61, T50 |
+| T63 | P2 | Phiên khám phá hồ sơ Pro 15 đến 30 phút, danh sách lỗi tìm được | Báo cáo phiên khám phá | T62 |
 
 ### Giai đoạn 7 · Review
 
