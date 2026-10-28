@@ -129,7 +129,7 @@ Phần nền để 4 người làm song song đã có trong repo. Cần review c
 | T20 | Xong khung | Khung MVVM, router, DI, `ViewState`; `docs/architecture.md` cần P1 cập nhật cho khớp code |
 | T21 | Xong khung | Theme từ token Lab 2 và widget chung; **chưa có font Nunito** (thêm vào `assets/fonts/`) |
 | T22 | Một phần | Đã có interface và model; **P3 cần viết bản cài đặt Firebase** trong `lib/firebase/` |
-| T31 | Một phần | Rules nháp và bộ test viết xong nhưng **chưa chạy được**: Firestore Emulator lỗi loopback của Java trên máy dựng; chạy `npm test` trong `firebase/tests/` trên máy khác |
+| T31 | Một phần | Rules nháp và bộ test **đã chạy trên Emulator: 37/37 đạt**; còn phải hoàn thiện rules theo mô hình dữ liệu cuối và nạp dữ liệu mẫu |
 | T01, T02 | Chưa | Cần tài khoản Firebase, thiết bị Android và API key |
 
 Cách làm song song: mỗi người sửa file route của mình (`lib/router/routes_pX.dart`) để thay màn tạm bằng màn thật; dùng `--dart-define=USE_DEV_SERVICES=true` để chạy khi Firebase chưa nối. **Trước khi nộp xoá `lib/dev/` (T83).**
