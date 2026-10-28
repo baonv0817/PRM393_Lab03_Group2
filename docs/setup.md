@@ -40,6 +40,10 @@ $a = "D:\src\android-sdk\cmdline-tools\latest\bin\android.exe"
 & $a --sdk=D:\src\android-sdk sdk install "platforms/android-36" "build-tools/36.0.0" "ndk/28.2.13676358"
 ```
 
+### Lỗi build Kotlin "different roots"
+
+Nếu `flutter build apk` báo `Could not close incremental caches ... this and base files have different roots`, do project (ổ D) và thư viện Pub (ổ C) khác ổ đĩa. Repo đã đặt `kotlin.incremental=false` trong `android/gradle.properties` để tránh lỗi này. Build lần đầu mất khoảng 5 đến 7 phút vì Gradle tải thư viện.
+
 ## 3. Điện thoại Android
 
 1. Cài đặt, Giới thiệu điện thoại, bấm 7 lần vào **Số bản dựng** để bật Tuỳ chọn nhà phát triển.

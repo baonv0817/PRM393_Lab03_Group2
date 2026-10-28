@@ -37,3 +37,6 @@ node_modules/
 
 # Log của Firebase Emulator
 *-debug.log
+
+# Log lỗi của trình biên dịch Kotlin
+.kotlin/
