@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "652236973307",
+    "project_id": "breakbite-1315b",
+    "storage_bucket": "breakbite-1315b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652236973307:android:acc84f8ab88b4bdc3fbc5e",
+        "android_client_info": {
+          "package_name": "vn.edu.fpt.breakbite"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "652236973307-3dg9mldpkvktbmguuv3iobkkpu2s0g9g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.edu.fpt.breakbite",
+            "certificate_hash": "2985a4f19660c7f62a98cb7b7c8f6fd677c4f533"
+          }
+        },
+        {
+          "client_id": "652236973307-ubtjnhcjivpej6t44vdjlagc894ce40s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe2u-3sZQmpUAanK_Uym7ZuMd8E8NWtZQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652236973307-ubtjnhcjivpej6t44vdjlagc894ce40s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "quick_items_limit": {
+      "defaultValue": {
+        "value": "5"
+      }
+    },
+    "promo_banner_enabled": {
+      "defaultValue": {
+        "value": "true"
+      }
+    },
+    "pickup_slot_enabled": {
+      "defaultValue": {
+        "value": "true"
+      }
+    }
+  }
+}
