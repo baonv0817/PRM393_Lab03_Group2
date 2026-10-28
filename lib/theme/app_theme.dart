@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+
+import 'app_colors.dart';
+import 'app_dimens.dart';
+
+/// Theme của app: token Lab 2 thành [ThemeData].
+abstract final class AppTheme {
+  /// Font Nunito: thêm file font vào `assets/fonts/` và khai báo trong pubspec.yaml
+  /// (việc của P1). Khi chưa có, Flutter dùng font hệ thống.
+  static const String fontFamily = 'Nunito';
+
+  static const ColorScheme colorScheme = ColorScheme(
+    brightness: Brightness.light,
+    primary: AppPalette.primary,
+    onPrimary: AppPalette.onPrimary,
+    secondary: AppPalette.primaryText,
+    onSecondary: AppPalette.surface,
+    error: AppPalette.error,
+    onError: AppPalette.surface,
+    surface: AppPalette.surface,
+    onSurface: AppPalette.onPrimary,
+    surfaceContainerHighest: AppPalette.surfaceVariant,
+    onSurfaceVariant: AppPalette.muted,
+    outline: AppPalette.borderInput,
+    outlineVariant: AppPalette.border,
+    primaryContainer: AppPalette.selected,
+    onPrimaryContainer: AppPalette.onPrimary,
+  );
+
+  /// Thang chữ Lab 2: Display 24 Bold, Headline 20 Bold, Title 16 SemiBold,
+  /// Body 14 Regular, Label 14 Bold. Không cỡ nào dưới 14 sp.
+  static const TextTheme textTheme = TextTheme(
+    headlineMedium: TextStyle(fontSize: 24, height: 1.33, fontWeight: FontWeight.w700),
+    headlineSmall: TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700),
+    titleMedium: TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.w600),
+    bodyLarge: TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.w400),
+    bodyMedium: TextStyle(fontSize: 14, height: 1.43, fontWeight: FontWeight.w400),
+    labelLarge: TextStyle(fontSize: 14, height: 1.43, fontWeight: FontWeight.w700),
+  );
+
+  static ThemeData light() {
+    final text = textTheme.apply(
+      fontFamily: fontFamily,
+      bodyColor: AppPalette.onPrimary,
+      displayColor: AppPalette.onPrimary,
+    );
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppPalette.background,
+      fontFamily: fontFamily,
+      textTheme: text,
+      extensions: const [AppColors.light],
+      dividerColor: AppPalette.border,
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppPalette.background,
+        foregroundColor: AppPalette.onPrimary,
+        elevation: AppElevation.flat,
+        scrolledUnderElevation: AppElevation.flat,
+        titleTextStyle: text.titleMedium,
+      ),
+      cardTheme: CardThemeData(
+        color: AppPalette.surface,
+        elevation: AppElevation.card,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: const BorderSide(color: AppPalette.border),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppPalette.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppPalette.borderInput),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppPalette.borderInput),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppPalette.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: const BorderSide(color: AppPalette.error),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppPalette.surface,
+        indicatorColor: AppPalette.selected,
+        height: 64,
+        labelTextStyle: WidgetStatePropertyAll(text.labelLarge?.copyWith(fontSize: 12)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppPalette.onPrimary,
+        contentTextStyle: text.bodyMedium?.copyWith(color: AppPalette.surface),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.input)),
+      ),
+    );
+  }
+}
