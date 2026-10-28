@@ -77,6 +77,8 @@ Mở lại terminal và VS Code, bật máy ảo bằng `flutter emulators --lau
 
 Máy ảo của mỗi người dùng khoá debug của máy đó: gửi SHA-1 của máy bạn cho người giữ Firebase project (xem mục 4) để Google Sign-in chạy.
 
+**Vào app khi màn đăng nhập (S26) chưa làm.** Với dữ liệu giả, thêm `--dart-define=DEV_SIGNED_IN=true` để vào thẳng app khách, và `--dart-define=DEV_ROLE=staff` để vào app người bán. Trong VS Code chọn cấu hình "BreakBite khách (dữ liệu giả, đã đăng nhập)" hoặc "BreakBite người bán (…)" rồi bấm F5. Hai cờ này chỉ có tác dụng với service giả và bị gỡ cùng `lib/dev/` trước khi nộp (T83).
+
 ## 4. Firebase
 
 ```powershell

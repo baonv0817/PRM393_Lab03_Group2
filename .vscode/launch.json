@@ -2,7 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "BreakBite (dev services, dữ liệu giả)",
+      "name": "BreakBite khách (dữ liệu giả, đã đăng nhập)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=USE_DEV_SERVICES=true", "--dart-define=DEV_SIGNED_IN=true"]
+    },
+    {
+      "name": "BreakBite người bán (dữ liệu giả, đã đăng nhập)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=USE_DEV_SERVICES=true", "--dart-define=DEV_SIGNED_IN=true", "--dart-define=DEV_ROLE=staff"]
+    },
+    {
+      "name": "BreakBite (dữ liệu giả, từ màn đăng nhập)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",

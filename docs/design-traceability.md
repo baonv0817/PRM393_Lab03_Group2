@@ -11,9 +11,9 @@ Quy ước: trạng thái (loading, empty, error, biến thể chọn) không ph
 | Mã Figma | Màn hình | Route | Widget (màn) | ViewModel | Nguồn dữ liệu | Phụ trách | Trạng thái |
 |---|---|---|---|---|---|---|---|
 | S01 | Onboarding | /onboarding | OnboardingScreen | OnboardingViewModel | Remote Config | P1 | Chưa làm |
-| S02 | Trang chủ | /home | HomeScreen | HomeViewModel | Firestore menu_items, kiosks | P1 | Chưa làm |
-| S02-LOADING | Đang tải Trang chủ | (state của /home) | LoadingView | HomeViewModel | — | P1 | Chưa làm |
-| S02-ADDED | Trang chủ, đã thêm vào giỏ | (state của /home) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Chưa làm |
+| S02 | Trang chủ | /home | HomeScreen | HomeViewModel | Firestore menu_items, kiosks | P1 | Xong |
+| S02-LOADING | Đang tải Trang chủ | (state của /home) | LoadingView | HomeViewModel | — | P1 | Xong |
+| S02-ADDED | Trang chủ, đã thêm vào giỏ | (state của /home) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Xong |
 | S03 | Thực đơn | /menu | MenuScreen | MenuViewModel | Firestore menu_items | P1 | Chưa làm |
 | S03-ADDED | Thực đơn, đã thêm vào giỏ | (state của /menu) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Chưa làm |
 | S04 | Chi tiết món | /menu/:id | ItemDetailScreen | ItemDetailViewModel | Firestore menu_items/{id} | P1 | Chưa làm |
