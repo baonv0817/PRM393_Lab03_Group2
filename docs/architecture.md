@@ -15,7 +15,9 @@ MVVM với Provider hoặc Riverpod (chốt khi dựng khung: `[Provider hoặc 
 | `lib/screens/` | Màn hình, chỉ hiển thị trạng thái của ViewModel |
 | `lib/widgets/` | Component Lab 2 dùng lại, đọc màu và kích thước từ theme |
 | `lib/theme/` | Token Lab 2 thành `ColorScheme`, `TextTheme`, hằng số khoảng cách, bo góc, đổ bóng |
-| `lib/utils/` | Tiện ích thuần |
+| `lib/utils/` | Tiện ích thuần (định dạng tiền, trạng thái đơn) |
+| `lib/router/` | `app_router.dart` (định tuyến theo đăng nhập và vai trò) và `routes_p1..p4.dart`, mỗi người sửa file của mình |
+| `lib/dev/` | Service giả để dev và test; **xoá trước khi nộp** |
 | `firebase/` | `storage.rules`, `firestore.rules`, `remote-config-defaults.json` |
 | `e2e_test/` | Bộ test ARTEMIS (Python, pytest) |
 

@@ -31,3 +31,9 @@ __pycache__/
 # Hệ điều hành
 .DS_Store
 Thumbs.db
+
+# Node (firebase/tests)
+node_modules/
+
+# Log của Firebase Emulator
+*-debug.log

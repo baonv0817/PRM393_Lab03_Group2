@@ -115,6 +115,8 @@ Mọi chỗ khác Figma ghi ở đây kèm lý do và **cập nhật lại Figma
 |---|---|---|---|---|
 | D01 | S26 đăng nhập email trường + OTP (S26-OTP) | Google Sign-In, bỏ màn OTP | Handout Lab 3 yêu cầu Google Sign-In | Chưa |
 | D02 | S06-GATEWAY là màn mô phỏng cổng bên thứ ba | Giữ màn mô phỏng, không gọi cổng thật | Không có tài khoản cổng thanh toán; ghi rõ là mô phỏng | Không cần |
+| D03 | Đăng nhập không bắt buộc (S01 mở thẳng Trang chủ) | Chưa đăng nhập thì chỉ thấy màn đăng nhập (S26); sau đăng nhập vào Trang chủ | Handout Lab 3: người chưa đăng nhập không được vào màn của app | Chưa |
+| D04 | App khách và app người bán là hai khu riêng, Figma không nêu cách chọn | Tài khoản có vai trò staff hoặc admin vào app người bán; khách không mở được `/seller/*` | Handout Lab 3 mục kiến trúc và rules theo vai trò | Chưa |
 | | | | | |
 
 Thêm dòng khi gặp sai lệch mới.
