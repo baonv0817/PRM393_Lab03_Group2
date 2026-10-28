@@ -22,13 +22,55 @@ HomeViewModel make({MenuService? menu, DevRemoteConfigService? rc, DevCartServic
     );
 
 void main() {
-  test('bắt đầu ở loading rồi có dữ liệu; loại món hết hàng và món làm lâu', () async {
+  test('bắt đầu ở loading rồi có dữ liệu; loại món hết hàng, giữ món tối đa 5 phút', () async {
     final vm = make();
     expect(vm.state, isA<ViewLoading<List<MenuItem>>>());
     await Future<void>.delayed(Duration.zero);
     final items = vm.state.dataOrNull!;
-    expect(items.every((e) => !e.soldOut && e.prepMinutes < 5), isTrue);
-    expect(items.map((e) => e.id), isNot(contains('m4')));
+    expect(items.every((e) => !e.soldOut && e.prepMinutes <= 5), isTrue);
+    expect(items.map((e) => e.id), ['m1', 'm2', 'm3']); // khớp 3 món trên Figma S02
+    vm.dispose();
+  });
+
+  test('chip loại món: lấy từ thực đơn và lọc danh sách món nhanh', () async {
+    final vm = make();
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.categories, ['Tacos', 'Mì trộn', 'Đồ uống']);
+    expect(vm.selectedCategory, isNull);
+
+    vm.selectCategory('Đồ uống');
+    expect(vm.state.dataOrNull!.map((e) => e.id), ['m3']);
+    vm.selectCategory(null);
+    expect(vm.state.dataOrNull, hasLength(3));
+    vm.dispose();
+  });
+
+  test('chọn loại mà không có món nhanh thì ra trạng thái rỗng kèm lời nhắn theo mục', () async {
+    final vm = make();
+    await Future<void>.delayed(Duration.zero);
+    vm.selectCategory('Món không tồn tại');
+    expect(vm.state, isA<ViewEmpty<List<MenuItem>>>());
+    expect((vm.state as ViewEmpty<List<MenuItem>>).message, 'Chưa có món nhanh trong mục này');
+    vm.dispose();
+  });
+
+  test('header: lấy kiosk đang mở đầu tiên và dòng trạng thái chờ', () async {
+    final vm = make();
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.kiosk!.id, 'q9-t2');
+    expect(vm.kioskStatus, 'Sẵn sàng · chờ 5–7 phút');
+    vm.dispose();
+  });
+
+  test('số món trong giỏ cộng theo số lượng và cập nhật khi thêm', () async {
+    final cart = DevCartService();
+    final vm = make(cart: cart);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.cartCount, 0);
+    await vm.addToCart(vm.state.dataOrNull!.first);
+    await vm.addToCart(vm.state.dataOrNull!.first);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.cartCount, 2);
     vm.dispose();
   });
 

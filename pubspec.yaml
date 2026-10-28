@@ -32,3 +32,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Nunito (SIL OFL, xem assets/fonts/OFL.txt): font biến thiên, một file cho mọi độ đậm.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf

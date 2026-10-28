@@ -10,17 +10,17 @@ import 'routes_p3.dart';
 import 'routes_p4.dart';
 
 const _customerTabs = [
-  AppNavTab(label: 'Trang chủ', icon: Icons.home_outlined),
-  AppNavTab(label: 'Thực đơn', icon: Icons.restaurant_menu),
-  AppNavTab(label: 'Đơn hàng', icon: Icons.receipt_long_outlined),
-  AppNavTab(label: 'Cá nhân', icon: Icons.person_outline),
+  AppNavTab(label: 'Trang chủ', icon: Icons.home),
+  AppNavTab(label: 'Thực đơn', icon: Icons.restaurant),
+  AppNavTab(label: 'Đơn hàng', icon: Icons.receipt),
+  AppNavTab(label: 'Cá nhân', icon: Icons.person),
 ];
 
 const _sellerTabs = [
-  AppNavTab(label: 'Đơn', icon: Icons.receipt_long_outlined),
+  AppNavTab(label: 'Đơn', icon: Icons.receipt),
   AppNavTab(label: 'Quét mã', icon: Icons.qr_code_scanner),
-  AppNavTab(label: 'Món', icon: Icons.restaurant_menu),
-  AppNavTab(label: 'Quán', icon: Icons.storefront_outlined),
+  AppNavTab(label: 'Món', icon: Icons.restaurant),
+  AppNavTab(label: 'Quán', icon: Icons.storefront),
 ];
 
 const _publicPaths = {'/sign-in', '/seller/sign-in'};

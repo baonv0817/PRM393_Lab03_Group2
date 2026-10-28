@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 
 /// Chip lọc của Lab 2: mặc định, đang chọn.
@@ -13,6 +14,8 @@ class AppChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
       selected: selected,
@@ -20,14 +23,55 @@ class AppChip extends StatelessWidget {
       excludeSemantics: true,
       child: ChoiceChip(
         label: Text(label),
+        labelStyle: text.labelLarge?.copyWith(color: selected ? colors.primaryText : scheme.onSurface),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
         selected: selected,
         onSelected: onSelected,
         showCheckmark: false,
         materialTapTargetSize: MaterialTapTargetSize.padded,
         selectedColor: scheme.primaryContainer,
         backgroundColor: scheme.surface,
-        side: BorderSide(color: selected ? scheme.primary : scheme.outlineVariant, width: selected ? 2 : 1),
+        side: BorderSide(color: selected ? scheme.primary : scheme.outlineVariant, width: selected ? 1.5 : 1),
         shape: const StadiumBorder(),
+      ),
+    );
+  }
+}
+
+/// Ô tìm kiếm ở Trang chủ (S02): chạm để sang màn Tìm kiếm (S28), không nhập tại chỗ.
+class AppSearchField extends StatelessWidget {
+  const AppSearchField({super.key, required this.hint, required this.onTap});
+
+  final String hint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: 'Tìm kiếm. $hint',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.input),
+            border: Border.all(color: colors.borderInput, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted), maxLines: 1, overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+        ),
       ),
     );
   }

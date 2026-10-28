@@ -61,7 +61,8 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppPalette.surface,
-        elevation: AppElevation.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.flat,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -91,9 +92,22 @@ abstract final class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppPalette.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.flat,
         indicatorColor: AppPalette.selected,
-        height: 64,
-        labelTextStyle: WidgetStatePropertyAll(text.labelLarge?.copyWith(fontSize: 12)),
+        indicatorShape: const StadiumBorder(),
+        height: 68,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? AppPalette.primaryText : AppPalette.muted),
+        ),
+        // 12 sp chỉ dành cho nhãn tab, luôn đi kèm icon (quyết định D36 của Lab 2).
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (s) => text.labelLarge?.copyWith(
+            fontSize: 12,
+            fontWeight: s.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w600,
+            color: s.contains(WidgetState.selected) ? AppPalette.primaryText : AppPalette.muted,
+          ),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppPalette.onPrimary,

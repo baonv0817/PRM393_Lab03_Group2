@@ -45,21 +45,55 @@ void main() {
     expect(find.text('Đang tải…'), findsNothing);
     expect(find.text('Món nhanh dưới 5 phút'), findsOneWidget);
     expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
+    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 phút vẫn nằm trong mục nhanh (Figma)
     expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
     expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing); // hết hàng
-    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsNothing); // 5 phút, không "dưới 5"
+  });
+
+  testWidgets('header hiện kiosk, trạng thái chờ, thông báo và giỏ hàng', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('Kiosk Q9 · Tầng 2'), findsOneWidget);
+    expect(find.text('Sẵn sàng · chờ 5–7 phút'), findsOneWidget);
+    expect(find.byTooltip('Thông báo'), findsOneWidget);
+    expect(find.byTooltip('Giỏ hàng, trống'), findsOneWidget);
+  });
+
+  testWidgets('có ô tìm kiếm, chip loại món và nút Đặt lại', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('Tìm Tacos, Mì trộn, Đồ uống...'), findsOneWidget);
+    for (final label in ['Tất cả', 'Tacos', 'Mì trộn', 'Đồ uống']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    // Nút Đặt lại nằm cuối danh sách: cuộn tới mới thấy.
+    await tester.scrollUntilVisible(find.text('Đặt lại đơn gần đây'), 200, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Đặt lại đơn gần đây'), findsOneWidget);
+  });
+
+  testWidgets('chạm chip Đồ uống thì chỉ còn món đồ uống', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đồ uống'));
+    await tester.pumpAndSettle();
+    expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
+    expect(find.text('Combo Tacos Bò Phô Mai'), findsNothing);
+    await tester.tap(find.text('Tất cả'));
+    await tester.pumpAndSettle();
+    expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
   });
 
   testWidgets('banner Combo Giờ Vàng theo Remote Config', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
-    expect(find.text('Combo Giờ Vàng'), findsOneWidget);
+    expect(find.text('Combo Giờ Vàng –15%'), findsOneWidget);
+    expect(find.text('Đặt ngay'), findsOneWidget);
   });
 
   testWidgets('tắt banner trong Remote Config thì banner biến mất', (tester) async {
     await pumpHome(tester, rc: DevRemoteConfigService()..values['promo_banner_enabled'] = false);
     await tester.pumpAndSettle();
-    expect(find.text('Combo Giờ Vàng'), findsNothing);
+    expect(find.text('Combo Giờ Vàng –15%'), findsNothing);
   });
 
   testWidgets('giới hạn 0 thì hiện trạng thái rỗng', (tester) async {
@@ -83,6 +117,7 @@ void main() {
 
     expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
     expect(find.text('Xem giỏ'), findsOneWidget);
+    expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget); // huy hiệu giỏ cập nhật
     final items = await h.cart.watchCart('u1').first;
     expect(items.single.itemId, 'm1');
     expect(h.analytics.events.single.name, 'add_to_cart');

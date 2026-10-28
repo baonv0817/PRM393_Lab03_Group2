@@ -111,6 +111,34 @@ class AppIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (filled) {
+      // Hình tròn cam 40 dp trong vùng chạm 48 dp (Figma: nút + trên thẻ món).
+      final enabled = onPressed != null;
+      return Tooltip(
+        message: semanticLabel,
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          label: semanticLabel,
+          excludeSemantics: true,
+          child: SizedBox.square(
+            dimension: AppA11y.minTouchTarget,
+            child: InkResponse(
+              onTap: onPressed,
+              radius: AppA11y.minTouchTarget / 2,
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(color: enabled ? scheme.primary : context.appColors.border, shape: BoxShape.circle),
+                  child: Icon(icon, color: scheme.onPrimary),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return IconButton(
       onPressed: onPressed,
       tooltip: semanticLabel,
@@ -119,9 +147,64 @@ class AppIconButton extends StatelessWidget {
         width: AppA11y.minTouchTarget,
         height: AppA11y.minTouchTarget,
       ),
-      style: filled
-          ? IconButton.styleFrom(backgroundColor: scheme.primary, foregroundColor: scheme.onPrimary)
-          : IconButton.styleFrom(foregroundColor: scheme.onSurface),
+      style: IconButton.styleFrom(foregroundColor: scheme.onSurface),
+    );
+  }
+}
+
+/// Nút icon kèm huy hiệu: số đếm cam (giỏ hàng) hoặc chấm đỏ (thông báo chưa đọc).
+/// `semanticLabel` nên đã chứa số đếm, ví dụ "Giỏ hàng, 2 món".
+class AppBadgeIconButton extends StatelessWidget {
+  const AppBadgeIconButton({
+    super.key,
+    required this.icon,
+    required this.semanticLabel,
+    required this.onPressed,
+    this.count = 0,
+    this.showDot = false,
+  });
+
+  final IconData icon;
+  final String semanticLabel;
+  final VoidCallback? onPressed;
+  final int count;
+  final bool showDot;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        AppIconButton(icon: icon, semanticLabel: semanticLabel, onPressed: onPressed),
+        if (count > 0)
+          Positioned(
+            right: 2,
+            top: 2,
+            child: ExcludeSemantics(
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                child: Text('$count', style: text.labelLarge?.copyWith(fontSize: 12, color: scheme.onPrimary, height: 1.2)),
+              ),
+            ),
+          )
+        else if (showDot)
+          Positioned(
+            right: 10,
+            top: 10,
+            child: ExcludeSemantics(
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: scheme.error, shape: BoxShape.circle),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

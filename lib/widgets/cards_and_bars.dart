@@ -6,6 +6,9 @@ import '../theme/app_dimens.dart';
 import '../utils/format.dart';
 import 'buttons.dart';
 
+/// Icon đại diện cho loại món khi chưa có ảnh (Figma: đồ uống dùng cốc, còn lại dùng dao nĩa).
+IconData menuCategoryIcon(String category) => category == 'Đồ uống' ? Icons.local_cafe : Icons.restaurant;
+
 /// Card/Food của Lab 2: món, đồ uống, hết hàng.
 class FoodCard extends StatelessWidget {
   const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd});
@@ -20,6 +23,8 @@ class FoodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final dim = item.soldOut ? colors.muted : null;
     return Semantics(
       label: '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}',
       child: Card(
@@ -37,23 +42,33 @@ class FoodCard extends StatelessWidget {
                     color: colors.surfaceVariant,
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
-                  child: Icon(Icons.restaurant, color: colors.muted),
+                  child: Icon(menuCategoryIcon(item.category), size: 32, color: colors.muted),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: text.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text(item.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: dim), maxLines: 2, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: AppSpacing.xs),
-                      Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, size: 16, color: colors.muted),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                        ],
+                      ),
                       const SizedBox(height: AppSpacing.xs),
-                      Text(formatVnd(item.priceVnd), style: text.labelLarge),
+                      Text(formatVnd(item.priceVnd), style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim)),
                     ],
                   ),
                 ),
                 if (item.soldOut)
-                  Text('Tạm hết', style: text.labelLarge?.copyWith(color: colors.muted))
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                    decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                    child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
+                  )
                 else
                   AppIconButton(icon: Icons.add, semanticLabel: 'Thêm ${item.name} vào giỏ', onPressed: onAdd, filled: true),
               ],
@@ -91,6 +106,8 @@ class AppNavTab {
   const AppNavTab({required this.label, required this.icon});
 
   final String label;
+
+  /// Icon đặc (Figma dùng icon đặc cho cả tab đang chọn lẫn chưa chọn).
   final IconData icon;
 }
 
@@ -104,12 +121,15 @@ class AppNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: selectedIndex,
-      onDestinationSelected: onSelected,
-      destinations: [
-        for (final t in tabs) NavigationDestination(icon: Icon(t.icon), label: t.label, tooltip: t.label),
-      ],
+    return DecoratedBox(
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.appColors.border))),
+      child: NavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: onSelected,
+        destinations: [
+          for (final t in tabs) NavigationDestination(icon: Icon(t.icon), label: t.label, tooltip: t.label),
+        ],
+      ),
     );
   }
 }

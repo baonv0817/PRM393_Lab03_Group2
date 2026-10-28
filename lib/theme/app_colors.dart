@@ -11,6 +11,7 @@ abstract final class AppPalette {
   static const surface = Color(0xFFFFFFFF);
   static const surfaceVariant = Color(0xFFF3F0EA);
   static const selected = Color(0xFFFFF1DE);
+  static const selectedBorder = Color(0xFFFFE8CC); // color-primary-container của Lab 2
   static const border = Color(0xFFE4DFD8);
   static const borderInput = Color(0xFF8A7A70);
   static const muted = Color(0xFF6B5F55);
@@ -24,6 +25,7 @@ class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.primaryText,
     required this.selected,
+    required this.selectedBorder,
     required this.border,
     required this.borderInput,
     required this.muted,
@@ -33,6 +35,7 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color primaryText;
   final Color selected;
+  final Color selectedBorder;
   final Color border;
   final Color borderInput;
   final Color muted;
@@ -42,6 +45,7 @@ class AppColors extends ThemeExtension<AppColors> {
   static const light = AppColors(
     primaryText: AppPalette.primaryText,
     selected: AppPalette.selected,
+    selectedBorder: AppPalette.selectedBorder,
     border: AppPalette.border,
     borderInput: AppPalette.borderInput,
     muted: AppPalette.muted,
@@ -53,6 +57,7 @@ class AppColors extends ThemeExtension<AppColors> {
   AppColors copyWith({
     Color? primaryText,
     Color? selected,
+    Color? selectedBorder,
     Color? border,
     Color? borderInput,
     Color? muted,
@@ -62,6 +67,7 @@ class AppColors extends ThemeExtension<AppColors> {
       AppColors(
         primaryText: primaryText ?? this.primaryText,
         selected: selected ?? this.selected,
+        selectedBorder: selectedBorder ?? this.selectedBorder,
         border: border ?? this.border,
         borderInput: borderInput ?? this.borderInput,
         muted: muted ?? this.muted,
@@ -75,6 +81,7 @@ class AppColors extends ThemeExtension<AppColors> {
     return AppColors(
       primaryText: Color.lerp(primaryText, other.primaryText, t)!,
       selected: Color.lerp(selected, other.selected, t)!,
+      selectedBorder: Color.lerp(selectedBorder, other.selectedBorder, t)!,
       border: Color.lerp(border, other.border, t)!,
       borderInput: Color.lerp(borderInput, other.borderInput, t)!,
       muted: Color.lerp(muted, other.muted, t)!,

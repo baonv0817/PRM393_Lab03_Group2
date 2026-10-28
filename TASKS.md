@@ -127,7 +127,7 @@ Phần nền để 4 người làm song song đã có trong repo. Cần review c
 |---|---|---|
 | T03 | Xong | Đã `flutter create`, ghim phiên bản và `flutterfire configure` (project `breakbite-1315b`) |
 | T20 | Xong khung | Khung MVVM, router, DI, `ViewState`; `docs/architecture.md` cần P1 cập nhật cho khớp code |
-| T21 | Xong khung | Theme từ token Lab 2 và widget chung; **chưa có font Nunito** (thêm vào `assets/fonts/`) |
+| T21 | Xong khung | Theme từ token Lab 2 và widget chung; font Nunito đã có trong `assets/fonts/`; S02 là màn mẫu đã làm theo Figma v2 |
 | T22 | Một phần | Đã có interface và model; **P3 cần viết bản cài đặt Firebase** trong `lib/firebase/` |
 | T31 | Một phần | Mô hình dữ liệu đã chốt khung (`docs/data-model.md`), rules và chỉ mục đã đẩy lên, **82/82 test rules đạt**. Script nạp dữ liệu mẫu và gán vai trò đã viết và kiểm trên Emulator (`firebase/seed/`). Đã nạp vào Firestore thật ngày 29/10/2026 (3 kiosk, 25 món, 3 voucher, 40 slot). **Còn:** gán vai trò staff và admin cho thành viên bằng `set-role.mjs` sau khi họ đăng nhập app một lần |
 | T01 | Một phần | Project `breakbite-1315b` (Spark): app Android, SHA-1 máy P1, Auth Google, Firestore (`asia-southeast1`), rules và Remote Config đã đẩy lên. **Còn:** Storage (console đòi gói Blaze), Crashlytics, SHA-1 của 3 máy còn lại, mời 3 người vào project |
