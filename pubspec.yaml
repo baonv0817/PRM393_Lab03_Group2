@@ -38,6 +38,8 @@ flutter:
   assets:
     - assets/brand/breakbite_logo.svg
     - assets/brand/breakbite_logo_soft.svg
+    # Ảnh món minh hoạ (Unsplash, nguồn ở CREDITS.md); ảnh thật của seller sẽ đến từ Cloud Storage.
+    - assets/images/menu/
 
   # Nunito (SIL OFL, xem assets/fonts/OFL.txt): font biến thiên, một file cho mọi độ đậm.
   fonts:

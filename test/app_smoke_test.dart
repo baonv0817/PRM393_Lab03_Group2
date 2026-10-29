@@ -14,13 +14,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('S26'), findsOneWidget);
     expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsNothing);
-    expect(find.text('Món nhanh dưới 5 phút'), findsNothing);
+    expect(find.text('Món nhanh · tối đa 5 phút'), findsNothing);
   });
 
   testWidgets('đã đăng nhập: Trang chủ có thanh dưới 4 tab, chuyển tab được', (tester) async {
     await tester.pumpWidget(BreakBiteApp(services: createDevServices(signedIn: true)));
     await tester.pumpAndSettle();
-    expect(find.text('Món nhanh dưới 5 phút'), findsOneWidget); // S02 Trang chủ (màn thật)
+    expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget); // S02 Trang chủ (màn thật)
     expect(find.byType(NavigationDestination), findsNWidgets(4));
     await tester.tap(find.text('Thực đơn'));
     await tester.pumpAndSettle();

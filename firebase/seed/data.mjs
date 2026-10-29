@@ -1,7 +1,8 @@
 // Dữ liệu mẫu theo docs/data-model.md mục 8. Thuần dữ liệu, không gọi Firebase, nên dễ đọc và sửa.
 
-// Giờ ra chơi 15 phút giữa hai slot học, giờ Việt Nam (HH:mm). Chỉnh theo lịch học thật của nhóm.
-export const BREAK_STARTS = ['09:30', '11:15', '14:00', '15:45'];
+// Giờ ra chơi 15 phút giữa hai slot học, giờ Việt Nam (HH:mm). Khung 10:15 khớp banner Combo Giờ Vàng
+// ở Trang chủ; chỉnh các khung khác theo lịch học thật của nhóm.
+export const BREAK_STARTS = ['08:45', '10:15', '13:15', '14:45'];
 export const SLOT_MINUTES = 15;
 export const SLOT_CAPACITY = 15;
 export const SLOT_DAYS = 7; // số ngày tới có slot (bỏ thứ Bảy, Chủ nhật)
@@ -46,12 +47,14 @@ export function menuItemsFor(kiosk) {
     category: m.category,
     prepMinutes: m.prepMinutes,
     soldOut: Boolean(m.soldOutAt?.includes(kiosk.id)),
-    imageUrl: null,
+    // Ảnh minh hoạ đóng gói trong app (nguồn: assets/images/menu/CREDITS.md). Khi seller tải ảnh
+    // lên Cloud Storage thì thay bằng link https của ảnh đó.
+    imageUrl: `assets/images/menu/${m.slug}.jpg`,
   }));
 }
 
 export const VOUCHERS = [
   { code: 'BBSTUDENT', title: 'Giảm 10K cho sinh viên', discountVnd: 10000, minOrderVnd: 40000, expiresAt: '2100-01-01', active: true },
-  { code: 'GIOVANG', title: 'Giờ Vàng giảm 20%, tối đa 15K', discountVnd: 0, percent: 20, maxDiscountVnd: 15000, minOrderVnd: 30000, expiresAt: '2100-01-01', active: true },
+  { code: 'GIOVANG', title: 'Combo Giờ Vàng giảm 15%, tối đa 15K', discountVnd: 0, percent: 15, maxDiscountVnd: 15000, minOrderVnd: 30000, expiresAt: '2100-01-01', active: true },
   { code: 'BB20', title: 'Mã đã hết hạn (để thử báo lỗi)', discountVnd: 20000, minOrderVnd: 0, expiresAt: '2020-01-01', active: true },
 ];

@@ -118,6 +118,7 @@ Mọi chỗ khác Figma ghi ở đây kèm lý do và **cập nhật lại Figma
 | D03 | Đăng nhập không bắt buộc (S01 mở thẳng Trang chủ) | Chưa đăng nhập thì chỉ thấy màn đăng nhập (S26); sau đăng nhập vào Trang chủ | Handout Lab 3: người chưa đăng nhập không được vào màn của app | Chưa |
 | D04 | App khách và app người bán là hai khu riêng, Figma không nêu cách chọn | Tài khoản có vai trò staff hoặc admin vào app người bán; khách không mở được `/seller/*` | Handout Lab 3 mục kiến trúc và rules theo vai trò | Chưa |
 | D05 | S01 có liên kết "Đăng nhập bằng email @fpt.edu.vn"; "Bắt đầu đặt món" và "Bỏ qua" mở thẳng Trang chủ | Liên kết ghi "Đăng nhập bằng Google"; cả ba nút đều sang màn đăng nhập S26 (S01 chỉ hiện với người chưa đăng nhập, mỗi lần mở app) | Hệ quả của D01 và D03 | Chưa |
+| D06 | S02 có chip loại món (Tất cả, Tacos, Mì trộn…), banner có nút "Đặt ngay" và biểu tượng thẻ giá, hàng "Đặt lại đơn gần đây" luôn hiện | Bỏ chip (lọc món là việc của tab Thực đơn S03, chip trên Trang chủ chỉ lọc danh sách ngắn gây khó hiểu); banner gọn, cả khối bấm được; "Đặt lại" chỉ hiện khi đã có đơn và ghi rõ món, tổng tiền; thẻ món dùng ảnh thật thay icon; tiêu đề "Món nhanh · tối đa 5 phút" (món 5 phút vẫn là món nhanh) | Giảm rối mắt, bỏ phần thừa, mọi thứ trên màn đều có dữ liệu thật | Chưa |
 | | | | | |
 
 Thêm dòng khi gặp sai lệch mới.

@@ -55,8 +55,21 @@ class MenuItem {
   final String kioskId;
   final String description;
 
-  /// Ảnh trong Cloud Storage `menu/{kioskId}/…` hoặc ảnh đóng gói sẵn.
+  /// Ảnh món: đường dẫn ảnh đóng gói trong app (`assets/images/menu/…`) hoặc link `https://`
+  /// của ảnh trong Cloud Storage `menu/{kioskId}/…`.
   final String? imageUrl;
+
+  MenuItem copyWith({bool? soldOut}) => MenuItem(
+        id: id,
+        name: name,
+        priceVnd: priceVnd,
+        category: category,
+        prepMinutes: prepMinutes,
+        soldOut: soldOut ?? this.soldOut,
+        kioskId: kioskId,
+        description: description,
+        imageUrl: imageUrl,
+      );
 }
 
 class Kiosk {

@@ -5,12 +5,16 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
+import '../utils/format.dart';
 import '../viewmodels/home_view_model.dart';
 import '../viewmodels/view_state.dart';
 import '../widgets/widgets.dart';
 
-/// S02 Trang chủ theo Figma v2: header kiosk (trạng thái, thông báo, giỏ), ô tìm kiếm, banner
-/// Combo Giờ Vàng (Remote Config), chip loại món, danh sách món nhanh và nút "Đặt lại".
+/// S02 Trang chủ: đầu trang cho kiosk (trạng thái chờ, thông báo, giỏ hàng), ô tìm kiếm, một
+/// banner gọn (Remote Config), món nhanh có ảnh và nút "Đặt lại" khi đã có đơn.
+///
+/// So với Figma v2 đã bỏ chip loại món (lọc món là việc của tab Thực đơn, chip trên Trang chủ chỉ
+/// lọc danh sách ngắn gây khó hiểu) và nút "Đặt ngay" trong banner (cả banner đã bấm được).
 /// Màn chỉ vẽ theo `HomeViewModel`; logic lọc, giới hạn và ghi giỏ hàng nằm trong ViewModel.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,16 +35,16 @@ class HomeScreen extends StatelessWidget {
             AppSearchField(hint: 'Tìm Tacos, Mì trộn, Đồ uống...', onTap: () => context.push('/search')),
             if (vm.promoBannerEnabled) ...[
               const SizedBox(height: AppSpacing.lg),
-              _PromoBanner(onOrderNow: () => context.go('/menu')),
+              _PromoBanner(onTap: () => context.go('/menu')),
             ],
-            const SizedBox(height: AppSpacing.lg),
-            _CategoryChips(vm: vm),
-            const SizedBox(height: AppSpacing.lg),
-            Semantics(header: true, child: Text('Món nhanh dưới 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+            const SizedBox(height: AppSpacing.xl),
+            Semantics(header: true, child: Text('Món nhanh · tối đa 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
             const SizedBox(height: AppSpacing.md),
             _QuickSection(vm: vm, onAdd: (item) => _add(context, vm, item)),
-            const SizedBox(height: AppSpacing.xs),
-            _ReorderRow(onTap: () => context.go('/orders')),
+            if (vm.lastOrder case final order?) ...[
+              const SizedBox(height: AppSpacing.xs),
+              _ReorderCard(order: order, onTap: () => _reorder(context, vm)),
+            ],
           ],
         ),
       ),
@@ -53,6 +57,16 @@ class HomeScreen extends StatelessWidget {
     showAddedSnackbar(
       context,
       message: 'Đã thêm ${item.name} vào giỏ',
+      onViewCart: () => context.push('/cart'),
+    );
+  }
+
+  Future<void> _reorder(BuildContext context, HomeViewModel vm) async {
+    final count = await vm.reorderLast();
+    if (!context.mounted || count == 0) return;
+    showAddedSnackbar(
+      context,
+      message: 'Đã thêm $count món của đơn gần đây vào giỏ',
       onViewCart: () => context.push('/cart'),
     );
   }
@@ -135,67 +149,48 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// Banner ưu đãi: hai dòng, cả khối bấm được (không có nút phụ).
 class _PromoBanner extends StatelessWidget {
-  const _PromoBanner({required this.onOrderNow});
+  const _PromoBanner({required this.onTap});
 
-  final VoidCallback onOrderNow;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
-      decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      label: 'Combo Giờ Vàng, giảm 15 phần trăm. Giờ nghỉ giải lao 10 giờ 15 đến 10 giờ 30. Chạm để xem thực đơn',
+      excludeSemantics: true,
+      child: Material(
         color: colors.selected,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: colors.selectedBorder),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: BorderSide(color: colors.selectedBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            child: Row(
               children: [
-                Text('Combo Giờ Vàng –15%', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: AppSpacing.xs),
-                Text('Giờ nghỉ giải lao 10:15–10:30', style: text.bodyMedium?.copyWith(color: colors.muted)),
-                AppButton(label: 'Đặt ngay', variant: AppButtonVariant.text, onPressed: onOrderNow),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Combo Giờ Vàng –15%', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text('Giờ nghỉ giải lao 10:15–10:30', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: colors.primaryText),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Icon(Icons.sell, color: colors.primaryText, size: 32),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({required this.vm});
-
-  final HomeViewModel vm;
-
-  @override
-  Widget build(BuildContext context) {
-    final categories = vm.categories;
-    return SizedBox(
-      height: 52,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length + 1,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (context, i) {
-          final label = i == 0 ? 'Tất cả' : categories[i - 1];
-          final value = i == 0 ? null : categories[i - 1];
-          return Center(
-            child: AppChip(label: label, selected: vm.selectedCategory == value, onSelected: (_) => vm.selectCategory(value)),
-          );
-        },
+        ),
       ),
     );
   }
@@ -233,10 +228,18 @@ class _QuickSection extends StatelessWidget {
   }
 }
 
-class _ReorderRow extends StatelessWidget {
-  const _ReorderRow({required this.onTap});
+/// Đặt lại đơn gần nhất: chỉ hiện khi đã có đơn, kèm tóm tắt món và tổng tiền.
+class _ReorderCard extends StatelessWidget {
+  const _ReorderCard({required this.order, required this.onTap});
 
+  final Order order;
   final VoidCallback onTap;
+
+  String get _summary {
+    final first = order.items.isEmpty ? '' : order.items.first.name;
+    final more = order.items.length > 1 ? ' + ${order.items.length - 1} món' : '';
+    return '$first$more · ${formatVnd(order.totalVnd)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -244,21 +247,29 @@ class _ReorderRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: 'Đặt lại đơn gần đây',
+      label: 'Đặt lại đơn gần đây: $_summary',
       excludeSemantics: true,
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 56),
+            constraints: const BoxConstraints(minHeight: 64),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
               child: Row(
                 children: [
                   Icon(Icons.refresh, color: colors.primaryText),
                   const SizedBox(width: AppSpacing.md),
-                  Text('Đặt lại đơn gần đây', style: text.labelLarge),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Đặt lại đơn gần đây', style: text.labelLarge),
+                        Text(_summary, style: text.bodyMedium?.copyWith(color: colors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

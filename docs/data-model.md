@@ -100,7 +100,7 @@ Slot do staff hoặc script nạp tạo cho từng ngày. Không có slot thì �
 | `category` | string | staff | "Tacos", "Mì trộn", "Đồ uống" |
 | `prepMinutes` | int | staff | ≥ 0; mục "nhanh dưới 5 phút" lọc `prepMinutes <= 5` |
 | `soldOut` | bool | staff | Món hết (K09); thay cho xoá |
-| `imageUrl` | string? | staff | Ảnh trong Storage `menu/{kioskId}/…` hoặc ảnh có sẵn trong app |
+| `imageUrl` | string? | staff | Đường dẫn ảnh đóng gói trong app (`assets/images/menu/…`, đang dùng cho dữ liệu mẫu) hoặc link `https://` của ảnh trong Storage `menu/{kioskId}/…`. Widget `MenuItemImage` xử lý cả hai; thiếu hoặc lỗi thì hiện logo |
 | `createdAt`, `updatedAt` | ts | staff | |
 
 Điểm sao trung bình tính ở máy khách từ `reviews` (không lưu tổng hợp vì khách không được sửa món).
@@ -242,9 +242,9 @@ Hạn chế vì **không có máy chủ riêng** (Spark, không dùng Cloud Func
 ## 8. Dữ liệu mẫu (T31)
 
 Script ở `firebase/seed/` (hướng dẫn chạy: `firebase/README.md`) nạp:
-- 3 kiosk (`q9-t2`, `q9-t4` mở; `nvh-t1` đóng để thử S21) và slot nhận món 4 khung giờ mỗi ngày làm việc trong 7 ngày tới cho kiosk đang mở (giờ ra chơi chỉnh trong `data.mjs`).
-- 25 món: 10 món mỗi kiosk mở (có món `soldOut: true` để thử S22 và món `prepMinutes <= 5` cho mục "nhanh") và 5 món cho kiosk đóng cửa.
-- 3 voucher: `BBSTUDENT` (còn hạn), `GIOVANG` (giảm theo %), `BB20` (hết hạn, thử S05-VOUCHER-ERR).
+- 3 kiosk (`q9-t2`, `q9-t4` mở; `nvh-t1` đóng để thử S21) và slot nhận món 4 khung giờ mỗi ngày làm việc trong 7 ngày tới cho kiosk đang mở (các khung 08:45, 10:15, 13:15, 14:45; chỉnh trong `data.mjs`).
+- 25 món: 10 món mỗi kiosk mở (có món `soldOut: true` để thử S22 và món `prepMinutes <= 5` cho mục "nhanh") và 5 món cho kiosk đóng cửa. Mỗi món có ảnh minh hoạ trong `assets/images/menu/` (nguồn Unsplash, tác giả ở `CREDITS.md`).
+- 3 voucher: `BBSTUDENT` (còn hạn), `GIOVANG` (Combo Giờ Vàng, giảm 15% tối đa 15K, khớp banner Trang chủ), `BB20` (hết hạn, thử S05-VOUCHER-ERR).
 - Tài khoản staff và admin **không nạp được bằng script dữ liệu** vì cần uid của Firebase Auth: người đó đăng nhập Google một lần, rồi chạy `set-role.mjs` để gán vai trò (staff gán thêm `kioskId`).
 
 Mặc định script không ghi đè tài liệu đã có, nên chạy lại không làm mất `soldOut` hay `booked` mà nhân viên và khách đã đổi.

@@ -49,6 +49,7 @@ Cài một lần: `cd firebase/seed && npm install`.
 |---|---|
 | Thử trên Emulator (tự dựng, nạp, kiểm tra, tắt) | `npm run seed:emulator` |
 | Nạp vào project thật | `node seed.mjs --project=breakbite-1315b --yes` |
+| Nạp lại sạch (xoá kiosks và slots, menu_items, vouchers rồi nạp lại; không đụng users, orders) | `node seed.mjs --project=breakbite-1315b --yes --reset` |
 | Gán vai trò | `node set-role.mjs <email> <user\|staff\|admin> [kioskId] --project=breakbite-1315b --yes` |
 
 Script dùng Admin SDK (bỏ qua Security Rules) nên project thật cần **khoá service account**: console, Project settings, Service accounts, Generate new private key. Lưu file **ngoài repo** (ví dụ `D:\secretsreakbite-admin.json`; `.gitignore` đã chặn `*firebase-adminsdk*.json`), rồi trong PowerShell:

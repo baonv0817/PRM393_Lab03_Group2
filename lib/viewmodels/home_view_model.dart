@@ -7,12 +7,13 @@ import '../services/services.dart';
 import 'view_state.dart';
 
 /// Mẫu ViewModel cho màn tải dữ liệu (S02 Trang chủ): có đủ loading, empty, error, data.
-/// Logic lọc "món nhanh", chip loại món, giới hạn từ Remote Config, trạng thái kiosk và số món
-/// trong giỏ nằm ở đây, không nằm trong `build()`.
+/// Logic lọc "món nhanh", giới hạn từ Remote Config, trạng thái kiosk, số món trong giỏ và đơn
+/// gần đây (để đặt lại) nằm ở đây, không nằm trong `build()`.
 class HomeViewModel extends ChangeNotifier {
   HomeViewModel({
     required this.menu,
     required this.cart,
+    required this.orders,
     required this.remoteConfig,
     required this.analytics,
     required this.uid,
@@ -22,24 +23,25 @@ class HomeViewModel extends ChangeNotifier {
 
   final MenuService menu;
   final CartService cart;
+  final OrderService orders;
   final RemoteConfigService remoteConfig;
   final AnalyticsService analytics;
   final String uid;
 
-  /// Món có thời gian làm tối đa ngưỡng này được coi là "nhanh" (Figma S02 hiện cả món 5 phút).
+  /// Món có thời gian làm tối đa ngưỡng này được coi là "nhanh" (Lab 2: bữa nghỉ 15 phút).
   static const quickMaxMinutes = 5;
 
   StreamSubscription<List<MenuItem>>? _menuSub;
   StreamSubscription<List<Kiosk>>? _kioskSub;
   StreamSubscription<List<CartItem>>? _cartSub;
+  StreamSubscription<List<Order>>? _ordersSub;
 
-  List<MenuItem> _items = const [];
   ViewState<List<MenuItem>> _state = const ViewLoading();
   Kiosk? _kiosk;
   int _cartCount = 0;
-  String? _category;
+  Order? _lastOrder;
 
-  /// Danh sách món nhanh đã lọc theo chip đang chọn.
+  /// Danh sách món nhanh.
   ViewState<List<MenuItem>> get state => _state;
 
   bool get promoBannerEnabled => remoteConfig.getBool(RemoteKeys.promoBannerEnabled);
@@ -62,17 +64,8 @@ class HomeViewModel extends ChangeNotifier {
   /// Số thông báo chưa đọc. Chưa có service thông báo (P2, màn S19) nên luôn là 0.
   int get unreadNotifications => 0;
 
-  /// Loại món để làm chip, theo thứ tự xuất hiện trong thực đơn.
-  List<String> get categories => {for (final i in _items) i.category}.toList();
-
-  /// Chip đang chọn; `null` là "Tất cả".
-  String? get selectedCategory => _category;
-
-  void selectCategory(String? category) {
-    if (_category == category) return;
-    _category = category;
-    _recompute();
-  }
+  /// Đơn gần nhất chưa bị huỷ; `null` khi người dùng chưa đặt đơn nào (khi đó không hiện nút Đặt lại).
+  Order? get lastOrder => _lastOrder;
 
   void load() {
     _state = const ViewLoading();
@@ -80,17 +73,20 @@ class HomeViewModel extends ChangeNotifier {
     unawaited(_menuSub?.cancel());
     unawaited(_kioskSub?.cancel());
     unawaited(_cartSub?.cancel());
+    unawaited(_ordersSub?.cancel());
     _menuSub = menu.watchMenu().listen(
       (items) {
-        _items = items;
-        _recompute();
+        final limit = remoteConfig.getInt(RemoteKeys.quickItemsLimit);
+        final quick = items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList();
+        _state = ViewStateX.fromList(quick, emptyMessage: 'Chưa có món nhanh lúc này');
+        notifyListeners();
       },
       onError: (Object e) {
         _state = const ViewError('Không tải được thực đơn. Kiểm tra mạng rồi thử lại.');
         notifyListeners();
       },
     );
-    // Kiosk và giỏ chỉ làm đẹp phần đầu trang: lỗi thì bỏ qua, không chặn danh sách món.
+    // Kiosk, giỏ và đơn gần đây chỉ bổ sung cho trang: lỗi thì bỏ qua, không chặn danh sách món.
     _kioskSub = menu.watchKiosks().listen(
       (kiosks) {
         _kiosk = kiosks.where((k) => k.open).firstOrNull ?? kiosks.firstOrNull;
@@ -105,19 +101,15 @@ class HomeViewModel extends ChangeNotifier {
       },
       onError: (Object e) {},
     );
-  }
-
-  void _recompute() {
-    final limit = remoteConfig.getInt(RemoteKeys.quickItemsLimit);
-    final quick = _items
-        .where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes && (_category == null || e.category == _category))
-        .take(limit)
-        .toList();
-    _state = ViewStateX.fromList(
-      quick,
-      emptyMessage: _category == null ? 'Chưa có món nhanh lúc này' : 'Chưa có món nhanh trong mục này',
+    _ordersSub = orders.watchMyOrders(uid).listen(
+      (list) {
+        final mine = list.where((o) => o.status != OrderStatus.cancelled).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        _lastOrder = mine.firstOrNull;
+        notifyListeners();
+      },
+      onError: (Object e) {},
     );
-    notifyListeners();
   }
 
   Future<void> addToCart(MenuItem item) async {
@@ -125,11 +117,23 @@ class HomeViewModel extends ChangeNotifier {
     await analytics.logEvent('add_to_cart', {'item_id': item.id, 'quantity': 1, 'source': 'home'});
   }
 
+  /// Đặt lại: thêm lại các món của đơn gần nhất vào giỏ. Trả về số dòng món đã thêm (0 nếu chưa có đơn).
+  Future<int> reorderLast() async {
+    final order = _lastOrder;
+    if (order == null) return 0;
+    for (final item in order.items) {
+      await cart.addItem(uid, item);
+    }
+    await analytics.logEvent('reorder', {'order_id': order.id, 'item_count': order.items.length});
+    return order.items.length;
+  }
+
   @override
   void dispose() {
     unawaited(_menuSub?.cancel());
     unawaited(_kioskSub?.cancel());
     unawaited(_cartSub?.cancel());
+    unawaited(_ordersSub?.cancel());
     super.dispose();
   }
 }

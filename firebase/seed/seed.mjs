@@ -4,12 +4,17 @@
 //   Thật:      GOOGLE_APPLICATION_CREDENTIALS=<khoá ngoài repo> node seed.mjs --project=<id> --yes
 //
 // Mặc định KHÔNG ghi đè tài liệu đã có (nên không làm mất việc staff đã sửa như soldOut, booked).
-// Thêm --overwrite để ghi đè. Tài khoản staff và admin gán bằng set-role.mjs.
+// Thêm --overwrite để ghi đè tài liệu cùng id, hoặc --reset để xoá sạch bốn collection mẫu (kiosks và
+// slots, menu_items, vouchers) rồi nạp lại. --reset không đụng users, orders, reviews, incidents.
+// Tài khoản staff và admin gán bằng set-role.mjs.
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { connect } from './admin.mjs';
 import { BREAK_STARTS, KIOSKS, SLOT_CAPACITY, SLOT_DAYS, SLOT_MINUTES, VOUCHERS, menuItemsFor } from './data.mjs';
 
 const argv = process.argv.slice(2);
-const overwrite = argv.includes('--overwrite');
+const reset = argv.includes('--reset');
+const overwrite = argv.includes('--overwrite') || reset;
 const verify = argv.includes('--verify');
 const { admin, db, projectId, emulator } = connect(argv);
 const { Timestamp, FieldValue } = admin.firestore;
@@ -69,6 +74,12 @@ const menuEntries = KIOSKS.flatMap((k) => menuItemsFor(k).map(({ id, ...m }) => 
 const voucherEntries = VOUCHERS.map(({ code, expiresAt, ...v }) => [db.doc(`vouchers/${code}`), { ...v, expiresAt: Timestamp.fromDate(new Date(expiresAt)) }]);
 const slotEntries = KIOSKS.filter((k) => k.open).flatMap((k) => slotsFor().map(({ id, ...s }) => [db.doc(`kiosks/${k.id}/slots/${id}`), s]));
 
+if (reset) {
+  // recursiveDelete xoá cả subcollection slots của kiosk.
+  for (const name of ['kiosks', 'menu_items', 'vouchers']) await db.recursiveDelete(db.collection(name));
+  console.log('Đã xoá kiosks (kèm slots), menu_items, vouchers để nạp lại.');
+}
+
 const written = {
   kiosks: await writeAll(kioskEntries),
   menu_items: await writeAll(menuEntries),
@@ -102,6 +113,9 @@ if (verify) {
     const m = doc.data();
     if (!m.name || !(m.priceVnd > 0) || !(m.prepMinutes >= 0) || typeof m.soldOut !== 'boolean') fail(`món ${doc.id} sai dạng`);
     if (!kioskIds.has(m.kioskId)) fail(`món ${doc.id} trỏ tới kiosk không tồn tại`);
+    // Mỗi món phải có ảnh đóng gói trong app và file ảnh phải tồn tại trong repo.
+    if (!m.imageUrl?.startsWith('assets/images/menu/')) fail(`món ${doc.id} thiếu imageUrl`);
+    if (!existsSync(fileURLToPath(new URL(`../../${m.imageUrl}`, import.meta.url)))) fail(`món ${doc.id}: không có file ${m.imageUrl}`);
     if (m.searchName !== m.searchName.toLowerCase() || /[̀-ͯ]/.test(m.searchName.normalize('NFD'))) fail(`món ${doc.id} searchName còn dấu`);
   }
   if ((await db.collection('menu_items').where('soldOut', '==', true).get()).empty) fail('không có món hết hàng để thử S22');

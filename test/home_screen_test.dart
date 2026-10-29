@@ -3,6 +3,7 @@ import 'package:breakbite/models/models.dart';
 import 'package:breakbite/screens/home_screen.dart';
 import 'package:breakbite/theme/app_theme.dart';
 import 'package:breakbite/viewmodels/home_view_model.dart';
+import 'package:breakbite/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -12,13 +13,17 @@ class _FailingMenu extends DevMenuService {
   Stream<List<MenuItem>> watchMenu() => Stream.error(Exception('offline'));
 }
 
-Future<({DevCartService cart, DevAnalyticsService analytics})> pumpHome(
+typedef Harness = ({DevCartService cart, DevAnalyticsService analytics, DevOrderService orders});
+
+Future<Harness> pumpHome(
   WidgetTester tester, {
   DevMenuService? menu,
   DevRemoteConfigService? rc,
+  DevOrderService? orders,
 }) async {
   final cart = DevCartService();
   final analytics = DevAnalyticsService();
+  final orderService = orders ?? DevOrderService();
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
@@ -26,6 +31,7 @@ Future<({DevCartService cart, DevAnalyticsService analytics})> pumpHome(
         create: (_) => HomeViewModel(
           menu: menu ?? DevMenuService(),
           cart: cart,
+          orders: orderService,
           remoteConfig: rc ?? DevRemoteConfigService(),
           analytics: analytics,
           uid: 'u1',
@@ -34,20 +40,28 @@ Future<({DevCartService cart, DevAnalyticsService analytics})> pumpHome(
       ),
     ),
   );
-  return (cart: cart, analytics: analytics);
+  return (cart: cart, analytics: analytics, orders: orderService);
 }
 
 void main() {
-  testWidgets('hiện loading rồi danh sách món nhanh, bỏ món hết hàng và món làm lâu', (tester) async {
+  testWidgets('hiện loading rồi danh sách món nhanh, bỏ món hết hàng', (tester) async {
     await pumpHome(tester);
     expect(find.text('Đang tải…'), findsOneWidget);
     await tester.pumpAndSettle();
     expect(find.text('Đang tải…'), findsNothing);
-    expect(find.text('Món nhanh dưới 5 phút'), findsOneWidget);
+    expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
     expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
-    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 phút vẫn nằm trong mục nhanh (Figma)
+    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 phút vẫn là món nhanh
     expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
     expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing); // hết hàng
+  });
+
+  testWidgets('mỗi món nhanh có ảnh món thật (không dùng logo giữ chỗ)', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+    expect(find.byType(MenuItemImage), findsNWidgets(3));
+    expect(find.byType(Image), findsNWidgets(3));
+    expect(find.byType(BreakBiteLogo), findsNothing);
   });
 
   testWidgets('header hiện kiosk, trạng thái chờ, thông báo và giỏ hàng', (tester) async {
@@ -59,35 +73,18 @@ void main() {
     expect(find.byTooltip('Giỏ hàng, trống'), findsOneWidget);
   });
 
-  testWidgets('có ô tìm kiếm, chip loại món và nút Đặt lại', (tester) async {
+  testWidgets('có ô tìm kiếm; đã bỏ chip loại món và nút phụ trong banner', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.text('Tìm Tacos, Mì trộn, Đồ uống...'), findsOneWidget);
-    for (final label in ['Tất cả', 'Tacos', 'Mì trộn', 'Đồ uống']) {
-      expect(find.text(label), findsOneWidget);
-    }
-    // Nút Đặt lại nằm cuối danh sách: cuộn tới mới thấy.
-    await tester.scrollUntilVisible(find.text('Đặt lại đơn gần đây'), 200, scrollable: find.byType(Scrollable).first);
-    expect(find.text('Đặt lại đơn gần đây'), findsOneWidget);
-  });
-
-  testWidgets('chạm chip Đồ uống thì chỉ còn món đồ uống', (tester) async {
-    await pumpHome(tester);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Đồ uống'));
-    await tester.pumpAndSettle();
-    expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
-    expect(find.text('Combo Tacos Bò Phô Mai'), findsNothing);
-    await tester.tap(find.text('Tất cả'));
-    await tester.pumpAndSettle();
-    expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
+    expect(find.byType(AppChip), findsNothing);
+    expect(find.text('Đặt ngay'), findsNothing);
   });
 
   testWidgets('banner Combo Giờ Vàng theo Remote Config', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.text('Combo Giờ Vàng –15%'), findsOneWidget);
-    expect(find.text('Đặt ngay'), findsOneWidget);
   });
 
   testWidgets('tắt banner trong Remote Config thì banner biến mất', (tester) async {
@@ -129,5 +126,38 @@ void main() {
     final size = tester.getSize(find.byTooltip('Thêm Combo Tacos Bò Phô Mai vào giỏ'));
     expect(size.width, greaterThanOrEqualTo(48));
     expect(size.height, greaterThanOrEqualTo(48));
+  });
+
+  group('Đặt lại đơn gần đây', () {
+    testWidgets('chưa có đơn thì không hiện nút Đặt lại', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('Đặt lại đơn gần đây'), findsNothing);
+    });
+
+    testWidgets('đã có đơn thì hiện tóm tắt; bấm thì thêm món vào giỏ', (tester) async {
+      final orders = DevOrderService();
+      await orders.createOrder(
+        uid: 'u1',
+        items: const [
+          CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000),
+          CartItem(itemId: 'm3', name: 'Trà Đào Chanh Sả', priceVnd: 20000),
+        ],
+        totalVnd: 59000,
+        method: PaymentMethod.momo,
+        kioskId: 'q9-t2',
+      );
+      final h = await pumpHome(tester, orders: orders);
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('Đặt lại đơn gần đây'), 200, scrollable: find.byType(Scrollable).first);
+      expect(find.text('Combo Tacos Bò Phô Mai + 1 món · 59.000đ'), findsOneWidget);
+
+      await tester.tap(find.text('Đặt lại đơn gần đây'));
+      await tester.pumpAndSettle();
+      expect(find.text('Đã thêm 2 món của đơn gần đây vào giỏ'), findsOneWidget);
+      expect((await h.cart.watchCart('u1').first).map((e) => e.itemId), ['m1', 'm3']);
+      expect(h.analytics.events.map((e) => e.name), contains('reorder'));
+    });
   });
 }

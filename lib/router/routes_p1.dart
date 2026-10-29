@@ -19,6 +19,7 @@ final GoRoute homeRoute = GoRoute(
       create: (_) => HomeViewModel(
         menu: services.menu,
         cart: services.cart,
+        orders: services.orders,
         remoteConfig: services.remoteConfig,
         analytics: services.analytics,
         uid: uid,

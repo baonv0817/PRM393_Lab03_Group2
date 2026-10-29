@@ -4,8 +4,8 @@ import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../utils/format.dart';
-import 'brand.dart';
 import 'buttons.dart';
+import 'menu_image.dart';
 
 /// Card/Food của Lab 2: món, đồ uống, hết hàng.
 class FoodCard extends StatelessWidget {
@@ -33,11 +33,8 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                // Chưa có ảnh món (Storage): dùng logo bản nhạt làm ảnh giữ chỗ.
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                  child: const BreakBiteLogo(size: 72, variant: LogoVariant.soft),
-                ),
+                // Ảnh món; thiếu ảnh thì MenuItemImage hiện logo bản nhạt.
+                MenuItemImage(imageUrl: item.imageUrl, size: 80),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
