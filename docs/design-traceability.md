@@ -49,14 +49,14 @@ Quy ước: trạng thái (loading, empty, error, biến thể chọn) không ph
 | S22 | Món hết, gợi ý thay thế | /menu/:id/alternatives | AlternativesScreen | AlternativesViewModel | Firestore menu_items | P2 | Chưa làm |
 | S23 | Đánh giá món | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews | P2 | Chưa làm |
 | S24 | Báo sự cố | /orders/:id/incident | IncidentScreen | IncidentViewModel | Firestore incidents | P2 | Chưa làm |
-| S25 | Hẹn giờ theo slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id} | P2 | Chưa làm |
+| S25 | Hẹn giờ theo slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id} | P1 | Chưa làm |
 | S26 | Đăng nhập (Google thay cho email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth | P3 | Chưa làm |
 | S26-OTP | Nhập mã xác nhận (bỏ, xem sai lệch D01) | — | — | — | — | P3 | Chưa làm |
-| S27 | Chọn kiosk (Q9 tầng 2, tầng 4, Nhà văn hóa SV) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks | P2 | Chưa làm |
-| S28 | Kết quả tìm kiếm | /search | SearchScreen | SearchViewModel | Firestore menu_items | P2 | Chưa làm |
-| S28-EMPTY | Không có kết quả | (state của /search) | EmptyView | SearchViewModel | — | P2 | Chưa làm |
-| S29 | Chọn mã giảm giá | /cart/vouchers | VoucherPickerScreen | VoucherViewModel | Firestore vouchers | P2 | Chưa làm |
-| S30 | Mất kết nối | (state toàn app) | OfflineView | ConnectivityViewModel | connectivity_plus | P2 | Chưa làm |
+| S27 | Chọn kiosk (Q9 tầng 2, tầng 4, Nhà văn hóa SV) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks | P3 | Chưa làm |
+| S28 | Kết quả tìm kiếm | /search | SearchScreen | SearchViewModel | Firestore menu_items | P3 | Chưa làm |
+| S28-EMPTY | Không có kết quả | (state của /search) | EmptyView | SearchViewModel | — | P3 | Chưa làm |
+| S29 | Chọn mã giảm giá | /cart/vouchers | VoucherPickerScreen | VoucherViewModel | Firestore vouchers | P1 | Chưa làm |
+| S30 | Mất kết nối | (state toàn app) | OfflineView | ConnectivityViewModel | connectivity_plus | P3 | Chưa làm |
 
 ## 2. App người bán (K01–K15)
 

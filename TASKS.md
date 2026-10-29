@@ -52,7 +52,7 @@ Cột "Phụ thuộc" cho biết task nào phải xong trước.
 |---|---|---|---|---|
 | T20 | P1 | `docs/architecture.md`: cấu trúc thư mục, sơ đồ tầng, sơ đồ tuần tự một flow đầy đủ, bảng ViewModel và service; dựng khung `lib/` (models, services, firebase, viewmodels, screens, widgets, utils), DI bằng Provider hoặc Riverpod, lớp trạng thái dùng chung (sealed class loading, empty, error, data), router | Khung chạy, `architecture.md` khớp code | T03, T10 |
 | T21 | P1 | `lib/theme/`: token thành `ColorScheme`, `TextTheme`, hằng số khoảng cách, bo góc; thư viện widget ở mục 4 của traceability; kiểm 360 dp và 412 dp, vùng bấm ≥ 48 dp, chữ ≥ 14 sp | Widget catalog hiển thị đủ biến thể, không tràn | T20 |
-| T22 | P3 | Dựng tầng service bọc SDK (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`) bằng interface, kèm bản giả để test ViewModel | Không widget nào gọi SDK trực tiếp | T20 |
+| T22 | P3 | Tầng service bọc SDK (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`): interface và bản giả đã có; **viết bản Firebase trong `lib/firebase/`** và `bootstrap.dart` | Không widget nào gọi SDK trực tiếp | T20 |
 
 ### Giai đoạn 3 · Integrate (Firebase và dữ liệu)
 
@@ -61,17 +61,19 @@ Cột "Phụ thuộc" cho biết task nào phải xong trước.
 | T30 | P3 | Google Sign-In, định tuyến theo trạng thái đăng nhập, đăng xuất xoá dữ liệu local, xử lý huỷ và mất mạng; lưu `users/{uid}` kèm `role` | Ảnh hai trạng thái, tab Users trong console | T22 |
 | T31 | P3 | Mô hình dữ liệu Firestore và `firebase/firestore.rules` mặc định từ chối, theo vai trò; script nạp dữ liệu mẫu thật vào Firestore (thực đơn, kiosk, voucher) | Rules đã kiểm trong Emulator; không dữ liệu cứng trong app | T30 |
 | T32 | P3 | `firebase/storage.rules` theo từng người dùng; `StorageService` tải lên có tiến trình, trả URL | Người khác không đọc được thư mục của mình | T30 |
+| T33 | P3 | Bản Firestore của `MenuService`, `CartService`, `OrderService` (kiosk, voucher, slot) trong `lib/firebase/`: truy vấn theo `docs/data-model.md` mục 5, đặt đơn bằng một batch (tạo đơn, xoá giỏ, tăng slot) | Đơn đặt ở app khách hiện ngay ở app người bán; không dữ liệu cứng trong app | T22, T31 |
+| T34 | Mỗi chủ màn | Dịch vụ theo tính năng, mỗi người làm của mình (interface ở `lib/services/<tên>_service.dart`, bản giả ở `lib/dev/dev_<tên>.dart`, bản Firestore ở `lib/firebase/`): P1 `SlotService`, `VoucherService`; P2 `ReviewService`, `FavoriteService`, `NotificationService`, `IncidentService` (tạo); P4 phần xử lý sự cố cho K13 | Màn của mình dùng dữ liệu thật; có test ViewModel với bản giả | T33 |
 
 ### Giai đoạn 4 · Features (song song sau T21 và T31)
 
 | ID | Người | Việc | Xong khi | Phụ thuộc |
 |---|---|---|---|---|
-| T40 | P1 | Luồng đặt món S01–S08 và biến thể: onboarding, trang chủ, thực đơn, chi tiết, giỏ, chọn phương thức, cổng mô phỏng, theo dõi đơn, lịch sử; thông báo thêm vào giỏ | Chạy trọn F1 và F3 trên thiết bị | T21, T31 |
+| T40 | P1 | Luồng đặt món: S01 và S02 đã xong (màn mẫu); còn S03 thực đơn, S04 chi tiết, S05 giỏ, S25 hẹn giờ, S29 chọn mã, S06 và biến thể thanh toán, S06-GATEWAY, S07 theo dõi đơn, S08 đơn hàng; thông báo thêm vào giỏ | Chạy trọn F1 và F3 trên thiết bị | T21, T33 |
 | T41 | P2 | S09–S14, S19–S25, S27–S30: sửa và huỷ đơn, lịch sử, yêu thích, đặt lại, thông báo, mã QR nhận món, đánh giá, báo sự cố, hẹn giờ, chọn kiosk, tìm kiếm, mã giảm giá, mất kết nối | F2 chạy trọn; mọi màn có loading, empty, error có thử lại | T21, T31 |
-| T42 | P3 | S15–S18, S26 và khu demo Firebase trong Profile (trung tâm thông báo, xuất file và tải lên, giá trị Remote Config, nút thử Crashlytics) | Khu demo thao tác được đủ các mục | T30 |
+| T42 | P3 | S15–S18, S26, S27 chọn kiosk, S28 tìm kiếm, S30 mất kết nối và khu demo Firebase trong Profile (trung tâm thông báo, xuất file và tải lên, giá trị Remote Config, nút thử Crashlytics) | Khu demo thao tác được đủ các mục | T30 |
 | T43 | P2 | Sinh PDF (biên lai hoặc tóm tắt đơn đang xem), tải lên qua `StorageService`, hiện tiến trình và URL | File tải lên đúng thư mục `reports/{uid}/…` | T32, T41 |
-| T44 | P4 | App người bán K01–K06: cổng vai trò, hàng đợi đơn thời gian thực, chi tiết, đang chuẩn bị, quét mã, giao món và thu tiền mặt | Một đơn của khách xuất hiện và xử lý được ở app người bán | T31, T40 |
-| T45 | P4 | K08–K15: quản lý món, đánh dấu hết món, trạng thái quán, thống kê ca, từ chối đơn, sự cố, thêm và sửa món | Đổi món ở app người bán thấy ngay ở app khách | T31, T44 |
+| T44 | P4 | App người bán K01–K06: cổng vai trò, hàng đợi đơn thời gian thực, chi tiết, đang chuẩn bị, quét mã, giao món và thu tiền mặt | Một đơn của khách xuất hiện và xử lý được ở app người bán | T33, T40 |
+| T45 | P4 | K08–K15: quản lý món, đánh dấu hết món, trạng thái quán, thống kê ca, từ chối đơn, sự cố, thêm và sửa món | Đổi món ở app người bán thấy ngay ở app khách | T33, T44 |
 
 ### Giai đoạn 5 · Instrument
 
@@ -128,9 +130,11 @@ Phần nền để 4 người làm song song đã có trong repo. Cần review c
 | T03 | Xong | Đã `flutter create`, ghim phiên bản và `flutterfire configure` (project `breakbite-1315b`) |
 | T20 | Xong khung | Khung MVVM, router, DI, `ViewState`; `docs/architecture.md` cần P1 cập nhật cho khớp code |
 | T21 | Xong khung | Theme từ token Lab 2 và widget chung; font Nunito đã có trong `assets/fonts/`; S02 là màn mẫu đã làm theo Figma v2 |
-| T22 | Một phần | Đã có interface và model; **P3 cần viết bản cài đặt Firebase** trong `lib/firebase/` |
+| T22 | Một phần | Đã có interface, bản giả và model; **P3 cần viết bản cài đặt Firebase** và `bootstrap.dart` trong `lib/firebase/` |
 | T31 | Một phần | Mô hình dữ liệu đã chốt khung (`docs/data-model.md`), rules và chỉ mục đã đẩy lên, **82/82 test rules đạt**. Script nạp dữ liệu mẫu và gán vai trò đã viết và kiểm trên Emulator (`firebase/seed/`). Đã nạp vào Firestore thật ngày 29/10/2026 (3 kiosk, 25 món, 3 voucher, 40 slot). **Còn:** gán vai trò staff và admin cho thành viên bằng `set-role.mjs` sau khi họ đăng nhập app một lần |
 | T01 | Một phần | Project `breakbite-1315b` (Spark): app Android, SHA-1 máy P1, Auth Google, Firestore (`asia-southeast1`), rules và Remote Config đã đẩy lên. **Còn:** Storage (console đòi gói Blaze), Crashlytics, SHA-1 của 3 máy còn lại, mời 3 người vào project |
 | T02 | Chưa | Cần thiết bị Android và API key ARTEMIS |
+| T40 | Một phần | S01 Onboarding và S02 Trang chủ xong, làm theo Figma v2 (màn mẫu cho cả nhóm). Còn S03–S08, S25, S29 |
+| T33, T34 | Chưa | Chưa ai viết bản Firestore của `MenuService`, `CartService`, `OrderService` và các dịch vụ theo tính năng |
 
 Cách làm song song: mỗi người sửa file route của mình (`lib/router/routes_pX.dart`) để thay màn tạm bằng màn thật; dùng `--dart-define=USE_DEV_SERVICES=true` để chạy khi Firebase chưa nối. **Trước khi nộp xoá `lib/dev/` (T83).**
