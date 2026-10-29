@@ -28,7 +28,8 @@ abstract interface class AuthService {
 }
 
 abstract interface class MenuService {
-  Stream<List<MenuItem>> watchMenu();
+  /// Thực đơn của một kiosk: mỗi món thuộc đúng một kiosk (`MenuItem.kioskId`).
+  Stream<List<MenuItem>> watchMenu(String kioskId);
   Future<MenuItem?> getItem(String id);
   Stream<List<Kiosk>> watchKiosks();
   Future<Voucher?> getVoucher(String code);

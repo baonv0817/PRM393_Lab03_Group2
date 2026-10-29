@@ -9,7 +9,27 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _FailingMenu extends DevMenuService {
   @override
-  Stream<List<MenuItem>> watchMenu() => Stream.error(Exception('offline'));
+  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
+}
+
+class _ClosedFirstMenu extends DevMenuService {
+  @override
+  Stream<List<Kiosk>> watchKiosks() => Stream.value(const [
+        Kiosk(id: 'nvh-t1', name: 'Nhà văn hóa SV · Tầng 1', open: false, waitMinutes: 0),
+        Kiosk(id: 'q9-t4', name: 'Kiosk Q9 · Tầng 4', open: true, waitMinutes: 10),
+      ]);
+}
+
+class _NoKioskMenu extends DevMenuService {
+  @override
+  Stream<List<Kiosk>> watchKiosks() => Stream.value(const []);
+}
+
+class _FlakyKioskMenu extends DevMenuService {
+  bool fail = true;
+
+  @override
+  Stream<List<Kiosk>> watchKiosks() => fail ? Stream.error(Exception('offline')) : super.watchKiosks();
 }
 
 const _tacos = CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000);
@@ -89,6 +109,45 @@ void main() {
     expect(analytics.events.first.name, 'add_to_cart');
     expect(analytics.events.first.params!['source'], 'home');
     vm.dispose();
+  });
+
+  group('thực đơn theo kiosk', () {
+    test('chỉ lấy món của kiosk đang chọn (kiosk mở đầu tiên)', () async {
+      final vm = make();
+      await settle();
+      expect(vm.kiosk!.id, 'q9-t2');
+      expect(vm.state.dataOrNull!.every((e) => e.kioskId == 'q9-t2'), isTrue);
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']); // không có m5, m6 của Tầng 4
+      vm.dispose();
+    });
+
+    test('kiosk đầu tiên đóng cửa thì chọn kiosk mở kế tiếp', () async {
+      final vm = make(menu: _ClosedFirstMenu());
+      await settle();
+      expect(vm.kiosk!.id, 'q9-t4');
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m5', 'm6']);
+      vm.dispose();
+    });
+
+    test('không có kiosk nào thì hiện trạng thái rỗng', () async {
+      final vm = make(menu: _NoKioskMenu());
+      await settle();
+      expect(vm.kiosk, isNull);
+      expect(vm.state, isA<ViewEmpty<List<MenuItem>>>());
+      vm.dispose();
+    });
+
+    test('lỗi tải kiosk thì ra trạng thái error, bấm thử lại tải lại được', () async {
+      final menu = _FlakyKioskMenu();
+      final vm = make(menu: menu);
+      await settle();
+      expect(vm.state, isA<ViewError<List<MenuItem>>>());
+      menu.fail = false;
+      vm.load();
+      await settle();
+      expect(vm.state, isA<ViewData<List<MenuItem>>>());
+      vm.dispose();
+    });
   });
 
   group('đặt lại đơn gần đây', () {

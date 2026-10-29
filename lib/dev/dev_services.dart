@@ -59,9 +59,30 @@ class DevAuthService implements AuthService {
 
 class DevMenuService implements MenuService {
   final _menu = _Live<List<MenuItem>>(const [
-    MenuItem(id: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000, category: 'Tacos', prepMinutes: 4, imageUrl: 'assets/images/menu/tacos-bo.jpg'),
-    MenuItem(id: 'm2', name: 'Mì Trộn Gà Cay Hàn Quốc', priceVnd: 35000, category: 'Mì trộn', prepMinutes: 5, imageUrl: 'assets/images/menu/mi-tron-ga.jpg'),
-    MenuItem(id: 'm3', name: 'Trà Đào Chanh Sả', priceVnd: 20000, category: 'Đồ uống', prepMinutes: 2, imageUrl: 'assets/images/menu/tra-dao.jpg'),
+    MenuItem(
+        id: 'm1',
+        name: 'Combo Tacos Bò Phô Mai',
+        priceVnd: 39000,
+        category: 'Tacos',
+        prepMinutes: 4,
+        kioskId: 'q9-t2',
+        imageUrl: 'assets/images/menu/tacos-bo.jpg'),
+    MenuItem(
+        id: 'm2',
+        name: 'Mì Trộn Gà Cay Hàn Quốc',
+        priceVnd: 35000,
+        category: 'Mì trộn',
+        prepMinutes: 5,
+        kioskId: 'q9-t2',
+        imageUrl: 'assets/images/menu/mi-tron-ga.jpg'),
+    MenuItem(
+        id: 'm3',
+        name: 'Trà Đào Chanh Sả',
+        priceVnd: 20000,
+        category: 'Đồ uống',
+        prepMinutes: 2,
+        kioskId: 'q9-t2',
+        imageUrl: 'assets/images/menu/tra-dao.jpg'),
     MenuItem(
         id: 'm4',
         name: 'Tacos Gà Giòn Sốt Cay',
@@ -69,7 +90,24 @@ class DevMenuService implements MenuService {
         category: 'Tacos',
         prepMinutes: 4,
         soldOut: true,
+        kioskId: 'q9-t2',
         imageUrl: 'assets/images/menu/tacos-ga.jpg'),
+    MenuItem(
+        id: 'm5',
+        name: 'Bánh Mì Chả Lụa Trứng',
+        priceVnd: 22000,
+        category: 'Bánh mì',
+        prepMinutes: 3,
+        kioskId: 'q9-t4',
+        imageUrl: 'assets/images/menu/banh-mi.jpg'),
+    MenuItem(
+        id: 'm6',
+        name: 'Cà Phê Sữa Đá',
+        priceVnd: 18000,
+        category: 'Đồ uống',
+        prepMinutes: 2,
+        kioskId: 'q9-t4',
+        imageUrl: 'assets/images/menu/cafe-sua.jpg'),
   ]);
   final _kiosks = _Live<List<Kiosk>>(const [
     Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: true, waitMinutes: 6),
@@ -78,7 +116,8 @@ class DevMenuService implements MenuService {
   ]);
 
   @override
-  Stream<List<MenuItem>> watchMenu() => _menu.stream;
+  Stream<List<MenuItem>> watchMenu(String kioskId) =>
+      _menu.stream.map((items) => items.where((e) => e.kioskId == kioskId).toList());
 
   @override
   Future<MenuItem?> getItem(String id) async => _menu.value.where((e) => e.id == id).firstOrNull;

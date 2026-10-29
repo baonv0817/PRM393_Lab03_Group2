@@ -69,31 +69,29 @@ class HomeViewModel extends ChangeNotifier {
 
   void load() {
     _state = const ViewLoading();
+    _kiosk = null; // chọn lại kiosk khi thử lại
     notifyListeners();
     unawaited(_menuSub?.cancel());
     unawaited(_kioskSub?.cancel());
     unawaited(_cartSub?.cancel());
     unawaited(_ordersSub?.cancel());
-    _menuSub = menu.watchMenu().listen(
-      (items) {
-        final limit = remoteConfig.getInt(RemoteKeys.quickItemsLimit);
-        final quick = items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList();
-        _state = ViewStateX.fromList(quick, emptyMessage: 'Chưa có món nhanh lúc này');
-        notifyListeners();
-      },
-      onError: (Object e) {
-        _state = const ViewError('Không tải được thực đơn. Kiểm tra mạng rồi thử lại.');
-        notifyListeners();
-      },
-    );
-    // Kiosk, giỏ và đơn gần đây chỉ bổ sung cho trang: lỗi thì bỏ qua, không chặn danh sách món.
+    // Chọn kiosk trước rồi mới tải thực đơn của kiosk đó; kiosk đổi thì tải lại thực đơn.
     _kioskSub = menu.watchKiosks().listen(
       (kiosks) {
-        _kiosk = kiosks.where((k) => k.open).firstOrNull ?? kiosks.firstOrNull;
+        final next = kiosks.where((k) => k.open).firstOrNull ?? kiosks.firstOrNull;
+        final changed = next?.id != _kiosk?.id;
+        _kiosk = next;
+        if (next == null) {
+          unawaited(_menuSub?.cancel());
+          _state = const ViewEmpty('Chưa có kiosk nào đang hoạt động');
+        } else if (changed) {
+          _watchMenu(next.id);
+        }
         notifyListeners();
       },
-      onError: (Object e) {},
+      onError: (Object e) => _fail(),
     );
+    // Giỏ và đơn gần đây chỉ bổ sung cho trang: lỗi thì bỏ qua, không chặn danh sách món.
     _cartSub = cart.watchCart(uid).listen(
       (items) {
         _cartCount = items.fold(0, (sum, e) => sum + e.quantity);
@@ -110,6 +108,25 @@ class HomeViewModel extends ChangeNotifier {
       },
       onError: (Object e) {},
     );
+  }
+
+  void _watchMenu(String kioskId) {
+    unawaited(_menuSub?.cancel());
+    _state = const ViewLoading();
+    _menuSub = menu.watchMenu(kioskId).listen(
+      (items) {
+        final limit = remoteConfig.getInt(RemoteKeys.quickItemsLimit);
+        final quick = items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList();
+        _state = ViewStateX.fromList(quick, emptyMessage: 'Chưa có món nhanh lúc này');
+        notifyListeners();
+      },
+      onError: (Object e) => _fail(),
+    );
+  }
+
+  void _fail() {
+    _state = const ViewError('Không tải được thực đơn. Kiểm tra mạng rồi thử lại.');
+    notifyListeners();
   }
 
   Future<void> addToCart(MenuItem item) async {

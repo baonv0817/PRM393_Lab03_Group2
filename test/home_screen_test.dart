@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 
 class _FailingMenu extends DevMenuService {
   @override
-  Stream<List<MenuItem>> watchMenu() => Stream.error(Exception('offline'));
+  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
 }
 
 typedef Harness = ({DevCartService cart, DevAnalyticsService analytics, DevOrderService orders});
