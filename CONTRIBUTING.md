@@ -33,7 +33,7 @@ This is where the team is most likely to step on each other. When you change a s
 
 | File or folder | Who edits | Rule |
 |---|---|---|
-| `lib/theme/`, `lib/widgets/` | P1 | Need a new widget or variant: open an issue or a small PR for P1 to review. Do not add hard-coded colors or font sizes in a screen |
+| `lib/theme/`, `lib/widgets/` | P1 | Need a new widget or variant: open an issue, or a small PR that P1 agrees to before it is merged. Do not add hard-coded colors or font sizes in a screen |
 | `lib/router/app_router.dart` | P1 | Do not edit. Each person only edits their own `routes_p1.dart` to `routes_p5.dart` |
 | `lib/router/routes_pX.dart` | the file's owner | Edit only your own file |
 | `lib/services/services.dart`, `lib/services/app_services.dart` | the whole team | **Do not add more interfaces to `services.dart`.** A new service goes in its own file `lib/services/<feature>_service.dart`; add exactly one field to `AppServices` |
@@ -43,13 +43,67 @@ This is where the team is most likely to step on each other. When you change a s
 | `lib/firebase/` | P3 (shared services); the feature owner (their own services) | The only place allowed to import the Firebase SDK |
 | `pubspec.yaml` | the whole team | When adding a package, record it in the versions table in `README.md` and tell the team |
 
-## 4. Git
+## 4. Git conventions
 
-- Branches: `feat/S03-menu`, `fix/K02-crash`, named after the screen or task ID.
-- Start commits with the ID: `[S03] Menu with category filter`. Many small commits over many days, not one dump.
-- Open a PR into `main` using the PR template, and **ask someone else to review it**. The reviewer runs the app and reads the diff, not just clicks Approve.
-- Never push straight to `main`. Never commit keys, passwords, keystores, or `*adminsdk*.json` files.
-- Conflicts in a shared file: whoever merges second resolves it, and tells the other person.
+This section is the single source of truth for branches, commits, pull requests and issues. `TASKS.md` and `ASSIGNMENTS.md` only point here.
+
+### 4.1 IDs
+
+Every branch, commit and PR carries the ID of the work it belongs to:
+
+| ID | Meaning | Example |
+|---|---|---|
+| `T00`–`T83` | Task in `TASKS.md` (GitHub issue with the same ID) | `T22` |
+| `S01`–`S30`, `K01`–`K15` | Screen in `docs/design-traceability.md` | `S03`, `K02` |
+| `CR-01`, `CR-02`… | Code review finding in `docs/code-review.md` | `CR-01` |
+
+Use the screen ID when the work is one screen, otherwise the task ID.
+
+### 4.2 Branches
+
+Format: `<type>/<ID>-<short-name>`, lower-case kebab-case short name, branched from the latest `main`.
+
+| Type | For | Example |
+|---|---|---|
+| `feat` | New screen, feature or service | `feat/S03-menu`, `feat/T22-firebase-auth` |
+| `fix` | Bug fix, review fix | `fix/K02-empty-list-crash`, `fix/CR-01-home-api-call` |
+| `docs` | Documentation only | `docs/T10-traceability`, `docs/T00-unify-conventions` |
+| `test` | Tests only (unit, widget, ARTEMIS) | `test/T62-artemis-checkout` |
+| `refactor` | Restructure without changing behavior | `refactor/T20-split-models` |
+| `chore` | Config, dependencies, tooling, CI | `chore/T03-bump-flutterfire` |
+
+One branch holds one screen or one slice of a task. Delete it after merging.
+
+### 4.3 Commits
+
+Format: `[ID] Summary`, for example `[S03] Add category filter to menu`.
+
+- Summary in English, imperative mood (`Add`, `Fix`, `Update`, `Remove`, `Refactor`, `Test`, `Document`), at most 72 characters, no period at the end.
+- Several IDs only when one change really serves both: `[S25][T34] Add SlotService with fake and Firestore versions`.
+- Review fixes use the finding ID: `[CR-01] Move API call out of HomeScreen`.
+- Optional body after a blank line: why the change was made, and `Refs #13` for the issue.
+- Many small commits over many days, not one dump. Every commit should still pass `flutter analyze`.
+- Never commit keys, passwords, keystores, `.env` files or `*adminsdk*.json`. `android/app/google-services.json` is allowed.
+
+### 4.4 Pull requests
+
+- Never push straight to `main`; every change goes through a PR so the history shows each member's work.
+- PR title uses the commit format: `[S03] Menu screen with category filter`.
+- Fill in the PR template. Write `Closes #13` when the PR finishes the whole task, `Refs #13` when it is only part of it.
+- Before merging: `flutter analyze` and `flutter test` are clean and the checklist in section 5 is ticked.
+- **No reviewer approval is required.** The author merges their own PR once the checks pass. Anyone may still comment, and changes to shared files (section 3) must be announced to the file's owner before merging.
+- Merge with **Create a merge commit**, never Squash: squashing erases the individual commits that show who did what and when.
+- Delete the branch after merging. Conflicts in a shared file: whoever merges second resolves them and tells the other person.
+
+### 4.5 Issues
+
+- Every task already has an issue `[T..] …` (#1–#36). Assign yourself when you start it and set the milestone of the week you plan to finish it.
+- A new bug gets its own issue titled `[S03] Bug: short description` with the `bug` label.
+- An issue is closed by the PR that finishes it (`Closes #…`), or by hand with a comment linking the commits.
+
+### 4.6 Language
+
+Code identifiers, commits, PRs, issues and docs are in English. Text shown in the app is Vietnamese, matching Figma.
 
 ## 5. A screen is done when
 

@@ -42,8 +42,8 @@ S01 and S02 are already done. The full table (screen, route, ViewModel, data sou
 
 Mandatory, because the lecturer may question each person individually (about 5 minutes: run 1 ARTEMIS test, change 1 Remote Config value live, explain 1 ViewModel and 1 review decision).
 
-1. Commit steadily across many days; start every commit with the task or screen ID, for example `[S03] Menu with category filter`. Do not pile the code onto one person.
-2. Work on your own branch, open a PR, have someone else review it, then merge into `main`.
+1. Commit steadily across many days; start every commit with the task or screen ID, for example `[S03] Add category filter to menu`. Do not pile the code onto one person.
+2. Work on your own branch, open a PR, and merge it into `main` yourself once the checks pass (no approval needed). Branch, commit and PR rules: `CONTRIBUTING.md` section 4.
 3. For every screen you build: fill in your row in `docs/design-traceability.md`, add `Semantics` labels (T61), write test cases into `docs/test-plan.md`, decide the review findings that touch your files (T71), write your report section and record your part of the video.
 4. No SDK calls in widgets, no logic in `build()`, no hard-coded colors or font sizes (use the theme and shared widgets).
 5. Every screen that loads data has loading, empty and error states with a retry button; the Back button goes to the right place.
@@ -168,7 +168,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | P2 waiting for P1's S07, S08 to build S09–S12 | P2 does S20, S23, S24 and the seller menu screens first; P1 builds S07, S08 early in week 2 |
 | P4 waiting for real orders to try the seller app | Use the dev services first (fake orders); try with real orders after T33 |
 | P5 waiting for finished screens to test | Write the test plan and the first tests against S02 (finished) and the flows as they land; keep ARTEMIS set up early (T02) |
-| Editing the theme and shared widgets | Only P1 edits `lib/theme/` and `lib/widgets/`; anyone who needs a change opens an issue or a small PR for P1 to review |
+| Editing the theme and shared widgets | Only P1 edits `lib/theme/` and `lib/widgets/`; anyone who needs a change opens an issue, or a small PR that P1 agrees to before it is merged |
 
 ## End-of-week checkpoints
 
