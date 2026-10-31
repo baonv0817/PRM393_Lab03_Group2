@@ -330,7 +330,7 @@ The script in `firebase/seed/` (how to run it: `firebase/README.md`) loads, with
 - 3 vouchers: `BBSTUDENT` (fixed 10K from 40K), `GIOVANG` (15 % up to 15K, 10:15–10:30, matching the Home banner), `BB20` (expired, to try S05-VOUCHER-ERR).
 - Staff and admin accounts **cannot be loaded by the script** because they need the Firebase Auth uid: that person signs in with Google once, then run `set-role.mjs` (for staff also a `kioskId`).
 
-By default the script does not overwrite existing documents, so re-running it keeps the `soldOut` and `booked` values staff and customers changed. After this structure change, load the menu and vouchers again with `--reset` (it does not touch users, orders, reviews or incidents). `npm run seed:emulator` checks every item and voucher against the rules' shapes.
+By default the script does not overwrite existing documents, so re-running it keeps the `soldOut` and `booked` values staff and customers changed. `npm run seed:emulator` checks every item and voucher against the rules' shapes. Documents already in the real project are moved to this structure by the T31 migration (`firebase/README.md`, "Data migrations"), not by reloading.
 
 ## 9. Process for changing the structure
 
@@ -339,4 +339,5 @@ By default the script does not overwrite existing documents, so re-running it ke
 3. Edit `firebase/firestore.rules`; add allowed and denied tests to `rules.test.mjs`; run `npm test` in `firebase/tests` (needs Java 21: the JDK bundled with Android Studio works, see `firebase/README.md`).
 4. If there is a new query: add the index to `firestore.indexes.json`.
 5. Update the seed when sample data is affected and run `npm run seed:emulator`.
-6. Open a PR and have the document owner (P3) review it. Deploy with `firebase deploy --only firestore:rules,firestore:indexes`.
+6. If documents already stored no longer match the new rules (a field renamed, a value changed, an id changed): add a script in `firebase/seed/migrations/` with a dry run and a `verify()`, plus a test with documents in the old structure, like `t31-data-model.mjs` and `migrate.test.mjs`. Adding an optional field needs no migration.
+7. Open a PR and have the document owner (P3) review it. Deploy in this order: indexes, then the data migration while the old rules are still live, then rules (`firebase/README.md`, "Rolling it out to the real project").
