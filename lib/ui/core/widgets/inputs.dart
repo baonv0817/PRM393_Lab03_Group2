@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:flutter/material.dart';
 
-/// Chip lọc của Lab 2: mặc định, đang chọn.
+/// Lab 2 filter chip: default, selected.
 class AppChip extends StatelessWidget {
   const AppChip({super.key, required this.label, required this.selected, required this.onSelected});
 
@@ -38,7 +37,7 @@ class AppChip extends StatelessWidget {
   }
 }
 
-/// Ô tìm kiếm ở Trang chủ (S02): chạm để sang màn Tìm kiếm (S28), không nhập tại chỗ.
+/// Search box on Home (S02): tapping it opens the Search screen (S28); no typing in place.
 class AppSearchField extends StatelessWidget {
   const AppSearchField({super.key, required this.hint, required this.onTap});
 
@@ -68,7 +67,14 @@ class AppSearchField extends StatelessWidget {
             children: [
               Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Expanded(
+                child: Text(
+                  hint,
+                  style: text.bodyMedium?.copyWith(color: colors.muted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),
@@ -77,7 +83,7 @@ class AppSearchField extends StatelessWidget {
   }
 }
 
-/// TextField của Lab 2 với trạng thái lỗi và gợi ý.
+/// Lab 2 TextField with error and helper states.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,

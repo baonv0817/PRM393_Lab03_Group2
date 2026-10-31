@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/routing/routes_p1.dart';
+import 'package:breakbite/routing/routes_p2.dart';
+import 'package:breakbite/routing/routes_p3.dart';
+import 'package:breakbite/routing/routes_p4.dart';
+import 'package:breakbite/routing/routes_p5.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
-import 'routes_p1.dart';
-import 'routes_p2.dart';
-import 'routes_p3.dart';
-import 'routes_p4.dart';
-import 'routes_p5.dart';
-import 'routes.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 const _customerTabs = [
   AppNavTab(label: 'Trang chủ', icon: Icons.home),
@@ -28,10 +27,10 @@ const _sellerTabs = [
 const _publicPaths = {AppRoutes.signIn, AppRoutes.sellerSignIn};
 const _onboardingPath = AppRoutes.onboarding;
 
-/// Quyết định điều hướng theo trạng thái đăng nhập và vai trò (tách ra để test).
+/// Navigation decision based on sign-in state and role (split out for testing).
 ///
-/// Người chưa đăng nhập vào app khách: chưa qua Onboarding thì về `/onboarding` (S01), qua rồi
-/// thì về `/sign-in` (S26). App người bán không có Onboarding.
+/// Signed-out users in the customer app go to `/onboarding` (S01) if they have not seen Onboarding,
+/// otherwise to `/sign-in` (S26). The seller app has no Onboarding.
 String? authRedirect({
   required AppUser? user,
   required bool initialized,
@@ -48,7 +47,7 @@ String? authRedirect({
     return isPublic ? null : AppRoutes.signIn;
   }
   if (isPublic || location == _onboardingPath) return user.isStaff ? AppRoutes.sellerOrders : AppRoutes.home;
-  // Đúng vai trò: khách không vào được vùng người bán; nhân viên dùng app người bán.
+  // Role check: customers cannot enter the seller area; staff use the seller app.
   if (isSeller && !user.isStaff) return AppRoutes.home;
   if (!isSeller && user.isStaff) return AppRoutes.sellerOrders;
   return null;
@@ -66,7 +65,7 @@ GoRouter createRouter(AuthViewModel auth) {
       onboardingDone: auth.onboardingDone,
     ),
     routes: [
-      // Route cụ thể đứng trước route có tham số.
+      // Specific routes come before parameterized ones.
       ...p2Routes,
       ...p1Routes,
       ...p3Routes,

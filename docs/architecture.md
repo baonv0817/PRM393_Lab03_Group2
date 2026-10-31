@@ -2,6 +2,25 @@
 
 MVVM with Provider and go_router, following the official Flutter architecture guide ([docs.flutter.dev/app-architecture](https://docs.flutter.dev/app-architecture)): a **UI layer** (views and view models, grouped by feature) on top of a **data layer** (repositories and services, grouped by type). Dependencies only point downward; a lower layer never imports a higher one.
 
+## 0. Why the layout differs from the handout's suggestion
+
+The handout suggests `lib/models/`, `services/`, `firebase/`, `viewmodels/`, `screens/`, `widgets/`, `utils/` and allows another layout if this document explains why. We use the layout of the official Flutter architecture guide for three reasons:
+
+1. **Five people work in parallel.** With 45 screens, layer-first folders (`screens/`, `viewmodels/`) would each hold about 45 files from five owners. One folder per feature (`lib/ui/<feature>/`) matches the ownership in `ASSIGNMENTS.md`, so people rarely edit the same files.
+2. **The handout's "service" covers two different jobs.** Wrapping an SDK (Auth, Crashlytics, FCM…) and owning business data (menu, cart, orders in Firestore) change for different reasons. The guide calls the first a service and the second a repository; both are "services" in the sense of section 5 of the handout: every external call goes through one, and they are injected so a ViewModel can be tested with a fake.
+3. **The final assignment needs a shared package.** Models and Firestore access must move to `packages/core/` to be reused by the web admin; keeping them in `lib/domain/` and `lib/data/repositories/`, separate from the UI, makes that a move rather than a rewrite.
+
+| Handout suggestion | This repo |
+|---|---|
+| `lib/models/` | `lib/domain/models/` |
+| `lib/services/` | `lib/data/services/` (SDK wrappers) and `lib/data/repositories/` (business data) |
+| `lib/firebase/` | `lib/config/firebase_dependencies.dart` and the Firebase implementations under `lib/data/` |
+| `lib/viewmodels/` | `lib/ui/<feature>/view_models/` |
+| `lib/screens/` | `lib/ui/<feature>/widgets/<name>_screen.dart` |
+| `lib/widgets/` | `lib/ui/core/widgets/` (Lab 2 components, one widget each) |
+| `lib/theme/` | `lib/ui/core/theme/` (the single place for tokens) |
+| `lib/utils/` | `lib/utils/` |
+
 ## 1. Folder structure
 
 ```
@@ -18,7 +37,7 @@ lib/
     routes_p1.dart … routes_p5.dart   each owner wires their own screens here
   domain/models/                plain data classes, one file per model, models.dart exports them all
   data/
-    services/                   thin wrappers around an SDK: auth, analytics, crash, messaging, storage, remote config
+    services/                   thin wrappers around an SDK: auth, analytics, crash, messaging, remote config; cloudinary/ (file storage)
     repositories/               source of truth for business data (Firestore): menu, cart, order…
   ui/
     core/                       theme/, widgets/, view_state.dart, placeholder_screen.dart (shared, owned by P1)
@@ -44,7 +63,8 @@ graph TD
     R --> RI[Firestore implementations]
     S --> SI[Firebase SDK wrappers]
     RI --> FB[Firebase: Firestore]
-    SI --> FB2[Firebase: Auth, Storage, FCM, Analytics, Crashlytics, Remote Config]
+    SI --> FB2[Firebase: Auth, FCM, Analytics, Crashlytics, Remote Config]
+    SI --> CL[Cloudinary: files]
     VM --> M[domain/models]
     R --> M
 ```
@@ -66,6 +86,9 @@ graph TD
 5. No `setState` for shared state; no singleton accessed directly from a widget.
 6. Paths come from `AppRoutes`, analytics event names from `AnalyticsEvents`, spacing from `AppSpacing` (names match the Figma tokens), never typed by hand.
 7. `lib/` never imports `dev/`. The submitted build therefore contains no fake data.
+8. One-shot operations of repositories and services return `Future<Result<T>>` (`lib/utils/result.dart`) with an `AppException` (`lib/domain/app_exception.dart`) on failure; nothing is thrown across layers. Realtime data is a `Stream<T>`. ViewModels handle every failure: show its message and log it to Crashlytics (details: `CONTRIBUTING.md` section 7).
+
+Rules 1, 3 (view models import only `package:flutter/foundation.dart`), 7 and the "no colour or text-style literals in feature screens" part of rule 6 are checked on every `flutter test` by `test/architecture_test.dart`.
 
 ## 4. Sequence diagram: placing an order (F1)
 
@@ -130,4 +153,4 @@ Repositories that do not exist yet (task T34) are created by the feature owner: 
 
 ## 7. Firestore data model
 
-Collections, every field, the order lifecycle, queries per screen, indexes, Storage and limitations: [`docs/data-model.md`](data-model.md). Detailed permissions are in `firebase/firestore.rules`, tested by `firebase/tests/rules.test.mjs`.
+Collections, every field, the order lifecycle, queries per screen, indexes, file storage and limitations: [`docs/data-model.md`](data-model.md). Detailed permissions are in `firebase/firestore.rules`, tested by `firebase/tests/rules.test.mjs`.

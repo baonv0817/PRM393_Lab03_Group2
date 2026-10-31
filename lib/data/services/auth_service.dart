@@ -1,23 +1,13 @@
-import '../../domain/models/app_user.dart';
-
-/// Đăng nhập bị người dùng huỷ.
-class AuthCancelled implements Exception {
-  const AuthCancelled();
-}
-
-/// Đăng nhập lỗi (mất mạng, bị từ chối…).
-class AuthFailure implements Exception {
-  const AuthFailure(this.message);
-
-  final String message;
-}
+import 'package:breakbite/domain/models/app_user.dart';
+import 'package:breakbite/utils/result.dart';
 
 abstract interface class AuthService {
-  /// `null` khi chưa đăng nhập.
+  /// Emits `null` while signed out.
   Stream<AppUser?> authStateChanges();
 
-  /// Ném [AuthCancelled] khi huỷ, [AuthFailure] khi lỗi.
-  Future<AppUser> signInWithGoogle();
+  /// Fails with `CancelledException` when the user closes the account picker, `NetworkException`
+  /// without a connection, `ServiceException` otherwise.
+  Future<Result<AppUser>> signInWithGoogle();
 
-  Future<void> signOut();
+  Future<Result<void>> signOut();
 }

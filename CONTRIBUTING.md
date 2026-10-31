@@ -44,7 +44,8 @@ This is where the team is most likely to step on each other. When you change a s
 | `lib/config/dependencies.dart`, `dev/fake_dependencies.dart` | the whole team | Add exactly one field and one provider line, and one line in each place that builds them |
 | `dev/fakes/` | the whole team | One fake per file, plus one export line in `fakes.dart` |
 | `lib/domain/models/` | the whole team | One model per file. Only **add**: a new file, or a new field with a default value at the end. Do not rename or delete, so other people's code still compiles. If you change the data structure, do all 4 places (`docs/data-model.md`) |
-| `firebase/firestore.rules`, `storage.rules`, `docs/data-model.md` | P3 reviews | Change together with tests in `firebase/tests/rules.test.mjs`; `npm test` must pass |
+| `analysis_options.yaml`, `test/architecture_test.dart` | P1 | Changing a lint or a layer rule is a team decision: a separate small PR, announced to everyone |
+| `firebase/firestore.rules`, `docs/data-model.md` | P3 reviews | Change together with tests in `firebase/tests/rules.test.mjs`; `npm test` must pass |
 | Firebase implementations (`lib/data/services/firebase/`, `lib/data/repositories/firestore/`, `lib/config/firebase_dependencies.dart`) | P3 (shared ones); the feature owner (their own repositories) | The only places allowed to import the Firebase SDK |
 | `pubspec.yaml` | the whole team | When adding a package, record it in the versions table in `README.md` and tell the team |
 
@@ -112,13 +113,11 @@ Code identifiers, commits, PRs, issues and docs are in English. Text shown in th
 
 ## 5. A screen is done when
 
-Run these in the repo root (both must be clean):
+Run these in the repo root (all three must be clean; details in section 7):
 
 ```bash
 flutter analyze
-```
-
-```bash
+dart format --set-exit-if-changed lib dev test
 flutter test
 ```
 
@@ -138,3 +137,46 @@ And check by eye on an emulator or phone:
 Fake data lives in `dev/` at the repo root, **outside `lib/`**; only `dev/main_dev.dart` and the tests use it. `lib/` never imports `dev/`, so the submitted build (`lib/main.dart`) contains no hard-coded or mock data, as the handout requires, and nothing has to be deleted before submission. Do not put business logic in `dev/`; logic belongs in the ViewModel so it behaves identically with real data.
 
 Sample menu, kiosks, vouchers and slots are already loaded into the real Firestore (`firebase/seed/`). To get a seller account for testing: sign in to the app once, then ask P3 to run `set-role.mjs` to assign the role and kiosk.
+
+## 7. Code standards
+
+Three checks must be clean before merging; the first two also run in VS Code as you type and save:
+
+```bash
+flutter analyze                                  # lints and strict typing from analysis_options.yaml
+dart format --set-exit-if-changed lib dev test   # 120 columns, set in analysis_options.yaml
+flutter test                                     # includes test/architecture_test.dart (layer rules)
+```
+
+| Topic | Rule | Checked by |
+|---|---|---|
+| Formatting | `dart format`, 120 columns. Turn on *Format On Save* in VS Code | `dart format` |
+| Imports | Inside `lib/` always `package:breakbite/…`, sorted. Tests import fakes with a relative path: `../../../dev/fakes/fakes.dart` | lints `always_use_package_imports`, `directives_ordering` |
+| Language | Identifiers, comments, test names, commits and docs in English. Only text shown to users is Vietnamese | review |
+| Comments | Explain *why*, not *what*. `///` on public classes and on members whose behaviour is not obvious from the name. No commented-out code; no `TODO` without a task ID (`TODO(T33): …`) | review |
+| Naming | Files `snake_case`: `<name>_screen.dart`, `<name>_view_model.dart`, `<name>_repository.dart`, `<name>_service.dart`, fakes `fake_<name>_….dart`. A test mirrors the path of what it tests and ends in `_test.dart` | review |
+| Types | Strict casts, inference and raw types; declared return types; no `dynamic` calls | analyzer, lints |
+| Async | Await every `Future` or wrap it in `unawaited(…)`; cancel every `StreamSubscription` in `dispose()` | lints `unawaited_futures`, `cancel_subscriptions` |
+| Layers | UI, routing and models never import an SDK; `lib/` never imports `dev/`; models do not import Flutter; view models import only `package:flutter/foundation.dart` and never a widget; feature screens use no colour or text-style literals | `test/architecture_test.dart` |
+| Analytics | Event names come from `AnalyticsEvents`; no personal data (name, e-mail) in parameters | review |
+| Tests | Every ViewModel: data, empty and error cases. Every screen: a widget test. Test names are sentences that state the behaviour | review |
+
+### Error handling
+
+1. **Repositories and services never throw across layers.** One-shot operations return `Future<Result<T>>` (`lib/utils/result.dart`): `Ok(value)` or `Err(AppException)`. The Firebase and Cloudinary implementations catch SDK exceptions and map them to one `AppException` (`lib/domain/app_exception.dart`), keeping the original as `cause` and `stackTrace`:
+
+   | Situation | Exception |
+   |---|---|
+   | No connection, timeout | `NetworkException` |
+   | User closed the picker or dialog | `CancelledException` |
+   | Security rules refused | `PermissionDeniedException` |
+   | Document missing (wrong voucher code…) | `NotFoundException` |
+   | Input not acceptable (file too large…) | `ValidationException` |
+   | Anything else | `ServiceException` |
+
+2. **Realtime data is a `Stream<T>`**; the ViewModel handles its errors in `onError`.
+3. **ViewModels handle every failure** with an exhaustive `switch` on the result: show `error.message` (already Vietnamese and user-ready) through `ViewError` or a snackbar, and record it with `crash.recordError(error.cause ?? error, error.stackTrace, reason: '<screen>.<action>')`. `CancelledException` is shown but not recorded. An error is never swallowed silently: even a non-blocking stream (cart badge) records a non-fatal error. This is also the "handled error from a real error path" the handout asks Crashlytics to show.
+4. **Telemetry never breaks the user's flow.** `AnalyticsService`, `CrashService` and `RemoteConfigService` return plain `Future`s and catch everything inside their implementations; Remote Config falls back to the in-app defaults.
+5. **Screens never use `try/catch`**; they switch on what the ViewModel returns.
+
+Reference implementation: `HomeViewModel.addToCart`, `AuthViewModel.signIn`, `CloudinaryStorageService.upload`, and their tests.

@@ -1,12 +1,13 @@
-import '../../../dev/fakes/fakes.dart';
 import 'package:breakbite/domain/models/models.dart';
-import 'package:breakbite/ui/home/widgets/home_screen.dart';
 import 'package:breakbite/ui/core/theme/app_theme.dart';
-import 'package:breakbite/ui/home/view_models/home_view_model.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
+import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/ui/home/widgets/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+
+import '../../../dev/fakes/fakes.dart';
 
 class _FailingMenu extends FakeMenuRepository {
   @override
@@ -34,6 +35,7 @@ Future<Harness> pumpHome(
           orders: orderService,
           remoteConfig: rc ?? FakeRemoteConfigService(),
           analytics: analytics,
+          crash: FakeCrashService(),
           uid: 'u1',
         ),
         child: const HomeScreen(),
@@ -44,19 +46,19 @@ Future<Harness> pumpHome(
 }
 
 void main() {
-  testWidgets('hiện loading rồi danh sách món nhanh, bỏ món hết hàng', (tester) async {
+  testWidgets('shows loading then the quick items, without sold-out items', (tester) async {
     await pumpHome(tester);
     expect(find.text('Đang tải…'), findsOneWidget);
     await tester.pumpAndSettle();
     expect(find.text('Đang tải…'), findsNothing);
     expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
     expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
-    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 phút vẫn là món nhanh
+    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 minutes still counts as quick
     expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
-    expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing); // hết hàng
+    expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing); // sold out
   });
 
-  testWidgets('mỗi món nhanh có ảnh món thật (không dùng logo giữ chỗ)', (tester) async {
+  testWidgets('every quick item shows its real photo (not the placeholder logo)', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.byType(MenuItemImage), findsNWidgets(3));
@@ -64,7 +66,7 @@ void main() {
     expect(find.byType(BreakBiteLogo), findsNothing);
   });
 
-  testWidgets('header hiện kiosk, trạng thái chờ, thông báo và giỏ hàng', (tester) async {
+  testWidgets('the header shows the kiosk, its wait time, notifications and the cart', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.text('Kiosk Q9 · Tầng 2'), findsOneWidget);
@@ -73,7 +75,7 @@ void main() {
     expect(find.byTooltip('Giỏ hàng, trống'), findsOneWidget);
   });
 
-  testWidgets('có ô tìm kiếm; đã bỏ chip loại món và nút phụ trong banner', (tester) async {
+  testWidgets('has a search field; no category chips and no extra banner button (D06)', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.text('Tìm Tacos, Mì trộn, Đồ uống...'), findsOneWidget);
@@ -81,32 +83,32 @@ void main() {
     expect(find.text('Đặt ngay'), findsNothing);
   });
 
-  testWidgets('banner Combo Giờ Vàng theo Remote Config', (tester) async {
+  testWidgets('the Golden Hour Combo banner follows Remote Config', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     expect(find.text('Combo Giờ Vàng –15%'), findsOneWidget);
   });
 
-  testWidgets('tắt banner trong Remote Config thì banner biến mất', (tester) async {
+  testWidgets('turning the banner off in Remote Config hides it', (tester) async {
     await pumpHome(tester, rc: FakeRemoteConfigService()..values['promo_banner_enabled'] = false);
     await tester.pumpAndSettle();
     expect(find.text('Combo Giờ Vàng –15%'), findsNothing);
   });
 
-  testWidgets('giới hạn 0 thì hiện trạng thái rỗng', (tester) async {
+  testWidgets('a limit of 0 shows the empty state', (tester) async {
     await pumpHome(tester, rc: FakeRemoteConfigService()..values['quick_items_limit'] = 0);
     await tester.pumpAndSettle();
     expect(find.text('Chưa có món nhanh lúc này'), findsOneWidget);
   });
 
-  testWidgets('lỗi mạng hiện thông báo và nút Thử lại', (tester) async {
+  testWidgets('a network error shows a message and a Retry button', (tester) async {
     await pumpHome(tester, menu: _FailingMenu());
     await tester.pumpAndSettle();
     expect(find.text('Không tải được thực đơn. Kiểm tra mạng rồi thử lại.'), findsOneWidget);
     expect(find.text('Thử lại'), findsOneWidget);
   });
 
-  testWidgets('bấm + ghi vào giỏ, ghi sự kiện và hiện thông báo "Đã thêm"', (tester) async {
+  testWidgets('tapping + writes the cart, logs the event and shows the "Đã thêm" snackbar', (tester) async {
     final h = await pumpHome(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Thêm Combo Tacos Bò Phô Mai vào giỏ'));
@@ -114,13 +116,13 @@ void main() {
 
     expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
     expect(find.text('Xem giỏ'), findsOneWidget);
-    expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget); // huy hiệu giỏ cập nhật
+    expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget); // the cart badge updates
     final items = await h.cart.watchCart('u1').first;
     expect(items.single.itemId, 'm1');
     expect(h.analytics.events.single.name, 'add_to_cart');
   });
 
-  testWidgets('vùng bấm nút + đạt tối thiểu 48 dp', (tester) async {
+  testWidgets('the + button has a touch target of at least 48 dp', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
     final size = tester.getSize(find.byTooltip('Thêm Combo Tacos Bò Phô Mai vào giỏ'));
@@ -128,14 +130,14 @@ void main() {
     expect(size.height, greaterThanOrEqualTo(48));
   });
 
-  group('Đặt lại đơn gần đây', () {
-    testWidgets('chưa có đơn thì không hiện nút Đặt lại', (tester) async {
+  group('Reorder the latest order', () {
+    testWidgets('hides the Reorder card when there is no order', (tester) async {
       await pumpHome(tester);
       await tester.pumpAndSettle();
       expect(find.text('Đặt lại đơn gần đây'), findsNothing);
     });
 
-    testWidgets('đã có đơn thì hiện tóm tắt; bấm thì thêm món vào giỏ', (tester) async {
+    testWidgets('with an order it shows a summary; tapping adds the items to the cart', (tester) async {
       final orders = FakeOrderRepository();
       await orders.createOrder(
         uid: 'u1',

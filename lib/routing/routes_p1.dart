@@ -1,14 +1,13 @@
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
-import 'package:breakbite/ui/home/widgets/home_screen.dart';
-import 'package:breakbite/ui/onboarding/widgets/onboarding_screen.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/routing/route_helpers.dart';
+import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
-import 'route_helpers.dart';
-import 'routes.dart';
+import 'package:breakbite/ui/home/widgets/home_screen.dart';
+import 'package:breakbite/ui/onboarding/widgets/onboarding_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 // P1: ordering flow S01–S08, S25, S29 (S21 is a state of Home, S22 is the alternatives screen).
 // See docs/design-traceability.md.
@@ -26,6 +25,7 @@ final GoRoute homeRoute = GoRoute(
         orders: context.read<OrderRepository>(),
         remoteConfig: context.read<RemoteConfigService>(),
         analytics: context.read<AnalyticsService>(),
+        crash: context.read<CrashService>(),
         uid: uid,
       ),
       child: const HomeScreen(),

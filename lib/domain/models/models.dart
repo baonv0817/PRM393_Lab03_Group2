@@ -1,6 +1,6 @@
-/// Mô hình dữ liệu thuần (không phụ thuộc Flutter hay Firebase), mỗi model một tệp.
-/// Ánh xạ với collection Firestore trong `docs/data-model.md`: tên trường giữ nguyên ở đó;
-/// việc đổi `Timestamp` sang `DateTime` làm ở `lib/data/`.
+/// Plain data models (no Flutter or Firebase dependency), one model per file.
+/// Mapped to the Firestore collections in `docs/data-model.md`: field names are kept as defined there;
+/// converting `Timestamp` to `DateTime` happens in `lib/data/`.
 library;
 
 export 'app_notification.dart';

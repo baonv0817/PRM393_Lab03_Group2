@@ -1,5 +1,7 @@
 import 'package:breakbite/data/repositories/repositories.dart';
+import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/utils/result.dart';
 
 import 'live_value.dart';
 
@@ -72,28 +74,33 @@ class FakeMenuRepository implements MenuRepository {
       _menu.stream.map((items) => items.where((e) => e.kioskId == kioskId).toList());
 
   @override
-  Future<MenuItem?> getItem(String id) async => _menu.value.where((e) => e.id == id).firstOrNull;
+  Future<Result<MenuItem>> getItem(String id) async {
+    final item = _menu.value.where((e) => e.id == id).firstOrNull;
+    return item == null ? const Result.error(NotFoundException(message: 'Không tìm thấy món.')) : Result.ok(item);
+  }
 
   @override
   Stream<List<Kiosk>> watchKiosks() => _kiosks.stream;
 
   @override
-  Future<Voucher?> getVoucher(String code) async => switch (code) {
-    'BBSTUDENT' => Voucher(code: code, discountVnd: 10000, expiresAt: DateTime(2100), minOrderVnd: 40000),
-    'BB20' => Voucher(code: code, discountVnd: 20000, expiresAt: DateTime(2020), minOrderVnd: 0),
-    _ => null,
+  Future<Result<Voucher>> getVoucher(String code) async => switch (code) {
+    'BBSTUDENT' => Result.ok(Voucher(code: code, discountVnd: 10000, expiresAt: DateTime(2100), minOrderVnd: 40000)),
+    'BB20' => Result.ok(Voucher(code: code, discountVnd: 20000, expiresAt: DateTime(2020), minOrderVnd: 0)),
+    _ => const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.')),
   };
 
   @override
-  Future<void> upsertItem(MenuItem item) async {
+  Future<Result<void>> upsertItem(MenuItem item) async {
     final list = [..._menu.value];
     final i = list.indexWhere((e) => e.id == item.id);
     i == -1 ? list.add(item) : list[i] = item;
     _menu.set(list);
+    return const Result.ok(null);
   }
 
   @override
-  Future<void> setSoldOut(String id, bool soldOut) async {
+  Future<Result<void>> setSoldOut(String id, bool soldOut) async {
     _menu.set([for (final e in _menu.value) e.id == id ? e.copyWith(soldOut: soldOut) : e]);
+    return const Result.ok(null);
   }
 }

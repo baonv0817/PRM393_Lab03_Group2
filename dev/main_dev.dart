@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'fake_dependencies.dart';
 
-/// Chạy app với dữ liệu giả: `flutter run -t dev/main_dev.dart` (VS Code: F5 các cấu hình "fake data").
-/// `--dart-define=DEV_SIGNED_IN=true` vào thẳng app không qua S26; `DEV_ROLE=staff` vào app người bán.
+/// Runs the app with fake data: `flutter run -t dev/main_dev.dart` (VS Code: F5 with the "fake data" configs).
+/// `--dart-define=DEV_SIGNED_IN=true` skips S26 and enters the app; `DEV_ROLE=staff` opens the seller app.
 const _devSignedIn = bool.fromEnvironment('DEV_SIGNED_IN');
 const _devRole = String.fromEnvironment('DEV_ROLE', defaultValue: 'user');
 

@@ -1,12 +1,17 @@
-import 'package:flutter/material.dart';
-
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
+import 'package:flutter/material.dart';
 
-/// Màn tạm cho tới khi người phụ trách làm xong. Thay bằng màn thật trong
-/// `lib/router/routes_pX.dart`; xoá màn này khi mọi route đã có màn thật.
+/// Temporary screen until the owner finishes the real one. Replace it with the real screen in
+/// `lib/router/routes_pX.dart`; delete this screen once every route has a real screen.
 class PlaceholderScreen extends StatelessWidget {
-  const PlaceholderScreen({super.key, required this.code, required this.title, required this.owner, this.showBack = true});
+  const PlaceholderScreen({
+    super.key,
+    required this.code,
+    required this.title,
+    required this.owner,
+    this.showBack = true,
+  });
 
   final String code;
   final String title;

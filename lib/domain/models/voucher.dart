@@ -12,20 +12,20 @@ class Voucher {
 
   final String code;
 
-  /// Giảm cố định (VND). Khi `percent` có giá trị thì dùng giảm theo phần trăm.
+  /// Fixed discount (VND). When `percent` is set, the percentage discount is used instead.
   final int discountVnd;
   final DateTime expiresAt;
   final int minOrderVnd;
   final String title;
 
-  /// Giảm theo phần trăm (1–100), kèm trần `maxDiscountVnd`.
+  /// Percentage discount (1–100), capped by `maxDiscountVnd`.
   final int? percent;
   final int? maxDiscountVnd;
   final bool active;
 
   bool isExpired(DateTime now) => now.isAfter(expiresAt);
 
-  /// Số tiền giảm cho một đơn có tạm tính `subtotalVnd`; 0 nếu chưa đủ điều kiện.
+  /// Discount amount for an order with subtotal `subtotalVnd`; 0 if the order does not qualify.
   int discountFor(int subtotalVnd, DateTime now) {
     if (!active || isExpired(now) || subtotalVnd < minOrderVnd) return 0;
     final raw = percent == null ? discountVnd : subtotalVnd * percent! ~/ 100;

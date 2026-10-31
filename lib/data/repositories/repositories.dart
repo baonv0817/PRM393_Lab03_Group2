@@ -1,5 +1,5 @@
-/// Repository: nguồn sự thật của dữ liệu nghiệp vụ (Firestore). Biến tài liệu thành model trong
-/// `lib/domain/models/`, giấu chi tiết truy vấn; ViewModel chỉ biết các interface này.
+/// Repositories: the source of truth for business data (Firestore). They turn documents into models in
+/// `lib/domain/models/` and hide query details; ViewModels only know these interfaces.
 library;
 
 export 'cart_repository.dart';

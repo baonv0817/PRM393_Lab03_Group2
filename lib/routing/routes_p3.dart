@@ -1,7 +1,6 @@
+import 'package:breakbite/routing/route_helpers.dart';
+import 'package:breakbite/routing/routes.dart';
 import 'package:go_router/go_router.dart';
-
-import 'route_helpers.dart';
-import 'routes.dart';
 
 // P3: account S15–S17, S26 sign-in, S27 kiosk picker, and the Firebase demo area.
 

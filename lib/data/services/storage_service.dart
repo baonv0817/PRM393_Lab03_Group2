@@ -1,43 +1,35 @@
-/// Thư mục gốc của tệp tải lên; tệp nằm ở `<folder>/<ownerId>/…`.
+import 'package:breakbite/utils/result.dart';
+
+/// Top-level folder of an upload; files land in `<folder>/<ownerId>/…`.
 enum UploadFolder {
-  /// Biên lai PDF khách xuất (T43); ownerId = uid.
+  /// PDF receipts exported by customers (T43); ownerId is the uid.
   reports,
 
-  /// Ảnh minh chứng sự cố (S24); ownerId = uid.
+  /// Incident evidence photos (S24); ownerId is the uid.
   incidents,
 
-  /// Ảnh món (K14, K15); ownerId = kioskId.
+  /// Item photos (K14, K15); ownerId is the kioskId.
   menu,
 }
 
 class UploadedFile {
   const UploadedFile({required this.url, required this.publicId, required this.sizeBytes});
 
-  /// Đường dẫn HTTPS công khai để mở hoặc tải tệp.
+  /// Public HTTPS link to open or download the file.
   final String url;
 
-  /// Mã định danh tệp ở nơi lưu (để lưu kèm metadata trong Firestore).
+  /// Id of the file at the storage provider, saved with its metadata in Firestore.
   final String publicId;
   final int sizeBytes;
 }
 
-/// Tải tệp thất bại: mất mạng, tệp không hợp lệ hoặc dịch vụ từ chối. [message] hiện được cho người dùng.
-class UploadFailure implements Exception {
-  const UploadFailure(this.message);
-
-  final String message;
-
-  @override
-  String toString() => 'UploadFailure: $message';
-}
-
 abstract interface class StorageService {
-  /// Kích thước tối đa của một tệp.
   static const maxBytes = 5 * 1024 * 1024;
 
-  /// Tải [bytes] lên `<folder>/<ownerId>/`, gọi [onProgress] với giá trị 0..1, trả về tệp đã lưu.
-  /// Ném [UploadFailure] khi không tải được.
-  Future<UploadedFile> upload({
+  /// Uploads [bytes] to `<folder>/<ownerId>/`, reporting progress from 0 to 1 through [onProgress].
+  /// Fails with `ValidationException` (empty or larger than [maxBytes]), `NetworkException` or
+  /// `ServiceException`.
+  Future<Result<UploadedFile>> upload({
     required UploadFolder folder,
     required String ownerId,
     required String fileName,

@@ -1,11 +1,12 @@
 import 'package:breakbite/app.dart';
-import '../dev/fake_dependencies.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../dev/fake_dependencies.dart';
+
 void main() {
-  testWidgets('chưa đăng nhập: thấy Onboarding (S01) trước, bấm Bỏ qua mới sang đăng nhập (S26)', (tester) async {
+  testWidgets('signed out: shows Onboarding (S01) first, tapping Skip goes to sign-in (S26)', (tester) async {
     await tester.pumpWidget(BreakBiteApp(dependencies: createFakeDependencies()));
     await tester.pumpAndSettle();
     expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsOneWidget);
@@ -17,10 +18,10 @@ void main() {
     expect(find.text('Món nhanh · tối đa 5 phút'), findsNothing);
   });
 
-  testWidgets('đã đăng nhập: Trang chủ có thanh dưới 4 tab, chuyển tab được', (tester) async {
+  testWidgets('signed in: Home has a 4-tab bottom bar and tabs can be switched', (tester) async {
     await tester.pumpWidget(BreakBiteApp(dependencies: createFakeDependencies(signedIn: true)));
     await tester.pumpAndSettle();
-    expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget); // S02 Trang chủ (màn thật)
+    expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget); // S02 Home (real screen)
     expect(find.byType(NavigationDestination), findsNWidgets(4));
     await tester.tap(find.text('Thực đơn'));
     await tester.pumpAndSettle();
@@ -30,7 +31,7 @@ void main() {
     expect(find.text('S15'), findsOneWidget);
   });
 
-  testWidgets('người bán đăng nhập thì vào app người bán với 4 tab', (tester) async {
+  testWidgets('signed-in seller lands in the seller app with 4 tabs', (tester) async {
     await tester.pumpWidget(BreakBiteApp(dependencies: createFakeDependencies(role: UserRole.staff, signedIn: true)));
     await tester.pumpAndSettle();
     expect(find.text('K02'), findsOneWidget);

@@ -17,10 +17,10 @@ class AppUser {
   final String? email;
   final String? photoUrl;
 
-  /// Mã số sinh viên (S16).
+  /// Student ID number (S16).
   final String? studentId;
 
-  /// Kiosk nhân viên phụ trách; chỉ có với staff.
+  /// Kiosk the staff member is in charge of; staff only.
   final String? kioskId;
 
   bool get isStaff => role == UserRole.staff || role == UserRole.admin;

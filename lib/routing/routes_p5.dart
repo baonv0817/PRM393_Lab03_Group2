@@ -1,7 +1,6 @@
+import 'package:breakbite/routing/route_helpers.dart';
+import 'package:breakbite/routing/routes.dart';
 import 'package:go_router/go_router.dart';
-
-import 'route_helpers.dart';
-import 'routes.dart';
 
 // P5: favorites S13, notification settings S18, notifications S19, search S28
 // (S14 is a bottom sheet and S30 is an app-wide state, so neither has a route).

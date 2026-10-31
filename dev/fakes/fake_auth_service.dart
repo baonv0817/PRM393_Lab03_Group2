@@ -1,5 +1,6 @@
-import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/utils/result.dart';
 
 import 'live_value.dart';
 
@@ -20,12 +21,15 @@ class FakeAuthService implements AuthService {
   Stream<AppUser?> authStateChanges() => _user.stream;
 
   @override
-  Future<AppUser> signInWithGoogle() async {
+  Future<Result<AppUser>> signInWithGoogle() async {
     final user = _make(role);
     _user.set(user);
-    return user;
+    return Result.ok(user);
   }
 
   @override
-  Future<void> signOut() async => _user.set(null);
+  Future<Result<void>> signOut() async {
+    _user.set(null);
+    return const Result.ok(null);
+  }
 }

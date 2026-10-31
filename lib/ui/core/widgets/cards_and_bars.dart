@@ -1,20 +1,19 @@
-import 'package:flutter/material.dart';
-
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:breakbite/ui/core/widgets/buttons.dart';
+import 'package:breakbite/ui/core/widgets/menu_image.dart';
 import 'package:breakbite/utils/format.dart';
-import 'buttons.dart';
-import 'menu_image.dart';
+import 'package:flutter/material.dart';
 
-/// Card/Food của Lab 2: món, đồ uống, hết hàng.
+/// Lab 2 Card/Food: dish, drink, sold out.
 class FoodCard extends StatelessWidget {
   const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd});
 
   final MenuItem item;
   final VoidCallback onTap;
 
-  /// `null` khi hết hàng.
+  /// `null` when sold out.
   final VoidCallback? onAdd;
 
   @override
@@ -33,14 +32,19 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               children: [
-                // Ảnh món; thiếu ảnh thì MenuItemImage hiện logo bản nhạt.
+                // Dish photo; if missing, MenuItemImage shows the soft logo.
                 MenuItemImage(imageUrl: item.imageUrl, size: 80),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: dim), maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text(
+                        item.name,
+                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: dim),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: AppSpacing.xxs),
                       Row(
                         children: [
@@ -50,7 +54,10 @@ class FoodCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xxs),
-                      Text(formatVnd(item.priceVnd), style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim)),
+                      Text(
+                        formatVnd(item.priceVnd),
+                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
+                      ),
                     ],
                   ),
                 ),
@@ -61,7 +68,12 @@ class FoodCard extends StatelessWidget {
                     child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
                   )
                 else
-                  AppIconButton(icon: Icons.add, semanticLabel: 'Thêm ${item.name} vào giỏ', onPressed: onAdd, filled: true),
+                  AppIconButton(
+                    icon: Icons.add,
+                    semanticLabel: 'Thêm ${item.name} vào giỏ',
+                    onPressed: onAdd,
+                    filled: true,
+                  ),
               ],
             ),
           ),
@@ -71,7 +83,7 @@ class FoodCard extends StatelessWidget {
   }
 }
 
-/// AppBar của Lab 2: tiêu đề, nút Back 48 × 48.
+/// Lab 2 AppBar: title, 48 × 48 Back button.
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppTopBar({super.key, required this.title, this.onBack, this.actions});
 
@@ -87,7 +99,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(title),
       centerTitle: false,
-      leading: onBack == null ? null : AppIconButton(icon: Icons.arrow_back, semanticLabel: 'Quay lại', onPressed: onBack),
+      leading: onBack == null
+          ? null
+          : AppIconButton(icon: Icons.arrow_back, semanticLabel: 'Quay lại', onPressed: onBack),
       actions: actions,
     );
   }
@@ -98,11 +112,11 @@ class AppNavTab {
 
   final String label;
 
-  /// Icon đặc (Figma dùng icon đặc cho cả tab đang chọn lẫn chưa chọn).
+  /// Filled icon (Figma uses filled icons for both selected and unselected tabs).
   final IconData icon;
 }
 
-/// NavBar 4 tab của Lab 2 (khách và người bán dùng chung).
+/// Lab 2 4-tab NavBar (shared by customer and seller).
 class AppNavBar extends StatelessWidget {
   const AppNavBar({super.key, required this.tabs, required this.selectedIndex, required this.onSelected});
 
@@ -113,7 +127,9 @@ class AppNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.appColors.border))),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: context.appColors.border)),
+      ),
       child: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: onSelected,
@@ -125,7 +141,7 @@ class AppNavBar extends StatelessWidget {
   }
 }
 
-/// Dialog xác nhận của Lab 2 (huỷ đơn, từ chối đơn…). Trả `true` khi xác nhận.
+/// Lab 2 confirmation dialog (cancel order, reject order…). Returns `true` when confirmed.
 Future<bool?> showAppDialog(
   BuildContext context, {
   required String title,
@@ -141,7 +157,11 @@ Future<bool?> showAppDialog(
       title: Text(title),
       content: Text(message),
       actions: [
-        AppButton(label: cancelLabel, variant: AppButtonVariant.secondary, onPressed: () => Navigator.of(ctx).pop(false)),
+        AppButton(
+          label: cancelLabel,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => Navigator.of(ctx).pop(false),
+        ),
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(true),
           style: FilledButton.styleFrom(
@@ -157,14 +177,18 @@ Future<bool?> showAppDialog(
   );
 }
 
-/// Thông báo "đã thêm vào giỏ" kèm nút Xem giỏ (S02-ADDED, S03-ADDED).
+/// "Added to cart" notice with a View cart button (S02-ADDED, S03-ADDED).
 void showAddedSnackbar(BuildContext context, {required String message, required VoidCallback onViewCart}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(message),
-        action: SnackBarAction(label: 'Xem giỏ', textColor: Theme.of(context).colorScheme.primary, onPressed: onViewCart),
+        action: SnackBarAction(
+          label: 'Xem giỏ',
+          textColor: Theme.of(context).colorScheme.primary,
+          onPressed: onViewCart,
+        ),
       ),
     );
 }

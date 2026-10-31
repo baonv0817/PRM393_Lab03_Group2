@@ -1,12 +1,11 @@
+import 'package:breakbite/data/repositories/repositories.dart';
+import 'package:breakbite/data/services/services.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-import '../data/repositories/repositories.dart';
-import '../data/services/services.dart';
-
-/// Mọi service và repository của app, dựng một lần: bản Firebase ở `firebase_dependencies.dart`,
-/// bản giả ở `dev/fake_dependencies.dart`. Thêm repository mới: một field ở đây, một dòng trong
-/// [providers], một dòng ở mỗi nơi dựng.
+/// All of the app's services and repositories, built once: the Firebase version is in `firebase_dependencies.dart`,
+/// the fake version in `dev/fake_dependencies.dart`. To add a repository: one field here, one line in
+/// [providers], and one line in each place that builds it.
 class AppDependencies {
   const AppDependencies({
     required this.auth,
@@ -31,7 +30,7 @@ class AppDependencies {
   final CartRepository cart;
   final OrderRepository orders;
 
-  /// Cung cấp từng phần riêng để route chỉ đọc đúng thứ cần: `context.read<MenuRepository>()`.
+  /// Provides each part separately so a route reads only what it needs: `context.read<MenuRepository>()`.
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
     Provider<AnalyticsService>.value(value: analytics),

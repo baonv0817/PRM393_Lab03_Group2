@@ -1,5 +1,5 @@
-/// Bản giả trong bộ nhớ của mọi service và repository, dùng cho `dev/main_dev.dart` và cho test.
-/// Nằm ngoài `lib/` nên không bao giờ có trong bản build nộp (handout cấm dữ liệu giả trong bản nộp).
+/// In-memory fakes of every service and repository, used by `dev/main_dev.dart` and by tests.
+/// They live outside `lib/`, so they never ship in the submitted build (the handout forbids fake data there).
 library;
 
 export 'fake_analytics_service.dart';

@@ -1,23 +1,31 @@
 import 'dart:async';
 
-import '../../../dev/fakes/fakes.dart';
-import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
-import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/domain/app_exception.dart';
+import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/ui/core/view_state.dart';
+import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../dev/fakes/fakes.dart';
 
 class _FailingMenu extends FakeMenuRepository {
   @override
   Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
 }
 
+class _FailingCart extends FakeCartRepository {
+  @override
+  Future<Result<void>> addItem(String uid, CartItem item) async => const Result.error(PermissionDeniedException());
+}
+
 class _ClosedFirstMenu extends FakeMenuRepository {
   @override
   Stream<List<Kiosk>> watchKiosks() => Stream.value(const [
-        Kiosk(id: 'nvh-t1', name: 'Nhà văn hóa SV · Tầng 1', open: false, waitMinutes: 0),
-        Kiosk(id: 'q9-t4', name: 'Kiosk Q9 · Tầng 4', open: true, waitMinutes: 10),
-      ]);
+    Kiosk(id: 'nvh-t1', name: 'Nhà văn hóa SV · Tầng 1', open: false, waitMinutes: 0),
+    Kiosk(id: 'q9-t4', name: 'Kiosk Q9 · Tầng 4', open: true, waitMinutes: 10),
+  ]);
 }
 
 class _NoKioskMenu extends FakeMenuRepository {
@@ -41,20 +49,21 @@ HomeViewModel make({
   FakeCartRepository? cart,
   FakeOrderRepository? orders,
   FakeAnalyticsService? analytics,
-}) =>
-    HomeViewModel(
-      menu: menu ?? FakeMenuRepository(),
-      cart: cart ?? FakeCartRepository(),
-      orders: orders ?? FakeOrderRepository(),
-      remoteConfig: rc ?? FakeRemoteConfigService(),
-      analytics: analytics ?? FakeAnalyticsService(),
-      uid: 'u1',
-    );
+  FakeCrashService? crash,
+}) => HomeViewModel(
+  menu: menu ?? FakeMenuRepository(),
+  cart: cart ?? FakeCartRepository(),
+  orders: orders ?? FakeOrderRepository(),
+  remoteConfig: rc ?? FakeRemoteConfigService(),
+  analytics: analytics ?? FakeAnalyticsService(),
+  crash: crash ?? FakeCrashService(),
+  uid: 'u1',
+);
 
 Future<void> settle() => Future<void>.delayed(Duration.zero);
 
 void main() {
-  test('bắt đầu ở loading rồi có dữ liệu; loại món hết hàng, giữ món tối đa 5 phút', () async {
+  test('starts loading then shows data; drops sold-out items, keeps items of at most 5 minutes', () async {
     final vm = make();
     expect(vm.state, isA<ViewLoading<List<MenuItem>>>());
     await settle();
@@ -64,7 +73,7 @@ void main() {
     vm.dispose();
   });
 
-  test('giới hạn số món lấy từ Remote Config', () async {
+  test('limits the number of items with Remote Config', () async {
     final rc = FakeRemoteConfigService()..values['quick_items_limit'] = 1;
     final vm = make(rc: rc);
     await settle();
@@ -72,7 +81,7 @@ void main() {
     vm.dispose();
   });
 
-  test('giới hạn bằng 0 thì ra trạng thái rỗng', () async {
+  test('a limit of 0 gives the empty state', () async {
     final rc = FakeRemoteConfigService()..values['quick_items_limit'] = 0;
     final vm = make(rc: rc);
     await settle();
@@ -80,14 +89,16 @@ void main() {
     vm.dispose();
   });
 
-  test('lỗi mạng thì ra trạng thái error', () async {
-    final vm = make(menu: _FailingMenu());
+  test('a network error gives the error state and records a non-fatal error', () async {
+    final crash = FakeCrashService();
+    final vm = make(menu: _FailingMenu(), crash: crash);
     await settle();
     expect(vm.state, isA<ViewError<List<MenuItem>>>());
+    expect(crash.errors, hasLength(1));
     vm.dispose();
   });
 
-  test('header: lấy kiosk đang mở đầu tiên và dòng trạng thái chờ', () async {
+  test('header uses the first open kiosk and its wait-time line', () async {
     final vm = make();
     await settle();
     expect(vm.kiosk!.id, 'q9-t2');
@@ -95,7 +106,7 @@ void main() {
     vm.dispose();
   });
 
-  test('thêm vào giỏ ghi giỏ hàng và sự kiện add_to_cart; số món trong giỏ cập nhật', () async {
+  test('add to cart writes the cart and the add_to_cart event; the cart count updates', () async {
     final cart = FakeCartRepository();
     final analytics = FakeAnalyticsService();
     final vm = make(cart: cart, analytics: analytics);
@@ -111,17 +122,29 @@ void main() {
     vm.dispose();
   });
 
-  group('thực đơn theo kiosk', () {
-    test('chỉ lấy món của kiosk đang chọn (kiosk mở đầu tiên)', () async {
+  test('a failed cart write returns the error, logs no event and records a non-fatal error', () async {
+    final analytics = FakeAnalyticsService();
+    final crash = FakeCrashService();
+    final vm = make(cart: _FailingCart(), analytics: analytics, crash: crash);
+    await settle();
+    final result = await vm.addToCart(vm.state.dataOrNull!.first);
+    expect(result.errorOrNull, isA<PermissionDeniedException>());
+    expect(analytics.events, isEmpty);
+    expect(crash.errors, hasLength(1));
+    vm.dispose();
+  });
+
+  group('menu per kiosk', () {
+    test('only shows items of the selected kiosk (the first open one)', () async {
       final vm = make();
       await settle();
       expect(vm.kiosk!.id, 'q9-t2');
       expect(vm.state.dataOrNull!.every((e) => e.kioskId == 'q9-t2'), isTrue);
-      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']); // không có m5, m6 của Tầng 4
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']); // no m5, m6 from floor 4
       vm.dispose();
     });
 
-    test('kiosk đầu tiên đóng cửa thì chọn kiosk mở kế tiếp', () async {
+    test('picks the next open kiosk when the first one is closed', () async {
       final vm = make(menu: _ClosedFirstMenu());
       await settle();
       expect(vm.kiosk!.id, 'q9-t4');
@@ -129,7 +152,7 @@ void main() {
       vm.dispose();
     });
 
-    test('không có kiosk nào thì hiện trạng thái rỗng', () async {
+    test('shows the empty state when there is no kiosk', () async {
       final vm = make(menu: _NoKioskMenu());
       await settle();
       expect(vm.kiosk, isNull);
@@ -137,7 +160,7 @@ void main() {
       vm.dispose();
     });
 
-    test('lỗi tải kiosk thì ra trạng thái error, bấm thử lại tải lại được', () async {
+    test('a kiosk loading error gives the error state, and retry loads again', () async {
       final menu = _FlakyKioskMenu();
       final vm = make(menu: menu);
       await settle();
@@ -150,48 +173,72 @@ void main() {
     });
   });
 
-  group('đặt lại đơn gần đây', () {
-    test('chưa có đơn thì không có đơn để đặt lại và đặt lại trả 0', () async {
+  group('reorder the latest order', () {
+    test('with no order there is nothing to reorder and reorder returns 0', () async {
       final vm = make();
       await settle();
       expect(vm.lastOrder, isNull);
-      expect(await vm.reorderLast(), 0);
+      expect((await vm.reorderLast()).valueOrNull, 0);
       vm.dispose();
     });
 
-    test('lấy đơn mới nhất chưa huỷ, bỏ qua đơn đã huỷ', () async {
+    test('uses the newest order that is not cancelled', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(uid: 'u1', items: const [_tacos], totalVnd: 39000, method: PaymentMethod.momo, kioskId: 'q9-t2');
+      await orders.createOrder(
+        uid: 'u1',
+        items: const [_tacos],
+        totalVnd: 39000,
+        method: PaymentMethod.momo,
+        kioskId: 'q9-t2',
+      );
       await Future<void>.delayed(const Duration(milliseconds: 2));
-      final newer = await orders.createOrder(uid: 'u1', items: const [_tea], totalVnd: 40000, method: PaymentMethod.cash, kioskId: 'q9-t2');
+      final newer = (await orders.createOrder(
+        uid: 'u1',
+        items: const [_tea],
+        totalVnd: 40000,
+        method: PaymentMethod.cash,
+        kioskId: 'q9-t2',
+      )).valueOrNull!;
       final vm = make(orders: orders);
       await settle();
       expect(vm.lastOrder!.id, newer);
 
       await orders.cancelOrder(newer);
       await settle();
-      expect(vm.lastOrder!.items.single.itemId, 'm1'); // quay về đơn trước đó
+      expect(vm.lastOrder!.items.single.itemId, 'm1'); // falls back to the previous order
       vm.dispose();
     });
 
-    test('không lấy đơn của người khác', () async {
+    test('ignores orders of other users', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(uid: 'someone-else', items: const [_tacos], totalVnd: 39000, method: PaymentMethod.momo, kioskId: 'q9-t2');
+      await orders.createOrder(
+        uid: 'someone-else',
+        items: const [_tacos],
+        totalVnd: 39000,
+        method: PaymentMethod.momo,
+        kioskId: 'q9-t2',
+      );
       final vm = make(orders: orders);
       await settle();
       expect(vm.lastOrder, isNull);
       vm.dispose();
     });
 
-    test('đặt lại thêm đúng các món và số lượng vào giỏ, ghi sự kiện reorder', () async {
+    test('reorder adds the same items and quantities to the cart and logs the reorder event', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(uid: 'u1', items: const [_tacos, _tea], totalVnd: 79000, method: PaymentMethod.momo, kioskId: 'q9-t2');
+      await orders.createOrder(
+        uid: 'u1',
+        items: const [_tacos, _tea],
+        totalVnd: 79000,
+        method: PaymentMethod.momo,
+        kioskId: 'q9-t2',
+      );
       final cart = FakeCartRepository();
       final analytics = FakeAnalyticsService();
       final vm = make(orders: orders, cart: cart, analytics: analytics);
       await settle();
 
-      expect(await vm.reorderLast(), 2);
+      expect((await vm.reorderLast()).valueOrNull, 2);
       final items = await cart.watchCart('u1').first;
       expect(items.map((e) => '${e.itemId}x${e.quantity}'), ['m1x1', 'm3x2']);
       expect(analytics.events.single.name, 'reorder');

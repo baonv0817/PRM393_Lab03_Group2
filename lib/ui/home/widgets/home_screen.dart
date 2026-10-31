@@ -1,22 +1,22 @@
+import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/core/theme/app_colors.dart';
+import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:breakbite/ui/core/view_state.dart';
+import 'package:breakbite/ui/core/widgets/widgets.dart';
+import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/utils/format.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:breakbite/domain/models/models.dart';
-import 'package:breakbite/ui/core/theme/app_colors.dart';
-import 'package:breakbite/ui/core/theme/app_dimens.dart';
-import 'package:breakbite/routing/routes.dart';
-import 'package:breakbite/utils/format.dart';
-import 'package:breakbite/ui/home/view_models/home_view_model.dart';
-import 'package:breakbite/ui/core/view_state.dart';
-import 'package:breakbite/ui/core/widgets/widgets.dart';
-
-/// S02 Trang chủ: đầu trang cho kiosk (trạng thái chờ, thông báo, giỏ hàng), ô tìm kiếm, một
-/// banner gọn (Remote Config), món nhanh có ảnh và nút "Đặt lại" khi đã có đơn.
+/// S02 Home: kiosk header (wait time, notifications, cart), search field, a compact banner (Remote
+/// Config), quick items with photos and a Reorder card once there is an order.
 ///
-/// So với Figma v2 đã bỏ chip loại món (lọc món là việc của tab Thực đơn, chip trên Trang chủ chỉ
-/// lọc danh sách ngắn gây khó hiểu) và nút "Đặt ngay" trong banner (cả banner đã bấm được).
-/// Màn chỉ vẽ theo `HomeViewModel`; logic lọc, giới hạn và ghi giỏ hàng nằm trong ViewModel.
+/// Compared with Figma v2 the category chips are dropped (filtering belongs to the Menu tab; chips on
+/// Home only filter a short list and confuse) and so is the banner button (the whole banner is tappable),
+/// see deviation D06. The screen only draws `HomeViewModel`; filtering, limits and cart writes live there.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -29,7 +29,12 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.xs, AppSpacing.screenPadding, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenPadding,
+            AppSpacing.xs,
+            AppSpacing.screenPadding,
+            AppSpacing.lg,
+          ),
           children: [
             _Header(vm: vm),
             const SizedBox(height: AppSpacing.sm),
@@ -39,7 +44,10 @@ class HomeScreen extends StatelessWidget {
               _PromoBanner(onTap: () => context.go(AppRoutes.menu)),
             ],
             const SizedBox(height: AppSpacing.lg),
-            Semantics(header: true, child: Text('Món nhanh · tối đa 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+            Semantics(
+              header: true,
+              child: Text('Món nhanh · tối đa 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            ),
             const SizedBox(height: AppSpacing.sm),
             _QuickSection(vm: vm, onAdd: (item) => _add(context, vm, item)),
             if (vm.lastOrder case final order?) ...[
@@ -53,24 +61,39 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<void> _add(BuildContext context, HomeViewModel vm, MenuItem item) async {
-    await vm.addToCart(item);
+    final result = await vm.addToCart(item);
     if (!context.mounted) return;
-    showAddedSnackbar(
-      context,
-      message: 'Đã thêm ${item.name} vào giỏ',
-      onViewCart: () => context.push(AppRoutes.cart),
-    );
+    switch (result) {
+      case Ok():
+        showAddedSnackbar(
+          context,
+          message: 'Đã thêm ${item.name} vào giỏ',
+          onViewCart: () => context.push(AppRoutes.cart),
+        );
+      case Err(:final error):
+        _showError(context, error.message);
+    }
   }
 
   Future<void> _reorder(BuildContext context, HomeViewModel vm) async {
-    final count = await vm.reorderLast();
-    if (!context.mounted || count == 0) return;
-    showAddedSnackbar(
-      context,
-      message: 'Đã thêm $count món của đơn gần đây vào giỏ',
-      onViewCart: () => context.push(AppRoutes.cart),
-    );
+    final result = await vm.reorderLast();
+    if (!context.mounted) return;
+    switch (result) {
+      case Ok(value: 0):
+        break;
+      case Ok(value: final count):
+        showAddedSnackbar(
+          context,
+          message: 'Đã thêm $count món của đơn gần đây vào giỏ',
+          onViewCart: () => context.push(AppRoutes.cart),
+        );
+      case Err(:final error):
+        _showError(context, error.message);
+    }
   }
+
+  void _showError(BuildContext context, String message) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 class _Header extends StatelessWidget {
@@ -111,17 +134,32 @@ class _Header extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(kiosk?.name ?? 'BreakBite', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            kiosk?.name ?? 'BreakBite',
+                            style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           if (status != null)
                             Row(
                               children: [
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: BoxDecoration(color: (kiosk?.open ?? false) ? colors.success : colors.muted, shape: BoxShape.circle),
+                                  decoration: BoxDecoration(
+                                    color: (kiosk?.open ?? false) ? colors.success : colors.muted,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
                                 const SizedBox(width: 6),
-                                Flexible(child: Text(status, style: text.bodyMedium?.copyWith(color: colors.muted), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                Flexible(
+                                  child: Text(
+                                    status,
+                                    style: text.bodyMedium?.copyWith(color: colors.muted),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ],
                             ),
                         ],
@@ -150,7 +188,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Banner ưu đãi: hai dòng, cả khối bấm được (không có nút phụ).
+/// Promo banner: two lines, the whole block is tappable (no extra button).
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner({required this.onTap});
 
@@ -197,7 +235,7 @@ class _PromoBanner extends StatelessWidget {
   }
 }
 
-/// Chiều cao vùng hiện loading, rỗng, lỗi (đủ chứa biểu tượng, lời nhắn và nút Thử lại).
+/// Height of the loading, empty and error area (fits the icon, the message and the Retry button).
 const double _stateHeight = 300;
 
 class _QuickSection extends StatelessWidget {
@@ -210,26 +248,32 @@ class _QuickSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (vm.state) {
       ViewLoading<List<MenuItem>>() => const SizedBox(height: _stateHeight, child: LoadingView()),
-      ViewEmpty<List<MenuItem>>(:final message) => SizedBox(height: _stateHeight, child: EmptyView(message: message ?? 'Chưa có món nhanh lúc này')),
-      ViewError<List<MenuItem>>(:final message) => SizedBox(height: _stateHeight, child: ErrorView(message: message, onRetry: vm.load)),
+      ViewEmpty<List<MenuItem>>(:final message) => SizedBox(
+        height: _stateHeight,
+        child: EmptyView(message: message ?? 'Chưa có món nhanh lúc này'),
+      ),
+      ViewError<List<MenuItem>>(:final message) => SizedBox(
+        height: _stateHeight,
+        child: ErrorView(message: message, onRetry: vm.load),
+      ),
       ViewData<List<MenuItem>>(:final data) => Column(
-          children: [
-            for (final item in data)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: FoodCard(
-                  item: item,
-                  onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
-                  onAdd: item.soldOut ? null : () => onAdd(item),
-                ),
+        children: [
+          for (final item in data)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: FoodCard(
+                item: item,
+                onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
+                onAdd: item.soldOut ? null : () => onAdd(item),
               ),
-          ],
-        ),
+            ),
+        ],
+      ),
     };
   }
 }
 
-/// Đặt lại đơn gần nhất: chỉ hiện khi đã có đơn, kèm tóm tắt món và tổng tiền.
+/// Reorder the latest order: shown only once there is an order, with the items and the total.
 class _ReorderCard extends StatelessWidget {
   const _ReorderCard({required this.order, required this.onTap});
 
@@ -267,7 +311,12 @@ class _ReorderCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Đặt lại đơn gần đây', style: text.labelLarge),
-                        Text(_summary, style: text.bodyMedium?.copyWith(color: colors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          _summary,
+                          style: text.bodyMedium?.copyWith(color: colors.muted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),

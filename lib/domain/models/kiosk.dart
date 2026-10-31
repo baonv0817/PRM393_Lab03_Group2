@@ -15,13 +15,13 @@ class Kiosk {
   final bool open;
   final int waitMinutes;
 
-  /// Địa điểm đầy đủ, ví dụ "Campus Q9, tầng 2".
+  /// Full location, e.g. "Campus Q9, tầng 2".
   final String location;
 
-  /// Giờ mở và đóng cửa dạng "HH:mm".
+  /// Opening and closing times in "HH:mm" format.
   final String? openTime;
   final String? closeTime;
 
-  /// Thông báo hiện ở Trang chủ khi quán đóng hoặc có thay đổi (S21).
+  /// Notice shown on the Home screen when the kiosk is closed or something changes (S21).
   final String? notice;
 }

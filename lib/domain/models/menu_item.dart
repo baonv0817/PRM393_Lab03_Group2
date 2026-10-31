@@ -18,12 +18,12 @@ class MenuItem {
   final int prepMinutes;
   final bool soldOut;
 
-  /// Kiosk bán món này; mỗi món thuộc đúng một kiosk.
+  /// Kiosk that sells this item; each item belongs to exactly one kiosk.
   final String kioskId;
   final String description;
 
-  /// Ảnh món: đường dẫn ảnh đóng gói trong app (`assets/images/menu/…`) hoặc link `https://`
-  /// của ảnh trong Cloud Storage `menu/{kioskId}/…`.
+  /// Item image: path to an image bundled in the app (`assets/images/menu/…`) or an `https://` link
+  /// to an image in Cloud Storage `menu/{kioskId}/…`.
   final String? imageUrl;
 
   MenuItem copyWith({bool? soldOut}) => MenuItem(

@@ -1,5 +1,5 @@
-/// Mọi đường dẫn của app. Định nghĩa route và điều hướng (`context.push`, `context.go`) đều dùng
-/// hằng ở đây, không viết chuỗi tay. Đường dẫn có tham số có thêm hàm dựng, ví dụ [menuItemOf].
+/// Every path in the app. Route definitions and navigation (`context.push`, `context.go`) all use the
+/// constants here, never hand-written strings. Parameterized paths also get a builder, e.g. [menuItemOf].
 abstract final class AppRoutes {
   static const onboarding = '/onboarding';
   static const signIn = '/sign-in';

@@ -1,5 +1,5 @@
-/// Service: lớp mỏng bọc SDK bên ngoài (Firebase Auth, Analytics, Crashlytics, FCM, Storage,
-/// Remote Config). Không giữ dữ liệu nghiệp vụ; ViewModel và repository chỉ biết các interface này.
+/// Services: thin wrappers around external SDKs (Firebase Auth, Analytics, Crashlytics, FCM, Storage,
+/// Remote Config). They hold no business data; ViewModels and repositories only know these interfaces.
 library;
 
 export 'analytics_events.dart';
