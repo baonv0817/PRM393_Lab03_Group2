@@ -8,8 +8,11 @@ import '../viewmodels/auth_view_model.dart';
 import '../viewmodels/home_view_model.dart';
 import 'route_helpers.dart';
 
-// P1: luồng đặt món S01–S08 (xem docs/design-traceability.md).
-/// Gốc của tab: S02 Trang chủ. Mẫu nối một màn thật: tạo ViewModel ở route, màn chỉ đọc nó.
+// P1: ordering flow S01–S08, S25, S29 (S21 is a state of Home, S22 is the alternatives screen).
+// See docs/design-traceability.md.
+
+/// Tab root: S02 Home. The pattern for wiring a real screen: create the ViewModel in the route,
+/// the screen only reads it.
 final GoRoute homeRoute = GoRoute(
   path: '/home',
   builder: (context, state) {
@@ -29,17 +32,20 @@ final GoRoute homeRoute = GoRoute(
   },
 );
 
-/// Gốc của tab: S03 Thực đơn.
+/// Tab root: S03 Menu.
 final GoRoute menuRoute = placeholderRoute('/menu', 'S03', 'Thực đơn', 'P1', showBack: false);
 
-/// Gốc của tab: S08 Đơn hàng.
+/// Tab root: S08 Orders.
 final GoRoute ordersRoute = placeholderRoute('/orders', 'S08', 'Đơn hàng', 'P1', showBack: false);
 
-/// Route toàn màn hình của P1.
+/// Full-screen routes of P1.
 final List<GoRoute> p1Routes = [
   GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
   placeholderRoute('/menu/:id', 'S04', 'Chi tiết món', 'P1'),
+  placeholderRoute('/menu/:id/alternatives', 'S22', 'Món hết, gợi ý thay thế', 'P1'),
   placeholderRoute('/cart', 'S05', 'Giỏ hàng', 'P1'),
+  placeholderRoute('/cart/pickup-time', 'S25', 'Hẹn giờ nhận', 'P1'),
+  placeholderRoute('/cart/vouchers', 'S29', 'Chọn mã giảm giá', 'P1'),
   placeholderRoute('/checkout', 'S06', 'Thanh toán', 'P1'),
   placeholderRoute('/checkout/gateway', 'S06-GATEWAY', 'Cổng thanh toán', 'P1'),
   placeholderRoute('/orders/:id', 'S07', 'Theo dõi đơn', 'P1'),

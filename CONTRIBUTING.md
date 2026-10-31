@@ -34,7 +34,7 @@ This is where the team is most likely to step on each other. When you change a s
 | File or folder | Who edits | Rule |
 |---|---|---|
 | `lib/theme/`, `lib/widgets/` | P1 | Need a new widget or variant: open an issue or a small PR for P1 to review. Do not add hard-coded colors or font sizes in a screen |
-| `lib/router/app_router.dart` | P1 | Do not edit. Each person only edits their own `routes_p1.dart` to `routes_p4.dart` |
+| `lib/router/app_router.dart` | P1 | Do not edit. Each person only edits their own `routes_p1.dart` to `routes_p5.dart` |
 | `lib/router/routes_pX.dart` | the file's owner | Edit only your own file |
 | `lib/services/services.dart`, `lib/services/app_services.dart` | the whole team | **Do not add more interfaces to `services.dart`.** A new service goes in its own file `lib/services/<feature>_service.dart`; add exactly one field to `AppServices` |
 | `lib/dev/dev_services.dart` | the whole team | The fake of a new service goes in its own file `lib/dev/dev_<feature>.dart`; add exactly one line to `createDevServices` |

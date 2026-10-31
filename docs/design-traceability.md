@@ -4,7 +4,7 @@ A map from the Lab 2 design (Figma Page 03, the frames with the ` v2` suffix) to
 
 Lab 2 documents: repo `PRM323-Lab2-Group2` (`05-P4-ui-design/`, `04-P3-ui-concept/01-DESIGN.md`, `06-P5-kiem-thu-ban-giao/03-flutter-handoff.md`).
 
-Convention: states (loading, empty, error, selected variants) are not separate routes; they are state of the parent screen inside the ViewModel.
+Convention: states (loading, empty, error, selected variants) are not separate routes; they are state of the parent screen inside the ViewModel. Owners are P1 to P5 (see `ASSIGNMENTS.md`).
 
 The Figma and the app UI are in Vietnamese, so each screen name is followed by its Vietnamese UI title in parentheses.
 
@@ -39,26 +39,26 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S10 | Cancelled order | /orders/:id/cancelled | OrderCancelledScreen | OrderTrackingViewModel | Firestore orders/{id} | P2 | Not started |
 | S11 | History by week and month | /orders/history | HistoryScreen | HistoryViewModel | Firestore orders (uid) | P2 | Not started |
 | S12 | Order detail | /orders/:id/detail | OrderDetailScreen | OrderDetailViewModel | Firestore orders/{id} | P2 | Not started |
-| S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P2 | Not started |
-| S14 | Quick reorder | (bottom sheet) | ReorderSheet | ReorderViewModel | Firestore orders (uid) | P2 | Not started |
+| S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P5 | Not started |
+| S14 | Quick reorder | (bottom sheet) | ReorderSheet | ReorderViewModel | Firestore orders (uid) | P5 | Not started |
 | S15 | Profile (Cá nhân) | /profile | ProfileScreen | ProfileViewModel | Firestore users/{uid} | P3 | Not started |
 | S16 | Student profile | /profile/info | StudentInfoScreen | ProfileViewModel | Firestore users/{uid} | P3 | Not started |
 | S17 | Payment methods | /profile/payment | PaymentSettingsScreen | PaymentSettingsViewModel | Firestore users/{uid} | P3 | Not started |
-| S18 | Notification settings | /profile/notifications | NotificationSettingsScreen | NotificationSettingsViewModel | Firestore users/{uid}, FCM | P3 | Not started |
-| S19 | Notifications | /notifications | NotificationCenterScreen | NotificationCenterViewModel | Firestore users/{uid}/notifications, FCM | P2 | Not started |
+| S18 | Notification settings | /profile/notifications | NotificationSettingsScreen | NotificationSettingsViewModel | Firestore users/{uid}, FCM | P5 | Not started |
+| S19 | Notifications | /notifications | NotificationCenterScreen | NotificationCenterViewModel | Firestore users/{uid}/notifications, FCM | P5 | Not started |
 | S20 | Pickup (QR code) | /orders/:id/pickup | PickupQrScreen | PickupViewModel | Firestore orders/{id} | P2 | Not started |
-| S21 | Home when the counter is closed | (state of /home) | ClosedBanner | HomeViewModel | Firestore kiosks/{id} | P2 | Not started |
-| S22 | Item sold out, suggested alternatives | /menu/:id/alternatives | AlternativesScreen | AlternativesViewModel | Firestore menu_items | P2 | Not started |
+| S21 | Home when the counter is closed | (state of /home) | ClosedBanner | HomeViewModel | Firestore kiosks/{id} | P1 | Not started |
+| S22 | Item sold out, suggested alternatives | /menu/:id/alternatives | AlternativesScreen | AlternativesViewModel | Firestore menu_items | P1 | Not started |
 | S23 | Review an item | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews | P2 | Not started |
 | S24 | Report an incident | /orders/:id/incident | IncidentScreen | IncidentViewModel | Firestore incidents | P2 | Not started |
 | S25 | Pick a time slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id} | P1 | Not started |
 | S26 | Sign-in (Google instead of email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth | P3 | Not started |
 | S26-OTP | Enter the verification code (dropped, see deviation D01) | — | — | — | — | P3 | Not started |
 | S27 | Choose a kiosk (Q9 floor 2, floor 4, Student Cultural House) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks | P3 | Not started |
-| S28 | Search results | /search | SearchScreen | SearchViewModel | Firestore menu_items | P3 | Not started |
-| S28-EMPTY | No results | (state of /search) | EmptyView | SearchViewModel | — | P3 | Not started |
+| S28 | Search results | /search | SearchScreen | SearchViewModel | Firestore menu_items | P5 | Not started |
+| S28-EMPTY | No results | (state of /search) | EmptyView | SearchViewModel | — | P5 | Not started |
 | S29 | Choose a voucher | /cart/vouchers | VoucherPickerScreen | VoucherViewModel | Firestore vouchers | P1 | Not started |
-| S30 | Offline | (app-wide state) | OfflineView | ConnectivityViewModel | connectivity_plus | P3 | Not started |
+| S30 | Offline | (app-wide state) | OfflineView | ConnectivityViewModel | connectivity_plus | P5 | Not started |
 
 ## 2. Seller app (K01–K15)
 
@@ -75,15 +75,15 @@ K07 does not exist in the design.
 | K05-ERR | Invalid code | (state of /seller/scan) | ErrorView | ScanViewModel | — | P4 | Not started |
 | K06 | Confirm handover | /seller/orders/:id/deliver | DeliverScreen | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
 | K06-CASH | Handover, collect cash | (state of deliver) | DeliverScreen | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
-| K08 | Menu management | /seller/menu | SellerMenuScreen | SellerMenuViewModel | Firestore menu_items | P4 | Not started |
-| K09 | Mark item sold out | (dialog) | SoldOutDialog | SellerMenuViewModel | Firestore menu_items/{id} | P4 | Not started |
-| K10 | Shop | /seller/shop | ShopScreen | ShopViewModel | Firestore kiosks/{id} | P4 | Not started |
-| K11 | Shift statistics | /seller/stats | ShiftStatsScreen | ShiftStatsViewModel | Firestore orders (aggregation) | P4 | Not started |
+| K08 | Menu management | /seller/menu | SellerMenuScreen | SellerMenuViewModel | Firestore menu_items | P2 | Not started |
+| K09 | Mark item sold out | (dialog) | SoldOutDialog | SellerMenuViewModel | Firestore menu_items/{id} | P2 | Not started |
+| K10 | Shop | /seller/shop | ShopScreen | ShopViewModel | Firestore kiosks/{id} | P2 | Not started |
+| K11 | Shift statistics | /seller/stats | ShiftStatsScreen | ShiftStatsViewModel | Firestore orders (aggregation) | P2 | Not started |
 | K12 | Reject order | (dialog) | RejectDialog | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
 | K13 | Incidents from customers | /seller/incidents | IncidentsScreen | IncidentsViewModel | Firestore incidents | P4 | Not started |
-| K14 | Add a new item | /seller/menu/new | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items | P4 | Not started |
-| K14-ERR | Item information missing | (state of the form) | FormErrorField | MenuItemFormViewModel | — | P4 | Not started |
-| K15 | Edit an item | /seller/menu/:id/edit | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items/{id} | P4 | Not started |
+| K14 | Add a new item | /seller/menu/new | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items | P2 | Not started |
+| K14-ERR | Item information missing | (state of the form) | FormErrorField | MenuItemFormViewModel | — | P2 | Not started |
+| K15 | Edit an item | /seller/menu/:id/edit | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items/{id} | P2 | Not started |
 
 ## 3. Flows
 

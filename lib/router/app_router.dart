@@ -8,6 +8,7 @@ import 'routes_p1.dart';
 import 'routes_p2.dart';
 import 'routes_p3.dart';
 import 'routes_p4.dart';
+import 'routes_p5.dart';
 
 const _customerTabs = [
   AppNavTab(label: 'Trang chủ', icon: Icons.home),
@@ -52,7 +53,7 @@ String? authRedirect({
   return null;
 }
 
-/// Router của app. Mỗi người phụ trách sửa file `routes_pX.dart` của mình, không sửa file này.
+/// The app's router. Each owner edits their own `routes_pX.dart`, not this file.
 GoRouter createRouter(AuthViewModel auth) {
   return GoRouter(
     initialLocation: '/home',
@@ -69,6 +70,7 @@ GoRouter createRouter(AuthViewModel auth) {
       ...p1Routes,
       ...p3Routes,
       ...p4Routes,
+      ...p5Routes,
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _TabShell(shell: shell, tabs: _customerTabs),
         branches: [

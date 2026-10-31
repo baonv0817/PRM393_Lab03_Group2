@@ -16,7 +16,7 @@ MVVM with Provider or Riverpod (decided when the skeleton was built: `[Provider 
 | `lib/widgets/` | Reusable Lab 2 components that read colors and sizes from the theme |
 | `lib/theme/` | Lab 2 tokens turned into `ColorScheme`, `TextTheme`, spacing, radius and shadow constants |
 | `lib/utils/` | Pure helpers (money formatting, order status) |
-| `lib/router/` | `app_router.dart` (routing by sign-in and role) and `routes_p1..p4.dart`, each person edits their own file |
+| `lib/router/` | `app_router.dart` (routing by sign-in and role) and `routes_p1..p5.dart`, each person edits their own file |
 | `lib/dev/` | Fake services for development and tests; **delete before submitting** |
 | `firebase/` | `storage.rules`, `firestore.rules`, `remote-config-defaults.json` |
 | `e2e_test/` | The ARTEMIS test suite (Python, pytest) |
