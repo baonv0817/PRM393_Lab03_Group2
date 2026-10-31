@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
-
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:flutter/material.dart';
 
 enum AppButtonVariant { primary, secondary, text }
 
-/// Button/Primary, Button/Secondary, Button/Text của Lab 2.
-/// Trạng thái: mặc định, nhấn, vô hiệu (`onPressed: null`), đang tải (`loading`).
+/// Lab 2 Button/Primary, Button/Secondary, Button/Text.
+/// States: default, pressed, disabled (`onPressed: null`), loading (`loading`).
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
@@ -29,57 +28,60 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
-    // Không đặt màu ở đây: chữ lấy `foregroundColor` của từng loại nút (và màu mờ khi vô hiệu).
+    // No color set here: the text takes each button type's `foregroundColor` (and the faded color when disabled).
     const textStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.43);
     final height = variant == AppButtonVariant.primary ? 56.0 : AppA11y.minTouchTarget;
     final enabled = onPressed != null && !loading;
     final onTap = enabled ? onPressed : null;
 
     final Widget content = loading
-        ? Row(mainAxisSize: MainAxisSize.min, children: [
-            const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            const SizedBox(width: AppSpacing.xs),
-            Text(label, style: textStyle),
-          ])
-        : Row(mainAxisSize: MainAxisSize.min, children: [
-            if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: AppSpacing.xs)],
-            Text(label, style: textStyle),
-          ]);
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
+              const SizedBox(width: AppSpacing.xs),
+              Text(label, style: textStyle),
+            ],
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: AppSpacing.xs)],
+              Text(label, style: textStyle),
+            ],
+          );
 
     final size = Size(AppA11y.minTouchTarget, height);
-    final shape = const StadiumBorder();
+    const shape = StadiumBorder();
 
     final Widget button = switch (variant) {
       AppButtonVariant.primary => FilledButton(
-          onPressed: onTap,
-          style: FilledButton.styleFrom(
-            minimumSize: size,
-            shape: shape,
-            backgroundColor: scheme.primary,
-            foregroundColor: scheme.onPrimary,
-            disabledBackgroundColor: colors.border,
-            disabledForegroundColor: colors.muted,
-          ),
-          child: content,
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          minimumSize: size,
+          shape: shape,
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          disabledBackgroundColor: colors.border,
+          disabledForegroundColor: colors.muted,
         ),
+        child: content,
+      ),
       AppButtonVariant.secondary => OutlinedButton(
-          onPressed: onTap,
-          style: OutlinedButton.styleFrom(
-            minimumSize: size,
-            shape: shape,
-            foregroundColor: scheme.onSurface,
-            side: BorderSide(color: enabled ? colors.borderInput : colors.border, width: 2),
-          ),
-          child: content,
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          minimumSize: size,
+          shape: shape,
+          foregroundColor: scheme.onSurface,
+          side: BorderSide(color: enabled ? colors.borderInput : colors.border, width: 2),
         ),
+        child: content,
+      ),
       AppButtonVariant.text => TextButton(
-          onPressed: onTap,
-          style: TextButton.styleFrom(
-            minimumSize: size,
-            foregroundColor: colors.primaryText,
-          ),
-          child: content,
-        ),
+        onPressed: onTap,
+        style: TextButton.styleFrom(minimumSize: size, foregroundColor: colors.primaryText),
+        child: content,
+      ),
     };
 
     return Semantics(
@@ -92,7 +94,7 @@ class AppButton extends StatelessWidget {
   }
 }
 
-/// IconButton 48 × 48 của Lab 2. `semanticLabel` bắt buộc để ARTEMIS và trình đọc màn hình hiểu nút.
+/// Lab 2 48 × 48 IconButton. `semanticLabel` is required so ARTEMIS and screen readers understand the button.
 class AppIconButton extends StatelessWidget {
   const AppIconButton({
     super.key,
@@ -106,14 +108,14 @@ class AppIconButton extends StatelessWidget {
   final String semanticLabel;
   final VoidCallback? onPressed;
 
-  /// Nút tròn cam (nút + trên thẻ món).
+  /// Round orange button (the + button on menu item cards).
   final bool filled;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (filled) {
-      // Hình tròn cam 40 dp trong vùng chạm 48 dp (Figma: nút + trên thẻ món).
+      // A 40 dp orange circle inside a 48 dp touch target (Figma: the + button on menu item cards).
       final enabled = onPressed != null;
       return Tooltip(
         message: semanticLabel,
@@ -131,7 +133,10 @@ class AppIconButton extends StatelessWidget {
                 child: Container(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(color: enabled ? scheme.primary : context.appColors.border, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: enabled ? scheme.primary : context.appColors.border,
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(icon, color: scheme.onPrimary),
                 ),
               ),
@@ -144,17 +149,14 @@ class AppIconButton extends StatelessWidget {
       onPressed: onPressed,
       tooltip: semanticLabel,
       icon: Icon(icon),
-      constraints: const BoxConstraints.tightFor(
-        width: AppA11y.minTouchTarget,
-        height: AppA11y.minTouchTarget,
-      ),
+      constraints: const BoxConstraints.tightFor(width: AppA11y.minTouchTarget, height: AppA11y.minTouchTarget),
       style: IconButton.styleFrom(foregroundColor: scheme.onSurface),
     );
   }
 }
 
-/// Nút icon kèm huy hiệu: số đếm cam (giỏ hàng) hoặc chấm đỏ (thông báo chưa đọc).
-/// `semanticLabel` nên đã chứa số đếm, ví dụ "Giỏ hàng, 2 món".
+/// Icon button with a badge: an orange count (cart) or a red dot (unread notifications).
+/// `semanticLabel` should already include the count, e.g. "Giỏ hàng, 2 món".
 class AppBadgeIconButton extends StatelessWidget {
   const AppBadgeIconButton({
     super.key,
@@ -189,7 +191,10 @@ class AppBadgeIconButton extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                child: Text('$count', style: text.labelLarge?.copyWith(fontSize: 12, color: scheme.onPrimary, height: 1.2)),
+                child: Text(
+                  '$count',
+                  style: text.labelLarge?.copyWith(fontSize: 12, color: scheme.onPrimary, height: 1.2),
+                ),
               ),
             ),
           )

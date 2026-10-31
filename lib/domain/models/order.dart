@@ -1,11 +1,11 @@
-import 'cart_item.dart';
+import 'package:breakbite/domain/models/cart_item.dart';
 
-/// Vòng đời đơn: pending → preparing → ready → delivered; huỷ được khi chưa giao.
+/// Order lifecycle: pending → preparing → ready → delivered; can be cancelled before delivery.
 enum OrderStatus { pending, preparing, ready, delivered, cancelled }
 
 enum PaymentMethod { momo, vnpay, card, cash }
 
-/// Cổng mô phỏng ghi nhận `paid` ngay; tiền mặt là `unpaid` đến khi nhân viên thu tiền.
+/// The simulated gateway records `paid` immediately; cash stays `unpaid` until staff collect the money.
 enum PaymentStatus { unpaid, paid }
 
 enum CancelledBy { customer, staff }
@@ -45,7 +45,7 @@ class Order {
   final String kioskId;
   final DateTime createdAt;
 
-  /// Mã ngắn hiện cho khách và nhân viên (6 ký tự đầu của id, viết hoa).
+  /// Short code shown to customers and staff (first 6 characters of the id, uppercased).
   final String orderCode;
   final String customerName;
   final String kioskName;
@@ -56,16 +56,16 @@ class Order {
   final String? pickupSlotId;
   final DateTime? pickupAt;
 
-  /// 6 chữ số ngẫu nhiên, nằm trong mã QR nhận món (S20, K05).
+  /// 6 random digits, embedded in the pickup QR code (S20, K05).
   final String pickupCode;
   final String note;
   final String? cancelReason;
   final CancelledBy? cancelledBy;
   final DateTime? updatedAt;
 
-  /// Khách chỉ sửa hoặc huỷ được khi đơn còn pending.
+  /// Customers can only edit or cancel while the order is still pending.
   bool get customerCanEdit => status == OrderStatus.pending;
 
-  /// Nội dung mã QR: nhân viên quét rồi đối chiếu `pickupCode`.
+  /// QR code payload: staff scan it and check it against `pickupCode`.
   String get qrPayload => 'bb:$id:$pickupCode';
 }

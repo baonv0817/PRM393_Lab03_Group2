@@ -1,4 +1,4 @@
-/// Khoá Remote Config (khớp `firebase/remote-config-defaults.json`).
+/// Remote Config keys (matching `firebase/remote-config-defaults.json`).
 abstract final class RemoteKeys {
   static const quickItemsLimit = 'quick_items_limit';
   static const promoBannerEnabled = 'promo_banner_enabled';

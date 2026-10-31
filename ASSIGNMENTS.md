@@ -8,7 +8,7 @@ Updated 31/10/2026. Per-task details, done-when criteria and dependencies: [`TAS
 |---|---|---|---|
 | **P1** Ordering: menu, cart, checkout, order tracking | `[name, student ID]` | `[@…]` | UI/UX 0.75 · Architecture 0.75 · Functionality F1, F2, F3 |
 | **P2** After ordering, plus seller menu management | `[name, student ID]` | `[@…]` | Functionality (post-order screens, seller menu and stats) |
-| **P3** Firebase, accounts, profile | `[name, student ID]` | `[@…]` | Firebase 2.0 · Auth, Firestore, Storage, Crashlytics, Remote Config |
+| **P3** Firebase, accounts, profile | `[name, student ID]` | `[@…]` | Firebase 2.0 · Auth, Firestore, file storage (Cloudinary), Crashlytics, Remote Config |
 | **P4** Seller order handling, code review, report | `[name, student ID]` | `[@…]` | Functionality (seller orders) · Code review 0.5 · Slides and video 2.0 |
 | **P5** Testing, notifications, search | `[name, student ID]` | `[@…]` | FCM 0.5 · Analytics · ARTEMIS tests 1.5 · Functionality (search, favorites, notifications) |
 
@@ -84,10 +84,10 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | 3 | T41 | S09 Edit order, S10 Cancelled order, S11 History, S12 Order detail (after P1 finishes S07, S08) | F3 continues to work |
 | 4 | T45 | K10 Shop status, K11 Shift statistics | The shop can open, close and see stats |
 | 5 | T34 | `ReviewRepository`, `IncidentRepository` (create side): interface, fake, Firestore version | Screens use real data |
-| 6 | T43 | Generate a PDF receipt from S12 and upload it through `StorageService` (needs Storage enabled, or the on-device alternative) | A receipt file |
+| 6 | T43 | Generate a PDF receipt from S12 and upload it through `StorageService` (Cloudinary, T32) | A receipt file |
 
 **Can start today:** S20, S23, S24 and K08–K15 (fake data). S09–S12 need P1 to finish S07, S08.
-**Waiting on:** P1 (S07, S08); P3 (T33 real data, T32 Storage if used).
+**Waiting on:** P1 (S07, S08); P3 (T33 real data, T32 Cloudinary setup).
 **Who waits on you:** P4 needs `IncidentRepository` to build K13; P1 and the customer app need the seller's item changes to show up (T45).
 **Report and slides:** the post-order flows and the seller menu management.
 **Oral check:** explain one Firestore rule that protects your data (for example who may mark an item sold out).
@@ -100,7 +100,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 
 | Order | Task | Work | Output |
 |---|---|---|---|
-| 1 | T01 | Remaining: enable Crashlytics, add everyone's SHA-1, invite the 4 other members to Firebase; Storage once the team decides about Blaze | The whole team is in the console and Google Sign-In works on every machine |
+| 1 | T01 | Remaining: enable Crashlytics, add everyone's SHA-1, invite the 4 other members to Firebase; set up Cloudinary (T32) | The whole team is in the console and Google Sign-In works on every machine |
 | 2 | T22 | Write `lib/config/firebase_dependencies.dart` and the Firebase versions of `AuthService`, `RemoteConfigService`, `AnalyticsService`, `CrashService`, `MessagingService`, `StorageService` | The app runs against real Firebase (drop the fake-data flag) |
 | 3 | T33 | Firestore versions of `MenuRepository`, `CartRepository`, `OrderRepository` (kiosks, vouchers, slots): queries per `docs/data-model.md` section 5, place an order with a batch | An order placed in the customer app shows up at once in the seller app |
 | 4 | T30 | The S26 Google Sign-In screen, routing by sign-in, sign-out, errors on cancel or network loss, create `users/{uid}` | Screenshots of 2 states, the Users tab |
@@ -112,7 +112,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 **Waiting on:** nobody, but the whole team waits on you.
 **Who waits on you:** P1 waits for T33; P4 waits for T30 (seller role) and T33; P5 waits for T22 (`MessagingService`, `AnalyticsService`).
 **Report and slides:** one section per Firebase service, how errors are handled, console screenshots, the data model and rules.
-**Oral check:** change 1 Remote Config value live and show the app change; explain 1 Firestore or Storage rule.
+**Oral check:** change 1 Remote Config value live and show the app change; explain 1 Firestore rule and how uploads are protected.
 
 ---
 
@@ -122,7 +122,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 
 | Order | Task | Work | Output |
 |---|---|---|---|
-| 1 | T11 | Ask the lecturer and save the confirmation in writing: team of 5, scope of the customer and seller apps, deviations D01–D06, the Storage question | Confirmation saved in `docs/` |
+| 1 | T11 | Ask the lecturer and save the confirmation in writing: team of 5, scope of the customer and seller apps, deviations D01–D06, approval to use Cloudinary instead of Cloud Storage | Confirmation saved in `docs/` |
 | 2 | T44 | K01 Role gate, K02 Order queue, K03 Order detail, K04 Preparing (F5 "seller" uses fake data) | Orders appear and can be accepted |
 | 3 | T44 | K05 Scan code, K06 Handover and cash, K12 Reject order | An order can be processed from accept to delivery |
 | 4 | T44, T34 | K13 Incidents, with the handling part of `IncidentRepository` (view, change status) | K13 uses real data |

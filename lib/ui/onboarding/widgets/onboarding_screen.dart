@@ -1,14 +1,13 @@
+import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/core/theme/app_colors.dart';
+import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:breakbite/ui/core/theme/app_colors.dart';
-import 'package:breakbite/ui/core/theme/app_dimens.dart';
-import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
-import 'package:breakbite/ui/core/widgets/widgets.dart';
-
-/// S01 Onboarding: màn đầu tiên của người chưa đăng nhập, chỉ có thương hiệu BreakBite, một dòng
-/// giới thiệu và lối vào. "Bỏ qua", "Bắt đầu đặt món" và liên kết đăng nhập đều đánh dấu đã xem
-/// Onboarding; router tự đưa người dùng sang màn đăng nhập (S26) vì app bắt buộc đăng nhập (D03).
+/// S01 Onboarding: the first screen for signed-out users, with only the BreakBite brand, a one-line
+/// intro and the way in. "Bỏ qua", "Bắt đầu đặt món" and the sign-in link all mark Onboarding as
+/// seen; the router then sends the user to sign-in (S26) because the app requires sign-in (D03).
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
@@ -49,7 +48,10 @@ class OnboardingScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: double.infinity, child: AppButton(label: 'Bắt đầu đặt món', onPressed: done)),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(label: 'Bắt đầu đặt món', onPressed: done),
+              ),
               const SizedBox(height: AppSpacing.xxs),
               AppButton(label: 'Đăng nhập bằng Google', variant: AppButtonVariant.text, onPressed: done),
               const SizedBox(height: AppSpacing.xs),

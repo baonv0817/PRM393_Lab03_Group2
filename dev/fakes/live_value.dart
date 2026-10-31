@@ -1,6 +1,6 @@
 import 'dart:async';
 
-/// Giá trị trong bộ nhớ phát lại cho người nghe mới (giống snapshot Firestore).
+/// In-memory value that replays to new listeners (like a Firestore snapshot).
 class LiveValue<T> {
   LiveValue(this._value);
 

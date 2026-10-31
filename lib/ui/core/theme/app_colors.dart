@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Token màu Lab 2 (Figma Variables "BreakBite Design Tokens").
-/// Màn hình không dùng mã màu trực tiếp: lấy từ `Theme.of(context).colorScheme`
-/// hoặc từ [AppColors] (`context.appColors`).
+/// Lab 2 color tokens (Figma Variables "BreakBite Design Tokens").
+/// Screens never use raw color codes: take them from `Theme.of(context).colorScheme`
+/// or from [AppColors] (`context.appColors`).
 abstract final class AppPalette {
   static const primary = Color(0xFFF69D39);
   static const onPrimary = Color(0xFF622B14);
@@ -11,7 +11,7 @@ abstract final class AppPalette {
   static const surface = Color(0xFFFFFFFF);
   static const surfaceVariant = Color(0xFFF3F0EA);
   static const selected = Color(0xFFFFF1DE);
-  static const selectedBorder = Color(0xFFFFE8CC); // color-primary-container của Lab 2
+  static const selectedBorder = Color(0xFFFFE8CC); // Lab 2 color-primary-container
   static const border = Color(0xFFE4DFD8);
   static const borderInput = Color(0xFF8A7A70);
   static const muted = Color(0xFF6B5F55);
@@ -19,7 +19,7 @@ abstract final class AppPalette {
   static const error = Color(0xFFB91C1C);
 }
 
-/// Token không có chỗ trong [ColorScheme] của Material.
+/// Tokens that have no slot in Material's [ColorScheme].
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -63,17 +63,16 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? muted,
     Color? success,
     Color? surfaceVariant,
-  }) =>
-      AppColors(
-        primaryText: primaryText ?? this.primaryText,
-        selected: selected ?? this.selected,
-        selectedBorder: selectedBorder ?? this.selectedBorder,
-        border: border ?? this.border,
-        borderInput: borderInput ?? this.borderInput,
-        muted: muted ?? this.muted,
-        success: success ?? this.success,
-        surfaceVariant: surfaceVariant ?? this.surfaceVariant,
-      );
+  }) => AppColors(
+    primaryText: primaryText ?? this.primaryText,
+    selected: selected ?? this.selected,
+    selectedBorder: selectedBorder ?? this.selectedBorder,
+    border: border ?? this.border,
+    borderInput: borderInput ?? this.borderInput,
+    muted: muted ?? this.muted,
+    success: success ?? this.success,
+    surfaceVariant: surfaceVariant ?? this.surfaceVariant,
+  );
 
   @override
   AppColors lerp(ThemeExtension<AppColors>? other, double t) {

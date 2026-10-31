@@ -6,10 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget host(Widget child) => MaterialApp(theme: AppTheme.light(), home: Scaffold(body: Center(child: child)));
+Widget host(Widget child) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
-  testWidgets('BreakBiteLogo vẽ SVG đúng kích thước, có nhãn trợ năng', (tester) async {
+  testWidgets('BreakBiteLogo renders the SVG at the right size with an accessibility label', (tester) async {
     await tester.pumpWidget(host(const BreakBiteLogo(size: 120)));
     await tester.pump();
     expect(find.byType(SvgPicture), findsOneWidget);
@@ -17,7 +20,7 @@ void main() {
     expect(find.bySemanticsLabel('Logo BreakBite'), findsOneWidget);
   });
 
-  testWidgets('hai biến thể logo đều tải được', (tester) async {
+  testWidgets('both logo variants load', (tester) async {
     for (final v in LogoVariant.values) {
       await tester.pumpWidget(host(BreakBiteLogo(size: 72, variant: v)));
       await tester.pump();
@@ -25,17 +28,21 @@ void main() {
     }
   });
 
-  testWidgets('BreakBiteWordmark hiện tên BreakBite, "Bite" màu nhấn', (tester) async {
+  testWidgets('BreakBiteWordmark shows the BreakBite name with "Bite" in the accent color', (tester) async {
     await tester.pumpWidget(host(const BreakBiteWordmark()));
     expect(find.bySemanticsLabel('BreakBite'), findsOneWidget);
     final rich = tester.widget<RichText>(find.byType(RichText).first);
     expect(rich.text.toPlainText(), 'BreakBite');
   });
 
-  test('icon app Android đã thay icon Flutter mặc định', () {
+  test('Android app icon replaces the default Flutter icon', () {
     for (final d in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
       expect(File('android/app/src/main/res/mipmap-$d/ic_launcher.png').existsSync(), isTrue, reason: d);
-      expect(File('android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png').existsSync(), isTrue, reason: 'adaptive $d');
+      expect(
+        File('android/app/src/main/res/mipmap-$d/ic_launcher_foreground.png').existsSync(),
+        isTrue,
+        reason: 'adaptive $d',
+      );
     }
     final adaptive = File('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml').readAsStringSync();
     expect(adaptive, contains('@color/ic_launcher_background'));

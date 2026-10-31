@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
-import 'buttons.dart';
+import 'package:breakbite/ui/core/widgets/buttons.dart';
+import 'package:flutter/material.dart';
 
-/// Loading của Lab 2.
+/// Lab 2 Loading.
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message = 'Đang tải…'});
 
@@ -30,7 +29,13 @@ class LoadingView extends StatelessWidget {
 }
 
 class _MessageView extends StatelessWidget {
-  const _MessageView({required this.icon, required this.iconColor, required this.message, this.actionLabel, this.onAction});
+  const _MessageView({
+    required this.icon,
+    required this.iconColor,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final IconData icon;
   final Color iconColor;
@@ -69,9 +74,15 @@ class _MessageView extends StatelessWidget {
   }
 }
 
-/// Empty của Lab 2.
+/// Lab 2 Empty.
 class EmptyView extends StatelessWidget {
-  const EmptyView({super.key, required this.message, this.actionLabel, this.onAction, this.icon = Icons.inbox_outlined});
+  const EmptyView({
+    super.key,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+    this.icon = Icons.inbox_outlined,
+  });
 
   final String message;
   final String? actionLabel;
@@ -80,15 +91,15 @@ class EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MessageView(
-        icon: icon,
-        iconColor: context.appColors.muted,
-        message: message,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+    icon: icon,
+    iconColor: context.appColors.muted,
+    message: message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 }
 
-/// Error của Lab 2: luôn có lối đi tiếp (thử lại).
+/// Lab 2 Error: always offers a way forward (retry).
 class ErrorView extends StatelessWidget {
   const ErrorView({super.key, required this.message, required this.onRetry});
 
@@ -97,15 +108,15 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MessageView(
-        icon: Icons.error_outline,
-        iconColor: Theme.of(context).colorScheme.error,
-        message: message,
-        actionLabel: 'Thử lại',
-        onAction: onRetry,
-      );
+    icon: Icons.error_outline,
+    iconColor: Theme.of(context).colorScheme.error,
+    message: message,
+    actionLabel: 'Thử lại',
+    onAction: onRetry,
+  );
 }
 
-/// Vẽ một [ViewState]: loading, empty, error có thử lại, hoặc dữ liệu.
+/// Renders a [ViewState]: loading, empty, error with retry, or data.
 class ViewStateView<T> extends StatelessWidget {
   const ViewStateView({
     super.key,
@@ -122,9 +133,9 @@ class ViewStateView<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => switch (state) {
-        ViewLoading<T>() => const LoadingView(),
-        ViewEmpty<T>(:final message) => EmptyView(message: message ?? emptyMessage),
-        ViewError<T>(:final message) => ErrorView(message: message, onRetry: onRetry),
-        ViewData<T>(:final data) => builder(context, data),
-      };
+    ViewLoading<T>() => const LoadingView(),
+    ViewEmpty<T>(:final message) => EmptyView(message: message ?? emptyMessage),
+    ViewError<T>(:final message) => ErrorView(message: message, onRetry: onRetry),
+    ViewData<T>(:final data) => builder(context, data),
+  };
 }

@@ -10,7 +10,7 @@ Deadline: `[fill in date]`. Minimum number of commits and days: `[fill in when t
 |---|---|---|---|
 | **P1** | Ordering flow | Menu, item detail, cart, pickup slot, voucher picker, checkout, order tracking, orders list, closed kiosk, unavailable item (S03–S08, S21, S22, S25, S29); architecture doc, design traceability, shared theme and widgets | Architecture 0.75, UI/UX 0.75, Functionality (F1, F2, F3) |
 | **P2** | After ordering, seller menu management | Edit and cancel order, history, order detail, pickup QR, review, incident report (S09–S12, S20, S23, S24); seller menu, sold out, shop, shift statistics, add and edit item (K08–K11, K14, K15); PDF export | Functionality |
-| **P3** | Firebase, accounts, profile | Auth, Firestore services, Storage, Crashlytics, Remote Config, the SDK-wrapping service layer; S15–S17, S26, S27; Firebase demo area | Firebase 2.0 |
+| **P3** | Firebase, accounts, profile | Auth, Firestore services, file storage (Cloudinary), Crashlytics, Remote Config, the SDK-wrapping service layer; S15–S17, S26, S27; Firebase demo area | Firebase 2.0 |
 | **P4** | Seller order handling, code review, report | Seller K01–K06, K12, K13; AI code review; compiling the report, slides, video | Functionality (seller), Review 0.5, Slides and video 2.0 |
 | **P5** | Testing, notifications, search | S13, S14, S18, S19, S28, S30; FCM; analytics; the ARTEMIS test suite and the test plan | FCM 0.5, Analytics, Testing 1.5 |
 
@@ -38,7 +38,7 @@ The "Depends on" column shows which task must be finished first.
 | ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
 | T00 | P1 | Create the GitHub repo `PRM393_Lab03_<StudentID>`, invite the 4 other members, require PRs for `main`, push this repo skeleton | All 5 people can clone and push | — |
-| T01 | P3 | Create the Firebase project (Spark), register the Android app, enable Auth (Google), Firestore, Storage, Cloud Messaging, Analytics, Crashlytics, Remote Config; add every member's SHA-1; invite the 4 other members to the project | The whole team can sign in to the console; `google-services.json` exists | T00 |
+| T01 | P3 | Create the Firebase project (Spark), register the Android app, enable Auth (Google), Firestore, Cloud Messaging, Analytics, Crashlytics, Remote Config; add every member's SHA-1; invite the 4 other members to the project | The whole team can sign in to the console; `google-services.json` exists | T00 |
 | T02 | P5 | Prepare the test machine: Android device or emulator, ADB, ARTEMIS (Python 3.12, uv), the model API key in an environment variable, a dedicated Google account for testing; record the pinned ARTEMIS commit | One sample ARTEMIS command runs | T00 |
 | T03 | P1 | `flutter create`, pin versions in `pubspec.yaml`, `flutterfire configure`, update the versions section of `README.md` | An empty app runs on a device and Firebase initializes without errors | T01 |
 
@@ -63,7 +63,7 @@ The "Depends on" column shows which task must be finished first.
 |---|---|---|---|---|
 | T30 | P3 | Google Sign-In, routing by sign-in state, sign-out clears local data, handle cancellation and network loss; save `users/{uid}` with `role` | Screenshots of both states, the Users tab in the console | T22 |
 | T31 | P3 | The Firestore data model and `firebase/firestore.rules` (deny by default, role-based); a seed script that loads real sample data into Firestore (menu, kiosks, vouchers) | Rules tested in the Emulator; no hard-coded data in the app | T30 |
-| T32 | P3 | `firebase/storage.rules` per user; `StorageService` with upload progress, returning the URL | Other users cannot read your folder | T30 |
+| T32 | P3 | Cloudinary account and unsigned upload preset (`docs/setup.md`); wire `CloudinaryStorageService` (already written and tested) into `firebase_dependencies.dart`; save each file URL in Firestore so only its owner can list it | A real upload shows progress and a URL; the file appears in the Cloudinary media library | T30 |
 | T33 | P3 | Firestore implementations of `MenuRepository`, `CartRepository`, `OrderRepository` (kiosks, vouchers, slots) in `lib/data/repositories/firestore/`: queries per section 5 of `docs/data-model.md`, place an order with one batch (create the order, delete the cart, increase the slot) | An order placed in the customer app appears at once in the seller app; no hard-coded data in the app | T22, T31 |
 | T34 | Each screen owner | Per-feature repositories, each person builds their own (interface in `lib/data/repositories/<name>_repository.dart`, fake in `dev/fakes/fake_<name>_repository.dart`, Firestore version in `lib/data/repositories/firestore/`; steps in `docs/architecture.md` section 6): P1 `SlotRepository`, `VoucherRepository`; P2 `ReviewRepository`, `IncidentRepository` (create); P5 `FavoriteRepository`, `NotificationRepository`; P4 the incident handling part for K13 | Your screens use real data; ViewModel tests use the fake | T33 |
 
@@ -136,7 +136,7 @@ The foundation that lets 5 people work in parallel is already in the repo. It ne
 | T21 | Skeleton done | Theme from the Lab 2 tokens and shared widgets; the Nunito font is in `assets/fonts/`; S02 is a reference screen built to Figma v2 |
 | T22 | Partial | Interfaces, fakes and models exist; **P3 must write the Firebase implementations** and wire them in `lib/config/firebase_dependencies.dart` |
 | T31 | Partial | The data model skeleton is settled (`docs/data-model.md`), rules and indexes are deployed, **82/82 rules tests pass**. The seed and role-assignment scripts are written and verified on the Emulator (`firebase/seed/`). Loaded into the real Firestore on 29/10/2026 (3 kiosks, 25 items, 3 vouchers, 40 slots). **Remaining:** assign the staff and admin roles to members with `set-role.mjs` after they sign in to the app once |
-| T01 | Partial | Project `breakbite-1315b` (Spark): Android app, P1's machine SHA-1, Google Auth, Firestore (`asia-southeast1`), rules and Remote Config deployed. **Remaining:** Storage (the console asks for the Blaze plan), Crashlytics, the other 4 machines' SHA-1, invite the 4 other members to the project |
+| T01 | Partial | Project `breakbite-1315b` (Spark): Android app, P1's machine SHA-1, Google Auth, Firestore (`asia-southeast1`), rules and Remote Config deployed. **Remaining:** Crashlytics, the other 4 machines' SHA-1, invite the 4 other members to the project |
 | T02 | Not started | Owner P5. Needs an Android device and the ARTEMIS API key |
 | T40 | Partial | S01 Onboarding and S02 Home are done, built to Figma v2 (reference screens for the team). Remaining: S03–S08, S21, S22, S25, S29 |
 | T33, T34 | Not started | Nobody has written the Firestore versions of `MenuRepository`, `CartRepository`, `OrderRepository` and the per-feature services yet |

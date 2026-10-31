@@ -9,11 +9,11 @@ String? go(AppUser? u, String loc, {bool init = true, bool onboarded = true}) =>
     authRedirect(user: u, initialized: init, location: loc, onboardingDone: onboarded);
 
 void main() {
-  test('chưa biết trạng thái đăng nhập thì chưa chuyển hướng', () {
+  test('does not redirect while sign-in state is unknown', () {
     expect(go(null, '/home', init: false), isNull);
   });
 
-  test('chưa đăng nhập: mọi màn khách về /sign-in, màn người bán về /seller/sign-in', () {
+  test('signed out: customer screens go to /sign-in, seller screens go to /seller/sign-in', () {
     expect(go(null, '/home'), '/sign-in');
     expect(go(null, '/cart'), '/sign-in');
     expect(go(null, '/seller/orders'), '/seller/sign-in');
@@ -21,44 +21,44 @@ void main() {
     expect(go(null, '/seller/sign-in'), isNull);
   });
 
-  test('đã đăng nhập: rời màn đăng nhập tới đúng app theo vai trò', () {
+  test('signed in: leaves the sign-in screen for the app matching the role', () {
     expect(go(customer, '/sign-in'), '/home');
     expect(go(staff, '/sign-in'), '/seller/orders');
     expect(go(staff, '/seller/sign-in'), '/seller/orders');
   });
 
-  test('chưa đăng nhập và chưa xem Onboarding: mọi màn khách về /onboarding (S01)', () {
+  test('signed out and Onboarding not seen: customer screens go to /onboarding (S01)', () {
     expect(go(null, '/home', onboarded: false), '/onboarding');
     expect(go(null, '/sign-in', onboarded: false), '/onboarding');
     expect(go(null, '/onboarding', onboarded: false), isNull);
   });
 
-  test('xem Onboarding xong thì sang /sign-in và không quay lại Onboarding', () {
+  test('after Onboarding goes to /sign-in and never returns to Onboarding', () {
     expect(go(null, '/onboarding'), '/sign-in');
     expect(go(null, '/home'), '/sign-in');
   });
 
-  test('app người bán không có Onboarding', () {
+  test('seller app has no Onboarding', () {
     expect(go(null, '/seller/orders', onboarded: false), '/seller/sign-in');
     expect(go(null, '/seller/sign-in', onboarded: false), isNull);
   });
 
-  test('đã đăng nhập thì không bao giờ thấy Onboarding', () {
+  test('signed-in users never see Onboarding', () {
     expect(go(customer, '/onboarding', onboarded: false), '/home');
     expect(go(staff, '/onboarding', onboarded: false), '/seller/orders');
   });
 
-  test('khách không vào được vùng người bán (từ chối sai vai trò)', () {
+  test('customers cannot enter the seller area (wrong role is rejected)', () {
     expect(go(customer, '/seller/orders'), '/home');
     expect(go(customer, '/seller/menu/new'), '/home');
   });
 
-  test('người bán và khách đi lại bình thường trong vùng của mình', () {
+  test('sellers and customers navigate freely within their own area', () {
     expect(go(customer, '/orders/A-204'), isNull);
     expect(go(staff, '/seller/orders/A-204'), isNull);
   });
 
-  test('nhân viên mở vùng khách thì được đưa về app người bán', () {
+  test('staff opening a customer route are sent to the seller app', () {
     expect(go(staff, '/home'), '/seller/orders');
   });
 }

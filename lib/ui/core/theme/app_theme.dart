@@ -1,12 +1,11 @@
+import 'package:breakbite/ui/core/theme/app_colors.dart';
+import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
-import 'app_dimens.dart';
-
-/// Theme của app: token Lab 2 thành [ThemeData].
+/// App theme: Lab 2 tokens turned into [ThemeData].
 abstract final class AppTheme {
-  /// Font Nunito: thêm file font vào `assets/fonts/` và khai báo trong pubspec.yaml
-  /// (việc của P1). Khi chưa có, Flutter dùng font hệ thống.
+  /// Nunito font: add the font files to `assets/fonts/` and declare them in pubspec.yaml
+  /// (P1's job). Until then, Flutter uses the system font.
   static const String fontFamily = 'Nunito';
 
   static const ColorScheme colorScheme = ColorScheme(
@@ -27,8 +26,8 @@ abstract final class AppTheme {
     onPrimaryContainer: AppPalette.onPrimary,
   );
 
-  /// Thang chữ Lab 2: Display 24 Bold, Headline 20 Bold, Title 16 SemiBold,
-  /// Body 14 Regular, Label 14 Bold. Không cỡ nào dưới 14 sp.
+  /// Lab 2 type scale: Display 24 Bold, Headline 20 Bold, Title 16 SemiBold,
+  /// Body 14 Regular, Label 14 Bold. No size below 14 sp.
   static const TextTheme textTheme = TextTheme(
     headlineMedium: TextStyle(fontSize: 24, height: 1.33, fontWeight: FontWeight.w700),
     headlineSmall: TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700),
@@ -98,9 +97,12 @@ abstract final class AppTheme {
         indicatorShape: const StadiumBorder(),
         height: 68,
         iconTheme: WidgetStateProperty.resolveWith(
-          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? AppPalette.primaryText : AppPalette.muted),
+          (s) => IconThemeData(
+            size: 24,
+            color: s.contains(WidgetState.selected) ? AppPalette.primaryText : AppPalette.muted,
+          ),
         ),
-        // 12 sp chỉ dành cho nhãn tab, luôn đi kèm icon (quyết định D36 của Lab 2).
+        // 12 sp is only for tab labels, always paired with an icon (Lab 2 decision D36).
         labelTextStyle: WidgetStateProperty.resolveWith(
           (s) => text.labelLarge?.copyWith(
             fontSize: 12,

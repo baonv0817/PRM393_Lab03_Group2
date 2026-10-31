@@ -13,7 +13,7 @@ class AppNotification {
   final String body;
   final DateTime receivedAt;
 
-  /// Màn liên quan khi chạm vào thông báo (nếu có).
+  /// Related screen to open when the notification is tapped (if any).
   final String? orderId;
   final bool read;
 }

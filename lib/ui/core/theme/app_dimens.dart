@@ -1,5 +1,5 @@
-/// Khoảng cách, bo góc, kích thước tối thiểu (Lab 2: lưới 4 dp, lề 16 dp).
-/// Tên khoảng cách trùng token Figma: `spacing-xxs` 4 · `xs` 8 · `sm` 12 · `md` 16 · `lg` 24 · `xl` 32.
+/// Spacing, corner radii, minimum sizes (Lab 2: 4 dp grid, 16 dp margins).
+/// Spacing names match the Figma tokens: `spacing-xxs` 4 · `xs` 8 · `sm` 12 · `md` 16 · `lg` 24 · `xl` 32.
 abstract final class AppSpacing {
   static const double xxs = 4;
   static const double xs = 8;
@@ -8,7 +8,7 @@ abstract final class AppSpacing {
   static const double lg = 24;
   static const double xl = 32;
 
-  /// Lề ngang chuẩn của màn hình.
+  /// Standard horizontal screen margin.
   static const double screenPadding = 16;
 }
 
@@ -26,11 +26,11 @@ abstract final class AppElevation {
   static const double sheet = 4;
 }
 
-/// Ngưỡng accessibility của Lab 2.
+/// Lab 2 accessibility thresholds.
 abstract final class AppA11y {
-  /// Vùng chạm tối thiểu (dp).
+  /// Minimum touch target (dp).
   static const double minTouchTarget = 48;
 
-  /// Cỡ chữ nội dung tối thiểu (sp).
+  /// Minimum body text size (sp).
   static const double minBodyText = 14;
 }

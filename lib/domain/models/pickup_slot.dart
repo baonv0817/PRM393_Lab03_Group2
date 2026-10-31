@@ -1,4 +1,4 @@
-/// Một khung giờ nhận món của kiosk, ứng với giờ ra chơi giữa hai slot (S25).
+/// A kiosk pickup time window, matching the break between two class slots (S25).
 class PickupSlot {
   const PickupSlot({
     required this.id,

@@ -1,5 +1,6 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/utils/result.dart';
 
 import 'live_value.dart';
 
@@ -8,7 +9,7 @@ class FakeOrderRepository implements OrderRepository {
   var _seq = 203;
 
   @override
-  Future<String> createOrder({
+  Future<Result<String>> createOrder({
     required String uid,
     required List<CartItem> items,
     required int totalVnd,
@@ -29,7 +30,7 @@ class FakeOrderRepository implements OrderRepository {
         createdAt: DateTime.now(),
       ),
     ]);
-    return id;
+    return Result.ok(id);
   }
 
   @override
@@ -39,13 +40,13 @@ class FakeOrderRepository implements OrderRepository {
   Stream<List<Order>> watchMyOrders(String uid) => _orders.stream.map((l) => l.where((o) => o.uid == uid).toList());
 
   @override
-  Future<void> cancelOrder(String id) => updateStatus(id, OrderStatus.cancelled);
+  Future<Result<void>> cancelOrder(String id) => updateStatus(id, OrderStatus.cancelled);
 
   @override
   Stream<List<Order>> watchAllOrders() => _orders.stream;
 
   @override
-  Future<void> updateStatus(String id, OrderStatus status) async {
+  Future<Result<void>> updateStatus(String id, OrderStatus status) async {
     _orders.set([
       for (final o in _orders.value)
         o.id == id
@@ -61,5 +62,6 @@ class FakeOrderRepository implements OrderRepository {
               )
             : o,
     ]);
+    return const Result.ok(null);
   }
 }

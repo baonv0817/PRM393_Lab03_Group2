@@ -16,11 +16,11 @@ class Review {
   final String uid;
   final String authorName;
 
-  /// Số sao 1–5.
+  /// Star rating 1–5.
   final int rating;
   final String comment;
   final DateTime createdAt;
 
-  /// Id tài liệu: mỗi món trong một đơn chỉ đánh giá một lần.
+  /// Document id: each item in an order can be reviewed only once.
   String get id => '${orderId}_$itemId';
 }

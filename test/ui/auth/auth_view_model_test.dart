@@ -1,20 +1,22 @@
-import '../../../dev/fakes/fakes.dart';
+import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
-import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _ThrowingAuth extends FakeAuthService {
-  _ThrowingAuth(this.error);
+import '../../../dev/fakes/fakes.dart';
 
-  final Exception error;
+class _FailingAuth extends FakeAuthService {
+  _FailingAuth(this.error);
+
+  final AppException error;
 
   @override
-  Future<AppUser> signInWithGoogle() async => throw error;
+  Future<Result<AppUser>> signInWithGoogle() async => Result.error(error);
 }
 
 void main() {
-  test('đăng nhập thành công: có user, ghi sự kiện login và đặt user id', () async {
+  test('successful sign-in sets the user, logs the login event and the user id', () async {
     final analytics = FakeAnalyticsService();
     final crash = FakeCrashService();
     final vm = AuthViewModel(FakeAuthService(), analytics, crash);
@@ -31,25 +33,32 @@ void main() {
     vm.dispose();
   });
 
-  test('huỷ đăng nhập: hiện thông báo, không có user', () async {
-    final vm = AuthViewModel(_ThrowingAuth(const AuthCancelled()), FakeAnalyticsService(), FakeCrashService());
+  test('cancelled sign-in shows a message, keeps no user and logs nothing to Crashlytics', () async {
+    final crash = FakeCrashService();
+    final vm = AuthViewModel(_FailingAuth(const CancelledException()), FakeAnalyticsService(), crash);
     await vm.signIn();
     expect(vm.user, isNull);
     expect(vm.message, contains('huỷ'));
     expect(vm.busy, isFalse);
+    expect(crash.errors, isEmpty);
     vm.dispose();
   });
 
-  test('đăng nhập lỗi: hiện thông báo và ghi lỗi không gây crash', () async {
+  test('failed sign-in shows the error message and records a non-fatal error', () async {
     final crash = FakeCrashService();
-    final vm = AuthViewModel(_ThrowingAuth(const AuthFailure('Không có mạng')), FakeAnalyticsService(), crash);
+    final vm = AuthViewModel(
+      _FailingAuth(const NetworkException(message: 'Không có mạng')),
+      FakeAnalyticsService(),
+      crash,
+    );
     await vm.signIn();
     expect(vm.message, 'Không có mạng');
+    expect(vm.busy, isFalse);
     expect(crash.errors, hasLength(1));
     vm.dispose();
   });
 
-  test('Onboarding: mặc định chưa xem, hoàn tất thì báo cho router một lần', () async {
+  test('onboarding is not done by default; completing it notifies the router once', () async {
     final vm = AuthViewModel(FakeAuthService(), FakeAnalyticsService(), FakeCrashService());
     var notified = 0;
     vm.addListener(() => notified++);
@@ -61,7 +70,7 @@ void main() {
     vm.dispose();
   });
 
-  test('đăng xuất ghi sự kiện logout và xoá user', () async {
+  test('sign-out logs the logout event and clears the user', () async {
     final analytics = FakeAnalyticsService();
     final vm = AuthViewModel(FakeAuthService(signedIn: true), analytics, FakeCrashService());
     await Future<void>.delayed(Duration.zero);

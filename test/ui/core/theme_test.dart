@@ -5,7 +5,7 @@ import 'package:breakbite/ui/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Tỉ lệ tương phản WCAG 2.x.
+/// WCAG 2.x contrast ratio.
 double contrast(Color a, Color b) {
   double lum(Color c) {
     double ch(double v) => v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
@@ -18,29 +18,36 @@ double contrast(Color a, Color b) {
 }
 
 void main() {
-  group('Lab 2 accessibility: tương phản chữ ≥ 4,5:1', () {
+  group('Lab 2 accessibility: text contrast ≥ 4.5:1', () {
     const pairs = {
-      'chữ nút (nâu) trên cam': (AppPalette.onPrimary, AppPalette.primary),
-      'chữ chính trên nền': (AppPalette.onPrimary, AppPalette.background),
-      'chữ chính trên thẻ': (AppPalette.onPrimary, AppPalette.surface),
-      'chữ phụ trên thẻ': (AppPalette.muted, AppPalette.surface),
-      'chữ nhấn trên nền': (AppPalette.primaryText, AppPalette.background),
-      'chữ thành công trên thẻ': (AppPalette.success, AppPalette.surface),
-      'chữ lỗi trên thẻ': (AppPalette.error, AppPalette.surface),
-      'chữ chính trên mục đang chọn': (AppPalette.onPrimary, AppPalette.selected),
+      'button text (brown) on orange': (AppPalette.onPrimary, AppPalette.primary),
+      'primary text on background': (AppPalette.onPrimary, AppPalette.background),
+      'primary text on card': (AppPalette.onPrimary, AppPalette.surface),
+      'secondary text on card': (AppPalette.muted, AppPalette.surface),
+      'accent text on background': (AppPalette.primaryText, AppPalette.background),
+      'success text on card': (AppPalette.success, AppPalette.surface),
+      'error text on card': (AppPalette.error, AppPalette.surface),
+      'primary text on selected item': (AppPalette.onPrimary, AppPalette.selected),
     };
     pairs.forEach((name, p) {
       test(name, () => expect(contrast(p.$1, p.$2), greaterThanOrEqualTo(4.5)));
     });
   });
 
-  test('chữ trắng trên cam không đạt (lý do đổi sang chữ nâu)', () {
+  test('white text on orange fails (why button text is brown)', () {
     expect(contrast(AppPalette.surface, AppPalette.primary), lessThan(3));
   });
 
-  test('theme dùng token, không cỡ chữ dưới 14 sp', () {
+  test('theme uses tokens and no font size is below 14 sp', () {
     final text = AppTheme.light().textTheme;
-    for (final style in [text.headlineMedium, text.headlineSmall, text.titleMedium, text.bodyLarge, text.bodyMedium, text.labelLarge]) {
+    for (final style in [
+      text.headlineMedium,
+      text.headlineSmall,
+      text.titleMedium,
+      text.bodyLarge,
+      text.bodyMedium,
+      text.labelLarge,
+    ]) {
       expect(style!.fontSize, greaterThanOrEqualTo(14));
     }
     expect(AppTheme.light().colorScheme.primary, AppPalette.primary);

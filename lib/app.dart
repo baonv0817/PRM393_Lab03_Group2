@@ -1,12 +1,11 @@
+import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/routing/router.dart';
+import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-import 'config/dependencies.dart';
-import 'data/services/services.dart';
-import 'routing/router.dart';
-import 'ui/auth/view_models/auth_view_model.dart';
-import 'ui/core/theme/app_theme.dart';
 
 class BreakBiteApp extends StatelessWidget {
   const BreakBiteApp({super.key, required this.dependencies});

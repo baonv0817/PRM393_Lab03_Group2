@@ -1,4 +1,4 @@
-# Firestore and Storage data model
+# Firestore and file storage data model
 
 The source of truth for the data of the customer app (S01–S30) and the seller app (K01–K15). Any change to the data structure must update **all four places in the same PR**: this document, `lib/domain/models/`, `firebase/firestore.rules` (and `storage.rules`), `firebase/tests/rules.test.mjs`. Document owner: P3.
 
@@ -100,7 +100,7 @@ Slots are created per day by staff or by the seed script. With no slot, the orde
 | `category` | string | staff | "Tacos", "Mì trộn", "Đồ uống" |
 | `prepMinutes` | int | staff | ≥ 0; the "quick under 5 minutes" section filters `prepMinutes <= 5` |
 | `soldOut` | bool | staff | Sold out (K09); used instead of deleting |
-| `imageUrl` | string? | staff | A path to an image bundled in the app (`assets/images/menu/…`, used for the sample data) or an `https://` link to an image in Storage `menu/{kioskId}/…`. The `MenuItemImage` widget handles both; when missing or broken it shows the logo |
+| `imageUrl` | string? | staff | A path to an image bundled in the app (`assets/images/menu/…`, used for the sample data) or an `https://` link to an image on Cloudinary `breakbite/menu/{kioskId}/…`. The `MenuItemImage` widget handles both; when missing or broken it shows the logo |
 | `createdAt`, `updatedAt` | ts | staff | |
 
 The average star rating is computed on the client from `reviews` (it is not stored as an aggregate because customers are not allowed to edit items).
@@ -215,15 +215,33 @@ Every composite index is in `firebase/firestore.indexes.json` (already deployed 
 
 **A note on rules and queries.** Rules are not filters: a staff query **must include** `where('kioskId', isEqualTo: myKiosk)` and a customer query must include `where('uid', isEqualTo: me)`, otherwise Firestore rejects the whole query.
 
-## 6. Cloud Storage
+## 6. File storage (Cloudinary)
 
-| Path | Content | Written by | Read by |
+Cloud Storage for Firebase now requires the Blaze plan, which needs a payment card. The team stays on Spark and stores files on **Cloudinary** (free plan) instead, through `CloudinaryStorageService` (`lib/data/services/cloudinary/`), which implements the same `StorageService` interface. The lecturer's approval of this substitution is requested in T11, as the handout's tool note requires.
+
+| Folder on Cloudinary | Content | Uploaded by | Opened by |
 |---|---|---|---|
-| `reports/{uid}/…` | PDF receipt (≤ 5 MB) exported by the customer (T43) | owner | owner |
-| `incidents/{uid}/{file}` | Incident evidence photo (image, < 5 MB) (S24) | owner | owner, staff, admin |
-| `menu/{kioskId}/{file}` | Item photo (image, < 5 MB) (K14, K15) | staff of that kiosk, admin | everyone signed in |
+| `breakbite/reports/{uid}/…` | PDF receipt exported by the customer (T43) | that customer | that customer (link shown in the app) |
+| `breakbite/incidents/{uid}/…` | Incident evidence photo (S24) | that customer | the customer, staff of the order's kiosk |
+| `breakbite/menu/{kioskId}/…` | Item photo (K14, K15) | staff of that kiosk | everyone |
 
-The Storage rules read the role from Firestore (`firestore.get(...)`), so nobody can raise their own privileges. **Storage is only usable after the Blaze plan is enabled.** Until then use the images bundled in the app (`imageUrl` is an asset path).
+How access is controlled without a server:
+
+| Layer | What it enforces |
+|---|---|
+| App (`StorageService`) | Only signed-in users reach an upload button; files over 5 MB are refused before upload; progress and the final URL are shown |
+| Cloudinary unsigned upload preset | Allowed formats only (`pdf`, `jpg`, `png`, `webp`), unique random file names, no overwrite |
+| Firestore | The URL and `publicId` are saved in Firestore (`orders`, `incidents.photoUrl`, `menu_items.imageUrl`, and a `reports` metadata collection planned with the next data-model change), so **which files a user can list** is decided by `firestore.rules` (owner only) |
+
+Limitations, to state in the report's risks section:
+
+| Limitation | Consequence | Mitigation |
+|---|---|---|
+| The upload preset is unsigned, so it is visible inside the APK | Anyone who extracts it can upload files to the account | Formats and sizes are restricted by the preset; signed uploads would need a server (Cloud Functions, not on Spark) |
+| Files are public by URL | Anyone holding a link can open the file | File names are long and random, links are only stored in owner-readable Firestore documents, receipts contain no personal data beyond the order |
+| New Cloudinary accounts block PDF delivery | The PDF link returns an error | Enable *Settings → Security → Allow delivery of PDF and ZIP files* (see `docs/setup.md`) |
+
+`firebase/storage.rules` is kept, unused, as the fallback if the lecturer does not approve Cloudinary.
 
 ## 7. What the rules can and cannot do
 

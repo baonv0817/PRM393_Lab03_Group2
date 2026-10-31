@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/domain/models/models.dart';
 
 class FakeMessagingService implements MessagingService {
   final _foreground = StreamController<AppNotification>.broadcast();

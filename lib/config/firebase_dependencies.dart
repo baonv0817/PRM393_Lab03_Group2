@@ -1,10 +1,10 @@
-import 'dependencies.dart';
+import 'package:breakbite/config/dependencies.dart';
 
-/// Khởi tạo Firebase và dựng các bản cài đặt thật.
+/// Initializes Firebase and builds the real implementations.
 ///
-/// TODO(P3, task T22 và T33): gọi `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`,
-/// rồi dựng service bọc SDK trong `lib/data/services/firebase/` và repository Firestore trong
-/// `lib/data/repositories/firestore/`. Lưu tệp: `CloudinaryStorageService(CloudinaryConfig.fromEnvironment())`.
+/// TODO(P3, tasks T22 and T33): call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`,
+/// then build the SDK-wrapping services in `lib/data/services/firebase/` and the Firestore repositories in
+/// `lib/data/repositories/firestore/`. File storage: `CloudinaryStorageService(CloudinaryConfig.fromEnvironment())`.
 Future<AppDependencies> createFirebaseDependencies() async {
   throw UnimplementedError(
     'Firebase chưa được nối. Chạy bản dữ liệu giả: flutter run -t dev/main_dev.dart, '

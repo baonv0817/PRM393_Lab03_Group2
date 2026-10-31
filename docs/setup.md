@@ -88,7 +88,7 @@ firebase login
 flutterfire configure --project <firebase-project-id>   # generates lib/firebase_options.dart (tasks T01, T03)
 ```
 
-The team project is `breakbite-1315b` (Spark plan). `lib/firebase_options.dart` and `android/app/google-services.json` are already in the repo, so a newcomer **does not need** to run `flutterfire configure` again; they only need to be invited to the project (Project settings, Users and permissions, role Editor).
+The team project is `breakbite-1315b` (Spark plan; files go to Cloudinary, see below). `lib/firebase_options.dart` and `android/app/google-services.json` are already in the repo, so a newcomer **does not need** to run `flutterfire configure` again; they only need to be invited to the project (Project settings, Users and permissions, role Editor).
 
 **SHA-1 for Google Sign-in.** Every machine has its own debug key, so each person gets the SHA-1 of their own machine and sends it to whoever holds the project, to add under Project settings, Your apps, BreakBite, Add fingerprint. Until it is added, Google sign-in fails with `ApiException: 10`.
 
@@ -99,6 +99,16 @@ keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias and
 If it says the keystore file is missing, run a Flutter app once so the machine creates it. A SHA-1 is a public fingerprint, so it is fine to send in the team chat; **do not** share the keystore file or the service-account file `*-adminsdk-*.json`.
 
 Run the rules tests: see `firebase/README.md`.
+
+### Cloudinary (file uploads)
+
+Files (PDF receipts, photos) are stored on Cloudinary instead of Cloud Storage for Firebase, which needs the Blaze plan (`docs/data-model.md` section 6). One person sets this up once for the team:
+
+1. Create a free account at cloudinary.com; note the **cloud name** on the dashboard.
+2. Settings → Upload → Upload presets → Add: **Signing mode: Unsigned**, allowed formats `pdf,jpg,png,webp`, unique file name on, overwrite off. Note the preset name.
+3. Settings → Security → tick **Allow delivery of PDF and ZIP files** and save (new accounts block PDF links otherwise).
+4. Put both values in `env/cloudinary.json` and commit it. They are not secrets: an unsigned preset is meant to be used from the app. Never put the API key or API secret in the repo.
+5. Run the real app with `flutter run --dart-define-from-file=env/cloudinary.json` (the VS Code configuration "BreakBite (real Firebase)" already passes it).
 
 ## 5. ARTEMIS (E2E tests)
 

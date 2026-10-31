@@ -1,15 +1,26 @@
+import 'package:breakbite/routing/route_helpers.dart';
+import 'package:breakbite/routing/routes.dart';
 import 'package:go_router/go_router.dart';
-
-import 'route_helpers.dart';
-import 'routes.dart';
 
 // P4: the seller's order handling K01–K06, K12 (reject dialog, no route), K13.
 
 /// Seller tab root: K02 Order list.
-final GoRoute sellerOrdersRoute = placeholderRoute(AppRoutes.sellerOrders, 'K02', 'Danh sách đơn', 'P4', showBack: false);
+final GoRoute sellerOrdersRoute = placeholderRoute(
+  AppRoutes.sellerOrders,
+  'K02',
+  'Danh sách đơn',
+  'P4',
+  showBack: false,
+);
 
 /// Seller tab root: K05 Scan the pickup code.
-final GoRoute sellerScanRoute = placeholderRoute(AppRoutes.sellerScan, 'K05', 'Quét mã nhận món', 'P4', showBack: false);
+final GoRoute sellerScanRoute = placeholderRoute(
+  AppRoutes.sellerScan,
+  'K05',
+  'Quét mã nhận món',
+  'P4',
+  showBack: false,
+);
 
 /// Full-screen routes of P4.
 final List<GoRoute> p4Routes = [

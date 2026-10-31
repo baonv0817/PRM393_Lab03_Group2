@@ -1,4 +1,4 @@
-/// Tên sự kiện Analytics (khớp `docs/analytics-plan.md`). Dùng hằng ở đây, không viết chuỗi tay.
+/// Analytics event names (matching `docs/analytics-plan.md`). Use these constants, not hand-written strings.
 abstract final class AnalyticsEvents {
   static const login = 'login';
   static const logout = 'logout';

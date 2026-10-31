@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/domain/app_exception.dart';
+import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:breakbite/domain/models/models.dart';
-import 'package:breakbite/data/services/services.dart';
-
-/// Trạng thái đăng nhập của cả app. Router lắng nghe để định tuyến theo auth.
-/// Mẫu cho ViewModel: nhận service qua constructor, không gọi SDK, kiểm thử được bằng service giả.
+/// App-wide sign-in state; the router listens to it to route by auth state.
+/// Reference ViewModel: services come through the constructor, no SDK calls, testable with fakes.
 class AuthViewModel extends ChangeNotifier {
   AuthViewModel(this._auth, this._analytics, this._crash) {
     _sub = _auth.authStateChanges().listen(
@@ -39,12 +40,12 @@ class AuthViewModel extends ChangeNotifier {
 
   AppUser? get user => _user;
 
-  /// Đã biết trạng thái đăng nhập lần đầu (để router không đẩy người dùng đi nhầm).
+  /// The first auth state is known, so the router does not send the user to the wrong place.
   bool get initialized => _initialized;
   bool get busy => _busy;
 
-  /// Đã qua Onboarding (S01) trong phiên này. Chưa qua thì người chưa đăng nhập thấy S01 trước
-  /// màn đăng nhập; đã đăng nhập rồi thì không bao giờ thấy S01.
+  /// Onboarding (S01) was completed in this session. Signed-out users see S01 before sign-in;
+  /// signed-in users never see it.
   bool get onboardingDone => _onboardingDone;
 
   void completeOnboarding() {
@@ -53,29 +54,35 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Thông báo lỗi hoặc huỷ để màn đăng nhập hiển thị.
+  /// Error or cancellation message for the sign-in screen.
   String? get message => _message;
 
   Future<void> signIn() async {
     _busy = true;
     _message = null;
     notifyListeners();
-    try {
-      await _auth.signInWithGoogle();
-    } on AuthCancelled {
-      _message = 'Bạn đã huỷ đăng nhập.';
-    } on AuthFailure catch (e) {
-      _message = e.message;
-      unawaited(_crash.recordError(e, null, reason: 'signInWithGoogle'));
-    } finally {
-      _busy = false;
-      notifyListeners();
+    final result = await _auth.signInWithGoogle();
+    switch (result) {
+      case Ok():
+        break;
+      case Err(error: CancelledException()):
+        _message = 'Bạn đã huỷ đăng nhập.';
+      case Err(:final error):
+        _message = error.message;
+        unawaited(_crash.recordError(error.cause ?? error, error.stackTrace, reason: 'signInWithGoogle'));
     }
+    _busy = false;
+    notifyListeners();
   }
 
   Future<void> signOut() async {
     await _analytics.logEvent(AnalyticsEvents.logout);
-    await _auth.signOut();
+    final result = await _auth.signOut();
+    if (result case Err(:final error)) {
+      _message = error.message;
+      unawaited(_crash.recordError(error.cause ?? error, error.stackTrace, reason: 'signOut'));
+      notifyListeners();
+    }
   }
 
   Future<void> _onUserChanged(AppUser? user) async {
