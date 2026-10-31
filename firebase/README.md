@@ -64,3 +64,78 @@ node set-role.mjs staff-email@gmail.com staff q9-t2 --project=breakbite-1315b --
 ```
 
 Never send the key file's contents to anyone, including in chat. `set-role.mjs` can only assign a role to an account that has signed in to the app at least once.
+
+## Data migrations (`firebase/seed/`)
+
+When the structure changes, existing documents in the real project are moved to the new structure by a script, not by hand in the console. The scripts:
+
+| Script | Does | Writes? |
+|---|---|---|
+| `backup.mjs` | Saves every document (subcollections included) to one JSON file, by default `~/breakbite-backups/<project>-<time>.json`. On Spark this replaces `gcloud firestore export`, which needs a Cloud Storage bucket (Blaze) | No |
+| `migrate.mjs` | Runs `migrations/t31-data-model.mjs`. **A dry run by default**: prints each planned change and warning. `--apply` writes, then verifies the result and checks that a second run would change nothing. On a real project `--apply` refuses to run without `--backup=<file>` of the same project taken in the last 24 hours | Only with `--apply` |
+| `restore.mjs` | Rollback: writes a backup back exactly as it was. `--prune` also deletes documents that are not in the backup (the ones a migration moved to a new id) | Yes |
+
+`npm run test:migrate` loads documents in the **old** structure into the Emulator and checks: a dry run writes nothing; `--apply` gives the new structure (every check in `verify()` passes); a second run plans 0 changes; `restore --prune` brings back exactly the old data. Result on 01/11/2026: 6 tests, 6 passed. On data already in the new structure (`seed.mjs` then `migrate.mjs`) it plans 0 changes.
+
+### What the T31 migration changes
+
+| Collection | Old | New |
+|---|---|---|
+| every document | `createdAt`/`updatedAt` often missing | Both present; when missing, taken from the document's own create and update time in Firestore |
+| `menu_items` | No `dishId`; `category` is a label (`Tacos`, `Đồ uống`, …) | `dishId` = the id without `{kioskId}-`; `category` `food`/`drink`/`other` (`Đồ uống` → `drink`; `Tacos`, `Mì trộn`, `Cơm`, `Bánh mì`, `Ăn vặt` → `food`; anything else → `other`) |
+| `vouchers` | `discountVnd`, `percent`, `maxDiscountVnd` side by side | `discount: {type: 'fixed', amountVnd}` or `{type: 'percent', percent, maxVnd}`; the old fields are removed |
+| `users/{uid}/favorites` | Id = menu item id; `itemId`, `kioskId`, `addedAt` | Id = `dishId`; `addedAt` → `createdAt`; the same dish saved at two kiosks becomes one favorite |
+| `reviews` | No `dishId` | `dishId` from the item |
+| `incidents` | Random id; `wrong_item`, `missing_item`, `in_progress`; free-text `resolution` | Id = `orderId`; camelCase values; free text moves to `resolutionNote` (with a warning, so someone sets `refunded`/`rejected`) |
+
+A second incident on the same order, or a voucher with no usable amount, is **not** changed: the script prints a warning and a person decides.
+
+### Rolling it out to the real project
+
+The project owner runs this, with the service-account key from the previous section. Do it when nobody is testing on the real project (about 15 minutes).
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "D:\secrets\breakbite-admin.json"
+cd firebase\seed
+npm install
+
+# 1. Backup (read only). Note the file path it prints.
+node backup.mjs --project=breakbite-1315b --yes
+
+# 2. Dry run: read every change and WARNING line. Stop here if something looks wrong.
+node migrate.mjs --project=breakbite-1315b --yes
+
+# 3. Indexes first: new indexes only add capability. If it asks to delete the old reviews(itemId, createdAt) index, answer yes.
+cd ..\..
+firebase deploy --only firestore:indexes --project breakbite-1315b
+
+# 4. Data, while the old rules are still deployed (the old rules accept the new shape; the new rules reject the old one).
+cd firebase\seed
+node migrate.mjs --project=breakbite-1315b --yes --apply --backup=<file from step 1>
+#    Must end with "Verify: 0 problems ... would change 0 documents".
+
+# 5. Refresh the sample catalog (GIOVANG 10:15–10:30, pickup slots for the next 7 days).
+node seed.mjs --project=breakbite-1315b --yes --overwrite
+
+# 6. Rules last.
+cd ..\..
+firebase deploy --only firestore:rules --project breakbite-1315b
+```
+
+7. Smoke test on a phone with the real build: sign in, Home shows the menu with categories, apply `BBSTUDENT` to a 40K cart, a staff account marks an item sold out, the Firestore console shows `_migrations/2026-11-t31-data-model`.
+
+Wait for the index build in step 3 (console, Firestore, Indexes: every index **Enabled**) before step 6; a query whose index is still building fails with `failed-precondition`.
+
+**Rollback** (if step 4, 6 or 7 goes wrong): deploy the previous rules, then restore the backup.
+
+```powershell
+git checkout 477d630 -- firebase/firestore.rules
+firebase deploy --only firestore:rules --project breakbite-1315b
+git checkout HEAD -- firebase/firestore.rules
+cd firebase\seed
+node restore.mjs --from=<file from step 1> --project=breakbite-1315b --yes --prune
+```
+
+The backup file contains personal data (names, emails, orders): keep it outside the repo and delete it once the new structure has run for a week.
+
+After the merge everyone rebases their branch on `main`: `MenuItem.category` is now the `ItemCategory` enum and `Voucher` has `discount` instead of `discountVnd`/`percent`.
