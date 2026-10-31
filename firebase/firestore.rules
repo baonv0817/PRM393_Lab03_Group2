@@ -1,115 +1,238 @@
 rules_version = '2';
 
-// Quy tắc cho mô hình dữ liệu ở docs/data-model.md. Mặc định từ chối; quyền theo vai trò
-// (user, staff, admin) và nhân viên chỉ thao tác trên kiosk của mình (users/{uid}.kioskId).
-// Mỗi quy tắc có test được phép và bị từ chối trong firebase/tests/rules.test.mjs.
+// Rules for the data model in docs/data-model.md. Deny by default; access by role (user, staff,
+// admin), and staff only act on their own kiosk (users/{uid}.kioskId). Every rule has allowed and
+// denied tests in firebase/tests/rules.test.mjs. Stored enum values are the Dart enum names.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------- Hàm dùng chung ----------
+    // ---------- Shared helpers ----------
     function signedIn() { return request.auth != null; }
     function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
     function role() { return userDoc().role; }
     function isAdmin() { return signedIn() && role() == 'admin'; }
-    // Nhân viên của đúng kiosk; admin được mọi kiosk.
+    // Staff of exactly this kiosk; admins act on every kiosk.
     function staffOf(kioskId) {
       return signedIn() && (role() == 'admin'
         || (role() == 'staff' && 'kioskId' in userDoc() && userDoc().kioskId == kioskId));
     }
     function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function orderDoc(orderId) { return get(/databases/$(database)/documents/orders/$(orderId)).data; }
+    function kioskDoc(kioskId) { return get(/databases/$(database)/documents/kiosks/$(kioskId)).data; }
+    function optional(d, key, type) {
+      return d.get(key, null) == null
+          || (type == 'string' && d[key] is string)
+          || (type == 'int' && d[key] is int)
+          || (type == 'timestamp' && d[key] is timestamp)
+          || (type == 'list' && d[key] is list)
+          || (type == 'map' && d[key] is map)
+          || (type == 'bool' && d[key] is bool);
+    }
+
+    // DB-16: every document carries server-set createdAt and updatedAt; createdAt never changes.
+    function stampedOnCreate() {
+      return request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+    }
+    function stampedOnUpdate() {
+      return request.resource.data.updatedAt == request.time && !changedKeys().hasAny(['createdAt']);
+    }
 
     // ---------- users ----------
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      // Tự tạo hồ sơ chỉ với role user và không tự gán kiosk.
+      // Self-created profile: role user, no kiosk.
       allow create: if isOwner(uid)
                     && request.resource.data.role == 'user'
-                    && !('kioskId' in request.resource.data);
-      // Chủ hồ sơ sửa tên, MSSV, cài đặt, FCM token; không đổi role và kioskId.
-      allow update: if isOwner(uid) && !changedKeys().hasAny(['role', 'kioskId']);
-      allow update: if isAdmin();
+                    && !('kioskId' in request.resource.data)
+                    && stampedOnCreate();
+      // The owner edits name, student ID, settings and FCM tokens; never role, kiosk or email.
+      allow update: if isOwner(uid)
+                    && !changedKeys().hasAny(['role', 'kioskId', 'email'])
+                    && (request.resource.data.get('fcmTokens', []) is list
+                        && request.resource.data.get('fcmTokens', []).size() <= 5)
+                    && stampedOnUpdate();
+      allow update: if isAdmin() && stampedOnUpdate();
 
-      match /favorites/{itemId} { allow read, write: if isOwner(uid); }
-      match /notifications/{id} { allow read, write: if isOwner(uid); }
+      match /favorites/{dishId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && request.resource.data.dishId == dishId && stampedOnCreate();
+        allow update: if isOwner(uid) && stampedOnUpdate();
+      }
+      match /notifications/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && stampedOnCreate();
+        allow update: if isOwner(uid) && stampedOnUpdate();
+      }
     }
 
-    // ---------- kiosks và slot nhận món ----------
+    // ---------- kiosks and pickup slots ----------
+    // Fields staff run day to day (K10); name and location belong to admins.
+    function validKioskOps(d) {
+      return d.open is bool
+          && d.waitMinutes is int && d.waitMinutes >= 0 && d.waitMinutes <= 120
+          && optional(d, 'pausedUntil', 'timestamp')
+          && (d.get('maxOrdersPerSlot', null) == null || (d.maxOrdersPerSlot is int && d.maxOrdersPerSlot > 0))
+          && optional(d, 'notice', 'string')
+          && optional(d, 'openTime', 'string')
+          && optional(d, 'closeTime', 'string');
+    }
+    function kioskAcceptsOrders(kioskId) {
+      return kioskDoc(kioskId).open == true
+          && (kioskDoc(kioskId).get('pausedUntil', null) == null || kioskDoc(kioskId).pausedUntil < request.time);
+    }
     match /kiosks/{kioskId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update: if staffOf(kioskId);
+      allow create: if isAdmin() && request.resource.data.name is string && validKioskOps(request.resource.data)
+                    && stampedOnCreate();
+      allow update: if isAdmin() && validKioskOps(request.resource.data) && stampedOnUpdate();
+      allow update: if staffOf(kioskId)
+                    && changedKeys().hasOnly(['open', 'pausedUntil', 'waitMinutes', 'maxOrdersPerSlot', 'notice',
+                         'openTime', 'closeTime', 'updatedAt'])
+                    && validKioskOps(request.resource.data)
+                    && stampedOnUpdate();
       allow delete: if false;
 
       match /slots/{slotId} {
         allow read: if signedIn();
-        allow create, update: if staffOf(kioskId);
-        // Khách đặt chỗ hoặc huỷ chỗ: chỉ đổi `booked` đúng 1 đơn vị, trong [0, capacity].
+        allow create: if staffOf(kioskId) && stampedOnCreate();
+        allow update: if staffOf(kioskId) && stampedOnUpdate();
+        // A customer books or releases a slot: `booked` moves by exactly one within [0, capacity].
+        // The app must write FieldValue.increment(±1) so two bookings at once both count.
         allow update: if signedIn()
-                      && changedKeys().hasOnly(['booked'])
+                      && changedKeys().hasOnly(['booked', 'updatedAt'])
                       && request.resource.data.booked >= 0
                       && request.resource.data.booked <= resource.data.capacity
-                      && math.abs(request.resource.data.booked - resource.data.booked) == 1;
+                      && math.abs(request.resource.data.booked - resource.data.booked) == 1
+                      && stampedOnUpdate();
       }
     }
 
     // ---------- menu_items ----------
+    // Id is {kioskId}-{dishId}; the same dish sold at several kiosks shares its dishId (DB-21).
     function validMenuItem(d) {
       return d.name is string && d.name.size() > 0
+          && d.searchName is string
+          && d.dishId is string && d.dishId.size() > 0
+          && d.category in ['food', 'drink', 'other']
           && d.priceVnd is int && d.priceVnd > 0
           && d.prepMinutes is int && d.prepMinutes >= 0
-          && d.soldOut is bool;
+          && d.soldOut is bool
+          && (d.get('optionGroups', null) == null || (d.optionGroups is list && d.optionGroups.size() <= 5))
+          && (d.get('soldOutReason', null) == null || d.soldOutReason in ['outOfIngredients', 'machineBroken', 'other'])
+          && optional(d, 'availableAgainAt', 'timestamp');
     }
     match /menu_items/{id} {
       allow read: if signedIn();
-      allow create: if staffOf(request.resource.data.kioskId) && validMenuItem(request.resource.data);
+      allow create: if staffOf(request.resource.data.kioskId)
+                    && id == request.resource.data.kioskId + '-' + request.resource.data.dishId
+                    && validMenuItem(request.resource.data)
+                    && stampedOnCreate();
       allow update: if staffOf(resource.data.kioskId)
-                    && request.resource.data.kioskId == resource.data.kioskId
-                    && validMenuItem(request.resource.data);
-      allow delete: if false;   // dùng soldOut thay vì xoá
+                    && !changedKeys().hasAny(['kioskId', 'dishId'])
+                    && validMenuItem(request.resource.data)
+                    && stampedOnUpdate();
+      allow delete: if false;   // use soldOut instead of deleting
     }
 
     // ---------- vouchers ----------
+    // The upper-case code is the document id. `discount` is exactly one of two shapes (DB-20).
+    function validDiscount(x) {
+      return x is map && (
+        (x.type == 'fixed' && x.keys().hasOnly(['type', 'amountVnd']) && x.amountVnd is int && x.amountVnd > 0)
+        || (x.type == 'percent' && x.keys().hasOnly(['type', 'percent', 'maxVnd'])
+            && x.percent is int && x.percent >= 1 && x.percent <= 100
+            && x.maxVnd is int && x.maxVnd > 0));
+    }
+    function validVoucher(d) {
+      return d.title is string && d.title.size() > 0
+          && validDiscount(d.discount)
+          && d.minOrderVnd is int && d.minOrderVnd >= 0
+          && d.expiresAt is timestamp
+          && d.active is bool
+          && optional(d, 'startsAt', 'timestamp')
+          && ((d.get('activeFrom', null) == null && d.get('activeTo', null) == null)
+              || (d.activeFrom is string && d.activeFrom.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+                  && d.activeTo is string && d.activeTo.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')));
+    }
     match /vouchers/{code} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      allow create: if isAdmin() && code.matches('^[A-Z0-9]{3,20}$') && validVoucher(request.resource.data)
+                    && stampedOnCreate();
+      allow update: if isAdmin() && validVoucher(request.resource.data) && stampedOnUpdate();
+      allow delete: if false;   // switch `active` off instead
     }
 
     // ---------- carts ----------
     match /carts/{uid} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid)
+                            && request.resource.data.kioskId is string
                             && request.resource.data.items is list
-                            && request.resource.data.items.size() <= 30;
+                            && request.resource.data.items.size() <= 30
+                            && optional(request.resource.data, 'voucherCode', 'string')
+                            && optional(request.resource.data, 'pickupSlotId', 'string')
+                            && optional(request.resource.data, 'pickupAt', 'timestamp')
+                            && (resource == null ? stampedOnCreate() : stampedOnUpdate());
     }
 
     // ---------- orders ----------
+    // DB-18: the discount must be exactly what the voucher gives; no voucher means no discount.
+    function smaller(a, b) { return a < b ? a : b; }
+    function discountFor(x, subtotal) {
+      return x.type == 'fixed' ? smaller(x.amountVnd, subtotal)
+                               : smaller(math.floor(subtotal * x.percent / 100), x.maxVnd);
+    }
+    function voucherAllows(d, v) {
+      return v.active == true
+          && v.expiresAt > request.time
+          && (v.get('startsAt', null) == null || v.startsAt <= request.time)
+          && d.subtotalVnd >= v.minOrderVnd
+          && d.discountVnd == discountFor(v.discount, d.subtotalVnd);
+    }
+    function validDiscountOf(d) {
+      return d.get('voucherCode', null) == null
+          ? d.discountVnd == 0
+          : voucherAllows(d, get(/databases/$(database)/documents/vouchers/$(d.voucherCode)).data);
+    }
     function validNewOrder(d) {
       return d.uid == request.auth.uid
           && d.status == 'pending'
           && d.keys().hasAll(['uid', 'kioskId', 'items', 'subtotalVnd', 'discountVnd', 'totalVnd',
-                              'paymentMethod', 'paymentStatus', 'pickupCode', 'createdAt'])
+                              'paymentMethod', 'paymentStatus', 'pickupCode', 'createdAt', 'updatedAt'])
           && d.items is list && d.items.size() >= 1 && d.items.size() <= 30
           && d.subtotalVnd is int && d.discountVnd is int
           && d.discountVnd >= 0 && d.discountVnd <= d.subtotalVnd
           && d.totalVnd == d.subtotalVnd - d.discountVnd
+          && validDiscountOf(d)
           && d.paymentMethod in ['momo', 'vnpay', 'card', 'cash']
-          // Tiền mặt trả tại quầy (unpaid); các cổng mô phỏng ghi nhận paid.
+          // Cash is paid at the counter (unpaid); the simulated gateways record paid.
           && ((d.paymentMethod == 'cash') == (d.paymentStatus == 'unpaid'))
-          && d.createdAt == request.time;
+          && stampedOnCreate();
     }
     function validTransition(from, to) {
       return (from == 'pending' && to in ['preparing', 'cancelled'])
           || (from == 'preparing' && to in ['ready', 'cancelled'])
           || (from == 'ready' && to in ['delivered', 'cancelled']);
     }
+    // R-15: each step writes its own server time, so shift statistics (K11) cannot be faked.
+    function stepTimeOk(from, d) {
+      return d.status == from
+          || (d.status == 'preparing' && d.acceptedAt == request.time
+              && (d.get('readyBy', null) == null || (d.readyBy is timestamp && d.readyBy > request.time)))
+          || (d.status == 'ready' && d.readyAt == request.time
+              && (d.get('prepSeconds', null) == null || (d.prepSeconds is int && d.prepSeconds >= 0)))
+          || (d.status == 'delivered' && d.deliveredAt == request.time)
+          || (d.status == 'cancelled' && d.cancelledAt == request.time);
+    }
     match /orders/{id} {
-      // Chỉ đặt được ở kiosk đang mở. Nhân viên phải truy vấn có where kioskId == kiosk của mình.
+      // Only at a kiosk that accepts orders. Staff queries must include where kioskId == their kiosk.
       allow create: if signedIn() && validNewOrder(request.resource.data)
-                    && get(/databases/$(database)/documents/kiosks/$(request.resource.data.kioskId)).data.open == true;
+                    && kioskAcceptsOrders(request.resource.data.kioskId);
       allow read: if isOwner(resource.data.uid) || staffOf(resource.data.kioskId);
 
-      // Khách sửa nội dung hoặc huỷ khi đơn còn pending (S09, S07-DIALOG); không đổi cách thanh toán.
+      // The customer edits or cancels while pending (S09, S07-DIALOG); payment method never changes.
       allow update: if isOwner(resource.data.uid)
                     && resource.data.status == 'pending'
                     && request.resource.data.status in ['pending', 'cancelled']
@@ -117,58 +240,112 @@ service cloud.firestore {
                          'pickupSlotId', 'pickupAt', 'note', 'status', 'cancelReason', 'cancelledBy',
                          'cancelledAt', 'updatedAt'])
                     && request.resource.data.totalVnd == request.resource.data.subtotalVnd - request.resource.data.discountVnd
-                    && (request.resource.data.status == 'pending' || request.resource.data.cancelledBy == 'customer');
+                    && (request.resource.data.status == 'pending'
+                        ? validDiscountOf(request.resource.data)
+                        : (request.resource.data.cancelledBy == 'customer'
+                           && request.resource.data.cancelledAt == request.time))
+                    && stampedOnUpdate();
 
-      // Nhân viên đi đúng chuỗi pending → preparing → ready → delivered, hoặc từ chối kèm lý do.
+      // Staff follow pending → preparing → ready → delivered, or reject with a reason.
       allow update: if staffOf(resource.data.kioskId)
-                    && changedKeys().hasOnly(['status', 'acceptedAt', 'readyAt', 'deliveredAt',
-                         'cancelledAt', 'cancelReason', 'cancelledBy', 'paymentStatus', 'updatedAt'])
+                    && changedKeys().hasOnly(['status', 'acceptedAt', 'readyAt', 'deliveredAt', 'cancelledAt',
+                         'readyBy', 'prepSeconds', 'cancelReason', 'cancelledBy', 'paymentStatus', 'updatedAt'])
                     && (request.resource.data.status == resource.data.status
                         || validTransition(resource.data.status, request.resource.data.status))
+                    && stepTimeOk(resource.data.status, request.resource.data)
                     && (request.resource.data.status != 'cancelled'
                         || (request.resource.data.cancelledBy == 'staff' && request.resource.data.cancelReason is string))
-                    // Giao đơn tiền mặt thì phải ghi nhận đã thu tiền.
+                    // Handing over a cash order records the payment.
                     && (request.resource.data.status != 'delivered' || resource.data.paymentMethod != 'cash'
                         || request.resource.data.paymentStatus == 'paid')
                     && (request.resource.data.paymentStatus == resource.data.paymentStatus
-                        || (resource.data.paymentMethod == 'cash' && request.resource.data.paymentStatus == 'paid'));
+                        || (resource.data.paymentMethod == 'cash' && request.resource.data.paymentStatus == 'paid'))
+                    && stampedOnUpdate();
       allow delete: if false;
     }
 
     // ---------- reviews ----------
-    // Id = {orderId}_{itemId}: mỗi món trong một đơn chỉ đánh giá một lần, và chỉ khi đơn đã giao.
+    // Id = {orderId}_{itemId}: one review per item per order, only once the order was delivered.
+    function validReviewBody(d) {
+      return d.rating is int && d.rating >= 1 && d.rating <= 5
+          && (d.get('comment', null) == null || (d.comment is string && d.comment.size() <= 500))
+          && (d.get('tags', null) == null || (d.tags is list && d.tags.size() <= 4))
+          && (d.get('authorName', null) == null || (d.authorName is string && d.authorName.size() <= 30));
+    }
     match /reviews/{reviewId} {
       allow read: if signedIn();
       allow create: if signedIn()
                     && request.resource.data.uid == request.auth.uid
                     && reviewId == request.resource.data.orderId + '_' + request.resource.data.itemId
-                    && request.resource.data.rating is int
-                    && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
-                    && request.resource.data.createdAt == request.time
-                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.uid == request.auth.uid
-                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'delivered';
+                    && request.resource.data.dishId is string
+                    && validReviewBody(request.resource.data)
+                    && orderDoc(request.resource.data.orderId).uid == request.auth.uid
+                    && orderDoc(request.resource.data.orderId).status == 'delivered'
+                    && stampedOnCreate();
       allow update: if isOwner(resource.data.uid)
-                    && changedKeys().hasOnly(['rating', 'comment', 'updatedAt'])
-                    && request.resource.data.rating is int
-                    && request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+                    && changedKeys().hasOnly(['rating', 'comment', 'tags', 'updatedAt'])
+                    && validReviewBody(request.resource.data)
+                    && stampedOnUpdate();
       allow delete: if false;
     }
 
     // ---------- incidents ----------
+    // Id = orderId: at most one incident per order (DB-26), so K13 cannot be flooded.
     match /incidents/{id} {
       allow create: if signedIn()
+                    && id == request.resource.data.orderId
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.status == 'open'
-                    && request.resource.data.type in ['wrong_item', 'missing_item', 'quality', 'late', 'other']
+                    && request.resource.data.type in ['missingItem', 'wrongItem', 'quality', 'late', 'other']
                     && request.resource.data.description is string
                     && request.resource.data.description.size() <= 500
-                    && request.resource.data.createdAt == request.time
-                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.uid == request.auth.uid
-                    && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.kioskId == request.resource.data.kioskId;
+                    && optional(request.resource.data, 'photoUrl', 'string')
+                    && orderDoc(id).uid == request.auth.uid
+                    && orderDoc(id).kioskId == request.resource.data.kioskId
+                    && stampedOnCreate();
       allow read: if isOwner(resource.data.uid) || staffOf(resource.data.kioskId);
       allow update: if staffOf(resource.data.kioskId)
-                    && changedKeys().hasOnly(['status', 'resolution', 'resolvedAt', 'handledBy'])
-                    && request.resource.data.status in ['open', 'in_progress', 'resolved'];
+                    && changedKeys().hasOnly(['status', 'resolution', 'resolutionNote', 'refundVnd', 'resolvedAt',
+                         'handledBy', 'updatedAt'])
+                    && request.resource.data.status in ['open', 'inProgress', 'resolved']
+                    && (request.resource.data.status != 'resolved' || (
+                        request.resource.data.resolvedAt == request.time
+                        && request.resource.data.handledBy == request.auth.uid
+                        && ((request.resource.data.resolution == 'refunded'
+                             && request.resource.data.refundVnd is int
+                             && request.resource.data.refundVnd > 0
+                             && request.resource.data.refundVnd <= orderDoc(id).totalVnd)
+                            || (request.resource.data.resolution == 'rejected'
+                                && request.resource.data.resolutionNote is string
+                                && request.resource.data.resolutionNote.size() > 0))))
+                    && stampedOnUpdate();
+      allow delete: if false;
+    }
+
+    // ---------- reports (PDF metadata, T43) ----------
+    match /reports/{id} {
+      allow read: if isOwner(resource.data.uid);
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.fileName is string
+                    && request.resource.data.url is string && request.resource.data.url.matches('^https://.+')
+                    && request.resource.data.publicId is string
+                    && request.resource.data.sizeKb is int
+                    && request.resource.data.sizeKb > 0 && request.resource.data.sizeKb <= 5120
+                    && (request.resource.data.get('orderId', null) == null
+                        || orderDoc(request.resource.data.orderId).uid == request.auth.uid)
+                    && stampedOnCreate();
+      allow update, delete: if false;
+    }
+
+    // ---------- announcements (final assignment) ----------
+    match /announcements/{id} {
+      allow read: if signedIn() && (resource.data.status == 'published' || isAdmin());
+      allow create: if isAdmin() && request.resource.data.status in ['draft', 'published', 'archived']
+                    && request.resource.data.createdBy == request.auth.uid
+                    && stampedOnCreate();
+      allow update: if isAdmin() && request.resource.data.status in ['draft', 'published', 'archived']
+                    && stampedOnUpdate();
       allow delete: if false;
     }
 

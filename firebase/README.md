@@ -22,13 +22,15 @@ Deploy: `firebase deploy --only firestore:rules,firestore:indexes,remoteconfig` 
 
 `firebase/tests/rules.test.mjs` has an allowed case and a denied case for every role (user, staff, admin) and every collection, plus the Storage rules (folder owner, PDF, image, ≤ 5 MB, staff by kiosk).
 
-**Result of the run on 29/10/2026 on the Emulator: 82 tests, 82 passed, 0 failed.** The line `Unexpected rules runtime error ... NullPointerException` printed when the Emulator shuts down is harmless.
+**Result of the run on 31/10/2026 on the Emulator: 81 tests (each with several allowed and denied assertions), 81 passed, 0 failed.** Covered: server timestamps on every write, users (no self-promotion, no email change, ≤ 5 FCM tokens), kiosks (staff edit operating fields only), slots (`increment(±1)` within capacity), menu items (category, `{kioskId}-{dishId}` id), vouchers (one discount shape, cap required), carts, orders (voucher discount recomputed, paused kiosks, server time of every step), reviews, incidents (one per order, refund ≤ total, explanation when rejected), reports, announcements, plus the fallback Storage rules. The lines `evaluation error …` printed for denied cases, and `Unexpected rules runtime error ... NullPointerException` when the Emulator shuts down, are harmless.
 
 ```bash
 cd firebase/tests
 npm install
 npm test        # needs Java 21; the Firestore Emulator downloads about 140 MB the first time
 ```
+
+**Java 21.** `firebase-tools` refuses older JDKs. Android Studio ships one, so you do not need to install another — in Git Bash: `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"; export PATH="$JAVA_HOME/bin:$PATH"` (PowerShell: `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"; $env:Path = "$env:JAVA_HOME\bin;$env:Path"`). `npm run seed:emulator` also needs the `firebase` command: install it globally (`npm install -g firebase-tools`) or put `firebase/tests/node_modules/.bin` on `PATH`.
 
 ### The "Unable to establish loopback connection" error on Windows
 

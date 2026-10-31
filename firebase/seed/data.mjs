@@ -18,16 +18,16 @@ export const KIOSKS = [
 
 // Mỗi kiosk bán các món dưới đây (kiosk đóng cửa chỉ bán một phần). `soldOut` để thử S22, K09.
 const MENU = [
-  { slug: 'tacos-bo', name: 'Combo Tacos Bò Phô Mai', category: 'Tacos', priceVnd: 39000, prepMinutes: 4, description: 'Hai bánh tacos bò, phô mai, kèm nước ngọt.' },
-  { slug: 'tacos-ga', name: 'Tacos Gà Giòn Sốt Cay', category: 'Tacos', priceVnd: 35000, prepMinutes: 4, description: 'Gà giòn, sốt cay, rau tươi.', soldOutAt: ['q9-t2'] },
-  { slug: 'mi-tron-ga', name: 'Mì Trộn Gà Cay Hàn Quốc', category: 'Mì trộn', priceVnd: 35000, prepMinutes: 5, description: 'Mì trộn sốt cay, gà xé, trứng.' },
-  { slug: 'mi-tron-bo', name: 'Mì Trộn Bò Xào', category: 'Mì trộn', priceVnd: 38000, prepMinutes: 6, description: 'Mì trộn, bò xào hành.' },
-  { slug: 'com-ga', name: 'Cơm Gà Teriyaki', category: 'Cơm', priceVnd: 42000, prepMinutes: 8, description: 'Cơm trắng, gà sốt teriyaki, rau củ.' },
-  { slug: 'banh-mi', name: 'Bánh Mì Chả Lụa Trứng', category: 'Bánh mì', priceVnd: 22000, prepMinutes: 3, description: 'Bánh mì nóng, chả lụa, trứng ốp la.' },
-  { slug: 'tra-dao', name: 'Trà Đào Chanh Sả', category: 'Đồ uống', priceVnd: 20000, prepMinutes: 2, description: 'Trà đào, chanh, sả, đá.' },
-  { slug: 'tra-sua', name: 'Trà Sữa Trân Châu', category: 'Đồ uống', priceVnd: 25000, prepMinutes: 3, description: 'Trà sữa, trân châu đen.' },
-  { slug: 'cafe-sua', name: 'Cà Phê Sữa Đá', category: 'Đồ uống', priceVnd: 18000, prepMinutes: 2, description: 'Cà phê phin, sữa đặc.' },
-  { slug: 'khoai-chien', name: 'Khoai Tây Chiên', category: 'Ăn vặt', priceVnd: 22000, prepMinutes: 4, description: 'Khoai tây chiên giòn, sốt tương cà.' },
+  { slug: 'tacos-bo', name: 'Combo Tacos Bò Phô Mai', category: 'food', priceVnd: 39000, prepMinutes: 4, description: 'Hai bánh tacos bò, phô mai, kèm nước ngọt.' },
+  { slug: 'tacos-ga', name: 'Tacos Gà Giòn Sốt Cay', category: 'food', priceVnd: 35000, prepMinutes: 4, description: 'Gà giòn, sốt cay, rau tươi.', soldOutAt: ['q9-t2'] },
+  { slug: 'mi-tron-ga', name: 'Mì Trộn Gà Cay Hàn Quốc', category: 'food', priceVnd: 35000, prepMinutes: 5, description: 'Mì trộn sốt cay, gà xé, trứng.' },
+  { slug: 'mi-tron-bo', name: 'Mì Trộn Bò Xào', category: 'food', priceVnd: 38000, prepMinutes: 6, description: 'Mì trộn, bò xào hành.' },
+  { slug: 'com-ga', name: 'Cơm Gà Teriyaki', category: 'food', priceVnd: 42000, prepMinutes: 8, description: 'Cơm trắng, gà sốt teriyaki, rau củ.' },
+  { slug: 'banh-mi', name: 'Bánh Mì Chả Lụa Trứng', category: 'food', priceVnd: 22000, prepMinutes: 3, description: 'Bánh mì nóng, chả lụa, trứng ốp la.' },
+  { slug: 'tra-dao', name: 'Trà Đào Chanh Sả', category: 'drink', priceVnd: 20000, prepMinutes: 2, description: 'Trà đào, chanh, sả, đá.' },
+  { slug: 'tra-sua', name: 'Trà Sữa Trân Châu', category: 'drink', priceVnd: 25000, prepMinutes: 3, description: 'Trà sữa, trân châu đen.' },
+  { slug: 'cafe-sua', name: 'Cà Phê Sữa Đá', category: 'drink', priceVnd: 18000, prepMinutes: 2, description: 'Cà phê phin, sữa đặc.' },
+  { slug: 'khoai-chien', name: 'Khoai Tây Chiên', category: 'food', priceVnd: 22000, prepMinutes: 4, description: 'Khoai tây chiên giòn, sốt tương cà.' },
 ];
 const CLOSED_KIOSK_MENU = ['tacos-bo', 'tra-dao', 'cafe-sua', 'banh-mi', 'khoai-chien'];
 
@@ -40,6 +40,7 @@ export function menuItemsFor(kiosk) {
   return MENU.filter((m) => kiosk.open || CLOSED_KIOSK_MENU.includes(m.slug)).map((m) => ({
     id: `${kiosk.id}-${m.slug}`,
     kioskId: kiosk.id,
+    dishId: m.slug,
     name: m.name,
     searchName: searchName(m.name),
     description: m.description,
@@ -54,7 +55,10 @@ export function menuItemsFor(kiosk) {
 }
 
 export const VOUCHERS = [
-  { code: 'BBSTUDENT', title: 'Giảm 10K cho sinh viên', discountVnd: 10000, minOrderVnd: 40000, expiresAt: '2100-01-01', active: true },
-  { code: 'GIOVANG', title: 'Combo Giờ Vàng giảm 15%, tối đa 15K', discountVnd: 0, percent: 15, maxDiscountVnd: 15000, minOrderVnd: 30000, expiresAt: '2100-01-01', active: true },
-  { code: 'BB20', title: 'Mã đã hết hạn (để thử báo lỗi)', discountVnd: 20000, minOrderVnd: 0, expiresAt: '2020-01-01', active: true },
+  { code: 'BBSTUDENT', title: 'Giảm 10K cho sinh viên', discount: { type: 'fixed', amountVnd: 10000 }, minOrderVnd: 40000, expiresAt: '2100-01-01', active: true },
+  {
+    code: 'GIOVANG', title: 'Combo Giờ Vàng giảm 15%, tối đa 15K', discount: { type: 'percent', percent: 15, maxVnd: 15000 },
+    minOrderVnd: 30000, expiresAt: '2100-01-01', activeFrom: '10:15', activeTo: '10:30', active: true,
+  },
+  { code: 'BB20', title: 'Mã đã hết hạn (để thử báo lỗi)', discount: { type: 'fixed', amountVnd: 20000 }, minOrderVnd: 0, expiresAt: '2020-01-01', active: true },
 ];
