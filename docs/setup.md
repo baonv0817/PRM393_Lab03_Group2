@@ -110,6 +110,21 @@ Files (PDF receipts, photos) are stored on Cloudinary instead of Cloud Storage f
 4. Put both values in `env/cloudinary.json` and commit it. They are not secrets: an unsigned preset is meant to be used from the app. Never put the API key or API secret in the repo.
 5. Run the real app with `flutter run --dart-define-from-file=env/cloudinary.json` (the VS Code configuration "BreakBite (real Firebase)" already passes it).
 
+### Firebase Emulator (local data)
+
+To try flows, rules and ARTEMIS runs without touching the real project:
+
+```powershell
+# terminal 1: start Auth and Firestore emulators (data is lost when they stop)
+firebase emulators:start --only auth,firestore --project breakbite-1315b
+
+# terminal 2: load the sample menu, kiosks, vouchers and slots into them
+cd firebase/seed
+$env:FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080"; $env:GCLOUD_PROJECT = "breakbite-1315b"; node seed.mjs
+```
+
+Then press F5 with **"BreakBite (Firebase Emulator)"**, or run `flutter run --dart-define=USE_FIREBASE_EMULATOR=true --dart-define-from-file=env/cloudinary.json`. The app connects to `10.0.2.2` on the Android emulator and `localhost` elsewhere; on a physical phone add `--dart-define=FIREBASE_EMULATOR_HOST=<your PC LAN IP>`. Only debug builds can use the emulator (cleartext traffic to those hosts is allowed in `android/app/src/debug/` only). Google Sign-In in the Auth emulator shows a fake account picker, so no real account is needed.
+
 ## 5. ARTEMIS (E2E tests)
 
 See `e2e_test/README.md`. The server lives in `D:\src\artemis`, pinned to commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b`. It needs an API key for a multimodal model (Gemini, Claude, GPT-4o or Qwen-VL) in the ARTEMIS server's `.env`; **never commit the key**.

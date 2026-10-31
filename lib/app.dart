@@ -1,4 +1,5 @@
 import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/routing/router.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
@@ -22,6 +23,7 @@ class BreakBiteApp extends StatelessWidget {
             context.read<AuthService>(),
             context.read<AnalyticsService>(),
             context.read<CrashService>(),
+            context.read<SessionRepository>(),
           ),
         ),
       ],

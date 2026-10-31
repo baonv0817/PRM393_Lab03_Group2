@@ -202,16 +202,18 @@ Every composite index is in `firebase/firestore.indexes.json` (already deployed 
 | S29 Voucher picker | `vouchers` where `active == true` | automatic |
 | S25 Pickup time | `kiosks/{k}/slots` where `startAt >= now` orderBy `startAt` | automatic |
 | S07 Tracking | `orders/{id}` (listen) | — |
-| S08, S11, S14 History, reorder | `orders` where `uid == me` orderBy `createdAt desc` | (uid, createdAt desc) |
+| S08, S11, S14 History, reorder | `orders` where `uid == me` orderBy `createdAt desc`, *paged* | (uid, createdAt desc) |
 | S13 Favorites | `users/{uid}/favorites` orderBy `addedAt desc` | automatic |
-| S19 Notifications | `users/{uid}/notifications` orderBy `createdAt desc` | automatic |
+| S19 Notifications | `users/{uid}/notifications` orderBy `createdAt desc`, *paged* | automatic |
 | S23 Review | `reviews/{orderId}_{itemId}`; item reviews: `reviews` where `itemId == m` orderBy `createdAt desc` | (itemId, createdAt desc) |
 | S24 Incident report | create `incidents`; the customer reads: where `uid == me` orderBy `createdAt desc` | (uid, createdAt desc) |
 | K02 Order queue | `orders` where `kioskId == mine` and `status in [pending, preparing, ready]` orderBy `createdAt desc` | (kioskId, status, createdAt desc) |
 | K05 Scan code | `orders` where `kioskId == mine` and `pickupCode == c` and `status == 'ready'` | (kioskId, pickupCode, status) |
 | K08 Menu management | like S03, without filtering `soldOut` | (kioskId, name) |
 | K11 Shift statistics | `orders` where `kioskId == mine` and `createdAt >= startOfShift`, using `count()` and `sum(totalVnd)` | (kioskId, createdAt desc) |
-| K13 Customer incidents | `incidents` where `kioskId == mine` and `status == s` orderBy `createdAt desc` | (kioskId, status, createdAt desc) |
+| K13 Customer incidents | `incidents` where `kioskId == mine` and `status == s` orderBy `createdAt desc`, *paged* | (kioskId, status, createdAt desc) |
+
+**Long lists are paged** with a cursor (`Paged<T>`, 20 per page, at most 50): the queries marked *paged* above add `limit` and `startAfterDocument`; see `CONTRIBUTING.md` section 7.
 
 **A note on rules and queries.** Rules are not filters: a staff query **must include** `where('kioskId', isEqualTo: myKiosk)` and a customer query must include `where('uid', isEqualTo: me)`, otherwise Firestore rejects the whole query.
 

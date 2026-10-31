@@ -159,7 +159,10 @@ flutter test                                     # includes test/architecture_te
 | Async | Await every `Future` or wrap it in `unawaited(…)`; cancel every `StreamSubscription` in `dispose()` | lints `unawaited_futures`, `cancel_subscriptions` |
 | Layers | UI, routing and models never import an SDK; `lib/` never imports `dev/`; models do not import Flutter; view models import only `package:flutter/foundation.dart` and never a widget; feature screens use no colour or text-style literals | `test/architecture_test.dart` |
 | Analytics | Event names come from `AnalyticsEvents`; no personal data (name, e-mail) in parameters | review |
-| Tests | Every ViewModel: data, empty and error cases. Every screen: a widget test. Test names are sentences that state the behaviour | review |
+| Tests | Every ViewModel: data, empty and error cases. Every screen: a widget test pumped with `pumpScreen` (`test/helpers/pump.dart`) at 360 dp, plus 412 dp for screens with long text. Test names are sentences that state the behaviour | review |
+| View models | `extends ChangeNotifier with SafeChangeNotifier`; every user action that writes data is a `Command` (below) | `test/architecture_test.dart`, review |
+| Test ids | Every button, tappable list cell, input and tab is wrapped in `TestId('<screen>.<element>[.<itemId>]')`, for example `s03.add.m1` | review; ARTEMIS relies on them |
+| Line endings | LF everywhere (`.gitattributes`); Windows editors keep working as usual | Git |
 
 ### Error handling
 
@@ -180,3 +183,39 @@ flutter test                                     # includes test/architecture_te
 5. **Screens never use `try/catch`**; they switch on what the ViewModel returns.
 
 Reference implementation: `HomeViewModel.addToCart`, `AuthViewModel.signIn`, `CloudinaryStorageService.upload`, and their tests.
+
+### Lists and pagination
+
+Firestore has no page numbers or offsets (skipped documents are still billed as reads), so long lists are read with a cursor through `Paged<T>` (`lib/utils/paged.dart`).
+
+| List | How it is read |
+|---|---|
+| Grows without limit: orders (S08, S11, S14), notifications (S19), incidents (K13), reviews of an item | `Future<Result<Paged<T>>> fetchX(…, {int limit = Paged.defaultLimit, PageCursor? after})`. The newest page can also be watched live (`watchX`, same order, `limit`); older pages are fetched when the user scrolls |
+| Small and bounded: one kiosk's menu (S03, S28), kiosks (S27), the active order queue (K02) | One `Stream<List<T>>`, filtered in the ViewModel |
+| Totals (K11) | Aggregation query (`count()`, `sum()`) returning `Result<int>` |
+
+Rules:
+1. Page size: default `Paged.defaultLimit` (20), at most `Paged.maxLimit` (50); anything else fails with `ValidationException`.
+2. The order must be fixed and match an index in `firestore.indexes.json` (for example `uid` + `createdAt desc`).
+3. `PageCursor` is opaque. The Firestore version wraps the last `DocumentSnapshot` of the page and the query uses `startAfterDocument`; a cursor from another source fails with `ValidationException`. Fakes use `IndexCursor` through `pageOf()` in `dev/fakes/paging.dart`.
+4. To know whether more exists without an extra read, query `limit + 1` documents: if `limit + 1` come back, return the first `limit` and set `next` to the cursor of the last returned one; otherwise `next` is `null`.
+5. The ViewModel appends each page to its list, keeps `next`, shows a footer loader while fetching, and stops asking when `hasMore` is false. A failed page keeps the items already shown and offers a retry.
+
+Reference: `OrderRepository.fetchMyOrders` (interface and fake) and `test/dev/paging_test.dart`.
+
+### Building blocks
+
+Use these instead of writing your own; each has tests and a reference use.
+
+| Need | Use | Where | Reference |
+|---|---|---|---|
+| A button that writes data (order, accept, sign in) | `Command0` / `Command1`: ignores a second tap while running, exposes `running` and `result`. Disable the button while `running`; after `await cmd.execute(…)` switch on the result (`null` means the tap was ignored) | `lib/utils/command.dart` | `HomeViewModel.addToCart`, `AuthViewModel.signIn` |
+| State several screens share (the selected kiosk) | `SessionRepository` (`watchSelectedKioskId`, `selectKiosk`, `clear`); never a global variable or a view model shared between screens | `lib/data/repositories/session_repository.dart` | `HomeViewModel` |
+| Safe `notifyListeners` after the user left | `with SafeChangeNotifier` | `lib/utils/safe_change_notifier.dart` | every view model |
+| Dates and money on screen | `formatVnd`, `formatTime` (`10:20`), `formatDayMonth` (`14/10`), `formatDate`, `formatDateTime`, `formatTimeLeft` (`còn 3 phút`), `orderStatusLabel(OrderStatus)` | `lib/utils/format.dart` | `test/utils/format_test.dart` |
+| Stable ids for ARTEMIS and widget tests | `TestId('s02.cart', child: …)`; in tests `find.bySemanticsIdentifier('s02.cart')` | `lib/ui/core/widgets/test_id.dart` | Home, Onboarding |
+| Widget test setup | `pumpScreen(tester, screen, providers: […], size: TestScreens.narrow)` | `test/helpers/pump.dart` | `test/ui/home/home_screen_test.dart` |
+| Firebase implementation of a one-shot method | `guard(() => …)` returns the `Result` with the right `AppException`; streams go through `guardStream(…)` | `lib/data/firebase/firebase_errors.dart` | `test/data/firebase/firebase_errors_test.dart` |
+| Firestore writes and reads | `...Stamp.created()` / `...Stamp.updated()` in every write (DB-16); `readDate`, `readDateOr`, `readEnum` when mapping documents to models; mapping code lives in the repository, never in `lib/domain/` | `lib/data/firebase/firestore_helpers.dart` | — |
+| A paged Firestore list | `fetchPage(query, fromDoc: …, limit: …, after: …)` | `lib/data/firebase/firestore_helpers.dart` | `OrderRepository.fetchMyOrders` (fake) |
+| Trying flows against local data | VS Code "BreakBite (Firebase Emulator)" or `--dart-define=USE_FIREBASE_EMULATOR=true` | `lib/config/firebase_setup.dart`, `docs/setup.md` | — |

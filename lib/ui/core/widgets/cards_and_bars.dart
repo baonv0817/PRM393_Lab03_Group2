@@ -3,12 +3,13 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/buttons.dart';
 import 'package:breakbite/ui/core/widgets/menu_image.dart';
+import 'package:breakbite/ui/core/widgets/test_id.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:flutter/material.dart';
 
 /// Lab 2 Card/Food: dish, drink, sold out.
 class FoodCard extends StatelessWidget {
-  const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd});
+  const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd, this.testId});
 
   final MenuItem item;
   final VoidCallback onTap;
@@ -16,13 +17,16 @@ class FoodCard extends StatelessWidget {
   /// `null` when sold out.
   final VoidCallback? onAdd;
 
+  /// Optional [TestId] of the card; its add button gets `<testId>.add`.
+  final String? testId;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final dim = item.soldOut ? colors.muted : null;
-    return Semantics(
+    final card = Semantics(
       label: '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}',
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -68,11 +72,14 @@ class FoodCard extends StatelessWidget {
                     child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
                   )
                 else
-                  AppIconButton(
-                    icon: Icons.add,
-                    semanticLabel: 'Thêm ${item.name} vào giỏ',
-                    onPressed: onAdd,
-                    filled: true,
+                  _withTestId(
+                    testId == null ? null : '$testId.add',
+                    AppIconButton(
+                      icon: Icons.add,
+                      semanticLabel: 'Thêm ${item.name} vào giỏ',
+                      onPressed: onAdd,
+                      filled: true,
+                    ),
                   ),
               ],
             ),
@@ -80,7 +87,10 @@ class FoodCard extends StatelessWidget {
         ),
       ),
     );
+    return _withTestId(testId, card);
   }
+
+  static Widget _withTestId(String? id, Widget child) => id == null ? child : TestId(id, child: child);
 }
 
 /// Lab 2 AppBar: title, 48 × 48 Back button.
