@@ -26,7 +26,10 @@ class OnboardingScreen extends StatelessWidget {
             children: [
               Align(
                 alignment: Alignment.centerRight,
-                child: AppButton(label: 'Bỏ qua', variant: AppButtonVariant.text, onPressed: done),
+                child: TestId(
+                  's01.skip',
+                  child: AppButton(label: 'Bỏ qua', variant: AppButtonVariant.text, onPressed: done),
+                ),
               ),
               Expanded(
                 child: Center(
@@ -50,10 +53,16 @@ class OnboardingScreen extends StatelessWidget {
               ),
               SizedBox(
                 width: double.infinity,
-                child: AppButton(label: 'Bắt đầu đặt món', onPressed: done),
+                child: TestId(
+                  's01.start',
+                  child: AppButton(label: 'Bắt đầu đặt món', onPressed: done),
+                ),
               ),
               const SizedBox(height: AppSpacing.xxs),
-              AppButton(label: 'Đăng nhập bằng Google', variant: AppButtonVariant.text, onPressed: done),
+              TestId(
+                's01.signIn',
+                child: AppButton(label: 'Đăng nhập bằng Google', variant: AppButtonVariant.text, onPressed: done),
+              ),
               const SizedBox(height: AppSpacing.xs),
             ],
           ),

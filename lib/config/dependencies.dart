@@ -17,6 +17,7 @@ class AppDependencies {
     required this.menu,
     required this.cart,
     required this.orders,
+    required this.session,
   });
 
   final AuthService auth;
@@ -29,6 +30,7 @@ class AppDependencies {
   final MenuRepository menu;
   final CartRepository cart;
   final OrderRepository orders;
+  final SessionRepository session;
 
   /// Provides each part separately so a route reads only what it needs: `context.read<MenuRepository>()`.
   List<SingleChildWidget> get providers => [
@@ -41,5 +43,6 @@ class AppDependencies {
     Provider<MenuRepository>.value(value: menu),
     Provider<CartRepository>.value(value: cart),
     Provider<OrderRepository>.value(value: orders),
+    Provider<SessionRepository>.value(value: session),
   ];
 }

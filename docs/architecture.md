@@ -31,6 +31,7 @@ lib/
   config/
     dependencies.dart           AppDependencies: every service and repository, exposed one by one through Provider
     firebase_dependencies.dart  builds the Firebase implementations (P3, T22 and T33)
+    firebase_setup.dart         Firebase.initializeApp, optional local emulators
   routing/
     router.dart                 GoRouter, redirect by sign-in and role, tab shells
     routes.dart                 AppRoutes: every path as a constant
@@ -38,18 +39,20 @@ lib/
   domain/models/                plain data classes, one file per model, models.dart exports them all
   data/
     services/                   thin wrappers around an SDK: auth, analytics, crash, messaging, remote config; cloudinary/ (file storage)
-    repositories/               source of truth for business data (Firestore): menu, cart, order…
+    repositories/               source of truth for app data: menu, cart, order (Firestore), session (selected kiosk)
+      local/                    implementations kept on the device (InMemorySessionRepository)
+    firebase/                   shared by every Firebase implementation: error mapping (guard), Stamp, readDate, fetchPage
   ui/
     core/                       theme/, widgets/, view_state.dart, placeholder_screen.dart (shared, owned by P1)
     <feature>/
       view_models/              <feature>_view_model.dart
       widgets/                  <feature>_screen.dart and widgets used only by this feature
-  utils/                        pure helpers (money formatting)
+  utils/                        result.dart, paged.dart, command.dart, safe_change_notifier.dart, format.dart
 dev/                            OUTSIDE lib/: never part of the submitted build
   main_dev.dart                 entry point with fake data
   fake_dependencies.dart        createFakeDependencies()
   fakes/                        in-memory fakes of every service and repository, also used by tests
-test/                           mirrors lib/ (test/ui/home/…, test/routing/…)
+test/                           mirrors lib/ (test/ui/home/…, test/routing/…); helpers/ (pumpScreen); architecture_test.dart
 ```
 
 ## 2. Layers
@@ -122,7 +125,7 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | Folder `lib/ui/…` | Screens | Owner | ViewModel | Depends on |
 |---|---|---|---|---|
 | `onboarding/` | S01 | P1 | (uses `AuthViewModel`) | — |
-| `home/` | S02, S21 | P1 | `HomeViewModel` | `MenuRepository`, `CartRepository`, `OrderRepository`, `RemoteConfigService`, `AnalyticsService` |
+| `home/` | S02, S21 | P1 | `HomeViewModel` | `MenuRepository`, `CartRepository`, `OrderRepository`, `SessionRepository`, `RemoteConfigService`, `AnalyticsService` |
 | `menu/` | S03, S04, S22 | P1 | `MenuViewModel`, `ItemDetailViewModel`, `AlternativesViewModel` | `MenuRepository`, `CartRepository`, `AnalyticsService` |
 | `cart/` | S05, S25, S29 | P1 | `CartViewModel`, `PickupTimeViewModel`, `VoucherViewModel` | `CartRepository`, `SlotRepository`, `VoucherRepository`, `AnalyticsService` |
 | `checkout/` | S06, S06-GATEWAY | P1 | `CheckoutViewModel` | `OrderRepository`, `CartRepository`, `AnalyticsService`, `CrashService` |

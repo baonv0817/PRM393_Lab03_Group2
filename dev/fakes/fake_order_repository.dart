@@ -1,8 +1,10 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/utils/paged.dart';
 import 'package:breakbite/utils/result.dart';
 
 import 'live_value.dart';
+import 'paging.dart';
 
 class FakeOrderRepository implements OrderRepository {
   final _orders = LiveValue<List<Order>>(const []);
@@ -38,6 +40,12 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   Stream<List<Order>> watchMyOrders(String uid) => _orders.stream.map((l) => l.where((o) => o.uid == uid).toList());
+
+  @override
+  Future<Result<Paged<Order>>> fetchMyOrders(String uid, {int limit = Paged.defaultLimit, PageCursor? after}) async {
+    final mine = _orders.value.where((o) => o.uid == uid).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return pageOf(mine, limit: limit, after: after);
+  }
 
   @override
   Future<Result<void>> cancelOrder(String id) => updateStatus(id, OrderStatus.cancelled);

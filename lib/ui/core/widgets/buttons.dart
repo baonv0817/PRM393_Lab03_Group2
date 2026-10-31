@@ -40,14 +40,18 @@ class AppButton extends StatelessWidget {
             children: [
               const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5)),
               const SizedBox(width: AppSpacing.xs),
-              Text(label, style: textStyle),
+              Flexible(
+                child: Text(label, style: textStyle, textAlign: TextAlign.center),
+              ),
             ],
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: AppSpacing.xs)],
-              Text(label, style: textStyle),
+              Flexible(
+                child: Text(label, style: textStyle, textAlign: TextAlign.center),
+              ),
             ],
           );
 

@@ -23,6 +23,7 @@ final GoRoute homeRoute = GoRoute(
         menu: context.read<MenuRepository>(),
         cart: context.read<CartRepository>(),
         orders: context.read<OrderRepository>(),
+        session: context.read<SessionRepository>(),
         remoteConfig: context.read<RemoteConfigService>(),
         analytics: context.read<AnalyticsService>(),
         crash: context.read<CrashService>(),

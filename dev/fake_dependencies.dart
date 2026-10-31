@@ -1,4 +1,5 @@
 import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/domain/models/models.dart';
 
 import 'fakes/fakes.dart';
@@ -13,4 +14,5 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
   menu: FakeMenuRepository(),
   cart: FakeCartRepository(),
   orders: FakeOrderRepository(),
+  session: InMemorySessionRepository(),
 );

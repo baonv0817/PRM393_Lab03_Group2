@@ -47,6 +47,16 @@ void main() {
     expect(_violations(viewModels, (i) => i.contains('/widgets/')), isEmpty);
   });
 
+  test('every view model mixes in SafeChangeNotifier', () {
+    final missing = [
+      for (final f in _dartFiles('lib/ui').where((f) => _path(f).contains('/view_models/')))
+        if (f.readAsStringSync().contains('extends ChangeNotifier') &&
+            !f.readAsStringSync().contains('with SafeChangeNotifier'))
+          _path(f),
+    ];
+    expect(missing, isEmpty);
+  });
+
   test('feature screens take colours and text styles from the theme, not literals', () {
     final screens = _dartFiles('lib/ui').where((f) => !_path(f).startsWith('lib/ui/core/'));
     final literal = RegExp(r'Color\(0x|\bColors\.(?!transparent)|\bTextStyle\(|fontFamily:');

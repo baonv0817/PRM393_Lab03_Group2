@@ -38,10 +38,16 @@ class HomeScreen extends StatelessWidget {
           children: [
             _Header(vm: vm),
             const SizedBox(height: AppSpacing.sm),
-            AppSearchField(hint: 'Tìm Tacos, Mì trộn, Đồ uống...', onTap: () => context.push(AppRoutes.search)),
+            TestId(
+              's02.search',
+              child: AppSearchField(
+                hint: 'Tìm Tacos, Mì trộn, Đồ uống...',
+                onTap: () => context.push(AppRoutes.search),
+              ),
+            ),
             if (vm.promoBannerEnabled) ...[
               const SizedBox(height: AppSpacing.md),
-              _PromoBanner(onTap: () => context.go(AppRoutes.menu)),
+              TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
             ],
             const SizedBox(height: AppSpacing.lg),
             Semantics(
@@ -52,7 +58,14 @@ class HomeScreen extends StatelessWidget {
             _QuickSection(vm: vm, onAdd: (item) => _add(context, vm, item)),
             if (vm.lastOrder case final order?) ...[
               const SizedBox(height: AppSpacing.xxs),
-              _ReorderCard(order: order, onTap: () => _reorder(context, vm)),
+              TestId(
+                's02.reorder',
+                child: ListenableBuilder(
+                  listenable: vm.reorderLast,
+                  builder: (context, _) =>
+                      _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(context, vm)),
+                ),
+              ),
             ],
           ],
         ),
@@ -61,8 +74,8 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<void> _add(BuildContext context, HomeViewModel vm, MenuItem item) async {
-    final result = await vm.addToCart(item);
-    if (!context.mounted) return;
+    final result = await vm.addToCart.execute(item);
+    if (!context.mounted || result == null) return;
     switch (result) {
       case Ok():
         showAddedSnackbar(
@@ -76,8 +89,8 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<void> _reorder(BuildContext context, HomeViewModel vm) async {
-    final result = await vm.reorderLast();
-    if (!context.mounted) return;
+    final result = await vm.reorderLast.execute();
+    if (!context.mounted || result == null) return;
     switch (result) {
       case Ok(value: 0):
         break;
@@ -171,17 +184,23 @@ class _Header extends StatelessWidget {
             ),
           ),
         ),
-        AppBadgeIconButton(
-          icon: Icons.notifications,
-          semanticLabel: bellLabel,
-          showDot: vm.unreadNotifications > 0,
-          onPressed: () => context.push(AppRoutes.notifications),
+        TestId(
+          's02.notifications',
+          child: AppBadgeIconButton(
+            icon: Icons.notifications,
+            semanticLabel: bellLabel,
+            showDot: vm.unreadNotifications > 0,
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
         ),
-        AppBadgeIconButton(
-          icon: Icons.shopping_cart,
-          semanticLabel: cartLabel,
-          count: vm.cartCount,
-          onPressed: () => context.push(AppRoutes.cart),
+        TestId(
+          's02.cart',
+          child: AppBadgeIconButton(
+            icon: Icons.shopping_cart,
+            semanticLabel: cartLabel,
+            count: vm.cartCount,
+            onPressed: () => context.push(AppRoutes.cart),
+          ),
         ),
       ],
     );
@@ -235,8 +254,9 @@ class _PromoBanner extends StatelessWidget {
   }
 }
 
-/// Height of the loading, empty and error area (fits the icon, the message and the Retry button).
-const double _stateHeight = 300;
+/// Minimum height of the loading, empty and error area; it grows when the message needs more room
+/// (narrow phones, large text).
+const _stateArea = BoxConstraints(minHeight: 300);
 
 class _QuickSection extends StatelessWidget {
   const _QuickSection({required this.vm, required this.onAdd});
@@ -247,13 +267,13 @@ class _QuickSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (vm.state) {
-      ViewLoading<List<MenuItem>>() => const SizedBox(height: _stateHeight, child: LoadingView()),
-      ViewEmpty<List<MenuItem>>(:final message) => SizedBox(
-        height: _stateHeight,
+      ViewLoading<List<MenuItem>>() => ConstrainedBox(constraints: _stateArea, child: const LoadingView()),
+      ViewEmpty<List<MenuItem>>(:final message) => ConstrainedBox(
+        constraints: _stateArea,
         child: EmptyView(message: message ?? 'Chưa có món nhanh lúc này'),
       ),
-      ViewError<List<MenuItem>>(:final message) => SizedBox(
-        height: _stateHeight,
+      ViewError<List<MenuItem>>(:final message) => ConstrainedBox(
+        constraints: _stateArea,
         child: ErrorView(message: message, onRetry: vm.load),
       ),
       ViewData<List<MenuItem>>(:final data) => Column(
@@ -265,6 +285,7 @@ class _QuickSection extends StatelessWidget {
                 item: item,
                 onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
                 onAdd: item.soldOut ? null : () => onAdd(item),
+                testId: 's02.item.${item.id}',
               ),
             ),
         ],
@@ -278,7 +299,9 @@ class _ReorderCard extends StatelessWidget {
   const _ReorderCard({required this.order, required this.onTap});
 
   final Order order;
-  final VoidCallback onTap;
+
+  /// `null` while the reorder runs, which disables the card.
+  final VoidCallback? onTap;
 
   String get _summary {
     final first = order.items.isEmpty ? '' : order.items.first.name;

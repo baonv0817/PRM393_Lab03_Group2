@@ -1,3 +1,4 @@
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
@@ -15,17 +16,31 @@ class _FailingAuth extends FakeAuthService {
   Future<Result<AppUser>> signInWithGoogle() async => Result.error(error);
 }
 
+AuthViewModel make({
+  FakeAuthService? auth,
+  FakeAnalyticsService? analytics,
+  FakeCrashService? crash,
+  InMemorySessionRepository? session,
+}) => AuthViewModel(
+  auth ?? FakeAuthService(),
+  analytics ?? FakeAnalyticsService(),
+  crash ?? FakeCrashService(),
+  session ?? InMemorySessionRepository(),
+);
+
 void main() {
   test('successful sign-in sets the user, logs the login event and the user id', () async {
     final analytics = FakeAnalyticsService();
     final crash = FakeCrashService();
-    final vm = AuthViewModel(FakeAuthService(), analytics, crash);
+    final vm = make(analytics: analytics, crash: crash);
     await Future<void>.delayed(Duration.zero);
     expect(vm.initialized, isTrue);
     expect(vm.user, isNull);
 
-    await vm.signIn();
+    final result = await vm.signIn.execute();
     await Future<void>.delayed(Duration.zero);
+    expect(result!.isOk, isTrue);
+    expect(vm.signIn.completed, isTrue);
     expect(vm.user?.uid, 'dev-user');
     expect(analytics.userId, 'dev-user');
     expect(analytics.events.map((e) => e.name), contains('login'));
@@ -35,31 +50,31 @@ void main() {
 
   test('cancelled sign-in shows a message, keeps no user and logs nothing to Crashlytics', () async {
     final crash = FakeCrashService();
-    final vm = AuthViewModel(_FailingAuth(const CancelledException()), FakeAnalyticsService(), crash);
-    await vm.signIn();
+    final vm = make(auth: _FailingAuth(const CancelledException()), crash: crash);
+    await vm.signIn.execute();
     expect(vm.user, isNull);
     expect(vm.message, contains('huỷ'));
-    expect(vm.busy, isFalse);
+    expect(vm.signIn.running, isFalse);
+    expect(vm.signIn.failed, isTrue);
     expect(crash.errors, isEmpty);
     vm.dispose();
   });
 
   test('failed sign-in shows the error message and records a non-fatal error', () async {
     final crash = FakeCrashService();
-    final vm = AuthViewModel(
-      _FailingAuth(const NetworkException(message: 'Không có mạng')),
-      FakeAnalyticsService(),
-      crash,
+    final vm = make(
+      auth: _FailingAuth(const NetworkException(message: 'Không có mạng')),
+      crash: crash,
     );
-    await vm.signIn();
+    await vm.signIn.execute();
     expect(vm.message, 'Không có mạng');
-    expect(vm.busy, isFalse);
+    expect(vm.signIn.running, isFalse);
     expect(crash.errors, hasLength(1));
     vm.dispose();
   });
 
   test('onboarding is not done by default; completing it notifies the router once', () async {
-    final vm = AuthViewModel(FakeAuthService(), FakeAnalyticsService(), FakeCrashService());
+    final vm = make();
     var notified = 0;
     vm.addListener(() => notified++);
     expect(vm.onboardingDone, isFalse);
@@ -70,14 +85,16 @@ void main() {
     vm.dispose();
   });
 
-  test('sign-out logs the logout event and clears the user', () async {
+  test('sign-out logs the logout event, clears the user and the data kept on the device', () async {
     final analytics = FakeAnalyticsService();
-    final vm = AuthViewModel(FakeAuthService(signedIn: true), analytics, FakeCrashService());
+    final session = InMemorySessionRepository(selectedKioskId: 'q9-t2');
+    final vm = make(auth: FakeAuthService(signedIn: true), analytics: analytics, session: session);
     await Future<void>.delayed(Duration.zero);
     expect(vm.user, isNotNull);
-    await vm.signOut();
+    await vm.signOut.execute();
     await Future<void>.delayed(Duration.zero);
     expect(vm.user, isNull);
+    expect(session.selectedKioskId, isNull);
     expect(analytics.events.map((e) => e.name), contains('logout'));
     vm.dispose();
   });

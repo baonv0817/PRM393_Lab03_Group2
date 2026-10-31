@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
@@ -50,10 +51,12 @@ HomeViewModel make({
   FakeOrderRepository? orders,
   FakeAnalyticsService? analytics,
   FakeCrashService? crash,
+  InMemorySessionRepository? session,
 }) => HomeViewModel(
   menu: menu ?? FakeMenuRepository(),
   cart: cart ?? FakeCartRepository(),
   orders: orders ?? FakeOrderRepository(),
+  session: session ?? InMemorySessionRepository(),
   remoteConfig: rc ?? FakeRemoteConfigService(),
   analytics: analytics ?? FakeAnalyticsService(),
   crash: crash ?? FakeCrashService(),
@@ -112,8 +115,8 @@ void main() {
     final vm = make(cart: cart, analytics: analytics);
     await settle();
     expect(vm.cartCount, 0);
-    await vm.addToCart(vm.state.dataOrNull!.first);
-    await vm.addToCart(vm.state.dataOrNull!.first);
+    await vm.addToCart.execute(vm.state.dataOrNull!.first);
+    await vm.addToCart.execute(vm.state.dataOrNull!.first);
     await settle();
     expect(vm.cartCount, 2);
     expect((await cart.watchCart('u1').first).single.quantity, 2);
@@ -127,7 +130,7 @@ void main() {
     final crash = FakeCrashService();
     final vm = make(cart: _FailingCart(), analytics: analytics, crash: crash);
     await settle();
-    final result = await vm.addToCart(vm.state.dataOrNull!.first);
+    final result = (await vm.addToCart.execute(vm.state.dataOrNull!.first))!;
     expect(result.errorOrNull, isA<PermissionDeniedException>());
     expect(analytics.events, isEmpty);
     expect(crash.errors, hasLength(1));
@@ -173,12 +176,66 @@ void main() {
     });
   });
 
+  group('kiosk from the session', () {
+    test('uses the kiosk chosen in the session (S27) and reloads the menu when it changes', () async {
+      final session = InMemorySessionRepository(selectedKioskId: 'q9-t4');
+      final vm = make(session: session);
+      await settle();
+      expect(vm.kiosk!.id, 'q9-t4');
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m5', 'm6']);
+
+      await session.selectKiosk('q9-t2');
+      await settle();
+      expect(vm.kiosk!.id, 'q9-t2');
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']);
+      vm.dispose();
+    });
+
+    test('without a choice it picks the first open kiosk and remembers it in the session', () async {
+      final session = InMemorySessionRepository();
+      final vm = make(session: session);
+      await settle();
+      expect(session.selectedKioskId, 'q9-t2');
+      vm.dispose();
+    });
+
+    test('a session kiosk that no longer exists falls back to the first open kiosk', () async {
+      final session = InMemorySessionRepository(selectedKioskId: 'gone');
+      final vm = make(session: session);
+      await settle();
+      expect(vm.kiosk!.id, 'q9-t2');
+      expect(session.selectedKioskId, 'q9-t2');
+      vm.dispose();
+    });
+  });
+
+  test('a second tap while adding to the cart is ignored', () async {
+    final cart = FakeCartRepository();
+    final vm = make(cart: cart);
+    await settle();
+    final item = vm.state.dataOrNull!.first;
+    final first = vm.addToCart.execute(item);
+    final second = await vm.addToCart.execute(item);
+    await first;
+    expect(second, isNull);
+    expect((await cart.watchCart('u1').first).single.quantity, 1);
+    vm.dispose();
+  });
+
+  test('no error is thrown when an action finishes after the screen was closed', () async {
+    final vm = make();
+    await settle();
+    final pending = vm.addToCart.execute(vm.state.dataOrNull!.first);
+    vm.dispose();
+    await expectLater(pending, completes);
+  });
+
   group('reorder the latest order', () {
     test('with no order there is nothing to reorder and reorder returns 0', () async {
       final vm = make();
       await settle();
       expect(vm.lastOrder, isNull);
-      expect((await vm.reorderLast()).valueOrNull, 0);
+      expect((await vm.reorderLast.execute())!.valueOrNull, 0);
       vm.dispose();
     });
 
@@ -238,7 +295,7 @@ void main() {
       final vm = make(orders: orders, cart: cart, analytics: analytics);
       await settle();
 
-      expect((await vm.reorderLast()).valueOrNull, 2);
+      expect((await vm.reorderLast.execute())!.valueOrNull, 2);
       final items = await cart.watchCart('u1').first;
       expect(items.map((e) => '${e.itemId}x${e.quantity}'), ['m1x1', 'm3x2']);
       expect(analytics.events.single.name, 'reorder');
