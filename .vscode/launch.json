@@ -25,7 +25,8 @@
       "name": "BreakBite (real Firebase)",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart"
+      "program": "lib/main.dart",
+      "args": ["--dart-define-from-file=env/cloudinary.json"]
     }
   ]
 }
