@@ -22,9 +22,11 @@ General rules:
 
 ## Git conventions
 
-- Branches `feat/T41-short-name`, `docs/T10-...`, `fix/CR-01-...`; never commit straight to `main`.
-- Every PR is reviewed by **someone else**; commit messages start with the task ID: `[T41] Add cart screen states`.
-- Review-fix commits mention the finding ID: `[CR-01] Move API call out of HomeScreen`.
+The full rules are in [`CONTRIBUTING.md`](CONTRIBUTING.md) section 4. In short:
+
+- Branch `<type>/<ID>-<short-name>`, for example `feat/S03-menu`, `fix/CR-01-home-api-call`; never commit straight to `main`.
+- Commit `[ID] Summary` in English, for example `[T41] Add cart screen states`; review fixes use the finding ID, `[CR-01] …`.
+- Every change goes through a PR that says `Closes #…` or `Refs #…`; no approval is required, the author merges with a merge commit (no squash).
 - Never commit service-account keys, API keys or keystores; use environment variables. `google-services.json` may be committed.
 
 ## Task list in order
