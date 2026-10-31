@@ -94,7 +94,7 @@ K07 does not exist in the design.
 | F3 Payment error, keep the cart | S06-ERR | S07-CASH → S07-DIALOG → S10 | Cash at the kiosk | TC-05 |
 | Seller: from accepting an order to handover | K01 | K02 → K03 → K04 → K05 → K06 | Invalid code → K05-ERR → K06-CASH | TC-12 |
 
-## 4. Lab 2 components → widgets (`lib/widgets/`)
+## 4. Lab 2 components → widgets (`lib/ui/core/widgets/`)
 
 | Lab 2 component | Flutter widget | Variants, state (parameters) | Built by |
 |---|---|---|---|

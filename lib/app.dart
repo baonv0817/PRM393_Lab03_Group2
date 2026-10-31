@@ -2,23 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'router/app_router.dart';
-import 'services/app_services.dart';
-import 'theme/app_theme.dart';
-import 'viewmodels/auth_view_model.dart';
+import 'config/dependencies.dart';
+import 'data/services/services.dart';
+import 'routing/router.dart';
+import 'ui/auth/view_models/auth_view_model.dart';
+import 'ui/core/theme/app_theme.dart';
 
 class BreakBiteApp extends StatelessWidget {
-  const BreakBiteApp({super.key, required this.services});
+  const BreakBiteApp({super.key, required this.dependencies});
 
-  final AppServices services;
+  final AppDependencies dependencies;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AppServices>.value(value: services),
+        ...dependencies.providers,
         ChangeNotifierProvider<AuthViewModel>(
-          create: (_) => AuthViewModel(services.auth, services.analytics, services.crash),
+          create: (context) => AuthViewModel(
+            context.read<AuthService>(),
+            context.read<AnalyticsService>(),
+            context.read<CrashService>(),
+          ),
         ),
       ],
       child: const _RouterHost(),

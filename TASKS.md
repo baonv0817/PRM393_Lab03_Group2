@@ -54,8 +54,8 @@ The "Depends on" column shows which task must be finished first.
 | ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
 | T20 | P1 | `docs/architecture.md`: folder structure, layer diagram, sequence diagram of one full flow, ViewModel and service table; build the `lib/` skeleton (models, services, firebase, viewmodels, screens, widgets, utils), DI with Provider or Riverpod, the shared state class (sealed class loading, empty, error, data), router | The skeleton runs and `architecture.md` matches the code | T03, T10 |
-| T21 | P1 | `lib/theme/`: tokens into `ColorScheme`, `TextTheme`, spacing and radius constants; the widget library from section 4 of the traceability doc; check 360 dp and 412 dp, tap targets ≥ 48 dp, text ≥ 14 sp | The widget catalog shows every variant without overflow | T20 |
-| T22 | P3 | SDK-wrapping service layer (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`): interfaces and fakes already exist; **write the Firebase implementations in `lib/firebase/`** and `bootstrap.dart` | No widget calls an SDK directly | T20 |
+| T21 | P1 | `lib/ui/core/theme/`: tokens into `ColorScheme`, `TextTheme`, spacing and radius constants; the widget library from section 4 of the traceability doc; check 360 dp and 412 dp, tap targets ≥ 48 dp, text ≥ 14 sp | The widget catalog shows every variant without overflow | T20 |
+| T22 | P3 | SDK-wrapping service layer (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`): interfaces and fakes already exist; **write the Firebase implementations in `lib/data/services/firebase/`** and wire them in `lib/config/firebase_dependencies.dart` and `firebase_dependencies.dart` | No widget calls an SDK directly | T20 |
 
 ### Stage 3 · Integrate (Firebase and data)
 
@@ -64,8 +64,8 @@ The "Depends on" column shows which task must be finished first.
 | T30 | P3 | Google Sign-In, routing by sign-in state, sign-out clears local data, handle cancellation and network loss; save `users/{uid}` with `role` | Screenshots of both states, the Users tab in the console | T22 |
 | T31 | P3 | The Firestore data model and `firebase/firestore.rules` (deny by default, role-based); a seed script that loads real sample data into Firestore (menu, kiosks, vouchers) | Rules tested in the Emulator; no hard-coded data in the app | T30 |
 | T32 | P3 | `firebase/storage.rules` per user; `StorageService` with upload progress, returning the URL | Other users cannot read your folder | T30 |
-| T33 | P3 | Firestore implementations of `MenuService`, `CartService`, `OrderService` (kiosks, vouchers, slots) in `lib/firebase/`: queries per section 5 of `docs/data-model.md`, place an order with one batch (create the order, delete the cart, increase the slot) | An order placed in the customer app appears at once in the seller app; no hard-coded data in the app | T22, T31 |
-| T34 | Each screen owner | Per-feature services, each person builds their own (interface in `lib/services/<name>_service.dart`, fake in `lib/dev/dev_<name>.dart`, Firestore version in `lib/firebase/`): P1 `SlotService`, `VoucherService`; P2 `ReviewService`, `IncidentService` (create); P5 `FavoriteService`, `NotificationService`; P4 the incident handling part for K13 | Your screens use real data; ViewModel tests use the fake | T33 |
+| T33 | P3 | Firestore implementations of `MenuRepository`, `CartRepository`, `OrderRepository` (kiosks, vouchers, slots) in `lib/data/repositories/firestore/`: queries per section 5 of `docs/data-model.md`, place an order with one batch (create the order, delete the cart, increase the slot) | An order placed in the customer app appears at once in the seller app; no hard-coded data in the app | T22, T31 |
+| T34 | Each screen owner | Per-feature repositories, each person builds their own (interface in `lib/data/repositories/<name>_repository.dart`, fake in `dev/fakes/fake_<name>_repository.dart`, Firestore version in `lib/data/repositories/firestore/`; steps in `docs/architecture.md` section 6): P1 `SlotRepository`, `VoucherRepository`; P2 `ReviewRepository`, `IncidentRepository` (create); P5 `FavoriteRepository`, `NotificationRepository`; P4 the incident handling part for K13 | Your screens use real data; ViewModel tests use the fake | T33 |
 
 ### Stage 4 · Features (in parallel after T21 and T31)
 
@@ -134,11 +134,11 @@ The foundation that lets 5 people work in parallel is already in the repo. It ne
 | T03 | Done | `flutter create`, pinned versions and `flutterfire configure` done (project `breakbite-1315b`) |
 | T20 | Skeleton done | MVVM skeleton, router, DI, `ViewState`; P1 must update `docs/architecture.md` to match the code |
 | T21 | Skeleton done | Theme from the Lab 2 tokens and shared widgets; the Nunito font is in `assets/fonts/`; S02 is a reference screen built to Figma v2 |
-| T22 | Partial | Interfaces, fakes and models exist; **P3 must write the Firebase implementations** and `bootstrap.dart` in `lib/firebase/` |
+| T22 | Partial | Interfaces, fakes and models exist; **P3 must write the Firebase implementations** and wire them in `lib/config/firebase_dependencies.dart` |
 | T31 | Partial | The data model skeleton is settled (`docs/data-model.md`), rules and indexes are deployed, **82/82 rules tests pass**. The seed and role-assignment scripts are written and verified on the Emulator (`firebase/seed/`). Loaded into the real Firestore on 29/10/2026 (3 kiosks, 25 items, 3 vouchers, 40 slots). **Remaining:** assign the staff and admin roles to members with `set-role.mjs` after they sign in to the app once |
 | T01 | Partial | Project `breakbite-1315b` (Spark): Android app, P1's machine SHA-1, Google Auth, Firestore (`asia-southeast1`), rules and Remote Config deployed. **Remaining:** Storage (the console asks for the Blaze plan), Crashlytics, the other 4 machines' SHA-1, invite the 4 other members to the project |
 | T02 | Not started | Owner P5. Needs an Android device and the ARTEMIS API key |
 | T40 | Partial | S01 Onboarding and S02 Home are done, built to Figma v2 (reference screens for the team). Remaining: S03–S08, S21, S22, S25, S29 |
-| T33, T34 | Not started | Nobody has written the Firestore versions of `MenuService`, `CartService`, `OrderService` and the per-feature services yet |
+| T33, T34 | Not started | Nobody has written the Firestore versions of `MenuRepository`, `CartRepository`, `OrderRepository` and the per-feature services yet |
 
-How to work in parallel: everyone edits their own route file (`lib/router/routes_pX.dart`) to replace the placeholder screen with the real one; use `--dart-define=USE_DEV_SERVICES=true` to run while Firebase is not connected. **Delete `lib/dev/` before submitting (T83).**
+How to work in parallel: everyone edits their own route file (`lib/routing/routes_pX.dart`) to replace the placeholder screen with the real one; run `dev/main_dev.dart` (F5 "fake data") while Firebase is not connected. Fake data lives in `dev/`, outside `lib/`, so it is never part of the submitted build.

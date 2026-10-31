@@ -24,7 +24,7 @@ Updated 31/10/2026. Per-task details, done-when criteria and dependencies: [`TAS
 
 ## How the work is split
 
-Each person owns **one coherent cluster of screens**, so they share ViewModels and data and collide less. Placeholder routes in the code already live in each person's own file (`lib/router/routes_p1.dart` to `routes_p5.dart`).
+Each person owns **one coherent cluster of screens**, so they share ViewModels and data and collide less. Placeholder routes in the code already live in each person's own file (`lib/routing/routes_p1.dart` to `routes_p5.dart`).
 
 | Cluster | Screens | Owner |
 |---|---|---|
@@ -61,7 +61,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | 1 | T40 | S03 Menu, S04 Item detail, S05 Cart (empty, wrong voucher) | Add items, change quantity, see the total |
 | 2 | T40 | S25 Pickup time, S29 Voucher picker, S06 Checkout + variants, S06-GATEWAY, S07 Order tracking, S08 Orders | F1, F2, F3 run end to end |
 | 3 | T40 | S21 Closed kiosk state on Home, S22 Unavailable-item suggestions | Every ordering screen has all states |
-| 4 | T34 | `SlotService` (book a slot) and `VoucherService` (voucher list): interface, fake, Firestore version | S25 and S29 use real data |
+| 4 | T34 | `SlotRepository` (book a slot) and `VoucherRepository` (voucher list): interface, fake, Firestore version | S25 and S29 use real data |
 | in parallel | T10, T20 | Update `docs/architecture.md` to match the code; lead the filling-in of `design-traceability.md` | Docs match the code |
 | last | T72, T83 | Check the MVVM rules across the repo; update Figma for the deviations (D01–D06); run the submission checklist | Checklist fully ticked |
 
@@ -83,12 +83,12 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | 2 | T45 | K08 Menu management, K09 Mark sold out, K14 Add item, K15 Edit item (F5 "seller" uses fake data) | A seller can add, edit and sell out items |
 | 3 | T41 | S09 Edit order, S10 Cancelled order, S11 History, S12 Order detail (after P1 finishes S07, S08) | F3 continues to work |
 | 4 | T45 | K10 Shop status, K11 Shift statistics | The shop can open, close and see stats |
-| 5 | T34 | `ReviewService`, `IncidentService` (create side): interface, fake, Firestore version | Screens use real data |
+| 5 | T34 | `ReviewRepository`, `IncidentRepository` (create side): interface, fake, Firestore version | Screens use real data |
 | 6 | T43 | Generate a PDF receipt from S12 and upload it through `StorageService` (needs Storage enabled, or the on-device alternative) | A receipt file |
 
 **Can start today:** S20, S23, S24 and K08–K15 (fake data). S09–S12 need P1 to finish S07, S08.
 **Waiting on:** P1 (S07, S08); P3 (T33 real data, T32 Storage if used).
-**Who waits on you:** P4 needs `IncidentService` to build K13; P1 and the customer app need the seller's item changes to show up (T45).
+**Who waits on you:** P4 needs `IncidentRepository` to build K13; P1 and the customer app need the seller's item changes to show up (T45).
 **Report and slides:** the post-order flows and the seller menu management.
 **Oral check:** explain one Firestore rule that protects your data (for example who may mark an item sold out).
 
@@ -101,8 +101,8 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | Order | Task | Work | Output |
 |---|---|---|---|
 | 1 | T01 | Remaining: enable Crashlytics, add everyone's SHA-1, invite the 4 other members to Firebase; Storage once the team decides about Blaze | The whole team is in the console and Google Sign-In works on every machine |
-| 2 | T22 | Write `lib/firebase/bootstrap.dart` and the Firebase versions of `AuthService`, `RemoteConfigService`, `AnalyticsService`, `CrashService`, `MessagingService`, `StorageService` | The app runs against real Firebase (drop the fake-data flag) |
-| 3 | T33 | Firestore versions of `MenuService`, `CartService`, `OrderService` (kiosks, vouchers, slots): queries per `docs/data-model.md` section 5, place an order with a batch | An order placed in the customer app shows up at once in the seller app |
+| 2 | T22 | Write `lib/config/firebase_dependencies.dart` and the Firebase versions of `AuthService`, `RemoteConfigService`, `AnalyticsService`, `CrashService`, `MessagingService`, `StorageService` | The app runs against real Firebase (drop the fake-data flag) |
+| 3 | T33 | Firestore versions of `MenuRepository`, `CartRepository`, `OrderRepository` (kiosks, vouchers, slots): queries per `docs/data-model.md` section 5, place an order with a batch | An order placed in the customer app shows up at once in the seller app |
 | 4 | T30 | The S26 Google Sign-In screen, routing by sign-in, sign-out, errors on cancel or network loss, create `users/{uid}` | Screenshots of 2 states, the Users tab |
 | 5 | T42 | S15–S17 Profile, S27 Kiosk picker, the Firebase demo area | The demo area works |
 | 6 | T51, T52 | Crashlytics (1 non-fatal error, 1 test crash), Remote Config (≥ 2 parameters that change behavior) | Console evidence |
@@ -125,12 +125,12 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 | 1 | T11 | Ask the lecturer and save the confirmation in writing: team of 5, scope of the customer and seller apps, deviations D01–D06, the Storage question | Confirmation saved in `docs/` |
 | 2 | T44 | K01 Role gate, K02 Order queue, K03 Order detail, K04 Preparing (F5 "seller" uses fake data) | Orders appear and can be accepted |
 | 3 | T44 | K05 Scan code, K06 Handover and cash, K12 Reject order | An order can be processed from accept to delivery |
-| 4 | T44, T34 | K13 Incidents, with the handling part of `IncidentService` (view, change status) | K13 uses real data |
+| 4 | T44, T34 | K13 Incidents, with the handling part of `IncidentRepository` (view, change status) | K13 uses real data |
 | 5 | T70, T71 | Open a PR, run ≥ 1 AI review tool, coordinate the decision on each finding | `docs/code-review.md` complete |
 | last | T80, T81, T82 | Compile the PDF report, slides, video (everyone sends their section and clip) | 3 deliverables to submit |
 
 **Can start today:** T11 and K01–K06, K12, K13 with fake data (the F5 "seller, signed in" configuration).
-**Waiting on:** P3 (T30 role, T33 real orders); P1 (real placed orders to try K02–K06); P2 (`IncidentService` create side for K13).
+**Waiting on:** P3 (T30 role, T33 real orders); P1 (real placed orders to try K02–K06); P2 (`IncidentRepository` create side for K13).
 **Who waits on you:** the whole team waits for the schedule to compile the report, slides, video.
 **Report and slides:** the seller order flow, code review, difficulties and lessons, list of AI tools.
 **Oral check:** explain 1 review decision (why accept or reject), the seller's accept-and-deliver flow.
@@ -145,7 +145,7 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 |---|---|---|---|
 | 1 | T02 | Prepare the test machine: Android device or emulator, ADB, ARTEMIS, API key in an environment variable, a dedicated Google account for testing | One sample ARTEMIS command runs |
 | 2 | T46 | S13 Favorites, S28 Search, S30 Offline, S18 Notification settings (doable now with fake data) | Each screen has all states |
-| 3 | T34 | `FavoriteService`, `NotificationService`: interface, fake, Firestore version | Screens use real data |
+| 3 | T34 | `FavoriteRepository`, `NotificationRepository`: interface, fake, Firestore version | Screens use real data |
 | 4 | T46, T53 | S19 Notifications and FCM: receive in 3 app states, Android 13+ permission, tapping opens the right screen; S14 Reorder | A test message from the console arrives in all 3 states |
 | 5 | T50 | `docs/analytics-plan.md` and the logging code (≥ 7 events, `setUserId` after sign-in), with DebugView screenshots | Console evidence for every event |
 | in parallel | T60 | The `docs/test-plan.md` skeleton, collecting cases from the others | ≥ 10 test cases |
@@ -163,18 +163,18 @@ Mandatory, because the lecturer may question each person individually (about 5 m
 
 | Likely bottleneck | How to avoid it |
 |---|---|
-| Everyone editing `services.dart`, `app_services.dart`, `dev_services.dart`, `models.dart` | Each new service lives in its own file `lib/services/<feature>_service.dart`, its fake in `lib/dev/dev_<feature>.dart`; add only one line to the shared files. PRs that touch shared files must be small and merged fast. Details: `CONTRIBUTING.md` |
+| Everyone editing the shared barrels (`services.dart`, `repositories.dart`, `models.dart`, `fakes.dart`) and `AppDependencies` | One class per file: a new repository is `lib/data/repositories/<feature>_repository.dart`, its fake `dev/fakes/fake_<feature>_repository.dart`; add only one line to each shared file. Each feature has its own folder `lib/ui/<feature>/`. PRs that touch shared files must be small and merged fast. Details: `CONTRIBUTING.md` |
 | Waiting for P3 to connect real Firebase | Build with fake data; when P3 is done only the run flag changes, not the screens |
 | P2 waiting for P1's S07, S08 to build S09–S12 | P2 does S20, S23, S24 and the seller menu screens first; P1 builds S07, S08 early in week 2 |
 | P4 waiting for real orders to try the seller app | Use the dev services first (fake orders); try with real orders after T33 |
 | P5 waiting for finished screens to test | Write the test plan and the first tests against S02 (finished) and the flows as they land; keep ARTEMIS set up early (T02) |
-| Editing the theme and shared widgets | Only P1 edits `lib/theme/` and `lib/widgets/`; anyone who needs a change opens an issue, or a small PR that P1 agrees to before it is merged |
+| Editing the theme and shared widgets | Only P1 edits `lib/ui/core/theme/` and `lib/ui/core/widgets/`; anyone who needs a change opens an issue, or a small PR that P1 agrees to before it is merged |
 
 ## End-of-week checkpoints
 
 | End of week | Must have |
 |---|---|
-| 1 | Everyone has cloned, built and run the app with F5; Firebase has everyone invited and all machines' SHA-1; each person has finished at least 2 screens faithful to Figma with fake data; `bootstrap.dart` runs |
+| 1 | Everyone has cloned, built and run the app with F5; Firebase has everyone invited and all machines' SHA-1; each person has finished at least 2 screens faithful to Figma with fake data; `firebase_dependencies.dart` runs |
 | 2 | Google sign-in and real Firestore data work; each person has at least 4 screens; F1 ordering runs end to end |
 | 3 | Every screen S01–S30 and K01–K15 runs with all states; the 6 Firebase services have evidence; the test plan is done |
 | 4 | ARTEMIS tests run ≥ 3 times each; code review done; report, slides, video; submission checklist |
