@@ -49,7 +49,7 @@ If `flutter build apk` reports `Could not close incremental caches ... this and 
 1. Settings, About phone, tap **Build number** 7 times to enable Developer options (on a Vietnamese-language phone: Cài đặt, Giới thiệu điện thoại, Số bản dựng).
 2. Turn on **USB debugging**, plug in the cable, and choose "Allow USB debugging" on the phone.
 3. `adb devices` must list the device with state `device` (not `unauthorized`).
-4. Install the app: `flutter run --dart-define=USE_DEV_SERVICES=true`.
+4. Install the app: `flutter run -t dev/main_dev.dart`.
 
 ### No Android phone (emulator, Chrome, iPhone)
 
@@ -57,7 +57,7 @@ You cannot run the app on an iPhone from a Windows machine (iOS builds need a Ma
 
 **Option 1: Chrome with a phone frame (lightest).**
 
-1. In VS Code install the **Flutter** extension (Dart Code), choose the **Chrome (web)** device at the bottom right and press **F5**. The `.vscode/launch.json` configurations already run with fake data (`USE_DEV_SERVICES=true`).
+1. In VS Code install the **Flutter** extension (Dart Code), choose the **Chrome (web)** device at the bottom right and press **F5**. The `.vscode/launch.json` configurations already run with fake data (entry point `dev/main_dev.dart`).
 2. In the browser window press `F12`, then `Ctrl+Shift+M` and choose an iPhone or Pixel to see the phone frame.
 
 The web build is only for looking at the UI: Firebase is configured for Android only, so it runs with fake data.
@@ -73,7 +73,7 @@ $env:ANDROID_AVD_HOME = "D:\src\android-avd"
 D:\src\android-sdk\cmdline-tools\latest\bin\avdmanager.bat create avd -n Pixel8_API35 -k "system-images;android-35;google_apis_playstore;x86_64" -d pixel_8
 ```
 
-Reopen the terminal and VS Code, start the emulator with `flutter emulators --launch Pixel8_API35`, then run `flutter run --dart-define=USE_DEV_SERVICES=true`. Start **only one** emulator: starting a second one reports `The Android emulator exited with code 1` or leaves the emulator stuck in the `offline` state. If it gets stuck, end the `emulator` and `qemu-system-x86_64` processes in Task Manager and start again. The first boot takes a few minutes.
+Reopen the terminal and VS Code, start the emulator with `flutter emulators --launch Pixel8_API35`, then run `flutter run -t dev/main_dev.dart`. Start **only one** emulator: starting a second one reports `The Android emulator exited with code 1` or leaves the emulator stuck in the `offline` state. If it gets stuck, end the `emulator` and `qemu-system-x86_64` processes in Task Manager and start again. The first boot takes a few minutes.
 
 Each person's emulator uses the debug key of that machine: send your machine's SHA-1 to whoever holds the Firebase project (see section 4) so Google Sign-in works.
 

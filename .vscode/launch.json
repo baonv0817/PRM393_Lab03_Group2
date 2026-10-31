@@ -5,22 +5,21 @@
       "name": "BreakBite customer (fake data, signed in)",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart",
-      "args": ["--dart-define=USE_DEV_SERVICES=true", "--dart-define=DEV_SIGNED_IN=true"]
+      "program": "dev/main_dev.dart",
+      "args": ["--dart-define=DEV_SIGNED_IN=true"]
     },
     {
       "name": "BreakBite seller (fake data, signed in)",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart",
-      "args": ["--dart-define=USE_DEV_SERVICES=true", "--dart-define=DEV_SIGNED_IN=true", "--dart-define=DEV_ROLE=staff"]
+      "program": "dev/main_dev.dart",
+      "args": ["--dart-define=DEV_SIGNED_IN=true", "--dart-define=DEV_ROLE=staff"]
     },
     {
       "name": "BreakBite (fake data, from the start: Onboarding then Sign-in)",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart",
-      "args": ["--dart-define=USE_DEV_SERVICES=true"]
+      "program": "dev/main_dev.dart"
     },
     {
       "name": "BreakBite (real Firebase)",

@@ -1,6 +1,6 @@
 # Firestore and Storage data model
 
-The source of truth for the data of the customer app (S01–S30) and the seller app (K01–K15). Any change to the data structure must update **all four places in the same PR**: this document, `lib/models/models.dart`, `firebase/firestore.rules` (and `storage.rules`), `firebase/tests/rules.test.mjs`. Document owner: P3.
+The source of truth for the data of the customer app (S01–S30) and the seller app (K01–K15). Any change to the data structure must update **all four places in the same PR**: this document, `lib/domain/models/`, `firebase/firestore.rules` (and `storage.rules`), `firebase/tests/rules.test.mjs`. Document owner: P3.
 
 Firebase project: `breakbite-1315b`, Firestore `(default)`, region `asia-southeast1`.
 
@@ -119,7 +119,7 @@ The id is the upper-case code (`BBSTUDENT`). Only admins create and edit.
 | `expiresAt` | ts | When expired, S05-VOUCHER-ERR shows an error |
 | `active` | bool | Switch a code off without deleting it |
 
-The discount calculation: `Voucher.discountFor()` in `models.dart` (with tests).
+The discount calculation: `Voucher.discountFor()` in `lib/domain/models/voucher.dart` (with tests).
 
 ### 3.5 `carts/{uid}`
 
@@ -252,7 +252,7 @@ By default the script does not overwrite existing documents, so re-running it do
 ## 9. Process for changing the structure
 
 1. Edit the relevant section of this document.
-2. Edit `lib/models/models.dart` (add **optional** fields or fields with a default value, so other people's code still compiles).
+2. Edit the model file in `lib/domain/models/` (add **optional** fields or fields with a default value, so other people's code still compiles).
 3. Edit `firebase/firestore.rules`; add allowed and denied tests to `rules.test.mjs`; run `npm test` in `firebase/tests`.
 4. If there is a new query: add the index to `firestore.indexes.json`.
 5. Open a PR and have the document owner (P3) review it. Deploy with `firebase deploy --only firestore:rules,firestore:indexes`.

@@ -30,10 +30,10 @@ A pre-order, pick-up-at-the-counter food app for students who study on campus, b
 flutter pub get
 flutter analyze
 flutter test                                              # no device needed
-flutter run --dart-define=USE_DEV_SERVICES=true          # run with fake services, while Firebase is not connected
+flutter run -t dev/main_dev.dart                          # fake data (dev/, outside lib/), while Firebase is not connected
 ```
 
-Running against the real Firebase needs T01 (Firebase project) and T22 (Firebase services) to be finished; see `lib/firebase/bootstrap.dart`.
+Running against the real Firebase needs T01 (Firebase project) and T22 (Firebase services) to be finished; see `lib/config/firebase_dependencies.dart`.
 
 Run the E2E tests: see `e2e_test/README.md`.
 
