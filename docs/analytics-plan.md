@@ -1,29 +1,29 @@
-# Kế hoạch sự kiện analytics
+# Analytics event plan
 
-Viết **trước** khi viết code theo dõi. Tối thiểu 7 sự kiện, đủ phủ: đăng nhập, đăng xuất, hành động chính (tìm kiếm, đặt món), mở màn chi tiết, xuất và tải tệp. Dùng tên Firebase khuyến nghị khi có (`login`, `search`, `add_to_cart`, `begin_checkout`, `purchase`), còn lại `snake_case`. Tham số không chứa dữ liệu cá nhân (không email, không tên).
+Write this **before** writing the tracking code. At least 7 events that together cover: sign-in, sign-out, the primary action (search, ordering), opening a detail screen, and exporting and uploading a file. Use Firebase's recommended names where one exists (`login`, `search`, `add_to_cart`, `begin_checkout`, `purchase`), `snake_case` otherwise. Parameters must not contain personal data (no email, no name).
 
-Mục tiêu thành công Lab 2: đặt xong dưới 35 giây, tối đa 8 chạm.
+Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 
-| Sự kiện | Khi nào | Tham số (kiểu) | Câu hỏi sản phẩm | Bước flow Lab 2 |
+| Event | When | Parameters (type) | Product question | Lab 2 flow step |
 |---|---|---|---|---|
-| `login` | Đăng nhập thành công | `method` (string) | Bao nhiêu người quay lại mỗi tuần? | S26 |
-| `logout` | Đăng xuất | `session_minutes` (int) | Một phiên kéo dài bao lâu? | S15 |
-| `search` | Chạy tìm kiếm | `search_term` (string), `result_count` (int) | Người dùng tìm gì, và từ khoá nào không ra kết quả? | S28 |
-| `view_menu_item` | Mở chi tiết món | `item_id` (string), `item_name` (string), `category` (string) | Món nào được xem nhiều nhưng ít được thêm? | S04 |
-| `add_to_cart` | Thêm món vào giỏ | `item_id` (string), `quantity` (int), `source` (string: home, menu, detail) | Thêm từ đâu nhanh nhất? | S02, S03, S04 |
-| `begin_checkout` | Vào màn thanh toán | `value_vnd` (int), `item_count` (int) | Bao nhiêu giỏ đi tới thanh toán? | S05 → S06 |
-| `purchase` | Đặt đơn thành công | `transaction_id` (string), `value_vnd` (int), `payment_method` (string), `taps_from_home` (int) | Đạt mục tiêu ≤ 8 chạm và < 35 giây không? | S06-GATEWAY → S07 |
-| `payment_failed` | Thanh toán bị từ chối hoặc mất mạng | `payment_method` (string), `reason` (string) | Phương thức nào lỗi nhiều, và bao nhiêu người chuyển sang tiền mặt? | S06-ERR |
-| `export_report` | Tạo và tải lên tệp | `order_id` (string), `file_size_kb` (int) | Đơn nào được xuất biên lai? | Khu demo, S12 |
-| `order_accepted` | Người bán nhận đơn | `order_id` (string), `wait_seconds` (int) | Quầy nhận đơn nhanh cỡ nào? | K03 |
-| `order_delivered` | Người bán giao món | `order_id` (string), `paid_cash` (bool) | Bao nhiêu đơn thu tiền mặt? | K06 |
+| `login` | Successful sign-in | `method` (string) | How many people come back each week? | S26 |
+| `logout` | Sign-out | `session_minutes` (int) | How long does a session last? | S15 |
+| `search` | A search runs | `search_term` (string), `result_count` (int) | What do people search for, and which terms return nothing? | S28 |
+| `view_menu_item` | Item detail opens | `item_id` (string), `item_name` (string), `category` (string) | Which items are viewed a lot but rarely added? | S04 |
+| `add_to_cart` | Item added to the cart | `item_id` (string), `quantity` (int), `source` (string: home, menu, detail) | Where is adding fastest from? | S02, S03, S04 |
+| `begin_checkout` | Enter the checkout screen | `value_vnd` (int), `item_count` (int) | How many carts reach checkout? | S05 → S06 |
+| `purchase` | Order placed successfully | `transaction_id` (string), `value_vnd` (int), `payment_method` (string), `taps_from_home` (int) | Is the goal of ≤ 8 taps and < 35 seconds met? | S06-GATEWAY → S07 |
+| `payment_failed` | Payment declined or network lost | `payment_method` (string), `reason` (string) | Which method fails most, and how many switch to cash? | S06-ERR |
+| `export_report` | A file is generated and uploaded | `order_id` (string), `file_size_kb` (int) | Which orders get a receipt exported? | Demo area, S12 |
+| `order_accepted` | Seller accepts an order | `order_id` (string), `wait_seconds` (int) | How fast does the counter accept orders? | K03 |
+| `order_delivered` | Seller hands over the order | `order_id` (string), `paid_cash` (bool) | How many orders are paid in cash? | K06 |
 
-Thuộc tính người dùng: `setUserId(uid)` sau đăng nhập; không đưa email hay tên vào user property.
+User property: `setUserId(uid)` after sign-in; never put an email or name in a user property.
 
-## Bằng chứng
+## Evidence
 
-Mỗi sự kiện cần ảnh DebugView (Analytics debug mode bật) lưu trong `evidence/analytics/`. Ghi tên file vào bảng khi có.
+Every event needs a DebugView screenshot (Analytics debug mode on) saved in `evidence/analytics/`. Write the file name in the table when you have it.
 
-| Sự kiện | Ảnh DebugView |
+| Event | DebugView screenshot |
 |---|---|
 | | |

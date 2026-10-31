@@ -1,20 +1,20 @@
 # AI code review
 
-AI tìm, nhóm quyết định. Mỗi phát hiện cần: công cụ, vị trí `file:dòng`, loại (bug, security, architecture, performance, test gap, maintainability), tóm tắt, quyết định (Accepted, Modified, Rejected), lý do (dẫn một yêu cầu trong handout, một quy tắc ở mục 5, một tác động đo được, hoặc ràng buộc thật như phạm vi, thời gian, giới hạn API), và commit sửa.
+The AI finds, the team decides. Every finding needs: tool, location `file:line`, type (bug, security, architecture, performance, test gap, maintainability), summary, decision (Accepted, Modified, Rejected), reason (cite a handout requirement, a rule from section 5, a measurable effect, or a real constraint such as scope, time or an API limit), and the fix commit.
 
-Yêu cầu: ≥ 5 phát hiện gắn dòng, ≥ 2 loại; ≥ 3 phát hiện được chấp nhận và sửa, mỗi sửa một commit ghi ID (ví dụ `[CR-01]`).
+Requirements: ≥ 5 findings tied to a line, ≥ 2 types; ≥ 3 findings accepted and fixed, each fix in its own commit mentioning the ID (for example `[CR-01]`).
 
-Cách chạy: mở một pull request rồi chạy công cụ review (ví dụ GitHub Copilot code review, CodeRabbit, SonarCloud, Kodus) trên PR đó; lưu đầu ra vào `evidence/code-review/`.
+How to run: open a pull request, then run a review tool (for example GitHub Copilot code review, CodeRabbit, SonarCloud, Kodus) on that PR; save the output in `evidence/code-review/`.
 
-## 1. Công cụ AI đã dùng trong lab
+## 1. AI tools used in the lab
 
-| Công cụ | Dùng để |
+| Tool | Used for |
 |---|---|
 | | |
 
-## 2. Phát hiện và quyết định
+## 2. Findings and decisions
 
-| ID | Công cụ | File:dòng | Loại | Phát hiện | Quyết định | Lý do | Commit sửa |
+| ID | Tool | File:line | Type | Finding | Decision | Reason | Fix commit |
 |---|---|---|---|---|---|---|---|
 | CR-01 | | | | | | | |
 | CR-02 | | | | | | | |

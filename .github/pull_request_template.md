@@ -1,16 +1,16 @@
 ## Task
-Mã task (ví dụ T41):
+Task ID (for example T41):
 
-## Thay đổi
+## Changes
 -
 
-## Đã kiểm tra
-- [ ] Chạy trên thiết bị Android
-- [ ] Có đủ trạng thái loading, empty, error (nếu là màn tải dữ liệu)
-- [ ] Không gọi SDK trực tiếp trong widget; logic nằm trong ViewModel hoặc service
-- [ ] Màu, cỡ chữ, khoảng cách lấy từ theme
-- [ ] Đã thêm `Semantics` label cho nút và danh sách
-- [ ] Đã cập nhật `docs/design-traceability.md` (trạng thái và sai lệch)
-- [ ] Không có khoá hoặc bí mật trong diff
+## Checked
+- [ ] Ran on an Android device
+- [ ] Loading, empty and error states are all there (for screens that load data)
+- [ ] No SDK calls directly in widgets; logic lives in a ViewModel or service
+- [ ] Colors, text sizes and spacing come from the theme
+- [ ] `Semantics` labels added to buttons and lists
+- [ ] `docs/design-traceability.md` updated (status and deviations)
+- [ ] No keys or secrets in the diff
 
-## Ảnh chụp
+## Screenshots

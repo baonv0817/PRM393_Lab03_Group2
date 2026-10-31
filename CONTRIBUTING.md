@@ -1,59 +1,59 @@
-# Cách làm việc trong repo
+# How we work in this repo
 
-Đọc một lần trước khi viết code. Phân công: [`PHAN-CONG.md`](PHAN-CONG.md). Cài môi trường: [`docs/setup.md`](docs/setup.md).
+Read this once before writing code. Assignments: [`ASSIGNMENTS.md`](ASSIGNMENTS.md). Environment setup: [`docs/setup.md`](docs/setup.md).
 
-## 1. Chạy app
+## 1. Run the app
 
-Mở VS Code, bấm **F5**, chọn cấu hình:
+Open VS Code, press **F5**, and pick a launch configuration:
 
-| Cấu hình | Dùng khi |
+| Configuration | Use it when |
 |---|---|
-| BreakBite khách (dữ liệu giả, đã đăng nhập) | Làm màn của app khách. Mặc định cho mọi người |
-| BreakBite người bán (dữ liệu giả, đã đăng nhập) | Làm màn của app người bán (K01–K15) |
-| BreakBite (dữ liệu giả, từ đầu: Onboarding rồi Đăng nhập) | Thử luồng mở app |
-| BreakBite (Firebase thật) | Sau khi P3 xong `bootstrap.dart` và T33 |
+| BreakBite customer (fake data, signed in) | Building customer-app screens. The default for everyone |
+| BreakBite seller (fake data, signed in) | Building seller-app screens (K01–K15) |
+| BreakBite (fake data, from the start: Onboarding then Sign-in) | Trying the app-opening flow |
+| BreakBite (real Firebase) | After P3 finishes `bootstrap.dart` and T33 |
 
-Sửa code rồi lưu là giao diện tự cập nhật. Thiết bị: máy ảo Android, Chrome hoặc điện thoại Android (xem `docs/setup.md`). iPhone không chạy được app này từ máy Windows.
+Edit the code and save: the UI updates by itself. Devices: Android emulator, Chrome, or an Android phone (see `docs/setup.md`). An iPhone cannot run this app from a Windows machine.
 
-## 2. Làm một màn: sao theo S02
+## 2. Build a screen: copy S02
 
-Màn mẫu: `lib/screens/home_screen.dart`, `lib/viewmodels/home_view_model.dart`, `test/home_screen_test.dart`, `test/home_view_model_test.dart`, và cách nối ở `lib/router/routes_p1.dart`.
+Reference screen: `lib/screens/home_screen.dart`, `lib/viewmodels/home_view_model.dart`, `test/home_screen_test.dart`, `test/home_view_model_test.dart`, and how it is wired in `lib/router/routes_p1.dart`.
 
-1. **Đọc hàng của màn** trong `docs/design-traceability.md` (route, ViewModel, nguồn dữ liệu) và ảnh Figma trong thư mục `assets/figma/` của repo Lab 2 (`final-ui-v2` cho S01–S07, `final-ui-s09-s25` cho S09–S25; app người bán và S26 trở đi: hỏi P1 hoặc xem Page 03 trong Figma). Figma là tham khảo: bỏ phần thừa hoặc rối mắt được, nhưng **ghi sai lệch** vào mục 5 của file đó (mã D07, D08…).
-2. **Viết ViewModel** `lib/viewmodels/<tên>_view_model.dart`: nhận service qua constructor, giữ `ViewState` (loading, empty, error, data), mọi logic ở đây. Không import `package:firebase_*`.
-3. **Viết màn** `lib/screens/<tên>_screen.dart`: chỉ đọc ViewModel (`context.watch`) và vẽ. Dùng widget trong `lib/widgets/`, màu và cỡ chữ từ theme (`context.appColors`, `Theme.of(context).textTheme`), khoảng cách từ `AppSpacing`.
-4. **Nối route** trong file `lib/router/routes_pX.dart` của mình: thay `placeholderRoute(...)` bằng `GoRoute` tạo ViewModel như `homeRoute`.
-5. **Viết test**: một test ViewModel (dữ liệu, lỗi, rỗng) và một test widget (hiện đúng, bấm đúng). Dữ liệu giả lấy từ `lib/dev/`.
-6. **Chạy kiểm tra** trước khi mở PR (mục 5).
-7. **Cập nhật** trạng thái hàng của màn trong `design-traceability.md` thành `Xong`.
+1. **Read the screen's row** in `docs/design-traceability.md` (route, ViewModel, data source) and the Figma image under `assets/figma/` in the Lab 2 repo (`final-ui-v2` for S01–S07, `final-ui-s09-s25` for S09–S25; for the seller app and S26 onward, ask P1 or see Page 03 in Figma). Figma is a reference: you may drop parts that are redundant or cluttered, but **record the deviation** in section 5 of that file (IDs D07, D08…).
+2. **Write the ViewModel** `lib/viewmodels/<name>_view_model.dart`: receive services through the constructor, hold a `ViewState` (loading, empty, error, data), keep all logic here. Never import `package:firebase_*`.
+3. **Write the screen** `lib/screens/<name>_screen.dart`: only read the ViewModel (`context.watch`) and draw. Use the widgets in `lib/widgets/`, colors and text sizes from the theme (`context.appColors`, `Theme.of(context).textTheme`), spacing from `AppSpacing`.
+4. **Wire the route** in your own `lib/router/routes_pX.dart`: replace `placeholderRoute(...)` with a `GoRoute` that creates the ViewModel like `homeRoute` does.
+5. **Write tests**: one ViewModel test (data, error, empty) and one widget test (shows the right thing, taps do the right thing). Fake data comes from `lib/dev/`.
+6. **Run the checks** before opening a PR (section 5).
+7. **Update** the screen's row status in `design-traceability.md` to `Done`.
 
-## 3. Quy tắc cho file dùng chung
+## 3. Rules for shared files
 
-Đây là chỗ cả nhóm dễ giẫm lên nhau. Sửa file chung thì làm **PR riêng, nhỏ, merge nhanh**, đừng gộp vào PR của màn.
+This is where the team is most likely to step on each other. When you change a shared file, make a **separate, small PR that merges quickly**; do not fold it into a screen PR.
 
-| File hoặc thư mục | Ai sửa | Quy tắc |
+| File or folder | Who edits | Rule |
 |---|---|---|
-| `lib/theme/`, `lib/widgets/` | P1 | Cần widget hoặc biến thể mới: mở issue hoặc PR nhỏ cho P1 duyệt. Không tự thêm màu, cỡ chữ cứng trong màn |
-| `lib/router/app_router.dart` | P1 | Không sửa. Mỗi người chỉ sửa `routes_p1.dart` đến `routes_p4.dart` của mình |
-| `lib/router/routes_pX.dart` | chủ file | Chỉ sửa file của mình |
-| `lib/services/services.dart`, `lib/services/app_services.dart` | cả nhóm | **Không nhét thêm interface vào `services.dart`.** Dịch vụ mới nằm file riêng `lib/services/<tính năng>_service.dart`; thêm đúng một trường vào `AppServices` |
-| `lib/dev/dev_services.dart` | cả nhóm | Bản giả của dịch vụ mới nằm file riêng `lib/dev/dev_<tính năng>.dart`; thêm đúng một dòng vào `createDevServices` |
-| `lib/models/models.dart` | cả nhóm | Chỉ **thêm**: lớp mới hoặc trường mới có giá trị mặc định ở cuối. Không đổi tên, không xoá, để code của người khác vẫn biên dịch. Đổi cấu trúc dữ liệu thì làm đủ 4 nơi (`docs/data-model.md`) |
-| `firebase/firestore.rules`, `storage.rules`, `docs/data-model.md` | P3 duyệt | Sửa kèm test ở `firebase/tests/rules.test.mjs`; `npm test` phải đạt |
-| `lib/firebase/` | P3 (dịch vụ chung); chủ tính năng (dịch vụ của mình) | Chỉ chỗ này được import SDK Firebase |
-| `pubspec.yaml` | cả nhóm | Thêm gói thì ghi vào bảng phiên bản ở `README.md`; báo nhóm |
+| `lib/theme/`, `lib/widgets/` | P1 | Need a new widget or variant: open an issue or a small PR for P1 to review. Do not add hard-coded colors or font sizes in a screen |
+| `lib/router/app_router.dart` | P1 | Do not edit. Each person only edits their own `routes_p1.dart` to `routes_p4.dart` |
+| `lib/router/routes_pX.dart` | the file's owner | Edit only your own file |
+| `lib/services/services.dart`, `lib/services/app_services.dart` | the whole team | **Do not add more interfaces to `services.dart`.** A new service goes in its own file `lib/services/<feature>_service.dart`; add exactly one field to `AppServices` |
+| `lib/dev/dev_services.dart` | the whole team | The fake of a new service goes in its own file `lib/dev/dev_<feature>.dart`; add exactly one line to `createDevServices` |
+| `lib/models/models.dart` | the whole team | Only **add**: a new class, or a new field with a default value at the end. Do not rename or delete, so other people's code still compiles. If you change the data structure, do all 4 places (`docs/data-model.md`) |
+| `firebase/firestore.rules`, `storage.rules`, `docs/data-model.md` | P3 reviews | Change together with tests in `firebase/tests/rules.test.mjs`; `npm test` must pass |
+| `lib/firebase/` | P3 (shared services); the feature owner (their own services) | The only place allowed to import the Firebase SDK |
+| `pubspec.yaml` | the whole team | When adding a package, record it in the versions table in `README.md` and tell the team |
 
 ## 4. Git
 
-- Nhánh: `feat/S03-thuc-don`, `fix/K02-crash`, tên theo mã màn hoặc task.
-- Commit mở đầu bằng mã: `[S03] Thực đơn có chọn loại món`. Nhiều commit nhỏ qua nhiều ngày, không dồn một lần.
-- Mở PR vào `main`, dùng mẫu PR có sẵn, **nhờ người khác duyệt**. Người duyệt chạy được app và đọc diff, không chỉ bấm Approve.
-- Không đẩy thẳng lên `main`. Không commit khoá, mật khẩu, keystore, file `*adminsdk*.json`.
-- Xung đột ở file chung: người merge sau là người sửa, và báo người kia.
+- Branches: `feat/S03-menu`, `fix/K02-crash`, named after the screen or task ID.
+- Start commits with the ID: `[S03] Menu with category filter`. Many small commits over many days, not one dump.
+- Open a PR into `main` using the PR template, and **ask someone else to review it**. The reviewer runs the app and reads the diff, not just clicks Approve.
+- Never push straight to `main`. Never commit keys, passwords, keystores, or `*adminsdk*.json` files.
+- Conflicts in a shared file: whoever merges second resolves it, and tells the other person.
 
-## 5. Xong một màn khi
+## 5. A screen is done when
 
-Chạy trong thư mục gốc (đều phải sạch):
+Run these in the repo root (both must be clean):
 
 ```bash
 flutter analyze
@@ -63,19 +63,19 @@ flutter analyze
 flutter test
 ```
 
-Và tự kiểm bằng mắt trên máy ảo hoặc điện thoại:
+And check by eye on an emulator or phone:
 
-- [ ] Giống Figma v2, hoặc sai lệch đã ghi ở `design-traceability.md` mục 5.
-- [ ] Đủ loading, empty, error có nút thử lại; nút Back đi đúng chỗ.
-- [ ] Vùng bấm ≥ 48 dp, chữ nội dung ≥ 14 sp, tương phản đạt (dùng token, không màu cứng).
-- [ ] Mỗi nút và ô bấm có `Semantics` hoặc `tooltip` (ARTEMIS đọc cây trợ năng, T61).
-- [ ] Không SDK trong widget, không logic trong `build()`.
-- [ ] Chạy được bằng dữ liệu giả; khi đủ T33 thì chạy được bằng Firebase thật.
-- [ ] Không dữ liệu cứng (tên món, giá, voucher) trong code màn hay ViewModel; dữ liệu đến từ service.
-- [ ] Có test ViewModel và test widget; hàng trong `design-traceability.md` đã đổi thành `Xong`.
+- [ ] Matches Figma v2, or the deviation is recorded in `design-traceability.md` section 5.
+- [ ] Loading, empty and error states with a retry button; the Back button goes to the right place.
+- [ ] Tap targets ≥ 48 dp, body text ≥ 14 sp, contrast passes (use tokens, no hard-coded colors).
+- [ ] Every button and tappable cell has `Semantics` or a `tooltip` (ARTEMIS reads the accessibility tree, T61).
+- [ ] No SDK in widgets, no logic in `build()`.
+- [ ] Runs on fake data; once T33 is in, it also runs on real Firebase.
+- [ ] No hard-coded data (item names, prices, vouchers) in screen or ViewModel code; data comes from a service.
+- [ ] A ViewModel test and a widget test exist; the row in `design-traceability.md` is `Done`.
 
-## 6. Dữ liệu giả và Firebase thật
+## 6. Fake data vs real Firebase
 
-Dữ liệu giả (`lib/dev/`) chỉ để dựng màn khi Firebase chưa nối và **phải xoá trước khi nộp** (T83), vì handout cấm dữ liệu cứng hay mock trong bản nộp. Đừng viết logic nghiệp vụ trong `lib/dev/`; logic nằm ở ViewModel để chạy giống hệt với dữ liệu thật.
+Fake data (`lib/dev/`) exists only to build screens while Firebase is not connected, and **must be deleted before submission** (T83), because the handout forbids hard-coded or mock data in the submitted build. Do not put business logic in `lib/dev/`; logic belongs in the ViewModel so it behaves identically with real data.
 
-Thực đơn mẫu, kiosk, voucher, slot đã nạp sẵn trên Firestore thật (`firebase/seed/`). Muốn có tài khoản người bán thử: đăng nhập app một lần rồi nhờ P3 chạy `set-role.mjs` gán vai trò và kiosk.
+Sample menu, kiosks, vouchers and slots are already loaded into the real Firestore (`firebase/seed/`). To get a seller account for testing: sign in to the app once, then ask P3 to run `set-role.mjs` to assign the role and kiosk.

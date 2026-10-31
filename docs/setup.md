@@ -1,68 +1,68 @@
-# Cài môi trường (Windows)
+# Environment setup (Windows)
 
-Các bước dưới đây đã chạy trên máy dựng khung ngày 28/10/2026. Mỗi thành viên làm lại trên máy mình; mục 1 chỉ cần khi gặp lỗi Java.
+The steps below were run on the machine that built the skeleton on 28/10/2026. Each member repeats them on their own machine; section 1 is only needed if you hit the Java error.
 
-## 1. Sửa lỗi Java "Unable to establish loopback connection"
+## 1. Fix the Java error "Unable to establish loopback connection"
 
-Trên một số máy Windows, Java 21 không tạo được socket nội bộ ở thư mục tạm mặc định. Biểu hiện: Firebase Emulator, `sdkmanager` hoặc Gradle thoát ngay với lỗi `Unable to establish loopback connection`. Sửa:
+On some Windows machines, Java 21 cannot create a local socket in the default temp folder. Symptom: the Firebase Emulator, `sdkmanager` or Gradle exits immediately with `Unable to establish loopback connection`. Fix:
 
 ```powershell
 mkdir D:\tmp\java
 setx JAVA_TOOL_OPTIONS "-Djava.io.tmpdir=D:/tmp/java -Djdk.net.unixdomain.tmpdir=D:/tmp/java"
 ```
 
-Mở lại terminal và IDE sau khi đặt.
+Reopen your terminal and IDE after setting it.
 
-## 2. Flutter và Android SDK
+## 2. Flutter and the Android SDK
 
-| Thành phần | Phiên bản đã dùng | Ghi chú |
+| Component | Version used | Notes |
 |---|---|---|
-| Flutter | 3.47.5 (stable), Dart 3.13.4 | giải nén vào `D:\src\flutter`, thêm `bin` vào PATH |
+| Flutter | 3.47.5 (stable), Dart 3.13.4 | extract to `D:\src\flutter`, add `bin` to PATH |
 | JDK | 21 | `flutter config --jdk-dir "C:\Program Files\Java\jdk-21"` |
-| Android command-line tools | `commandlinetools-win-16111833` | giải nén vào `D:\src\android-sdk\cmdline-tools\latest` |
+| Android command-line tools | `commandlinetools-win-16111833` | extract to `D:\src\android-sdk\cmdline-tools\latest` |
 | Platform | android-36, android-35 | |
 | Build-tools | 36.0.0, 35.0.0 | |
 | platform-tools (adb) | 37.0.1 | |
-| NDK | 28.2.13676358 | Gradle cần; cài tay vì `sdkmanager` mới lỗi với dấu `;` |
+| NDK | 28.2.13676358 | needed by Gradle; install by hand because the new `sdkmanager` fails on the `;` character |
 
-Đặt biến môi trường người dùng `ANDROID_HOME` và `ANDROID_SDK_ROOT` bằng `D:\src\android-sdk`, thêm `D:\src\android-sdk\platform-tools` vào PATH, rồi:
+Set the user environment variables `ANDROID_HOME` and `ANDROID_SDK_ROOT` to `D:\src\android-sdk`, add `D:\src\android-sdk\platform-tools` to PATH, then:
 
 ```powershell
 flutter config --android-sdk D:\src\android-sdk
-flutter doctor --android-licenses     # trả lời y
-flutter doctor -v                     # phải báo "No issues found"
+flutter doctor --android-licenses     # answer y
+flutter doctor -v                     # must report "No issues found"
 ```
 
-Cài gói bằng lệnh `android` (thay `sdkmanager`):
+Install packages with the `android` command (replaces `sdkmanager`):
 
 ```powershell
 $a = "D:\src\android-sdk\cmdline-tools\latest\bin\android.exe"
 & $a --sdk=D:\src\android-sdk sdk install "platforms/android-36" "build-tools/36.0.0" "ndk/28.2.13676358"
 ```
 
-### Lỗi build Kotlin "different roots"
+### Kotlin build error "different roots"
 
-Nếu `flutter build apk` báo `Could not close incremental caches ... this and base files have different roots`, do project (ổ D) và thư viện Pub (ổ C) khác ổ đĩa. Repo đã đặt `kotlin.incremental=false` trong `android/gradle.properties` để tránh lỗi này. Build lần đầu mất khoảng 5 đến 7 phút vì Gradle tải thư viện.
+If `flutter build apk` reports `Could not close incremental caches ... this and base files have different roots`, the project (drive D) and the Pub packages (drive C) are on different drives. The repo already sets `kotlin.incremental=false` in `android/gradle.properties` to avoid this. The first build takes about 5 to 7 minutes because Gradle downloads libraries.
 
-## 3. Điện thoại Android
+## 3. Android phone
 
-1. Cài đặt, Giới thiệu điện thoại, bấm 7 lần vào **Số bản dựng** để bật Tuỳ chọn nhà phát triển.
-2. Bật **Gỡ lỗi USB**, cắm cáp, chọn "Cho phép gỡ lỗi USB" trên máy.
-3. `adb devices` phải liệt kê thiết bị ở trạng thái `device` (không phải `unauthorized`).
-4. Cài app: `flutter run --dart-define=USE_DEV_SERVICES=true`.
+1. Settings, About phone, tap **Build number** 7 times to enable Developer options (on a Vietnamese-language phone: Cài đặt, Giới thiệu điện thoại, Số bản dựng).
+2. Turn on **USB debugging**, plug in the cable, and choose "Allow USB debugging" on the phone.
+3. `adb devices` must list the device with state `device` (not `unauthorized`).
+4. Install the app: `flutter run --dart-define=USE_DEV_SERVICES=true`.
 
-### Không có điện thoại Android (máy ảo, Chrome, iPhone)
+### No Android phone (emulator, Chrome, iPhone)
 
-Không thể chạy app lên iPhone từ máy Windows (build iOS cần máy Mac và Xcode). Người dùng Windows chọn một trong hai cách dưới đây. Điện thoại Android thật chỉ cần khi thử Google Sign-in thật và chạy ARTEMIS, máy dùng chung của nhóm.
+You cannot run the app on an iPhone from a Windows machine (iOS builds need a Mac and Xcode). On Windows pick one of the two options below. A real Android phone is only needed to try the real Google sign-in and to run ARTEMIS, and the team shares one for that.
 
-**Cách 1: Chrome với khung điện thoại (nhẹ nhất).**
+**Option 1: Chrome with a phone frame (lightest).**
 
-1. Trong VS Code cài extension **Flutter** (Dart Code), chọn thiết bị **Chrome (web)** ở góc dưới bên phải rồi bấm **F5**. Cấu hình `.vscode/launch.json` đã chạy với dữ liệu giả (`USE_DEV_SERVICES=true`).
-2. Trong cửa sổ trình duyệt bấm `F12`, rồi `Ctrl+Shift+M` và chọn iPhone hoặc Pixel để thấy khung điện thoại.
+1. In VS Code install the **Flutter** extension (Dart Code), choose the **Chrome (web)** device at the bottom right and press **F5**. The `.vscode/launch.json` configurations already run with fake data (`USE_DEV_SERVICES=true`).
+2. In the browser window press `F12`, then `Ctrl+Shift+M` and choose an iPhone or Pixel to see the phone frame.
 
-Bản web chỉ để xem giao diện: Firebase mới cấu hình cho Android, nên chạy với dữ liệu giả.
+The web build is only for looking at the UI: Firebase is configured for Android only, so it runs with fake data.
 
-**Cách 2: Android Emulator (giống máy thật, cần khoảng 3 GB và 8 GB RAM trống).**
+**Option 2: Android Emulator (closest to a real phone, needs about 3 GB of disk and 8 GB of free RAM).**
 
 ```powershell
 $a = "D:\src\android-sdk\cmdline-tools\latest\bin\android.exe"
@@ -73,43 +73,43 @@ $env:ANDROID_AVD_HOME = "D:\src\android-avd"
 D:\src\android-sdk\cmdline-tools\latest\bin\avdmanager.bat create avd -n Pixel8_API35 -k "system-images;android-35;google_apis_playstore;x86_64" -d pixel_8
 ```
 
-Mở lại terminal và VS Code, bật máy ảo bằng `flutter emulators --launch Pixel8_API35`, rồi chạy `flutter run --dart-define=USE_DEV_SERVICES=true`. Bật **một** emulator thôi: mở thêm một cái nữa sẽ báo `The Android emulator exited with code 1` hoặc làm máy ảo kẹt ở trạng thái `offline`. Nếu kẹt, tắt tiến trình `emulator` và `qemu-system-x86_64` trong Task Manager rồi bật lại. Lần đầu boot mất vài phút.
+Reopen the terminal and VS Code, start the emulator with `flutter emulators --launch Pixel8_API35`, then run `flutter run --dart-define=USE_DEV_SERVICES=true`. Start **only one** emulator: starting a second one reports `The Android emulator exited with code 1` or leaves the emulator stuck in the `offline` state. If it gets stuck, end the `emulator` and `qemu-system-x86_64` processes in Task Manager and start again. The first boot takes a few minutes.
 
-Máy ảo của mỗi người dùng khoá debug của máy đó: gửi SHA-1 của máy bạn cho người giữ Firebase project (xem mục 4) để Google Sign-in chạy.
+Each person's emulator uses the debug key of that machine: send your machine's SHA-1 to whoever holds the Firebase project (see section 4) so Google Sign-in works.
 
-**Vào app khi màn đăng nhập (S26) chưa làm.** Với dữ liệu giả, thêm `--dart-define=DEV_SIGNED_IN=true` để vào thẳng app khách, và `--dart-define=DEV_ROLE=staff` để vào app người bán. Trong VS Code chọn cấu hình "BreakBite khách (dữ liệu giả, đã đăng nhập)" hoặc "BreakBite người bán (…)" rồi bấm F5. Hai cờ này chỉ có tác dụng với service giả và bị gỡ cùng `lib/dev/` trước khi nộp (T83).
+**Getting into the app while the sign-in screen (S26) is not built.** With fake data, add `--dart-define=DEV_SIGNED_IN=true` to go straight into the customer app, and `--dart-define=DEV_ROLE=staff` to go into the seller app. In VS Code pick the "BreakBite customer (fake data, signed in)" or "BreakBite seller (fake data, signed in)" configuration and press F5. These two flags only affect the fake services and are removed together with `lib/dev/` before submission (T83).
 
 ## 4. Firebase
 
 ```powershell
 npm install -g firebase-tools           # 15.34.1
-dart pub global activate flutterfire_cli # 1.4.1; thêm %LOCALAPPDATA%\Pub\Cache\bin vào PATH
+dart pub global activate flutterfire_cli # 1.4.1; add %LOCALAPPDATA%\Pub\Cache\bin to PATH
 firebase login
-flutterfire configure --project <id-project-firebase>   # sinh lib/firebase_options.dart (task T01, T03)
+flutterfire configure --project <firebase-project-id>   # generates lib/firebase_options.dart (tasks T01, T03)
 ```
 
-Project của nhóm là `breakbite-1315b` (gói Spark). `lib/firebase_options.dart` và `android/app/google-services.json` đã nằm trong repo, nên người mới **không cần** chạy lại `flutterfire configure`; chỉ cần được mời vào project (Project settings, Users and permissions, vai trò Editor).
+The team project is `breakbite-1315b` (Spark plan). `lib/firebase_options.dart` and `android/app/google-services.json` are already in the repo, so a newcomer **does not need** to run `flutterfire configure` again; they only need to be invited to the project (Project settings, Users and permissions, role Editor).
 
-**SHA-1 cho Google Sign-in.** Mỗi máy có khoá debug riêng, nên mỗi người lấy SHA-1 của máy mình và gửi cho người giữ project để thêm vào Project settings, Your apps, BreakBite, Add fingerprint. Chưa thêm thì đăng nhập Google báo `ApiException: 10`.
+**SHA-1 for Google Sign-in.** Every machine has its own debug key, so each person gets the SHA-1 of their own machine and sends it to whoever holds the project, to add under Project settings, Your apps, BreakBite, Add fingerprint. Until it is added, Google sign-in fails with `ApiException: 10`.
 
 ```powershell
 keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android | Select-String "SHA1"
 ```
 
-Nếu báo không thấy file keystore, chạy app Flutter một lần để máy tự tạo. SHA-1 là dấu vân tay công khai nên gửi qua nhóm chat được; **không** chia sẻ file keystore hay file service account `*-adminsdk-*.json`.
+If it says the keystore file is missing, run a Flutter app once so the machine creates it. A SHA-1 is a public fingerprint, so it is fine to send in the team chat; **do not** share the keystore file or the service-account file `*-adminsdk-*.json`.
 
-Chạy test rules: xem `firebase/README.md`.
+Run the rules tests: see `firebase/README.md`.
 
-## 5. ARTEMIS (test E2E)
+## 5. ARTEMIS (E2E tests)
 
-Xem `e2e_test/README.md`. Máy chủ đặt ở `D:\src\artemis`, ghim commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b`. Cần khoá API của một mô hình đa phương thức (Gemini, Claude, GPT-4o hoặc Qwen-VL) trong `.env` của máy chủ ARTEMIS; **không commit khoá**.
+See `e2e_test/README.md`. The server lives in `D:\src\artemis`, pinned to commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b`. It needs an API key for a multimodal model (Gemini, Claude, GPT-4o or Qwen-VL) in the ARTEMIS server's `.env`; **never commit the key**.
 
-## 6. Kiểm tra nhanh
+## 6. Quick check
 
 ```powershell
 cd <repo>
 flutter pub get
 flutter analyze
-flutter test                      # 36 test
-flutter build apk --debug         # cần SDK, NDK ở mục 2
+flutter test                      # all unit and widget tests, no device needed
+flutter build apk --debug         # needs the SDK and NDK from section 2
 ```

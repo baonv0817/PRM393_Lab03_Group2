@@ -1,140 +1,140 @@
-# Kế hoạch task (nhóm 4 người)
+# Task plan (team of 4)
 
-Phân công theo người: [`PHAN-CONG.md`](PHAN-CONG.md). Thứ tự bám đúng quy trình handout: **Plan, Architect, Integrate, Instrument, Test, Review, Report**. Git history phải cho thấy các bước này theo thứ tự, và commit của từng người phải thấy được.
+Assignments per person: [`ASSIGNMENTS.md`](ASSIGNMENTS.md). The order follows the handout workflow: **Plan, Architect, Integrate, Instrument, Test, Review, Report**. The Git history must show these stages in order, and every member's commits must be visible.
 
-Hạn nộp: `[điền ngày]`. Số commit và số ngày tối thiểu: `[điền khi thầy công bố]`.
+Deadline: `[fill in date]`. Minimum number of commits and days: `[fill in when the lecturer announces it]`.
 
-## Phân công
+## Assignments
 
-| Người | Vai trò | Phụ trách chính | Điểm rubric gánh chính |
+| Person | Role | Main responsibility | Main rubric points |
 |---|---|---|---|
-| **P1** | Kiến trúc, design system, luồng đặt món | Repo, khung MVVM, theme và thư viện widget, `design-traceability.md`, `architecture.md`, màn S01–S08 và biến thể | Kiến trúc 0,75, UI/UX 0,75, một phần Chức năng |
-| **P2** | App khách mở rộng, thông báo, test E2E | Màn S09–S14, S19–S25, S27–S30; sinh PDF và tải lên; FCM và trung tâm thông báo; bộ test ARTEMIS | Chức năng, FCM 0,5, Test 1,5 |
-| **P3** | Firebase và tài khoản | Auth, Storage, Analytics, Crashlytics, Remote Config, tầng service bọc SDK; S15–S18, S26; khu demo Firebase | Firebase 2,0 |
-| **P4** | App người bán, code review, báo cáo | Toàn bộ app người bán K01–K15; AI code review; gom báo cáo, slide, video | Chức năng (người bán), Review 0,5, Slide và video 2,0 |
+| **P1** | Ordering flow | Menu, item detail, cart, pickup slot, voucher picker, checkout, order tracking, orders list (S03–S08, S25, S29); architecture doc, design traceability, shared theme and widgets | Architecture 0.75, UI/UX 0.75, Functionality (F1, F2, F3) |
+| **P2** | After-order screens, notifications, E2E tests | Edit and cancel order, history, order detail, favorites, reorder, notification center, pickup QR, closed kiosk, unavailable item, review, incident report (S09–S14, S19–S24); PDF export; FCM; the ARTEMIS test suite | Functionality, FCM 0.5, Testing 1.5 |
+| **P3** | Firebase, accounts, profile | Auth, Firestore services, Storage, Analytics, Crashlytics, Remote Config, the SDK-wrapping service layer; S15–S18, S26, S27, S28, S30; Firebase demo area | Firebase 2.0 |
+| **P4** | Seller app, code review, report | The whole seller app K01–K15; AI code review; compiling the report, slides, video | Functionality (seller), Review 0.5, Slides and video 2.0 |
 
-Quy tắc chung:
-- Mỗi người **tự viết test case (bước, kết quả mong đợi) cho màn mình làm** vào `docs/test-plan.md`; P2 gom, chạy và đánh giá độ tin cậy.
-- Mỗi người **tự đặt `Semantics` label** cho màn mình để ARTEMIS đọc được.
-- Mỗi người **viết phần báo cáo và quay đoạn video của phần mình**; P4 ghép.
-- Ai cũng phải giải thích được code của mình và một quyết định review (có thể bị hỏi vấn đáp 5 phút).
+General rules:
+- Everyone **writes the test cases (steps, expected result) for the screens they build** into `docs/test-plan.md`; P2 collects them, runs them and assesses reliability.
+- Everyone **adds `Semantics` labels** to their own screens so ARTEMIS can read them.
+- Everyone **writes their part of the report and records their part of the video**; P4 assembles.
+- Everyone must be able to explain their own code and one review decision (there may be a 5-minute oral check).
 
-## Quy ước Git
+## Git conventions
 
-- Nhánh `feat/T41-ten-ngan`, `docs/T10-...`, `fix/CR-01-...`; không commit thẳng vào `main`.
-- Mỗi PR do **người khác** duyệt; commit message mở đầu bằng mã task: `[T41] Add cart screen states`.
-- Commit sửa lỗi review ghi ID phát hiện: `[CR-01] Move API call out of HomeScreen`.
-- Không commit khoá service-account, API key, keystore; dùng biến môi trường. `google-services.json` được commit.
+- Branches `feat/T41-short-name`, `docs/T10-...`, `fix/CR-01-...`; never commit straight to `main`.
+- Every PR is reviewed by **someone else**; commit messages start with the task ID: `[T41] Add cart screen states`.
+- Review-fix commits mention the finding ID: `[CR-01] Move API call out of HomeScreen`.
+- Never commit service-account keys, API keys or keystores; use environment variables. `google-services.json` may be committed.
 
-## Danh sách task theo thứ tự
+## Task list in order
 
-Cột "Phụ thuộc" cho biết task nào phải xong trước.
+The "Depends on" column shows which task must be finished first.
 
-### Giai đoạn 0 · Chuẩn bị (tuần 1, ngày 1–2)
+### Stage 0 · Preparation (week 1, days 1–2)
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T00 | P1 | Tạo repo GitHub `PRM393_Lab03_<MSSV>`, mời 3 thành viên, bật bắt buộc PR cho `main`, đẩy khung repo này lên | Cả 4 người clone và push được | — |
-| T01 | P3 | Tạo Firebase project (Spark), đăng ký app Android, bật Auth (Google), Firestore, Storage, Cloud Messaging, Analytics, Crashlytics, Remote Config; thêm SHA-1 máy của từng người; mời 3 người vào project | Cả nhóm đăng nhập console được; có `google-services.json` | T00 |
-| T02 | P2 | Chuẩn bị máy test: thiết bị Android hoặc emulator, ADB, ARTEMIS (Python 3.12, uv), API key mô hình đặt trong biến môi trường, tài khoản Google dành riêng cho test; ghi commit ARTEMIS đã ghim | Chạy được 1 lệnh ARTEMIS mẫu | T00 |
-| T03 | P1 | `flutter create`, ghim phiên bản trong `pubspec.yaml`, `flutterfire configure`, cập nhật `README.md` mục phiên bản | App rỗng chạy trên thiết bị, Firebase khởi tạo không lỗi | T01 |
+| T00 | P1 | Create the GitHub repo `PRM393_Lab03_<StudentID>`, invite the 3 members, require PRs for `main`, push this repo skeleton | All 4 people can clone and push | — |
+| T01 | P3 | Create the Firebase project (Spark), register the Android app, enable Auth (Google), Firestore, Storage, Cloud Messaging, Analytics, Crashlytics, Remote Config; add every member's SHA-1; invite the 3 members to the project | The whole team can sign in to the console; `google-services.json` exists | T00 |
+| T02 | P2 | Prepare the test machine: Android device or emulator, ADB, ARTEMIS (Python 3.12, uv), the model API key in an environment variable, a dedicated Google account for testing; record the pinned ARTEMIS commit | One sample ARTEMIS command runs | T00 |
+| T03 | P1 | `flutter create`, pin versions in `pubspec.yaml`, `flutterfire configure`, update the versions section of `README.md` | An empty app runs on a device and Firebase initializes without errors | T01 |
 
-### Giai đoạn 1 · Plan
+### Stage 1 · Plan
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T10 | P1 (mỗi người sửa hàng của mình) | Hoàn thiện `docs/design-traceability.md`: ma trận màn, flow, component và danh sách sai lệch | Mọi màn S01–S30, K01–K15 có route, widget, nguồn dữ liệu, người phụ trách | T00 |
-| T11 | P4 | Chốt phạm vi với thầy bằng văn bản: nhóm 4 người, app khách và app người bán, các sai lệch D01 (Google Sign-In thay OTP) | Có xác nhận của thầy, lưu trong `docs/` | — |
+| T10 | P1 (everyone edits their own rows) | Complete `docs/design-traceability.md`: screen matrix, flows, components and the deviations list | Every screen S01–S30 and K01–K15 has a route, widget, data source and owner | T00 |
+| T11 | P4 | Confirm the scope with the lecturer in writing: team of 4, customer app and seller app, deviation D01 (Google Sign-In instead of OTP) | The lecturer's confirmation is saved in `docs/` | — |
 
-### Giai đoạn 2 · Architect
+### Stage 2 · Architect
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T20 | P1 | `docs/architecture.md`: cấu trúc thư mục, sơ đồ tầng, sơ đồ tuần tự một flow đầy đủ, bảng ViewModel và service; dựng khung `lib/` (models, services, firebase, viewmodels, screens, widgets, utils), DI bằng Provider hoặc Riverpod, lớp trạng thái dùng chung (sealed class loading, empty, error, data), router | Khung chạy, `architecture.md` khớp code | T03, T10 |
-| T21 | P1 | `lib/theme/`: token thành `ColorScheme`, `TextTheme`, hằng số khoảng cách, bo góc; thư viện widget ở mục 4 của traceability; kiểm 360 dp và 412 dp, vùng bấm ≥ 48 dp, chữ ≥ 14 sp | Widget catalog hiển thị đủ biến thể, không tràn | T20 |
-| T22 | P3 | Tầng service bọc SDK (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`): interface và bản giả đã có; **viết bản Firebase trong `lib/firebase/`** và `bootstrap.dart` | Không widget nào gọi SDK trực tiếp | T20 |
+| T20 | P1 | `docs/architecture.md`: folder structure, layer diagram, sequence diagram of one full flow, ViewModel and service table; build the `lib/` skeleton (models, services, firebase, viewmodels, screens, widgets, utils), DI with Provider or Riverpod, the shared state class (sealed class loading, empty, error, data), router | The skeleton runs and `architecture.md` matches the code | T03, T10 |
+| T21 | P1 | `lib/theme/`: tokens into `ColorScheme`, `TextTheme`, spacing and radius constants; the widget library from section 4 of the traceability doc; check 360 dp and 412 dp, tap targets ≥ 48 dp, text ≥ 14 sp | The widget catalog shows every variant without overflow | T20 |
+| T22 | P3 | SDK-wrapping service layer (`AuthService`, `StorageService`, `MessagingService`, `AnalyticsService`, `CrashService`, `RemoteConfigService`): interfaces and fakes already exist; **write the Firebase implementations in `lib/firebase/`** and `bootstrap.dart` | No widget calls an SDK directly | T20 |
 
-### Giai đoạn 3 · Integrate (Firebase và dữ liệu)
+### Stage 3 · Integrate (Firebase and data)
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T30 | P3 | Google Sign-In, định tuyến theo trạng thái đăng nhập, đăng xuất xoá dữ liệu local, xử lý huỷ và mất mạng; lưu `users/{uid}` kèm `role` | Ảnh hai trạng thái, tab Users trong console | T22 |
-| T31 | P3 | Mô hình dữ liệu Firestore và `firebase/firestore.rules` mặc định từ chối, theo vai trò; script nạp dữ liệu mẫu thật vào Firestore (thực đơn, kiosk, voucher) | Rules đã kiểm trong Emulator; không dữ liệu cứng trong app | T30 |
-| T32 | P3 | `firebase/storage.rules` theo từng người dùng; `StorageService` tải lên có tiến trình, trả URL | Người khác không đọc được thư mục của mình | T30 |
-| T33 | P3 | Bản Firestore của `MenuService`, `CartService`, `OrderService` (kiosk, voucher, slot) trong `lib/firebase/`: truy vấn theo `docs/data-model.md` mục 5, đặt đơn bằng một batch (tạo đơn, xoá giỏ, tăng slot) | Đơn đặt ở app khách hiện ngay ở app người bán; không dữ liệu cứng trong app | T22, T31 |
-| T34 | Mỗi chủ màn | Dịch vụ theo tính năng, mỗi người làm của mình (interface ở `lib/services/<tên>_service.dart`, bản giả ở `lib/dev/dev_<tên>.dart`, bản Firestore ở `lib/firebase/`): P1 `SlotService`, `VoucherService`; P2 `ReviewService`, `FavoriteService`, `NotificationService`, `IncidentService` (tạo); P4 phần xử lý sự cố cho K13 | Màn của mình dùng dữ liệu thật; có test ViewModel với bản giả | T33 |
+| T30 | P3 | Google Sign-In, routing by sign-in state, sign-out clears local data, handle cancellation and network loss; save `users/{uid}` with `role` | Screenshots of both states, the Users tab in the console | T22 |
+| T31 | P3 | The Firestore data model and `firebase/firestore.rules` (deny by default, role-based); a seed script that loads real sample data into Firestore (menu, kiosks, vouchers) | Rules tested in the Emulator; no hard-coded data in the app | T30 |
+| T32 | P3 | `firebase/storage.rules` per user; `StorageService` with upload progress, returning the URL | Other users cannot read your folder | T30 |
+| T33 | P3 | Firestore implementations of `MenuService`, `CartService`, `OrderService` (kiosks, vouchers, slots) in `lib/firebase/`: queries per section 5 of `docs/data-model.md`, place an order with one batch (create the order, delete the cart, increase the slot) | An order placed in the customer app appears at once in the seller app; no hard-coded data in the app | T22, T31 |
+| T34 | Each screen owner | Per-feature services, each person builds their own (interface in `lib/services/<name>_service.dart`, fake in `lib/dev/dev_<name>.dart`, Firestore version in `lib/firebase/`): P1 `SlotService`, `VoucherService`; P2 `ReviewService`, `FavoriteService`, `NotificationService`, `IncidentService` (create); P4 the incident handling part for K13 | Your screens use real data; ViewModel tests use the fake | T33 |
 
-### Giai đoạn 4 · Features (song song sau T21 và T31)
+### Stage 4 · Features (in parallel after T21 and T31)
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T40 | P1 | Luồng đặt món: S01 và S02 đã xong (màn mẫu); còn S03 thực đơn, S04 chi tiết, S05 giỏ, S25 hẹn giờ, S29 chọn mã, S06 và biến thể thanh toán, S06-GATEWAY, S07 theo dõi đơn, S08 đơn hàng; thông báo thêm vào giỏ | Chạy trọn F1 và F3 trên thiết bị | T21, T33 |
-| T41 | P2 | S09–S14, S19–S25, S27–S30: sửa và huỷ đơn, lịch sử, yêu thích, đặt lại, thông báo, mã QR nhận món, đánh giá, báo sự cố, hẹn giờ, chọn kiosk, tìm kiếm, mã giảm giá, mất kết nối | F2 chạy trọn; mọi màn có loading, empty, error có thử lại | T21, T31 |
-| T42 | P3 | S15–S18, S26, S27 chọn kiosk, S28 tìm kiếm, S30 mất kết nối và khu demo Firebase trong Profile (trung tâm thông báo, xuất file và tải lên, giá trị Remote Config, nút thử Crashlytics) | Khu demo thao tác được đủ các mục | T30 |
-| T43 | P2 | Sinh PDF (biên lai hoặc tóm tắt đơn đang xem), tải lên qua `StorageService`, hiện tiến trình và URL | File tải lên đúng thư mục `reports/{uid}/…` | T32, T41 |
-| T44 | P4 | App người bán K01–K06: cổng vai trò, hàng đợi đơn thời gian thực, chi tiết, đang chuẩn bị, quét mã, giao món và thu tiền mặt | Một đơn của khách xuất hiện và xử lý được ở app người bán | T33, T40 |
-| T45 | P4 | K08–K15: quản lý món, đánh dấu hết món, trạng thái quán, thống kê ca, từ chối đơn, sự cố, thêm và sửa món | Đổi món ở app người bán thấy ngay ở app khách | T33, T44 |
+| T40 | P1 | Ordering flow: S01 and S02 are done (reference screens); remaining are S03 menu, S04 item detail, S05 cart, S25 pickup time, S29 voucher picker, S06 and the payment variants, S06-GATEWAY, S07 order tracking, S08 orders; the "added to cart" notice | F1 and F3 run end to end on a device | T21, T33 |
+| T41 | P2 | S09–S14, S19–S24: edit and cancel order, history, order detail, favorites, reorder, notifications, pickup QR code, closed kiosk, unavailable item, review, incident report | F2 runs end to end; every screen has loading, empty, error with retry | T21, T31 |
+| T42 | P3 | S15–S18, S26, S27 kiosk picker, S28 search, S30 offline, and the Firebase demo area in Profile (notification center, file export and upload, Remote Config values, Crashlytics test buttons) | Every item in the demo area can be operated | T30 |
+| T43 | P2 | Generate a PDF (receipt or summary of the order being viewed), upload it through `StorageService`, show progress and URL | The file lands in `reports/{uid}/…` | T32, T41 |
+| T44 | P4 | Seller app K01–K06: role gate, real-time order queue, detail, preparing, scan code, deliver and collect cash | A customer's order appears and can be processed in the seller app | T33, T40 |
+| T45 | P4 | K08–K15: menu management, mark item sold out, shop status, shift statistics, reject order, incidents, add and edit item | A change in the seller app shows immediately in the customer app | T33, T44 |
 
-### Giai đoạn 5 · Instrument
+### Stage 5 · Instrument
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T50 | P3 | `docs/analytics-plan.md` và code ghi sự kiện (≥ 7, đặt `userId` sau đăng nhập, không dữ liệu cá nhân) | Mỗi sự kiện có ảnh DebugView | T30 |
-| T51 | P3 | Crashlytics: 1 lỗi không gây crash từ đường lỗi thật, 1 crash thử, kèm user ID và custom key | Dashboard thấy cả hai, kèm key | T30 |
-| T52 | P3 | Remote Config ≥ 2 tham số đổi hành vi nhìn thấy trên màn (ví dụ số món "nhanh dưới 5 phút", bật tắt banner Combo Giờ Vàng); `firebase/remote-config-defaults.json` | Ảnh trước và sau, giá trị trên console | T40 |
-| T53 | P2 (dùng `MessagingService` của P3) | FCM: nhận ở 3 trạng thái, xin quyền Android 13+, danh sách thông báo trong app, chạm vào mở màn liên quan | Tin thử từ console tới được ở mỗi trạng thái | T41 |
+| T50 | P3 | `docs/analytics-plan.md` and the event-logging code (≥ 7 events, set `userId` after sign-in, no personal data) | Every event has a DebugView screenshot | T30 |
+| T51 | P3 | Crashlytics: 1 non-fatal error from a real error path, 1 test crash, with user ID and custom key | The dashboard shows both, with the key | T30 |
+| T52 | P3 | Remote Config ≥ 2 parameters that change visible behavior (for example the number of "quick under 5 minutes" items, toggling the Golden Hour Combo banner); `firebase/remote-config-defaults.json` | Before and after screenshots, values in the console | T40 |
+| T53 | P2 (uses P3's `MessagingService`) | FCM: receive in 3 states, ask for Android 13+ permission, in-app notification list, tapping opens the related screen | A test message from the console arrives in every state | T41 |
 
-### Giai đoạn 6 · Test
+### Stage 6 · Test
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T60 | P2 (mỗi người nộp case của mình) | `docs/test-plan.md`: ≥ 10 test case, đủ phủ nội dung mục 7 handout (có nhánh lỗi, tương tác native, phiên khám phá) | Mọi flow Lab 2 và đường lỗi có test | T10 |
-| T61 | Tất cả | Thêm `Semantics` label cho nút, ô danh sách, biểu đồ của màn mình | ARTEMIS đọc được cây trợ năng của màn | T40–T45 |
-| T62 | P2 | Viết test ARTEMIS bằng pytest trong `e2e_test/`, kiểm theo giá trị agent trả về, ≥ 3 lần mỗi test, bảng tỉ lệ đạt, phân tích test chập chờn; 1 test kiểm sự kiện analytics đã ghi | Bảng kết quả, dấu vết hoặc ảnh cho mỗi lần chạy | T61, T50 |
-| T63 | P2 | Phiên khám phá hồ sơ Pro 15 đến 30 phút, danh sách lỗi tìm được | Báo cáo phiên khám phá | T62 |
+| T60 | P2 (everyone submits their own cases) | `docs/test-plan.md`: ≥ 10 test cases covering section 7 of the handout (including error paths, native interactions, the exploratory session) | Every Lab 2 flow and error path has a test | T10 |
+| T61 | Everyone | Add `Semantics` labels to the buttons, list cells and charts of your screens | ARTEMIS can read the accessibility tree of the screen | T40–T45 |
+| T62 | P2 | Write the ARTEMIS tests in pytest under `e2e_test/`, assert on the value the agent reports back, ≥ 3 runs per test, a pass-rate table, analysis of flaky tests; 1 test that checks a logged analytics event | Results table, trace or screenshot for every run | T61, T50 |
+| T63 | P2 | A 15 to 30 minute exploratory session with the Pro profile, list of bugs found | Exploratory session report | T62 |
 
-### Giai đoạn 7 · Review
+### Stage 7 · Review
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T70 | P4 | Mở PR, chạy ít nhất 1 công cụ AI review, lưu đầu ra | Đầu ra công cụ nằm trong `evidence/` | T40–T45 |
-| T71 | Tất cả | Mỗi người quyết định (accept, modify, reject) các phát hiện thuộc file của mình, lý do dẫn tới yêu cầu cụ thể; tổng ≥ 5 phát hiện, ≥ 3 commit sửa lỗi nêu ID | `docs/code-review.md` đủ bảng, link commit | T70 |
-| T72 | P1 | Kiểm tra quy tắc MVVM toàn repo (không SDK trong widget, không logic trong `build()`), đối chiếu `architecture.md` | Danh sách vi phạm bằng 0 hoặc đã ghi lý do | T71 |
+| T70 | P4 | Open a PR, run at least 1 AI review tool, save the output | The tool output is in `evidence/` | T40–T45 |
+| T71 | Everyone | Each person decides (accept, modify, reject) the findings that belong to their files, with a concrete reason; ≥ 5 findings in total, ≥ 3 fix commits that mention the ID | `docs/code-review.md` has the full table and commit links | T70 |
+| T72 | P1 | Check the MVVM rules across the repo (no SDK in widgets, no logic in `build()`), compare with `architecture.md` | The violation list is empty or each one is explained | T71 |
 
-### Giai đoạn 8 · Report
+### Stage 8 · Report
 
-| ID | Người | Việc | Xong khi | Phụ thuộc |
+| ID | Owner | Work | Done when | Depends on |
 |---|---|---|---|---|
-| T80 | P4 (mỗi người viết mục của mình) | Báo cáo PDF 8 đến 12 trang theo mục lục handout, mỗi khẳng định có ảnh hoặc link bằng chứng | `report/Lab03_<MSSV>.pdf` | T72 |
-| T81 | P4 | Slide 12 đến 15 trang PDF, mỗi slide "chạy được" có ảnh minh chứng, Figma và app đặt cạnh nhau | `slides/Lab03_<MSSV>_slides.pdf` | T80 |
-| T82 | P4 (mỗi người quay phần mình) | Video 5 đến 10 phút quay trực tiếp trên thiết bị: đăng nhập, từng flow kể cả nhánh lỗi, xuất và tải lên, thông báo đẩy, đổi Remote Config không build lại, Crashlytics, chạy 1 test ARTEMIS, 1 phát hiện review và cách sửa | Link video công khai trong README | T80 |
-| T83 | P1 | Cập nhật Figma theo `design-traceability.md` mục 5; chạy checklist nộp bài; mở repo, báo cáo, slide, video bằng cửa sổ ẩn danh | Mọi mục checklist đã tích | T82 |
+| T80 | P4 (everyone writes their own section) | PDF report of 8 to 12 pages following the handout table of contents, every claim backed by a screenshot or link | `report/Lab03_<StudentID>.pdf` | T72 |
+| T81 | P4 | PDF slides of 12 to 15 pages, every "it works" slide has evidence, Figma and the app side by side | `slides/Lab03_<StudentID>_slides.pdf` | T80 |
+| T82 | P4 (everyone records their part) | A 5 to 10 minute video recorded live on a device: sign-in, each flow including the error path, export and upload, push notification, a Remote Config change without rebuilding, Crashlytics, one ARTEMIS test run, one review finding and its fix | A public video link in the README | T80 |
+| T83 | P1 | Update Figma per section 5 of `design-traceability.md`; run the submission checklist; open the repo, report, slides and video in a private window | Every checklist item is ticked | T82 |
 
-## Mốc tham khảo (điều chỉnh theo hạn thật)
+## Reference milestones (adjust to the real deadline)
 
-| Tuần | Mục tiêu |
+| Week | Goal |
 |---|---|
 | 1 | T00–T03, T10, T11, T20, T21, T22 |
-| 2 | T30–T32, bắt đầu T40, T41, T42, T44 |
-| 3 | Hoàn thành T40–T45, T50–T53 |
+| 2 | T30–T32, start T40, T41, T42, T44 |
+| 3 | Finish T40–T45, T50–T53 |
 | 4 | T60–T63, T70–T72, T80–T83 |
 
-Nên có buổi họp ngắn đầu và giữa mỗi tuần; người nào chậm hơn một mốc thì báo ngay để chia lại việc.
+Have a short meeting at the start and the middle of each week; anyone who falls behind a milestone should say so right away so the work can be redistributed.
 
-## Tiến độ nền (khung đã dựng sẵn)
+## Foundation progress (skeleton already built)
 
-Phần nền để 4 người làm song song đã có trong repo. Cần review chứ chưa coi là xong.
+The foundation that lets 4 people work in parallel is already in the repo. It needs review; it is not considered finished.
 
-| Task | Trạng thái | Ghi chú |
+| Task | Status | Notes |
 |---|---|---|
-| T03 | Xong | Đã `flutter create`, ghim phiên bản và `flutterfire configure` (project `breakbite-1315b`) |
-| T20 | Xong khung | Khung MVVM, router, DI, `ViewState`; `docs/architecture.md` cần P1 cập nhật cho khớp code |
-| T21 | Xong khung | Theme từ token Lab 2 và widget chung; font Nunito đã có trong `assets/fonts/`; S02 là màn mẫu đã làm theo Figma v2 |
-| T22 | Một phần | Đã có interface, bản giả và model; **P3 cần viết bản cài đặt Firebase** và `bootstrap.dart` trong `lib/firebase/` |
-| T31 | Một phần | Mô hình dữ liệu đã chốt khung (`docs/data-model.md`), rules và chỉ mục đã đẩy lên, **82/82 test rules đạt**. Script nạp dữ liệu mẫu và gán vai trò đã viết và kiểm trên Emulator (`firebase/seed/`). Đã nạp vào Firestore thật ngày 29/10/2026 (3 kiosk, 25 món, 3 voucher, 40 slot). **Còn:** gán vai trò staff và admin cho thành viên bằng `set-role.mjs` sau khi họ đăng nhập app một lần |
-| T01 | Một phần | Project `breakbite-1315b` (Spark): app Android, SHA-1 máy P1, Auth Google, Firestore (`asia-southeast1`), rules và Remote Config đã đẩy lên. **Còn:** Storage (console đòi gói Blaze), Crashlytics, SHA-1 của 3 máy còn lại, mời 3 người vào project |
-| T02 | Chưa | Cần thiết bị Android và API key ARTEMIS |
-| T40 | Một phần | S01 Onboarding và S02 Trang chủ xong, làm theo Figma v2 (màn mẫu cho cả nhóm). Còn S03–S08, S25, S29 |
-| T33, T34 | Chưa | Chưa ai viết bản Firestore của `MenuService`, `CartService`, `OrderService` và các dịch vụ theo tính năng |
+| T03 | Done | `flutter create`, pinned versions and `flutterfire configure` done (project `breakbite-1315b`) |
+| T20 | Skeleton done | MVVM skeleton, router, DI, `ViewState`; P1 must update `docs/architecture.md` to match the code |
+| T21 | Skeleton done | Theme from the Lab 2 tokens and shared widgets; the Nunito font is in `assets/fonts/`; S02 is a reference screen built to Figma v2 |
+| T22 | Partial | Interfaces, fakes and models exist; **P3 must write the Firebase implementations** and `bootstrap.dart` in `lib/firebase/` |
+| T31 | Partial | The data model skeleton is settled (`docs/data-model.md`), rules and indexes are deployed, **82/82 rules tests pass**. The seed and role-assignment scripts are written and verified on the Emulator (`firebase/seed/`). Loaded into the real Firestore on 29/10/2026 (3 kiosks, 25 items, 3 vouchers, 40 slots). **Remaining:** assign the staff and admin roles to members with `set-role.mjs` after they sign in to the app once |
+| T01 | Partial | Project `breakbite-1315b` (Spark): Android app, P1's machine SHA-1, Google Auth, Firestore (`asia-southeast1`), rules and Remote Config deployed. **Remaining:** Storage (the console asks for the Blaze plan), Crashlytics, the other 3 machines' SHA-1, invite the 3 members to the project |
+| T02 | Not started | Needs an Android device and the ARTEMIS API key |
+| T40 | Partial | S01 Onboarding and S02 Home are done, built to Figma v2 (reference screens for the team). Remaining: S03–S08, S25, S29 |
+| T33, T34 | Not started | Nobody has written the Firestore versions of `MenuService`, `CartService`, `OrderService` and the per-feature services yet |
 
-Cách làm song song: mỗi người sửa file route của mình (`lib/router/routes_pX.dart`) để thay màn tạm bằng màn thật; dùng `--dart-define=USE_DEV_SERVICES=true` để chạy khi Firebase chưa nối. **Trước khi nộp xoá `lib/dev/` (T83).**
+How to work in parallel: everyone edits their own route file (`lib/router/routes_pX.dart`) to replace the placeholder screen with the real one; use `--dart-define=USE_DEV_SERVICES=true` to run while Firebase is not connected. **Delete `lib/dev/` before submitting (T83).**

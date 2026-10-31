@@ -1,62 +1,63 @@
 # BreakBite · Lab 3 (PRM393)
 
-App đặt món trước, nhận tại quầy cho sinh viên học trên campus, xây bằng Flutter trên Firebase. Gồm **app khách** (S01–S30) và **app người bán** (K01–K15) theo thiết kế Lab 2 (`PRM323-Lab2-Group2`).
+A pre-order, pick-up-at-the-counter food app for students who study on campus, built with Flutter on Firebase. It contains a **customer app** (S01–S30) and a **seller app** (K01–K15) following the Lab 2 design (`PRM323-Lab2-Group2`).
 
-> Đây là khung repo ban đầu. Mục "Cách chạy", "Phiên bản", "Video" được điền khi làm xong. Kế hoạch việc nằm ở [`TASKS.md`](TASKS.md).
+> This is the initial repo skeleton. The "How to run", "Versions" and "Video" sections get filled in as the work is finished. The work plan is in [`TASKS.md`](TASKS.md); who does what is in [`ASSIGNMENTS.md`](ASSIGNMENTS.md); how to contribute is in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-- **Chủ đề:** BreakBite, campus Quận 9
-- **Nhóm:** `[điền tên, MSSV các thành viên]`
-- **Nguồn dữ liệu:** Cloud Firestore (dữ liệu của người dùng và quán)
-- **Video demo:** `[điền link]`
+- **Topic:** BreakBite, Campus District 9
+- **Team:** `[fill in names and student IDs]`
+- **Data source:** Cloud Firestore (user and shop data)
+- **Demo video:** `[fill in link]`
 
-## Bản đồ sản phẩm nộp
+## Deliverables map
 
-| Cần tìm | Ở đâu |
+| Looking for | Where |
 |---|---|
-| Truy vết thiết kế | [`docs/design-traceability.md`](docs/design-traceability.md) |
-| Kiến trúc | [`docs/architecture.md`](docs/architecture.md) |
-| Kế hoạch sự kiện analytics | [`docs/analytics-plan.md`](docs/analytics-plan.md) |
-| Kế hoạch test và kết quả ARTEMIS | [`docs/test-plan.md`](docs/test-plan.md), [`e2e_test/`](e2e_test/) |
+| Design traceability | [`docs/design-traceability.md`](docs/design-traceability.md) |
+| Architecture | [`docs/architecture.md`](docs/architecture.md) |
+| Data model | [`docs/data-model.md`](docs/data-model.md) |
+| Analytics event plan | [`docs/analytics-plan.md`](docs/analytics-plan.md) |
+| Test plan and ARTEMIS results | [`docs/test-plan.md`](docs/test-plan.md), [`e2e_test/`](e2e_test/) |
 | AI code review | [`docs/code-review.md`](docs/code-review.md) |
-| Quy tắc bảo mật | [`firebase/storage.rules`](firebase/storage.rules), [`firebase/firestore.rules`](firebase/firestore.rules) |
-| Cài môi trường | [`docs/setup.md`](docs/setup.md) |
-| Bằng chứng | [`evidence/`](evidence/) |
-| Báo cáo, slide | [`report/`](report/), [`slides/`](slides/) |
+| Security rules | [`firebase/storage.rules`](firebase/storage.rules), [`firebase/firestore.rules`](firebase/firestore.rules) |
+| Environment setup | [`docs/setup.md`](docs/setup.md) |
+| Evidence | [`evidence/`](evidence/) |
+| Report, slides | [`report/`](report/), [`slides/`](slides/) |
 
-## Cách chạy (điền khi có app)
+## How to run (fill in when the app exists)
 
 ```bash
 flutter pub get
 flutter analyze
-flutter test                                              # 36 test, không cần thiết bị
-flutter run --dart-define=USE_DEV_SERVICES=true          # chạy bằng service giả, khi Firebase chưa nối
+flutter test                                              # no device needed
+flutter run --dart-define=USE_DEV_SERVICES=true          # run with fake services, while Firebase is not connected
 ```
 
-Chạy bằng Firebase thật cần hoàn thành T01 (Firebase project) và T22 (service Firebase); xem `lib/firebase/bootstrap.dart`.
+Running against the real Firebase needs T01 (Firebase project) and T22 (Firebase services) to be finished; see `lib/firebase/bootstrap.dart`.
 
-Chạy test E2E: xem `e2e_test/README.md`.
+Run the E2E tests: see `e2e_test/README.md`.
 
-## Phiên bản đã ghim (điền)
+## Pinned versions (fill in)
 
-| Công cụ | Phiên bản |
+| Tool | Version |
 |---|---|
 | Flutter (stable) | 3.47.5 |
 | Dart | 3.13.4 |
-| Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_storage 14.0.1, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1, firebase_remote_config 7.0.1, google_sign_in 7.2.0 (xem `pubspec.yaml`) |
+| Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_storage 14.0.1, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1, firebase_remote_config 7.0.1, google_sign_in 7.2.0 (see `pubspec.yaml`) |
 | provider, go_router, flutter_svg | 6.1.5+1, 18.1.1, 2.3.2 |
 | Google ARTEMIS | commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b` (main, 2026-10-01) |
 | Python, uv | Python 3.12, uv 0.13.6 |
-| Android SDK | platform 36 và 35, build-tools 36.0.0, NDK 28.2.13676358 (xem `docs/setup.md`) |
+| Android SDK | platforms 36 and 35, build-tools 36.0.0, NDK 28.2.13676358 (see `docs/setup.md`) |
 | Firebase CLI, FlutterFire CLI | 15.34.1, 1.4.1 |
 
-## Công cụ AI đã dùng
+## AI tools used
 
-Khai báo mọi công cụ AI (sinh code, chat, review, làm slide) và mục đích:
+Declare every AI tool (code generation, chat, review, slides) and its purpose:
 
-| Công cụ | Dùng để |
+| Tool | Used for |
 |---|---|
-| `[điền]` | `[điền]` |
+| `[fill in]` | `[fill in]` |
 
-## Bảo mật
+## Security
 
-Không commit khoá service-account, API key, keystore. Khoá và tài khoản test đặt trong biến môi trường. `android/app/google-services.json` được phép commit.
+Never commit service-account keys, API keys or keystores. Keys and test accounts go in environment variables. `android/app/google-services.json` may be committed.

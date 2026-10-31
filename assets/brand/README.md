@@ -1,31 +1,31 @@
-# Logo BreakBite
+# BreakBite logo
 
-Chiếc bánh tròn bị cắn một miếng (**Bite**) với chữ **B** ở giữa; "Break" là giờ giải lao 15 phút. Nền cam thương hiệu.
+A round cookie-like bun with a bite taken out of it (**Bite**) and a **B** in the middle; "Break" is the 15-minute class break. Brand orange background.
 
-| File | Dùng ở đâu |
+| File | Where it is used |
 |---|---|
-| `breakbite_logo.svg` | Màn Onboarding và mọi nơi cần logo trong app (`BreakBiteLogo`) |
-| `breakbite_logo_soft.svg` | Ảnh giữ chỗ trên thẻ món khi món chưa có ảnh (`BreakBiteLogo(variant: LogoVariant.soft)`) |
-| `breakbite_logo.png` (1024 px) | Báo cáo, slide, Figma. Không đóng gói vào app |
+| `breakbite_logo.svg` | The Onboarding screen and anywhere else the app needs the logo (`BreakBiteLogo`) |
+| `breakbite_logo_soft.svg` | Placeholder image on item cards when an item has no photo (`BreakBiteLogo(variant: LogoVariant.soft)`) |
+| `breakbite_logo.png` (1024 px) | Report, slides, Figma. Not bundled into the app |
 
-Icon app Android (`android/app/src/main/res/mipmap-*/ic_launcher.png`) cũng sinh từ cùng bộ tham số.
+The Android app icon (`android/app/src/main/res/mipmap-*/ic_launcher.png`, plus the adaptive icon `ic_launcher_foreground.png`) is generated from the same parameters.
 
-## Màu (token Lab 2)
+## Colors (Lab 2 tokens)
 
-| Phần | Màu |
+| Part | Color |
 |---|---|
-| Nền | cam `#F69D39` |
-| Bánh | kem `#FFF5E5` |
-| Chữ B | nâu cacao `#622B14` |
-| Tên "Break" / "Bite" | nâu `#622B14` / cam nâu `#B45309` (widget `BreakBiteWordmark`, font Nunito ExtraBold) |
+| Background | orange `#F69D39` |
+| Bun | cream `#FFF5E5` |
+| Letter B | cocoa brown `#622B14` |
+| The name "Break" / "Bite" | brown `#622B14` / orange-brown `#B45309` (widget `BreakBiteWordmark`, Nunito ExtraBold) |
 
-## Sửa logo
+## Editing the logo
 
-Mọi kích thước và màu nằm ở đầu `scripts/make_logo.py`. Sửa rồi chạy lại từ gốc repo:
+All sizes and colors are at the top of `scripts/make_logo.py`. Edit it, then re-run from the repo root:
 
 ```powershell
 pip install pillow
 python scripts/make_logo.py
 ```
 
-Script ghi đè các file SVG, PNG và icon app ở bảng trên. Nhớ cập nhật Figma cho khớp.
+The script overwrites the SVG, PNG and app-icon files in the table above. Remember to update Figma to match.

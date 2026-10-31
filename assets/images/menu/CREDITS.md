@@ -1,10 +1,10 @@
-# Nguồn ảnh món
+# Item photo credits
 
-Ảnh tải từ [Unsplash](https://unsplash.com) ngày 29/10/2026, dùng theo [Unsplash License](https://unsplash.com/license) (miễn phí cho mục đích thương mại và phi thương mại, không bắt buộc ghi nguồn; nhóm vẫn ghi để minh bạch trong báo cáo). Ảnh được cắt vuông và thu nhỏ còn 560 px, nén JPEG; không chỉnh màu.
+Photos downloaded from [Unsplash](https://unsplash.com) on 29/10/2026 and used under the [Unsplash License](https://unsplash.com/license) (free for commercial and non-commercial use, attribution not required; the team lists it anyway for transparency in the report). The photos are cropped square and resized to 560 px, JPEG-compressed; the colors are not edited.
 
-Đây là ảnh minh hoạ, không phải món thật của quán. Khi Cloud Storage được bật (cần gói Blaze), seller tải ảnh thật lên `menu/{kioskId}/…` và đổi `imageUrl` trong Firestore; app tự dùng ảnh mới.
+These are illustration photos, not the shop's real dishes. Once Cloud Storage is enabled (needs the Blaze plan), a seller uploads real photos to `menu/{kioskId}/…` and changes `imageUrl` in Firestore; the app then uses the new image automatically.
 
-| Tệp | Tác giả | Trang ảnh |
+| File | Author | Photo page |
 |---|---|---|
 | `tacos-bo.jpg` | Jeswin Thomas | https://unsplash.com/photos/z_PfaGzeN9E |
 | `tacos-ga.jpg` | Alma Agencia D | https://unsplash.com/photos/n5jDzmKMT8w |
