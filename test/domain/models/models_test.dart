@@ -2,10 +2,15 @@ import 'package:breakbite/domain/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final now = DateTime(2026, 10, 29, 9);
+  final now = DateTime.utc(2026, 10, 29, 2);
 
   group('Voucher.discountFor', () {
-    final fixed = Voucher(code: 'BBSTUDENT', discountVnd: 10000, expiresAt: DateTime(2100), minOrderVnd: 40000);
+    final fixed = Voucher(
+      code: 'BBSTUDENT',
+      discount: const FixedDiscount(10000),
+      expiresAt: DateTime(2100),
+      minOrderVnd: 40000,
+    );
 
     test('eligible order gets exactly the fixed discount', () {
       expect(fixed.discountFor(50000, now), 10000);
@@ -13,27 +18,44 @@ void main() {
     test('no discount below the minimum order', () {
       expect(fixed.discountFor(39000, now), 0);
     });
-    test('no discount when expired or disabled', () {
-      final expired = Voucher(code: 'BB20', discountVnd: 20000, expiresAt: DateTime(2020), minOrderVnd: 0);
-      final off = Voucher(code: 'OFF', discountVnd: 5000, expiresAt: DateTime(2100), minOrderVnd: 0, active: false);
+    test('no discount when expired, disabled or not started yet', () {
+      final expired = Voucher(code: 'BB20', discount: const FixedDiscount(20000), expiresAt: DateTime(2020));
+      final off = Voucher(code: 'OFF', discount: const FixedDiscount(5000), expiresAt: DateTime(2100), active: false);
+      final later = Voucher(
+        code: 'LATER',
+        discount: const FixedDiscount(5000),
+        startsAt: DateTime(2099),
+        expiresAt: DateTime(2100),
+      );
       expect(expired.discountFor(50000, now), 0);
       expect(off.discountFor(50000, now), 0);
+      expect(later.discountFor(50000, now), 0);
     });
-    test('percentage discount is capped', () {
+    test('a percentage is rounded down and capped, like the security rules', () {
       final pct = Voucher(
-        code: 'P',
-        discountVnd: 0,
+        code: 'GIOVANG',
+        discount: const PercentDiscount(percent: 15, maxVnd: 15000),
         expiresAt: DateTime(2100),
-        minOrderVnd: 0,
-        percent: 20,
-        maxDiscountVnd: 15000,
       );
-      expect(pct.discountFor(50000, now), 10000);
+      expect(pct.discountFor(39000, now), 5850);
+      expect(pct.discountFor(39001, now), 5850);
       expect(pct.discountFor(200000, now), 15000);
     });
-    test('discount never exceeds the subtotal', () {
-      final big = Voucher(code: 'BIG', discountVnd: 50000, expiresAt: DateTime(2100), minOrderVnd: 0);
+    test('the discount never exceeds the subtotal', () {
+      final big = Voucher(code: 'BIG', discount: const FixedDiscount(50000), expiresAt: DateTime(2100));
       expect(big.discountFor(30000, now), 30000);
+    });
+    test('a daily window (Vietnam time) limits when the voucher works', () {
+      final golden = Voucher(
+        code: 'GIOVANG',
+        discount: const PercentDiscount(percent: 15, maxVnd: 15000),
+        expiresAt: DateTime(2100),
+        activeFrom: '10:15',
+        activeTo: '10:30',
+      );
+      expect(golden.discountFor(40000, DateTime.utc(2026, 10, 29, 3, 20)), 6000);
+      expect(golden.discountFor(40000, DateTime.utc(2026, 10, 29, 3, 30)), 0);
+      expect(golden.discountFor(40000, DateTime.utc(2026, 10, 29, 3, 14)), 0);
     });
   });
 
@@ -81,8 +103,40 @@ void main() {
     });
   });
 
-  test('Review uses id {orderId}_{itemId}', () {
-    final r = Review(orderId: 'o6', itemId: 'm1', kioskId: 'q9-t2', uid: 'u1', rating: 5, createdAt: now);
-    expect(r.id, 'o6_m1');
+  group('Review', () {
+    test('uses id {orderId}_{itemId}', () {
+      final r = Review(orderId: 'o6', itemId: 'q9-t2-tacos-bo', kioskId: 'q9-t2', uid: 'u1', rating: 5, createdAt: now);
+      expect(r.id, 'o6_q9-t2-tacos-bo');
+    });
+    test('public author name keeps the given name and the family initial only', () {
+      expect(Review.publicAuthorName('Nguyễn Minh Quân'), 'Quân N.');
+      expect(Review.publicAuthorName('  Đỗ   Hoàng Gia Bảo '), 'Bảo Đ.');
+      expect(Review.publicAuthorName('Linh'), 'Linh');
+      expect(Review.publicAuthorName(''), 'Khách');
+    });
+  });
+
+  test('Incident id is the order id, so an order has at most one incident', () {
+    final incident = Incident(
+      orderId: 'o6',
+      kioskId: 'q9-t2',
+      uid: 'u1',
+      type: IncidentType.missingItem,
+      description: 'Thiếu trà',
+      status: IncidentStatus.open,
+      createdAt: now,
+    );
+    expect(incident.id, 'o6');
+  });
+
+  test('stored enum values are the Dart enum names (no snake_case mapping)', () {
+    expect(IncidentType.missingItem.name, 'missingItem');
+    expect(IncidentStatus.inProgress.name, 'inProgress');
+    expect(ItemCategory.values.map((c) => c.name), ['food', 'drink', 'other']);
+  });
+
+  test('notification ids are deterministic so the same event is never stored twice', () {
+    expect(AppNotification.idForOrder('o6', OrderStatus.ready), 'o6_ready');
+    expect(AppNotification.idForAnnouncement('a1'), 'ann_a1');
   });
 }

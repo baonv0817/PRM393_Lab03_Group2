@@ -62,7 +62,14 @@ void main() {
   });
 
   testWidgets('sold-out FoodCard shows Tạm hết and no add button', (tester) async {
-    const item = MenuItem(id: 'x', name: 'Tacos', priceVnd: 35000, category: 'Tacos', prepMinutes: 4, soldOut: true);
+    const item = MenuItem(
+      id: 'x',
+      name: 'Tacos',
+      priceVnd: 35000,
+      category: ItemCategory.food,
+      prepMinutes: 4,
+      soldOut: true,
+    );
     await tester.pumpWidget(host(FoodCard(item: item, onTap: () {}, onAdd: null)));
     expect(find.text('Tạm hết'), findsOneWidget);
     expect(find.byType(IconButton), findsNothing);

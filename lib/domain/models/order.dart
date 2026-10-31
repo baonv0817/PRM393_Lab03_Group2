@@ -33,6 +33,12 @@ class Order {
     this.note = '',
     this.cancelReason,
     this.cancelledBy,
+    this.acceptedAt,
+    this.readyBy,
+    this.readyAt,
+    this.prepSeconds,
+    this.deliveredAt,
+    this.cancelledAt,
     this.updatedAt,
   });
 
@@ -61,6 +67,18 @@ class Order {
   final String note;
   final String? cancelReason;
   final CancelledBy? cancelledBy;
+
+  /// Server times of each step; the rules require the server time, so K11 statistics can be trusted.
+  final DateTime? acceptedAt;
+
+  /// Promised ready time set when staff accept (S07 "dự kiến", K04 countdown).
+  final DateTime? readyBy;
+  final DateTime? readyAt;
+
+  /// Seconds between accepting and ready, written with the ready step; K11 averages it.
+  final int? prepSeconds;
+  final DateTime? deliveredAt;
+  final DateTime? cancelledAt;
   final DateTime? updatedAt;
 
   /// Customers can only edit or cancel while the order is still pending.

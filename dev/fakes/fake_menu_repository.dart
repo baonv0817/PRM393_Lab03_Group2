@@ -9,36 +9,40 @@ class FakeMenuRepository implements MenuRepository {
   final _menu = LiveValue<List<MenuItem>>(const [
     MenuItem(
       id: 'm1',
+      dishId: 'tacos-bo',
       name: 'Combo Tacos Bò Phô Mai',
       priceVnd: 39000,
-      category: 'Tacos',
+      category: ItemCategory.food,
       prepMinutes: 4,
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/tacos-bo.jpg',
     ),
     MenuItem(
       id: 'm2',
+      dishId: 'mi-tron-ga',
       name: 'Mì Trộn Gà Cay Hàn Quốc',
       priceVnd: 35000,
-      category: 'Mì trộn',
+      category: ItemCategory.food,
       prepMinutes: 5,
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/mi-tron-ga.jpg',
     ),
     MenuItem(
       id: 'm3',
+      dishId: 'tra-dao',
       name: 'Trà Đào Chanh Sả',
       priceVnd: 20000,
-      category: 'Đồ uống',
+      category: ItemCategory.drink,
       prepMinutes: 2,
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/tra-dao.jpg',
     ),
     MenuItem(
       id: 'm4',
+      dishId: 'tacos-ga',
       name: 'Tacos Gà Giòn Sốt Cay',
       priceVnd: 35000,
-      category: 'Tacos',
+      category: ItemCategory.food,
       prepMinutes: 4,
       soldOut: true,
       kioskId: 'q9-t2',
@@ -46,18 +50,20 @@ class FakeMenuRepository implements MenuRepository {
     ),
     MenuItem(
       id: 'm5',
+      dishId: 'banh-mi',
       name: 'Bánh Mì Chả Lụa Trứng',
       priceVnd: 22000,
-      category: 'Bánh mì',
+      category: ItemCategory.food,
       prepMinutes: 3,
       kioskId: 'q9-t4',
       imageUrl: 'assets/images/menu/banh-mi.jpg',
     ),
     MenuItem(
       id: 'm6',
+      dishId: 'cafe-sua',
       name: 'Cà Phê Sữa Đá',
       priceVnd: 18000,
-      category: 'Đồ uống',
+      category: ItemCategory.drink,
       prepMinutes: 2,
       kioskId: 'q9-t4',
       imageUrl: 'assets/images/menu/cafe-sua.jpg',
@@ -84,8 +90,20 @@ class FakeMenuRepository implements MenuRepository {
 
   @override
   Future<Result<Voucher>> getVoucher(String code) async => switch (code) {
-    'BBSTUDENT' => Result.ok(Voucher(code: code, discountVnd: 10000, expiresAt: DateTime(2100), minOrderVnd: 40000)),
-    'BB20' => Result.ok(Voucher(code: code, discountVnd: 20000, expiresAt: DateTime(2020), minOrderVnd: 0)),
+    'BBSTUDENT' => Result.ok(
+      Voucher(code: code, discount: const FixedDiscount(10000), expiresAt: DateTime(2100), minOrderVnd: 40000),
+    ),
+    'BB20' => Result.ok(Voucher(code: code, discount: const FixedDiscount(20000), expiresAt: DateTime(2020))),
+    'GIOVANG' => Result.ok(
+      Voucher(
+        code: code,
+        discount: const PercentDiscount(percent: 15, maxVnd: 15000),
+        expiresAt: DateTime(2100),
+        minOrderVnd: 30000,
+        activeFrom: '10:15',
+        activeTo: '10:30',
+      ),
+    ),
     _ => const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.')),
   };
 
