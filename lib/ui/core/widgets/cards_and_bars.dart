@@ -3,8 +3,10 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/buttons.dart';
 import 'package:breakbite/ui/core/widgets/menu_image.dart';
+import 'package:breakbite/ui/core/widgets/quantity_stepper.dart';
 import 'package:breakbite/ui/core/widgets/test_id.dart';
 import 'package:breakbite/utils/format.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 
 class FoodCard extends StatelessWidget {
@@ -44,7 +46,7 @@ class FoodCard extends StatelessWidget {
         child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
       );
     } else if (quantity > 0) {
-      action = _QuantityStepper(
+      action = QuantityStepper(
         key: const ValueKey('stepper'),
         name: item.name,
         quantity: quantity,
@@ -136,82 +138,13 @@ class FoodCard extends StatelessWidget {
   static Widget _withTestId(String? id, Widget child) => id == null ? child : TestId(id, child: child);
 }
 
-class _QuantityStepper extends StatelessWidget {
-  const _QuantityStepper({
-    super.key,
-    required this.name,
-    required this.quantity,
-    required this.onIncrement,
-    required this.onDecrement,
-    this.testId,
-  });
-
-  final String name;
-  final int quantity;
-  final VoidCallback? onIncrement;
-  final VoidCallback? onDecrement;
-  final String? testId;
-
-  Widget _id(String suffix, Widget child) => testId == null ? child : TestId('$testId.$suffix', child: child);
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final colors = context.appColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.selected,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.selectedBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _id(
-            'dec',
-            AppIconButton(
-              icon: quantity == 1 ? Icons.delete_outline : Icons.remove,
-              semanticLabel: quantity == 1 ? 'Bỏ $name khỏi giỏ' : 'Bớt 1 $name',
-              onPressed: onDecrement,
-            ),
-          ),
-          _id(
-            'qty',
-            Semantics(
-              liveRegion: true,
-              label: 'Số lượng $quantity',
-              excludeSemantics: true,
-              child: SizedBox(
-                width: 24,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-                  child: Text(
-                    '$quantity',
-                    key: ValueKey(quantity),
-                    textAlign: TextAlign.center,
-                    style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          _id(
-            'inc',
-            AppIconButton(icon: Icons.add, semanticLabel: 'Thêm 1 $name', onPressed: onIncrement, filled: true),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
-  const AppTopBar({super.key, required this.title, this.onBack, this.actions});
+  const AppTopBar({super.key, required this.title, this.onBack, this.actions, this.closes = false});
 
   final String title;
   final VoidCallback? onBack;
   final List<Widget>? actions;
+  final bool closes;
 
   @override
   Size get preferredSize => const Size.fromHeight(56);
@@ -223,7 +156,11 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: false,
       leading: onBack == null
           ? null
-          : AppIconButton(icon: Icons.arrow_back, semanticLabel: 'Quay lại', onPressed: onBack),
+          : AppIconButton(
+              icon: closes ? Icons.close : Icons.arrow_back,
+              semanticLabel: closes ? 'Đóng' : 'Quay lại',
+              onPressed: onBack,
+            ),
       actions: actions,
     );
   }
@@ -317,4 +254,9 @@ void showAppMessage(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
+}
+
+void showResultError(BuildContext context, Result<Object?>? result) {
+  if (!context.mounted) return;
+  if (result case Err(:final error)) showAppMessage(context, error.message);
 }

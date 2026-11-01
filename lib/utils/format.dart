@@ -56,3 +56,10 @@ String paymentMethodLabel(PaymentMethod method) => switch (method) {
   PaymentMethod.card => 'Thẻ SV / Ví BreakBite',
   PaymentMethod.cash => 'Tiền mặt tại kiosk',
 };
+
+String paymentMethodHint(PaymentMethod method) => switch (method) {
+  PaymentMethod.momo => 'Ví điện tử',
+  PaymentMethod.vnpay => 'Quét mã bằng app ngân hàng',
+  PaymentMethod.card => 'Trừ vào thẻ sinh viên',
+  PaymentMethod.cash => 'Trả khi nhận món tại kiosk',
+};

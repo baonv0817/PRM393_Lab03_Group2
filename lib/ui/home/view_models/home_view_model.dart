@@ -6,6 +6,7 @@ import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/utils/command.dart';
+import 'package:breakbite/utils/queued_quantities.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:breakbite/utils/safe_change_notifier.dart';
 import 'package:flutter/foundation.dart';
@@ -57,9 +58,10 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   bool _sessionKnown = false;
   Kiosk? _kiosk;
   Cart _cart = Cart.empty;
-  final _desired = <String, int>{};
-  final _writes = <String, Future<void>>{};
-  final _written = <String, int>{};
+  late final _quantities = QueuedQuantities(
+    write: (id, quantity) => cart.setQuantity(uid, id, quantity),
+    onChanged: notifyListeners,
+  );
   Order? _lastOrder;
 
   ViewState<List<MenuItem>> get state => _state;
@@ -79,13 +81,14 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   int get cartCount {
     var total = 0;
     for (final line in _cart.items) {
-      total += _desired[line.itemId] ?? line.quantity;
+      total += _quantities.pendingOf(line.itemId) ?? line.quantity;
     }
     return total;
   }
 
-  int quantityOf(String itemId) =>
-      _desired[itemId] ?? _cart.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
+  int quantityOf(String itemId) => _quantities.pendingOf(itemId) ?? _storedQuantity(itemId);
+
+  int _storedQuantity(String itemId) => _cart.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
 
   bool canIncrease(String itemId) => quantityOf(itemId) < Cart.maxQuantity;
 
@@ -114,9 +117,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchSelectedKiosk'));
     _cartSub = cart.watchCart(uid).listen((current) {
       _cart = current;
-      for (final id in _desired.keys.toList()) {
-        if (!_writes.containsKey(id)) _settle(id);
-      }
+      _quantities.settle(_storedQuantity);
       notifyListeners();
     }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchCart'));
     _ordersSub = orders.watchMyOrders(uid).listen((list) {
@@ -193,50 +194,16 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     return result;
   }
 
-  Future<Result<void>> changeQuantity(MenuItem item, int delta) {
+  Future<Result<void>> changeQuantity(MenuItem item, int delta) async {
     final current = quantityOf(item.id);
     final next = (current + delta).clamp(0, Cart.maxQuantity);
-    if (next == current) return Future.value(const Result.ok(null));
-    _desired[item.id] = next;
-    notifyListeners();
-    final done = Completer<Result<void>>();
-    final write = (_writes[item.id] ?? Future<void>.value()).then((_) async {
-      final target = _desired[item.id];
-      if (target == null || target == _written[item.id]) {
-        done.complete(const Result.ok(null));
-        return;
-      }
-      final result = await cart.setQuantity(uid, item.id, target);
-      if (result is Ok<void>) _written[item.id] = target;
-      if (result case Err(:final error)) {
-        _desired.remove(item.id);
-        crash.recordNonFatal(error, error.stackTrace, 'home.changeQuantity');
-        notifyListeners();
-      }
-      done.complete(result);
-    });
-    _writes[item.id] = write;
-    unawaited(
-      write.whenComplete(() {
-        if (identical(_writes[item.id], write)) {
-          _writes.remove(item.id);
-          _written.remove(item.id);
-          _settle(item.id);
-        }
-      }),
-    );
+    if (next == current) return const Result.ok(null);
     if (delta > 0) {
       unawaited(analytics.logEvent(AnalyticsEvents.addToCart, {'item_id': item.id, 'quantity': 1, 'source': 'home'}));
     }
-    return done.future;
-  }
-
-  void _settle(String itemId) {
-    final stored = _cart.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
-    if (_desired[itemId] == stored) {
-      _desired.remove(itemId);
-      notifyListeners();
-    }
+    final result = await _quantities.set(item.id, next);
+    if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'home.changeQuantity');
+    return result;
   }
 
   Future<Result<int>> _reorderLast() async {
