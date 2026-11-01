@@ -236,3 +236,9 @@ Use these instead of writing your own; each has tests and a reference use.
 | Firestore writes and reads | `...Stamp.created()` / `...Stamp.updated()` in every write (DB-16); `readDate`, `readDateOr`, `readEnum` when mapping documents to models; mapping code lives in the repository, never in `lib/domain/` | `lib/data/firebase/firestore_helpers.dart` | — |
 | A paged Firestore list | `fetchPage(query, fromDoc: …, limit: …, after: …)` | `lib/data/firebase/firestore_helpers.dart` | `OrderRepository.fetchMyOrders` (fake) |
 | Trying flows against local data | VS Code "BreakBite (Firebase Emulator)" or `--dart-define=USE_FIREBASE_EMULATOR=true` | `lib/config/firebase_setup.dart`, `docs/setup.md` | — |
+| A short message after an action (saved, error) | `showAppMessage(context, text)`: replaces the current message instead of queueing; never build a `SnackBar` in a screen | `lib/ui/core/widgets/cards_and_bars.dart` | S16, S17, S27 |
+| A list where the customer picks one option | `SelectableCard(selected:, onTap:, semanticLabel:, child:)`: selected colors, radio and screen-reader state | `lib/ui/core/widgets/selectable_card.dart` | S17, S27 |
+| The main button pinned at the bottom of a screen | `BottomActionButton(label:, onPressed:, loading:, testId:)`; wrap it in `ListenableBuilder(listenable: vm.save, …)` for a command | `lib/ui/core/widgets/bottom_action_button.dart` | S16, S17, S27 |
+| A person's picture | `UserAvatar(name:, photoUrl:)`: the photo, or the initial of the given name | `lib/ui/core/widgets/user_avatar.dart` | S15 |
+| Signing out (customer or seller app) | `SignOutButton(testId: …)`: asks first, then signs out through `AuthViewModel` | `lib/ui/auth/widgets/sign_out_button.dart` | S15; K10 should use it |
+| Logging a handled error from a view model | `crash.recordNonFatal(error, stack, 'feature.action')`: sends the real cause and skips cancelled actions | `lib/data/services/crash_service.dart` | every view model |
