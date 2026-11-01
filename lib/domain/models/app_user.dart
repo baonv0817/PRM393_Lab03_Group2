@@ -9,6 +9,7 @@ class AppUser {
     this.photoUrl,
     this.studentId,
     this.kioskId,
+    this.defaultKioskId,
   });
 
   final String uid;
@@ -16,12 +17,9 @@ class AppUser {
   final UserRole role;
   final String? email;
   final String? photoUrl;
-
-  /// Student ID number (S16).
   final String? studentId;
-
-  /// Kiosk the staff member is in charge of; staff only.
   final String? kioskId;
+  final String? defaultKioskId;
 
   bool get isStaff => role == UserRole.staff || role == UserRole.admin;
 }

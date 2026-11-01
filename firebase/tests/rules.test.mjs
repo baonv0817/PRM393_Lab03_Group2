@@ -117,6 +117,23 @@ describe('users', () => {
     await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { displayName: 'Quân N.', studentId: 'SE183398', fcmTokens: ['t1'], ...touched() }));
     await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { fcmTokens: ['1', '2', '3', '4', '5', '6'], ...touched() }));
   });
+  test('a user saves phone, default kiosk and default payment method: allowed', async () => {
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), {
+      phone: '0912345678', defaultKioskId: 'k1', defaultPaymentMethod: 'cash', ...touched(),
+    }));
+  });
+  test('a malformed student ID or phone, an unknown kiosk or payment method, a 61-character name: denied', async () => {
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { studentId: 'se1', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { phone: '912345678', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { defaultKioskId: 'nowhere', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { defaultPaymentMethod: 'bitcoin', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { displayName: 'a'.repeat(61), ...touched() }));
+  });
+  test('a long name from Google does not block other updates such as lastLoginAt', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) =>
+      updateDoc(doc(ctx.firestore(), 'users/u1'), { displayName: 'b'.repeat(80) }));
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { lastLoginAt: serverTimestamp(), ...touched() }));
+  });
   test('users and staff read someone else\'s profile: denied; owner and admin: allowed', async () => {
     await assertFails(getDoc(doc(as('u1'), 'users/u2')));
     await assertFails(getDoc(doc(as('s1'), 'users/u1')));

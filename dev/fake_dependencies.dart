@@ -17,4 +17,5 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
   orders: FakeOrderRepository(),
   reports: FakeReportRepository(),
   session: InMemorySessionRepository(),
+  users: FakeUserRepository(),
 );

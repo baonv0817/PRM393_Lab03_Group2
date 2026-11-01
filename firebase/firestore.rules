@@ -39,19 +39,31 @@ service cloud.firestore {
       return request.resource.data.updatedAt == request.time && !changedKeys().hasAny(['createdAt']);
     }
 
-    // ---------- users ----------
+    function validProfile(d) {
+      let changed = changedKeys();
+      return (!changed.hasAny(['displayName'])
+              || (d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 60))
+          && (!changed.hasAny(['studentId']) || d.get('studentId', null) == null
+              || (d.studentId is string && d.studentId.matches('^[A-Z]{2}[0-9]{6}$')))
+          && (!changed.hasAny(['phone']) || d.get('phone', null) == null
+              || (d.phone is string && d.phone.matches('^0[0-9]{9}$')))
+          && (!changed.hasAny(['defaultKioskId']) || d.get('defaultKioskId', null) == null
+              || (d.defaultKioskId is string
+                  && exists(/databases/$(database)/documents/kiosks/$(d.defaultKioskId))))
+          && (!changed.hasAny(['defaultPaymentMethod']) || d.get('defaultPaymentMethod', null) == null
+              || d.defaultPaymentMethod in ['momo', 'vnpay', 'card', 'cash']);
+    }
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      // Self-created profile: role user, no kiosk.
       allow create: if isOwner(uid)
                     && request.resource.data.role == 'user'
                     && !('kioskId' in request.resource.data)
                     && stampedOnCreate();
-      // The owner edits name, student ID, settings and FCM tokens; never role, kiosk or email.
       allow update: if isOwner(uid)
                     && !changedKeys().hasAny(['role', 'kioskId', 'email'])
                     && (request.resource.data.get('fcmTokens', []) is list
                         && request.resource.data.get('fcmTokens', []).size() <= 5)
+                    && validProfile(request.resource.data)
                     && stampedOnUpdate();
       allow update: if isAdmin() && stampedOnUpdate();
 

@@ -26,6 +26,7 @@ AppUser appUserFromData(String uid, Json? data, {required String fallbackName, S
       photoUrl: _stringOrNull(data?['photoUrl']) ?? photoUrl,
       studentId: _stringOrNull(data?['studentId']),
       kioskId: _stringOrNull(data?['kioskId']),
+      defaultKioskId: _stringOrNull(data?['defaultKioskId']),
     );
 
 Kiosk kioskFromData(String id, Json data) => Kiosk(
@@ -196,4 +197,17 @@ Report reportFromData(String id, Json data, {required DateTime now}) => Report(
   sizeKb: _int(data['sizeKb']),
   createdAt: readDateOr(data['createdAt'], now),
   orderId: _stringOrNull(data['orderId']),
+);
+
+UserProfile userProfileFromData(String uid, Json? data) => UserProfile(
+  uid: uid,
+  displayName: _string(data?['displayName']),
+  email: _stringOrNull(data?['email']),
+  studentId: _stringOrNull(data?['studentId']),
+  phone: _stringOrNull(data?['phone']),
+  defaultKioskId: _stringOrNull(data?['defaultKioskId']),
+  defaultPaymentMethod: switch (data?['defaultPaymentMethod']) {
+    final String name => PaymentMethod.values.asNameMap()[name],
+    _ => null,
+  },
 );

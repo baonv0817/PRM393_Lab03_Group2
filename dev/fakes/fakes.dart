@@ -11,5 +11,6 @@ export 'fake_remote_config_service.dart';
 export 'fake_report_file_service.dart';
 export 'fake_report_repository.dart';
 export 'fake_storage_service.dart';
+export 'fake_user_repository.dart';
 export 'live_value.dart';
 export 'paging.dart';
