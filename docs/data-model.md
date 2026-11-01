@@ -108,7 +108,7 @@ Slots are created per day by staff or by the seed script, which creates the next
 | `soldOut` | bool | staff | Sold out (K09); used instead of deleting |
 | `soldOutReason` | string? | staff | `outOfIngredients`, `machineBroken`, `other` (K09) |
 | `availableAgainAt` | ts? | staff | "Có lại lúc 10:30" (K09, S22). Display only: the item stays sold out until staff switch `soldOut` off |
-| `optionGroups` | list<map>? | staff | At most 5 groups (spice level, toppings — S04) |
+| `optionGroups` | list<map>? | staff | At most 5 groups (spice level, toppings — S04). **Not used in Lab 3 (DB-02/04):** the customer writes preferences in the line `note`; the rules still accept the field so the final assignment can add options without a migration |
 | `imageUrl` | string? | staff | A bundled asset (`assets/images/menu/…`, sample data) or an `https://` Cloudinary link `breakbite/menu/{kioskId}/…`. `MenuItemImage` handles both and falls back to the logo |
 
 The average rating (S04) is an aggregation query, `average('rating')` over `reviews` where `dishId == d`; it is not stored because customers cannot edit items.
@@ -139,6 +139,8 @@ One cart per person, id = uid. A cart is a draft tied to **one kiosk**: switchin
 | `items` | list<map> | At most 30 lines: `itemId`, `name`, `priceVnd`, `quantity`, `note` |
 | `voucherCode` | string? | The voucher currently applied |
 | `pickupSlotId`, `pickupAt` | string?, ts? | The time chosen in S25, kept through S05 → S06 and app restarts |
+
+`CartRepository` (DB-23): `watchCart(uid)` emits a `Cart` (empty when the document does not exist); `addItem(uid, kioskId:, item:)` merges the same item and refuses an item of another kiosk while the cart has lines; `setQuantity` (0 removes the line), `setNote`, `replaceItems` (after repricing), `setVoucher`, `setPickup(slot)` and `clear`. Every change is a transaction; a cart whose last line is removed is deleted.
 
 Prices in a cart are a snapshot from when the item was added. **Right before placing the order (S06), re-read the items and call `repriceCart()`** (`lib/domain/cart_repricing.dart`): if a price changed, an item sold out or is no longer sold, show the changes, save the new lines and let the customer confirm again.
 
@@ -240,9 +242,9 @@ stateDiagram-v2
 | Admin | Same as staff, every kiosk | |
 | Nobody | Delete an order | |
 
-### Placing an order with one batch
+### Placing an order in one transaction
 
-When the customer confirms (S06), after `repriceCart()` found no change, the app writes **in one `WriteBatch`**: create `orders/{id}` + delete `carts/{uid}` + (if a slot is booked) `slots/{slotId}.booked: FieldValue.increment(1)`. If the batch fails nothing is written. Cancelling an order with a booked slot: a batch that updates the order and `increment(-1)`.
+When the customer confirms (S06), after `repriceCart()` found no change, `OrderRepository.placeOrder` runs **one transaction**: it reads the kiosk (open, not paused), the voucher and the slot (exists, not full, not over), computes the discount with the same formula as the rules, then creates `orders/{id}` + deletes `carts/{uid}` + `slots/{slotId}.booked: FieldValue.increment(1)`. A problem stops the transaction before anything is written and comes back as a readable `ValidationException` ("Đơn tối thiểu 40.000đ để dùng mã BBSTUDENT.") instead of a rules rejection. Editing (S09), cancelling and every staff step also read the order inside a transaction first, so a step on an order that changed meanwhile fails with "Đơn này vừa được xử lý ở nơi khác"; cancelling or rejecting an order with a slot releases it with `increment(-1)` in the same transaction. Placing an order needs a connection (a transaction cannot be queued offline).
 
 ## 5. Queries per screen and indexes
 

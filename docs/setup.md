@@ -77,7 +77,7 @@ Reopen the terminal and VS Code, start the emulator with `flutter emulators --la
 
 Each person's emulator uses the debug key of that machine: send your machine's SHA-1 to whoever holds the Firebase project (see section 4) so Google Sign-in works.
 
-**Getting into the app while the sign-in screen (S26) is not built.** With fake data, add `--dart-define=DEV_SIGNED_IN=true` to go straight into the customer app, and `--dart-define=DEV_ROLE=staff` to go into the seller app. In VS Code pick the "BreakBite customer (fake data, signed in)" or "BreakBite seller (fake data, signed in)" configuration and press F5. These two flags only affect the fake services and are removed together with `lib/dev/` before submission (T83).
+**Skipping sign-in with fake data.** The real app signs in on S26 with Google. With fake data, add `--dart-define=DEV_SIGNED_IN=true` to go straight into the customer app, and `--dart-define=DEV_ROLE=staff` to go into the seller app. In VS Code pick the "BreakBite customer (fake data, signed in)" or "BreakBite seller (fake data, signed in)" configuration and press F5. These two flags only affect the fake services and are removed together with `lib/dev/` before submission (T83).
 
 ## 4. Firebase
 
@@ -124,6 +124,18 @@ $env:FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080"; $env:GCLOUD_PROJECT = "breakbit
 ```
 
 Then press F5 with **"BreakBite (Firebase Emulator)"**, or run `flutter run --dart-define=USE_FIREBASE_EMULATOR=true --dart-define-from-file=env/cloudinary.json`. The app connects to `10.0.2.2` on the Android emulator and `localhost` elsewhere; on a physical phone add `--dart-define=FIREBASE_EMULATOR_HOST=<your PC LAN IP>`. Only debug builds can use the emulator (cleartext traffic to those hosts is allowed in `android/app/src/debug/` only). Google Sign-In in the Auth emulator shows a fake account picker, so no real account is needed.
+
+**Integration test against the real rules.** `integration_test/firebase_emulator_test.dart` runs the real Firebase code (sign-in and `users/{uid}`, menu, cart, placing, editing and cancelling an order, the staff steps, menu editing, the notification inbox) against the Auth and Firestore emulators with `firebase/firestore.rules`, and checks the rules refuse what they must (a customer accepting an order, staff of another kiosk). On an Android emulator:
+
+```powershell
+firebase emulators:exec --only auth,firestore --project breakbite-1315b "flutter test integration_test/firebase_emulator_test.dart --dart-define=USE_FIREBASE_EMULATOR=true"
+```
+
+Without an Android emulator it runs in Chrome: start `chromedriver --port=4444` (same major version as Chrome, from Chrome for Testing), then
+
+```powershell
+firebase emulators:exec --only auth,firestore --project breakbite-1315b "flutter drive --driver=test_driver/integration_test.dart --target=integration_test/firebase_emulator_test.dart -d web-server --browser-name=chrome --headless"
+```
 
 ## 5. ARTEMIS (E2E tests)
 
