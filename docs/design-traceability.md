@@ -19,20 +19,20 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S03 | Menu (Thực đơn) | /menu | MenuScreen | MenuViewModel | Firestore menu_items | P1 | Not started |
 | S03-ADDED | Menu, item added to cart | (state of /menu) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Not started |
 | S04 | Item detail | /menu/:id | ItemDetailScreen | ItemDetailViewModel | Firestore menu_items/{id} | P1 | Not started |
-| S05 | Cart (Giỏ hàng) | /cart | CartScreen | CartViewModel | Firestore carts/{uid} | P1 | Not started |
-| S05-EMPTY | Empty cart | (state of /cart) | EmptyView | CartViewModel | — | P1 | Not started |
-| S05-VOUCHER-ERR | Wrong voucher code | (state of /cart) | VoucherErrorField | CartViewModel | Firestore vouchers | P1 | Not started |
-| S06 | Checkout (MoMo by default) | /checkout | CheckoutScreen | CheckoutViewModel | Firestore orders | P1 | Not started |
-| S06-VNPAY | Checkout, VNPAY-QR selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Not started |
-| S06-CARD | Checkout, student card / wallet selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Not started |
-| S06-CASH | Checkout, cash selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Not started |
-| S06-LOADING | Connecting to the gateway | (state of /checkout) | LoadingView | CheckoutViewModel | — | P1 | Not started |
-| S06-LOADING-VNPAY | Connecting to VNPAY-QR | (state of /checkout) | LoadingView | CheckoutViewModel | — | P1 | Not started |
-| S06-GATEWAY | Payment gateway (simulated) | /checkout/gateway | GatewayScreen | CheckoutViewModel | Firestore orders | P1 | Not started |
-| S06-ERR | Payment error, cart kept | (state of /checkout) | ErrorView | CheckoutViewModel | — | P1 | Not started |
-| S07 | Order tracking | /orders/:id | OrderTrackingScreen | OrderTrackingViewModel | Firestore orders/{id} (realtime) | P1 | Not started |
-| S07-CASH | Pay at the counter | (state of /orders/:id) | OrderTrackingScreen | OrderTrackingViewModel | Firestore orders/{id} | P1 | Not started |
-| S07-DIALOG | Confirm cancelling the order | (dialog) | ConfirmDialog | OrderTrackingViewModel | Firestore orders/{id} | P1 | Not started |
+| S05 | Cart (Giỏ hàng) | /cart | CartScreen | CartViewModel | Firestore carts/{uid} | P1 | Done |
+| S05-EMPTY | Empty cart | (state of /cart) | EmptyView | CartViewModel | — | P1 | Done |
+| S05-VOUCHER-ERR | Wrong voucher code | (state of /cart) | Voucher row with the reason and "Bỏ mã" | CartViewModel | Firestore vouchers | P1 | Done |
+| S06 | Checkout (MoMo by default) | /checkout | CheckoutScreen | CheckoutViewModel | Firestore orders | P1 | Done |
+| S06-VNPAY | Checkout, VNPAY-QR selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Done |
+| S06-CARD | Checkout, student card / wallet selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Done |
+| S06-CASH | Checkout, cash selected | (state of /checkout) | PaymentMethodTile | CheckoutViewModel | — | P1 | Done |
+| S06-LOADING | Connecting to the gateway | (state of /checkout) | Loading confirm button | CheckoutViewModel | — | P1 | Done |
+| S06-LOADING-VNPAY | Connecting to VNPAY-QR | (state of /checkout) | Loading confirm button | CheckoutViewModel | — | P1 | Done |
+| S06-GATEWAY | Payment gateway (simulated) | /checkout/gateway | GatewayScreen | CheckoutViewModel | Firestore orders | P1 | Done |
+| S06-ERR | Payment error, cart kept | (state of /checkout) | Failure card, other methods | CheckoutViewModel | — | P1 | Done |
+| S07 | Order tracking | /orders/:id | OrderTrackingScreen | OrderTrackingViewModel | Firestore orders/{id} (realtime) | P1 | Done |
+| S07-CASH | Pay at the counter | (state of /orders/:id) | OrderTrackingScreen | OrderTrackingViewModel | Firestore orders/{id} | P1 | Done |
+| S07-DIALOG | Confirm cancelling the order | (dialog) | showAppDialog | OrderTrackingViewModel | Firestore orders/{id} | P1 | Done |
 | S08 | Orders, history (Đơn hàng) | /orders | OrdersScreen | OrdersViewModel | Firestore orders (uid) | P1 | Not started |
 | S08-EMPTY | No orders yet | (state of /orders) | EmptyView | OrdersViewModel | — | P1 | Not started |
 | S09 | Edit order | /orders/:id/edit | EditOrderScreen | EditOrderViewModel | Firestore orders/{id} | P2 | Not started |
@@ -131,6 +131,7 @@ Every place that differs from Figma is recorded here with the reason, and **Figm
 | D11 | The app opens straight on Onboarding or Home | A splash screen (logo and spinner) shows for the moment the app needs to learn the sign-in state, then opens Onboarding, sign-in, Home or the seller app | Without it Home was built before the user was known and wrote the cart for an empty user id; the splash is not a new screen in the flow | Not yet |
 | D12 | S02 item card: price on the left, a + button on the right; S02-ADDED shows an "added" snackbar after every add | Price and action share the bottom row of the card. The first + makes the dish photo fly into the cart button (the button bounces) and turns into a stepper [− n +] (a bin icon at 1); later taps change the number in place, which updates at once and is saved in the background. No snackbar: the flight, the stepper and the cart button already show the result, and screen readers hear "Đã thêm … vào giỏ". Reduce motion turns the flight off | Adding the same item again only raised a hidden count; the stepper shows what is in the cart and lets the customer correct it without opening the cart, and one notice per add was noise | Not yet |
 | D13 | S02 has the cart icon at the top right, next to the notification bell | A round cart button with a count sits at the bottom right above the tab bar and only appears once the cart has items; the bell stays at the top | The cart is the next step after adding, so it belongs within thumb reach on large phones; an empty cart has nothing to open | Not yet |
+| D14 | S05 lines show options ("Cay vừa · Thêm phô mai") and a dish icon; S06-GATEWAY shows the order code; S06-ERR says the order is held until a time; S07 "Chỉ đường tới Kiosk" opens a map | S05 lines show the note for the kitchen, editable in place (items have no options, DB-02/04); the gateway shows the method instead of an order code; S06-ERR says the cart is kept as it is; "Chỉ đường tới kiosk" opens a sheet with the kiosk location, hours and pickup code | The order is created only when payment succeeds (the gateway is simulated, D02), so there is no code yet and nothing expires; the app has no maps or location permission | Not yet |
 | | | | | |
 
 Add a row whenever you find a new deviation.
