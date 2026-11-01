@@ -2,10 +2,7 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:flutter/material.dart';
 
-/// App theme: Lab 2 tokens turned into [ThemeData].
 abstract final class AppTheme {
-  /// Nunito font: add the font files to `assets/fonts/` and declare them in pubspec.yaml
-  /// (P1's job). Until then, Flutter uses the system font.
   static const String fontFamily = 'Nunito';
 
   static const ColorScheme colorScheme = ColorScheme(
@@ -26,8 +23,6 @@ abstract final class AppTheme {
     onPrimaryContainer: AppPalette.onPrimary,
   );
 
-  /// Lab 2 type scale: Display 24 Bold, Headline 20 Bold, Title 16 SemiBold,
-  /// Body 14 Regular, Label 14 Bold. No size below 14 sp.
   static const TextTheme textTheme = TextTheme(
     headlineMedium: TextStyle(fontSize: 24, height: 1.33, fontWeight: FontWeight.w700),
     headlineSmall: TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700),
@@ -56,7 +51,8 @@ abstract final class AppTheme {
         foregroundColor: AppPalette.onPrimary,
         elevation: AppElevation.flat,
         scrolledUnderElevation: AppElevation.flat,
-        titleTextStyle: text.titleMedium,
+        titleTextStyle: text.headlineSmall,
+        shape: const Border(bottom: BorderSide(color: AppPalette.border)),
       ),
       cardTheme: CardThemeData(
         color: AppPalette.surface,
@@ -102,7 +98,6 @@ abstract final class AppTheme {
             color: s.contains(WidgetState.selected) ? AppPalette.primaryText : AppPalette.muted,
           ),
         ),
-        // 12 sp is only for tab labels, always paired with an icon (Lab 2 decision D36).
         labelTextStyle: WidgetStateProperty.resolveWith(
           (s) => text.labelLarge?.copyWith(
             fontSize: 12,
