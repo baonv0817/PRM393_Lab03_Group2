@@ -1,6 +1,5 @@
-/// Every path in the app. Route definitions and navigation (`context.push`, `context.go`) all use the
-/// constants here, never hand-written strings. Parameterized paths also get a builder, e.g. [menuItemOf].
 abstract final class AppRoutes {
+  static const splash = '/splash';
   static const onboarding = '/onboarding';
   static const signIn = '/sign-in';
 

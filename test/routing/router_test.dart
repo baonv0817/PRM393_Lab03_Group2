@@ -9,8 +9,17 @@ String? go(AppUser? u, String loc, {bool init = true, bool onboarded = true}) =>
     authRedirect(user: u, initialized: init, location: loc, onboardingDone: onboarded);
 
 void main() {
-  test('does not redirect while sign-in state is unknown', () {
-    expect(go(null, '/home', init: false), isNull);
+  test('while the sign-in state is unknown every screen waits on the splash screen', () {
+    expect(go(null, '/home', init: false), '/splash');
+    expect(go(null, '/orders/A-204', init: false), '/splash');
+    expect(go(null, '/splash', init: false), isNull);
+  });
+
+  test('once the sign-in state is known the splash screen opens the right place', () {
+    expect(go(customer, '/splash'), '/home');
+    expect(go(staff, '/splash'), '/seller/orders');
+    expect(go(null, '/splash'), '/sign-in');
+    expect(go(null, '/splash', onboarded: false), '/onboarding');
   });
 
   test('signed out: customer screens go to /sign-in, seller screens go to /seller/sign-in', () {

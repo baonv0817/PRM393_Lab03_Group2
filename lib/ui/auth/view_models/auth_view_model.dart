@@ -105,6 +105,7 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
       return;
     }
     if (previous?.uid != user.uid) {
+      if (user.defaultKioskId case final kioskId?) await _session.selectKiosk(kioskId);
       await _analytics.setUserId(user.uid);
       await _crash.setUserId(user.uid);
       await _messaging.attachUser(user.uid);

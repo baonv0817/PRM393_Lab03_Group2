@@ -27,17 +27,17 @@ const _sellerTabs = [
 const _publicPaths = {AppRoutes.signIn, AppRoutes.sellerSignIn};
 const _onboardingPath = AppRoutes.onboarding;
 
-/// Navigation decision based on sign-in state and role (split out for testing).
-///
-/// Signed-out users in the customer app go to `/onboarding` (S01) if they have not seen Onboarding,
-/// otherwise to `/sign-in` (S26). The seller app has no Onboarding.
 String? authRedirect({
   required AppUser? user,
   required bool initialized,
   required String location,
   bool onboardingDone = true,
 }) {
-  if (!initialized) return null;
+  if (!initialized) return location == AppRoutes.splash ? null : AppRoutes.splash;
+  if (location == AppRoutes.splash) {
+    if (user == null) return onboardingDone ? AppRoutes.signIn : _onboardingPath;
+    return user.isStaff ? AppRoutes.sellerOrders : AppRoutes.home;
+  }
   final isSeller = location.startsWith(AppRoutes.sellerPrefix);
   final isPublic = _publicPaths.contains(location);
   if (user == null) {
@@ -47,7 +47,6 @@ String? authRedirect({
     return isPublic ? null : AppRoutes.signIn;
   }
   if (isPublic || location == _onboardingPath) return user.isStaff ? AppRoutes.sellerOrders : AppRoutes.home;
-  // Role check: customers cannot enter the seller area; staff use the seller app.
   if (isSeller && !user.isStaff) return AppRoutes.home;
   if (!isSeller && user.isStaff) return AppRoutes.sellerOrders;
   return null;

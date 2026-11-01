@@ -4,6 +4,7 @@ import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/auth/widgets/sign_in_screen.dart';
+import 'package:breakbite/ui/auth/widgets/splash_screen.dart';
 import 'package:breakbite/ui/profile/view_models/firebase_demo_view_model.dart';
 import 'package:breakbite/ui/profile/view_models/profile_view_model.dart';
 import 'package:breakbite/ui/profile/widgets/firebase_demo_screen.dart';
@@ -24,6 +25,7 @@ final GoRoute profileRoute = GoRoute(
 );
 
 final List<GoRoute> p3Routes = [
+  GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
   GoRoute(path: AppRoutes.signIn, builder: (context, state) => const SignInScreen()),
   placeholderRoute(AppRoutes.profileInfo, 'S16', 'Hồ sơ sinh viên', 'P3'),
   placeholderRoute(AppRoutes.profilePayment, 'S17', 'Phương thức thanh toán', 'P3'),
