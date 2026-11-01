@@ -9,9 +9,11 @@ import 'live_value.dart';
 import 'paging.dart';
 
 class FakeOrderRepository implements OrderRepository {
-  FakeOrderRepository({this.vouchers = const {}});
+  FakeOrderRepository({this.vouchers = const {}, this.cart, this.voucherLookup});
 
   final Map<String, Voucher> vouchers;
+  final CartRepository? cart;
+  final Future<Result<Voucher>> Function(String code)? voucherLookup;
   final _orders = LiveValue<List<Order>>(const []);
   var _seq = 203;
   var _clock = DateTime(2026, 11, 2, 9);
@@ -23,7 +25,11 @@ class FakeOrderRepository implements OrderRepository {
   @override
   Future<Result<String>> placeOrder(OrderDraft draft) async {
     if (draft.items.isEmpty) return const Result.error(ValidationException('Giỏ hàng đang trống.'));
-    final voucher = draft.voucherCode == null ? null : vouchers[draft.voucherCode];
+    final code = draft.voucherCode;
+    var voucher = code == null ? null : vouchers[code];
+    if (code != null && voucher == null && voucherLookup != null) {
+      if (await voucherLookup!(code) case Ok(:final value)) voucher = value;
+    }
     if (draft.voucherCode != null && voucher == null) {
       return const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.'));
     }
@@ -53,6 +59,7 @@ class FakeOrderRepository implements OrderRepository {
         createdAt: _clock,
       ),
     ]);
+    await cart?.clear(draft.uid);
     return Result.ok(id);
   }
 
@@ -126,7 +133,7 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   Future<Result<void>> accept(Order order, {required Duration readyIn}) =>
-      _move(order, from: const [OrderStatus.pending], to: OrderStatus.preparing);
+      _move(order, from: const [OrderStatus.pending], to: OrderStatus.preparing, readyIn: readyIn);
 
   @override
   Future<Result<void>> markReady(Order order) =>
@@ -149,12 +156,15 @@ class FakeOrderRepository implements OrderRepository {
     required OrderStatus to,
     CancelledBy? cancelledBy,
     String? cancelReason,
+    Duration? readyIn,
   }) async {
     final current = _find(order.id);
     if (current == null) return const Result.error(NotFoundException(message: 'Không tìm thấy đơn hàng.'));
     if (!from.contains(current.status)) {
       return const Result.error(ValidationException('Đơn này vừa được xử lý ở nơi khác.'));
     }
+    _clock = _clock.add(const Duration(minutes: 1));
+    final now = _clock;
     _replace(
       _copy(
         current,
@@ -162,6 +172,11 @@ class FakeOrderRepository implements OrderRepository {
         cancelledBy: cancelledBy,
         cancelReason: cancelReason,
         paymentStatus: to == OrderStatus.delivered ? PaymentStatus.paid : null,
+        acceptedAt: to == OrderStatus.preparing ? now : null,
+        readyBy: readyIn == null ? null : now.add(readyIn),
+        readyAt: to == OrderStatus.ready ? now : null,
+        deliveredAt: to == OrderStatus.delivered ? now : null,
+        cancelledAt: to == OrderStatus.cancelled ? now : null,
       ),
     );
     return const Result.ok(null);
@@ -187,6 +202,11 @@ class FakeOrderRepository implements OrderRepository {
     CancelledBy? cancelledBy,
     String? cancelReason,
     PaymentStatus? paymentStatus,
+    DateTime? acceptedAt,
+    DateTime? readyBy,
+    DateTime? readyAt,
+    DateTime? deliveredAt,
+    DateTime? cancelledAt,
   }) => Order(
     id: o.id,
     uid: o.uid,
@@ -209,5 +229,12 @@ class FakeOrderRepository implements OrderRepository {
     note: note ?? o.note,
     cancelReason: cancelReason ?? o.cancelReason,
     cancelledBy: cancelledBy ?? o.cancelledBy,
+    acceptedAt: acceptedAt ?? o.acceptedAt,
+    readyBy: readyBy ?? o.readyBy,
+    readyAt: readyAt ?? o.readyAt,
+    prepSeconds: o.prepSeconds,
+    deliveredAt: deliveredAt ?? o.deliveredAt,
+    cancelledAt: cancelledAt ?? o.cancelledAt,
+    updatedAt: o.updatedAt,
   );
 }

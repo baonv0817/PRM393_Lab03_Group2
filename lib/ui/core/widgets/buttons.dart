@@ -2,10 +2,8 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:flutter/material.dart';
 
-enum AppButtonVariant { primary, secondary, text }
+enum AppButtonVariant { primary, secondary, text, destructive }
 
-/// Lab 2 Button/Primary, Button/Secondary, Button/Text.
-/// States: default, pressed, disabled (`onPressed: null`), loading (`loading`).
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
@@ -15,7 +13,10 @@ class AppButton extends StatelessWidget {
     this.loading = false,
     this.icon,
     this.semanticLabel,
+    this.large = false,
   });
+
+  static const largeHeight = 56.0;
 
   final String label;
   final VoidCallback? onPressed;
@@ -23,14 +24,15 @@ class AppButton extends StatelessWidget {
   final bool loading;
   final IconData? icon;
   final String? semanticLabel;
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
-    // No color set here: the text takes each button type's `foregroundColor` (and the faded color when disabled).
     const textStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.43);
-    final height = variant == AppButtonVariant.primary ? 56.0 : AppA11y.minTouchTarget;
+    final filled = variant == AppButtonVariant.primary || variant == AppButtonVariant.destructive;
+    final height = filled || large ? largeHeight : AppA11y.minTouchTarget;
     final enabled = onPressed != null && !loading;
     final onTap = enabled ? onPressed : null;
 
@@ -71,11 +73,24 @@ class AppButton extends StatelessWidget {
         ),
         child: content,
       ),
+      AppButtonVariant.destructive => FilledButton(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          minimumSize: size,
+          shape: shape,
+          backgroundColor: scheme.error,
+          foregroundColor: scheme.onError,
+          disabledBackgroundColor: colors.border,
+          disabledForegroundColor: colors.muted,
+        ),
+        child: content,
+      ),
       AppButtonVariant.secondary => OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           minimumSize: size,
           shape: shape,
+          backgroundColor: scheme.surface,
           foregroundColor: scheme.onSurface,
           side: BorderSide(color: enabled ? colors.borderInput : colors.border, width: 2),
         ),
@@ -98,7 +113,6 @@ class AppButton extends StatelessWidget {
   }
 }
 
-/// Lab 2 48 × 48 IconButton. `semanticLabel` is required so ARTEMIS and screen readers understand the button.
 class AppIconButton extends StatelessWidget {
   const AppIconButton({
     super.key,
@@ -112,14 +126,12 @@ class AppIconButton extends StatelessWidget {
   final String semanticLabel;
   final VoidCallback? onPressed;
 
-  /// Round orange button (the + button on menu item cards).
   final bool filled;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (filled) {
-      // A 40 dp orange circle inside a 48 dp touch target (Figma: the + button on menu item cards).
       final enabled = onPressed != null;
       return Tooltip(
         message: semanticLabel,
@@ -159,8 +171,6 @@ class AppIconButton extends StatelessWidget {
   }
 }
 
-/// Icon button with a badge: an orange count (cart) or a red dot (unread notifications).
-/// `semanticLabel` should already include the count, e.g. "Giỏ hàng, 2 món".
 class AppBadgeIconButton extends StatelessWidget {
   const AppBadgeIconButton({
     super.key,

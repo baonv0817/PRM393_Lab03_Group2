@@ -4,8 +4,13 @@ import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_slot_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_user_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
 import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite/data/services/firebase/notification_inbox.dart';
+import 'package:breakbite/data/services/storage_service.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/firebase_options.dart';
@@ -178,13 +183,18 @@ void main() {
     expect(emitted!.uid, customerUid);
   });
 
-  testWidgets('customer: menu, kiosks and vouchers load; an unknown code is not found', (tester) async {
+  testWidgets('customer: menu, kiosks, vouchers and upcoming slots load; an unknown code is not found', (tester) async {
     final items = await menu.watchMenu('q9-t2').first;
     expect(items.map((e) => e.dishId), ['tacos-bo', 'tra-dao']);
     expect((await menu.watchKiosks().first).length, 3);
     expect(ok(await menu.getVoucher(' bbstudent ')).discount, isA<FixedDiscount>());
     expect(err(await menu.getVoucher('NOPE99')), isA<NotFoundException>());
     expect(ok(await menu.getItems(['q9-t2-tacos-bo', 'missing'])).keys, ['q9-t2-tacos-bo']);
+    final active = await FirestoreVoucherRepository(db).watchActiveVouchers().first;
+    expect(active.map((v) => v.code), ['BBSTUDENT']);
+    final upcoming = await FirestoreSlotRepository(db).watchUpcomingSlots('q9-t2', from: DateTime.now()).first;
+    expect(upcoming.map((s) => s.id), ['slot-a', 'slot-b']);
+    expect(upcoming.first.remaining, 2);
   });
 
   testWidgets('customer: the cart is created, edited and refuses items of another kiosk', (tester) async {
@@ -352,6 +362,77 @@ void main() {
 
     ok(await authAs('customer-1', 'Nguyễn Minh Quân').signOut());
     expect(auth.currentUser, isNull);
+  });
+
+  testWidgets('customer: profile, default kiosk, payment method and exported files pass the rules', (tester) async {
+    final service = authAs('customer-1', 'Nguyễn Minh Quân');
+    ok(await service.signInWithGoogle());
+    final users = FirestoreUserRepository(db);
+    final reports = FirestoreReportRepository(db);
+    const wait = Duration(seconds: 15);
+
+    ok(
+      await users.saveProfile(
+        customerUid,
+        displayName: ' Nguyễn  Minh Quân ',
+        studentId: 'se183398',
+        phone: '+84 912 345 678',
+        defaultKioskId: 'q9-t4',
+      ),
+    );
+    ok(await users.setDefaultPaymentMethod(customerUid, PaymentMethod.cash));
+    final profile = await users
+        .watchProfile(customerUid)
+        .firstWhere((p) => p.defaultPaymentMethod == PaymentMethod.cash && p.defaultKioskId == 'q9-t4')
+        .timeout(wait);
+    expect(profile.displayName, 'Nguyễn Minh Quân');
+    expect(profile.studentId, 'SE183398');
+    expect(profile.phone, '0912345678');
+    final signedIn = await service.authStateChanges().firstWhere((u) => u?.defaultKioskId == 'q9-t4').timeout(wait);
+    expect(signedIn!.uid, customerUid);
+
+    expect(
+      err(await users.saveProfile(customerUid, displayName: 'Quân', studentId: 'SE12')),
+      isA<ValidationException>(),
+    );
+    await expectLater(
+      db.doc('users/$customerUid').update({'defaultKioskId': 'nowhere', 'updatedAt': FieldValue.serverTimestamp()}),
+      throwsA(isA<FirebaseException>()),
+    );
+    ok(await users.saveProfile(customerUid, displayName: 'Quân'));
+    final cleared = await users
+        .watchProfile(customerUid)
+        .firstWhere((p) => p.displayName == 'Quân' && p.defaultKioskId == null)
+        .timeout(wait);
+    expect(cleared.studentId, isNull);
+    expect(cleared.defaultPaymentMethod, PaymentMethod.cash);
+
+    final report = ok(
+      await reports.save(
+        uid: customerUid,
+        fileName: 'breakbite-don-hang.pdf',
+        file: const UploadedFile(
+          url: 'https://res.cloudinary.com/demo/image/upload/x.pdf',
+          publicId: 'breakbite/reports/x',
+          sizeBytes: 9148,
+        ),
+      ),
+    );
+    expect(report.sizeKb, 9);
+    final mine = await reports.watchMine(customerUid).firstWhere((list) => list.isNotEmpty).timeout(wait);
+    expect(mine.single.fileName, 'breakbite-don-hang.pdf');
+    expect(
+      err(
+        await reports.save(
+          uid: customerUid,
+          fileName: 'x.pdf',
+          file: const UploadedFile(url: 'http://x', publicId: 'x', sizeBytes: 2048),
+        ),
+      ),
+      isA<ValidationException>(),
+    );
+
+    ok(await service.signOut());
   });
 
   testWidgets('staff: the role set by an admin arrives live; the kiosk queue is processed step by step', (

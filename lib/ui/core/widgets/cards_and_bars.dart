@@ -3,21 +3,32 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/buttons.dart';
 import 'package:breakbite/ui/core/widgets/menu_image.dart';
+import 'package:breakbite/ui/core/widgets/quantity_stepper.dart';
 import 'package:breakbite/ui/core/widgets/test_id.dart';
 import 'package:breakbite/utils/format.dart';
+import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 
-/// Lab 2 Card/Food: dish, drink, sold out.
 class FoodCard extends StatelessWidget {
-  const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd, this.testId});
+  const FoodCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+    required this.onAdd,
+    this.quantity = 0,
+    this.onIncrement,
+    this.onDecrement,
+    this.imageKey,
+    this.testId,
+  });
 
   final MenuItem item;
   final VoidCallback onTap;
-
-  /// `null` when sold out.
   final VoidCallback? onAdd;
-
-  /// Optional [TestId] of the card; its add button gets `<testId>.add`.
+  final int quantity;
+  final VoidCallback? onIncrement;
+  final VoidCallback? onDecrement;
+  final Key? imageKey;
   final String? testId;
 
   @override
@@ -26,8 +37,40 @@ class FoodCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final dim = item.soldOut ? colors.muted : null;
+    final Widget action;
+    if (item.soldOut) {
+      action = Container(
+        key: const ValueKey('soldOut'),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
+        decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
+        child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
+      );
+    } else if (quantity > 0) {
+      action = QuantityStepper(
+        key: const ValueKey('stepper'),
+        name: item.name,
+        quantity: quantity,
+        onIncrement: onIncrement,
+        onDecrement: onDecrement,
+        testId: testId,
+      );
+    } else {
+      action = _withTestId(
+        testId == null ? null : '$testId.add',
+        AppIconButton(
+          key: const ValueKey('add'),
+          icon: Icons.add,
+          semanticLabel: 'Thêm ${item.name} vào giỏ',
+          onPressed: onAdd,
+          filled: true,
+        ),
+      );
+    }
     final card = Semantics(
-      label: '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}',
+      label:
+          '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}'
+          '${item.soldOut && item.availableAgainAt != null ? ', có lại lúc ${formatTime(item.availableAgainAt!)}' : ''}'
+          '${quantity > 0 ? ', $quantity trong giỏ' : ''}',
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -36,8 +79,10 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               children: [
-                // Dish photo; if missing, MenuItemImage shows the soft logo.
-                MenuItemImage(imageUrl: item.imageUrl, size: 80),
+                KeyedSubtree(
+                  key: imageKey,
+                  child: MenuItemImage(imageUrl: item.imageUrl, size: 80),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -50,37 +95,44 @@ class FoodCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: AppSpacing.xxs),
+                      if (item.soldOut && item.availableAgainAt != null)
+                        Text(
+                          'Có lại lúc ${formatTime(item.availableAgainAt!)}',
+                          style: text.bodyMedium?.copyWith(color: colors.muted),
+                        )
+                      else
+                        Row(
+                          children: [
+                            Icon(Icons.schedule, size: 16, color: colors.muted),
+                            const SizedBox(width: AppSpacing.xxs),
+                            Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                          ],
+                        ),
                       Row(
                         children: [
-                          Icon(Icons.schedule, size: 16, color: colors.muted),
-                          const SizedBox(width: AppSpacing.xxs),
-                          Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                          Expanded(
+                            child: Text(
+                              formatVnd(item.priceVnd),
+                              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOutBack,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, animation) => FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(scale: animation, alignment: Alignment.centerRight, child: child),
+                            ),
+                            layoutBuilder: (current, previous) =>
+                                Stack(alignment: Alignment.centerRight, children: [...previous, ?current]),
+                            child: action,
+                          ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        formatVnd(item.priceVnd),
-                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
                       ),
                     ],
                   ),
                 ),
-                if (item.soldOut)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-                    decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                    child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
-                  )
-                else
-                  _withTestId(
-                    testId == null ? null : '$testId.add',
-                    AppIconButton(
-                      icon: Icons.add,
-                      semanticLabel: 'Thêm ${item.name} vào giỏ',
-                      onPressed: onAdd,
-                      filled: true,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -93,13 +145,13 @@ class FoodCard extends StatelessWidget {
   static Widget _withTestId(String? id, Widget child) => id == null ? child : TestId(id, child: child);
 }
 
-/// Lab 2 AppBar: title, 48 × 48 Back button.
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
-  const AppTopBar({super.key, required this.title, this.onBack, this.actions});
+  const AppTopBar({super.key, required this.title, this.onBack, this.actions, this.closes = false});
 
   final String title;
   final VoidCallback? onBack;
   final List<Widget>? actions;
+  final bool closes;
 
   @override
   Size get preferredSize => const Size.fromHeight(56);
@@ -111,7 +163,11 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: false,
       leading: onBack == null
           ? null
-          : AppIconButton(icon: Icons.arrow_back, semanticLabel: 'Quay lại', onPressed: onBack),
+          : AppIconButton(
+              icon: closes ? Icons.close : Icons.arrow_back,
+              semanticLabel: closes ? 'Đóng' : 'Quay lại',
+              onPressed: onBack,
+            ),
       actions: actions,
     );
   }
@@ -122,11 +178,9 @@ class AppNavTab {
 
   final String label;
 
-  /// Filled icon (Figma uses filled icons for both selected and unselected tabs).
   final IconData icon;
 }
 
-/// Lab 2 4-tab NavBar (shared by customer and seller).
 class AppNavBar extends StatelessWidget {
   const AppNavBar({super.key, required this.tabs, required this.selectedIndex, required this.onSelected});
 
@@ -151,7 +205,6 @@ class AppNavBar extends StatelessWidget {
   }
 }
 
-/// Lab 2 confirmation dialog (cancel order, reject order…). Returns `true` when confirmed.
 Future<bool?> showAppDialog(
   BuildContext context, {
   required String title,
@@ -187,13 +240,14 @@ Future<bool?> showAppDialog(
   );
 }
 
-/// "Added to cart" notice with a View cart button (S02-ADDED, S03-ADDED).
 void showAddedSnackbar(BuildContext context, {required String message, required VoidCallback onViewCart}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(message),
+        persist: false,
+        duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: 'Xem giỏ',
           textColor: Theme.of(context).colorScheme.primary,
@@ -201,4 +255,15 @@ void showAddedSnackbar(BuildContext context, {required String message, required 
         ),
       ),
     );
+}
+
+void showAppMessage(BuildContext context, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
+}
+
+void showResultError(BuildContext context, Result<Object?>? result) {
+  if (!context.mounted) return;
+  if (result case Err(:final error)) showAppMessage(context, error.message);
 }

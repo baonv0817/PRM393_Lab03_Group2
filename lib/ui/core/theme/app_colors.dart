@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Lab 2 color tokens (Figma Variables "BreakBite Design Tokens").
-/// Screens never use raw color codes: take them from `Theme.of(context).colorScheme`
-/// or from [AppColors] (`context.appColors`).
 abstract final class AppPalette {
   static const primary = Color(0xFFF69D39);
   static const onPrimary = Color(0xFF622B14);
@@ -11,15 +8,15 @@ abstract final class AppPalette {
   static const surface = Color(0xFFFFFFFF);
   static const surfaceVariant = Color(0xFFF3F0EA);
   static const selected = Color(0xFFFFF1DE);
-  static const selectedBorder = Color(0xFFFFE8CC); // Lab 2 color-primary-container
+  static const selectedBorder = Color(0xFFFFE8CC);
   static const border = Color(0xFFE4DFD8);
   static const borderInput = Color(0xFF8A7A70);
   static const muted = Color(0xFF6B5F55);
   static const success = Color(0xFF15803D);
   static const error = Color(0xFFB91C1C);
+  static const errorContainer = Color(0xFFFDECEC);
 }
 
-/// Tokens that have no slot in Material's [ColorScheme].
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({

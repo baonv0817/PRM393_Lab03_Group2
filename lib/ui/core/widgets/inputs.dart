@@ -1,8 +1,8 @@
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
+import 'package:breakbite/ui/core/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
-/// Lab 2 filter chip: default, selected.
 class AppChip extends StatelessWidget {
   const AppChip({super.key, required this.label, required this.selected, required this.onSelected});
 
@@ -37,17 +37,57 @@ class AppChip extends StatelessWidget {
   }
 }
 
-/// Search box on Home (S02): tapping it opens the Search screen (S28); no typing in place.
 class AppSearchField extends StatelessWidget {
-  const AppSearchField({super.key, required this.hint, required this.onTap});
+  const AppSearchField({super.key, required this.hint, this.onTap, this.controller, this.onChanged})
+    : assert(onTap != null || controller != null);
 
   final String hint;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      borderSide: BorderSide(color: colors.borderInput, width: 1.5),
+    );
+    if (controller case final controller?) {
+      return Semantics(
+        textField: true,
+        label: 'Tìm kiếm. $hint',
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: scheme.surface,
+            prefixIcon: Icon(Icons.search, color: scheme.onSurface),
+            suffixIcon: ValueListenableBuilder(
+              valueListenable: controller,
+              builder: (context, value, _) => value.text.isEmpty
+                  ? const SizedBox.shrink()
+                  : AppIconButton(
+                      icon: Icons.close,
+                      semanticLabel: 'Xoá từ khoá',
+                      onPressed: () {
+                        controller.clear();
+                        onChanged?.call('');
+                      },
+                    ),
+            ),
+            border: border,
+            enabledBorder: border,
+            focusedBorder: border.copyWith(borderSide: BorderSide(color: scheme.primary, width: 2)),
+          ),
+        ),
+      );
+    }
     return Semantics(
       button: true,
       label: 'Tìm kiếm. $hint',
@@ -59,13 +99,13 @@ class AppSearchField extends StatelessWidget {
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: scheme.surface,
             borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(color: colors.borderInput, width: 1.5),
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
+              Icon(Icons.search, color: scheme.onSurface),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -83,7 +123,6 @@ class AppSearchField extends StatelessWidget {
   }
 }
 
-/// Lab 2 TextField with error and helper states.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,

@@ -44,6 +44,35 @@ class _FlakyKioskMenu extends FakeMenuRepository {
   Stream<List<Kiosk>> watchKiosks() => fail ? Stream.error(Exception('offline')) : super.watchKiosks();
 }
 
+class _SlowCart extends FakeCartRepository {
+  final _gates = <Completer<void>>[];
+  final written = <int>[];
+  bool hold = true;
+  bool failNext = false;
+
+  @override
+  Future<Result<void>> setQuantity(String uid, String itemId, int quantity) async {
+    if (hold) {
+      final gate = Completer<void>();
+      _gates.add(gate);
+      await gate.future;
+    }
+    if (failNext) {
+      failNext = false;
+      return const Result.error(NetworkException());
+    }
+    written.add(quantity);
+    return super.setQuantity(uid, itemId, quantity);
+  }
+
+  void release() {
+    hold = false;
+    for (final gate in _gates) {
+      if (!gate.isCompleted) gate.complete();
+    }
+  }
+}
+
 const _tacos = CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000);
 const _tea = CartItem(itemId: 'm3', name: 'Trà Đào Chanh Sả', priceVnd: 20000, quantity: 2);
 
@@ -322,5 +351,91 @@ void main() {
     expect((await vm.reorderLast.execute())!.valueOrNull, 1);
     expect(session.selectedKioskId, 'q9-t4');
     vm.dispose();
+  });
+
+  group('quantity on the card', () {
+    test('taps change the number at once, are written in order and none is lost', () async {
+      final cart = _SlowCart();
+      final vm = make(cart: cart);
+      await settle();
+      final item = vm.state.dataOrNull!.first;
+      await vm.addToCart.execute(item);
+      await settle();
+      expect(vm.quantityOf(item.id), 1);
+      final taps = [vm.changeQuantity(item, 1), vm.changeQuantity(item, 1), vm.changeQuantity(item, 1)];
+      expect(vm.quantityOf(item.id), 4);
+      expect(vm.cartCount, 4);
+      cart.release();
+      await Future.wait(taps);
+      await settle();
+      expect(cart.written, [4]);
+      expect((await cart.watchCart('u1').first).items.single.quantity, 4);
+      expect(vm.quantityOf(item.id), 4);
+      vm.dispose();
+    });
+
+    test('going down to zero removes the item from the cart', () async {
+      final cart = FakeCartRepository();
+      final vm = make(cart: cart);
+      await settle();
+      final item = vm.state.dataOrNull!.first;
+      await vm.addToCart.execute(item);
+      await settle();
+      await vm.changeQuantity(item, -1);
+      await settle();
+      expect(vm.quantityOf(item.id), 0);
+      expect((await cart.watchCart('u1').first).isEmpty, isTrue);
+      vm.dispose();
+    });
+
+    test('a failed write puts the stored number back and records the error', () async {
+      final cart = _SlowCart();
+      final crash = FakeCrashService();
+      final vm = make(cart: cart, crash: crash);
+      await settle();
+      final item = vm.state.dataOrNull!.first;
+      await vm.addToCart.execute(item);
+      await settle();
+      cart.failNext = true;
+      final tap = vm.changeQuantity(item, 1);
+      expect(vm.quantityOf(item.id), 2);
+      cart.release();
+      final result = await tap;
+      expect(result, isA<Err<void>>());
+      expect(vm.quantityOf(item.id), 1);
+      expect(crash.errors, hasLength(1));
+      vm.dispose();
+    });
+
+    test('the number stops at 99 and an item of another kiosk is flagged before adding', () async {
+      final cart = FakeCartRepository();
+      final vm = make(cart: cart);
+      await settle();
+      final item = vm.state.dataOrNull!.first;
+      await cart.addItem(
+        'u1',
+        kioskId: item.kioskId,
+        item: CartItem(itemId: item.id, name: item.name, priceVnd: item.priceVnd, quantity: 99),
+      );
+      await settle();
+      expect(vm.canIncrease(item.id), isFalse);
+      await vm.changeQuantity(item, 1);
+      expect(vm.quantityOf(item.id), 99);
+      expect(vm.blocksAdd(item), isFalse);
+      expect(
+        vm.blocksAdd(
+          const MenuItem(
+            id: 'x',
+            name: 'X',
+            priceVnd: 1000,
+            category: ItemCategory.food,
+            prepMinutes: 2,
+            kioskId: 'q9-t4',
+          ),
+        ),
+        isTrue,
+      );
+      vm.dispose();
+    });
   });
 }

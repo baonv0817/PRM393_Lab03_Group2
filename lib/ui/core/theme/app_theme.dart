@@ -13,6 +13,8 @@ abstract final class AppTheme {
     onSecondary: AppPalette.surface,
     error: AppPalette.error,
     onError: AppPalette.surface,
+    errorContainer: AppPalette.errorContainer,
+    onErrorContainer: AppPalette.error,
     surface: AppPalette.surface,
     onSurface: AppPalette.onPrimary,
     surfaceContainerHighest: AppPalette.surfaceVariant,

@@ -6,6 +6,9 @@ import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_slot_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_user_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
 import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/data/services/cloudinary/cloudinary_storage_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_analytics_service.dart';
@@ -49,5 +52,8 @@ Future<AppDependencies> createFirebaseDependencies() async {
     orders: FirestoreOrderRepository(db),
     reports: FirestoreReportRepository(db),
     session: InMemorySessionRepository(),
+    users: FirestoreUserRepository(db),
+    vouchers: FirestoreVoucherRepository(db),
+    slots: FirestoreSlotRepository(db),
   );
 }

@@ -1,17 +1,12 @@
 rules_version = '2';
 
-// Rules for the data model in docs/data-model.md. Deny by default; access by role (user, staff,
-// admin), and staff only act on their own kiosk (users/{uid}.kioskId). Every rule has allowed and
-// denied tests in firebase/tests/rules.test.mjs. Stored enum values are the Dart enum names.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------- Shared helpers ----------
     function signedIn() { return request.auth != null; }
     function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
     function role() { return userDoc().role; }
     function isAdmin() { return signedIn() && role() == 'admin'; }
-    // Staff of exactly this kiosk; admins act on every kiosk.
     function staffOf(kioskId) {
       return signedIn() && (role() == 'admin'
         || (role() == 'staff' && 'kioskId' in userDoc() && userDoc().kioskId == kioskId));
@@ -30,7 +25,6 @@ service cloud.firestore {
           || (type == 'bool' && d[key] is bool);
     }
 
-    // DB-16: every document carries server-set createdAt and updatedAt; createdAt never changes.
     function stampedOnCreate() {
       return request.resource.data.createdAt == request.time
           && request.resource.data.updatedAt == request.time;
@@ -39,19 +33,31 @@ service cloud.firestore {
       return request.resource.data.updatedAt == request.time && !changedKeys().hasAny(['createdAt']);
     }
 
-    // ---------- users ----------
+    function validProfile(d) {
+      let changed = changedKeys();
+      return (!changed.hasAny(['displayName'])
+              || (d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 60))
+          && (!changed.hasAny(['studentId']) || d.get('studentId', null) == null
+              || (d.studentId is string && d.studentId.matches('^[A-Z]{2}[0-9]{6}$')))
+          && (!changed.hasAny(['phone']) || d.get('phone', null) == null
+              || (d.phone is string && d.phone.matches('^0[0-9]{9}$')))
+          && (!changed.hasAny(['defaultKioskId']) || d.get('defaultKioskId', null) == null
+              || (d.defaultKioskId is string
+                  && exists(/databases/$(database)/documents/kiosks/$(d.defaultKioskId))))
+          && (!changed.hasAny(['defaultPaymentMethod']) || d.get('defaultPaymentMethod', null) == null
+              || d.defaultPaymentMethod in ['momo', 'vnpay', 'card', 'cash']);
+    }
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      // Self-created profile: role user, no kiosk.
       allow create: if isOwner(uid)
                     && request.resource.data.role == 'user'
                     && !('kioskId' in request.resource.data)
                     && stampedOnCreate();
-      // The owner edits name, student ID, settings and FCM tokens; never role, kiosk or email.
       allow update: if isOwner(uid)
                     && !changedKeys().hasAny(['role', 'kioskId', 'email'])
                     && (request.resource.data.get('fcmTokens', []) is list
                         && request.resource.data.get('fcmTokens', []).size() <= 5)
+                    && validProfile(request.resource.data)
                     && stampedOnUpdate();
       allow update: if isAdmin() && stampedOnUpdate();
 
@@ -67,8 +73,6 @@ service cloud.firestore {
       }
     }
 
-    // ---------- kiosks and pickup slots ----------
-    // Fields staff run day to day (K10); name and location belong to admins.
     function validKioskOps(d) {
       return d.open is bool
           && d.waitMinutes is int && d.waitMinutes >= 0 && d.waitMinutes <= 120
@@ -98,8 +102,6 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create: if staffOf(kioskId) && stampedOnCreate();
         allow update: if staffOf(kioskId) && stampedOnUpdate();
-        // A customer books or releases a slot: `booked` moves by exactly one within [0, capacity].
-        // The app must write FieldValue.increment(±1) so two bookings at once both count.
         allow update: if signedIn()
                       && changedKeys().hasOnly(['booked', 'updatedAt'])
                       && request.resource.data.booked >= 0
@@ -109,8 +111,6 @@ service cloud.firestore {
       }
     }
 
-    // ---------- menu_items ----------
-    // Id is {kioskId}-{dishId}; the same dish sold at several kiosks shares its dishId (DB-21).
     function validMenuItem(d) {
       return d.name is string && d.name.size() > 0
           && d.searchName is string
@@ -133,11 +133,9 @@ service cloud.firestore {
                     && !changedKeys().hasAny(['kioskId', 'dishId'])
                     && validMenuItem(request.resource.data)
                     && stampedOnUpdate();
-      allow delete: if false;   // use soldOut instead of deleting
+      allow delete: if false;
     }
 
-    // ---------- vouchers ----------
-    // The upper-case code is the document id. `discount` is exactly one of two shapes (DB-20).
     function validDiscount(x) {
       return x is map && (
         (x.type == 'fixed' && x.keys().hasOnly(['type', 'amountVnd']) && x.amountVnd is int && x.amountVnd > 0)
@@ -161,10 +159,9 @@ service cloud.firestore {
       allow create: if isAdmin() && code.matches('^[A-Z0-9]{3,20}$') && validVoucher(request.resource.data)
                     && stampedOnCreate();
       allow update: if isAdmin() && validVoucher(request.resource.data) && stampedOnUpdate();
-      allow delete: if false;   // switch `active` off instead
+      allow delete: if false;
     }
 
-    // ---------- carts ----------
     match /carts/{uid} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid)
@@ -177,8 +174,6 @@ service cloud.firestore {
                             && (resource == null ? stampedOnCreate() : stampedOnUpdate());
     }
 
-    // ---------- orders ----------
-    // DB-18: the discount must be exactly what the voucher gives; no voucher means no discount.
     function smaller(a, b) { return a < b ? a : b; }
     function discountFor(x, subtotal) {
       return x.type == 'fixed' ? smaller(x.amountVnd, subtotal)
@@ -207,7 +202,6 @@ service cloud.firestore {
           && d.totalVnd == d.subtotalVnd - d.discountVnd
           && validDiscountOf(d)
           && d.paymentMethod in ['momo', 'vnpay', 'card', 'cash']
-          // Cash is paid at the counter (unpaid); the simulated gateways record paid.
           && ((d.paymentMethod == 'cash') == (d.paymentStatus == 'unpaid'))
           && stampedOnCreate();
     }
@@ -216,7 +210,6 @@ service cloud.firestore {
           || (from == 'preparing' && to in ['ready', 'cancelled'])
           || (from == 'ready' && to in ['delivered', 'cancelled']);
     }
-    // R-15: each step writes its own server time, so shift statistics (K11) cannot be faked.
     function stepTimeOk(from, d) {
       return d.status == from
           || (d.status == 'preparing' && d.acceptedAt == request.time
@@ -227,12 +220,10 @@ service cloud.firestore {
           || (d.status == 'cancelled' && d.cancelledAt == request.time);
     }
     match /orders/{id} {
-      // Only at a kiosk that accepts orders. Staff queries must include where kioskId == their kiosk.
       allow create: if signedIn() && validNewOrder(request.resource.data)
                     && kioskAcceptsOrders(request.resource.data.kioskId);
       allow read: if isOwner(resource.data.uid) || staffOf(resource.data.kioskId);
 
-      // The customer edits or cancels while pending (S09, S07-DIALOG); payment method never changes.
       allow update: if isOwner(resource.data.uid)
                     && resource.data.status == 'pending'
                     && request.resource.data.status in ['pending', 'cancelled']
@@ -246,7 +237,6 @@ service cloud.firestore {
                            && request.resource.data.cancelledAt == request.time))
                     && stampedOnUpdate();
 
-      // Staff follow pending → preparing → ready → delivered, or reject with a reason.
       allow update: if staffOf(resource.data.kioskId)
                     && changedKeys().hasOnly(['status', 'acceptedAt', 'readyAt', 'deliveredAt', 'cancelledAt',
                          'readyBy', 'prepSeconds', 'cancelReason', 'cancelledBy', 'paymentStatus', 'updatedAt'])
@@ -255,7 +245,6 @@ service cloud.firestore {
                     && stepTimeOk(resource.data.status, request.resource.data)
                     && (request.resource.data.status != 'cancelled'
                         || (request.resource.data.cancelledBy == 'staff' && request.resource.data.cancelReason is string))
-                    // Handing over a cash order records the payment.
                     && (request.resource.data.status != 'delivered' || resource.data.paymentMethod != 'cash'
                         || request.resource.data.paymentStatus == 'paid')
                     && (request.resource.data.paymentStatus == resource.data.paymentStatus
@@ -264,8 +253,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------- reviews ----------
-    // Id = {orderId}_{itemId}: one review per item per order, only once the order was delivered.
     function validReviewBody(d) {
       return d.rating is int && d.rating >= 1 && d.rating <= 5
           && (d.get('comment', null) == null || (d.comment is string && d.comment.size() <= 500))
@@ -289,8 +276,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------- incidents ----------
-    // Id = orderId: at most one incident per order (DB-26), so K13 cannot be flooded.
     match /incidents/{id} {
       allow create: if signedIn()
                     && id == request.resource.data.orderId
@@ -322,7 +307,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------- reports (PDF metadata, T43) ----------
     match /reports/{id} {
       allow read: if isOwner(resource.data.uid);
       allow create: if signedIn()
@@ -338,7 +322,6 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ---------- announcements (final assignment) ----------
     match /announcements/{id} {
       allow read: if signedIn() && (resource.data.status == 'published' || isAdmin());
       allow create: if isAdmin() && request.resource.data.status in ['draft', 'published', 'archived']

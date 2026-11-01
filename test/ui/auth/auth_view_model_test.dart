@@ -16,6 +16,16 @@ class _FailingAuth extends FakeAuthService {
   Future<Result<AppUser>> signInWithGoogle() async => Result.error(error);
 }
 
+class _AuthWithDefaultKiosk extends FakeAuthService {
+  _AuthWithDefaultKiosk(this.defaultKioskId) : super(signedIn: true);
+
+  final String defaultKioskId;
+
+  @override
+  Stream<AppUser?> authStateChanges() =>
+      Stream.value(AppUser(uid: 'u1', displayName: 'Quân', role: UserRole.user, defaultKioskId: defaultKioskId));
+}
+
 AuthViewModel make({
   FakeAuthService? auth,
   FakeAnalyticsService? analytics,
@@ -133,6 +143,22 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(analytics.userId, 'dev-user');
     expect(analytics.events.map((e) => e.name), isNot(contains('login')));
+    vm.dispose();
+  });
+
+  test('signing in picks the default kiosk saved in the profile', () async {
+    final session = InMemorySessionRepository(selectedKioskId: 'q9-t2');
+    final vm = make(auth: _AuthWithDefaultKiosk('q9-t4'), session: session);
+    await pumpEventQueue();
+    expect(session.selectedKioskId, 'q9-t4');
+    vm.dispose();
+  });
+
+  test('without a default kiosk the current choice is kept', () async {
+    final session = InMemorySessionRepository(selectedKioskId: 'q9-t2');
+    final vm = make(auth: FakeAuthService(signedIn: true), session: session);
+    await pumpEventQueue();
+    expect(session.selectedKioskId, 'q9-t2');
     vm.dispose();
   });
 }

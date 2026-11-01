@@ -1,6 +1,3 @@
-// Security Rules tests on the Firebase Emulator: every role (user, staff, admin) and every collection
-// has at least one allowed and one denied case. Run `npm test` in this folder. Data model:
-// docs/data-model.md.
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
@@ -24,10 +21,8 @@ after(async () => {
   await env.cleanup();
 });
 
-// DB-16: what the app adds to every write.
 const created = () => ({ createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
 const touched = () => ({ updatedAt: serverTimestamp() });
-// Already stored documents (written with rules disabled).
 const stored = () => ({ createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
 const future = Timestamp.fromDate(new Date('2100-01-01'));
 const past = Timestamp.fromDate(new Date('2020-01-01'));
@@ -116,6 +111,23 @@ describe('users', () => {
   test('a user edits name, student ID and up to 5 FCM tokens: allowed; 6 tokens: denied', async () => {
     await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { displayName: 'Quân N.', studentId: 'SE183398', fcmTokens: ['t1'], ...touched() }));
     await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { fcmTokens: ['1', '2', '3', '4', '5', '6'], ...touched() }));
+  });
+  test('a user saves phone, default kiosk and default payment method: allowed', async () => {
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), {
+      phone: '0912345678', defaultKioskId: 'k1', defaultPaymentMethod: 'cash', ...touched(),
+    }));
+  });
+  test('a malformed student ID or phone, an unknown kiosk or payment method, a 61-character name: denied', async () => {
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { studentId: 'se1', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { phone: '912345678', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { defaultKioskId: 'nowhere', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { defaultPaymentMethod: 'bitcoin', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'users/u1'), { displayName: 'a'.repeat(61), ...touched() }));
+  });
+  test('a long name from Google does not block other updates such as lastLoginAt', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) =>
+      updateDoc(doc(ctx.firestore(), 'users/u1'), { displayName: 'b'.repeat(80) }));
+    await assertSucceeds(updateDoc(doc(as('u1'), 'users/u1'), { lastLoginAt: serverTimestamp(), ...touched() }));
   });
   test('users and staff read someone else\'s profile: denied; owner and admin: allowed', async () => {
     await assertFails(getDoc(doc(as('u1'), 'users/u2')));
@@ -526,7 +538,6 @@ describe('unknown collections', () => {
   });
 });
 
-// Kept as the fallback if Cloudinary is not approved (docs/data-model.md section 6).
 describe('Cloud Storage (fallback, not used by the app)', () => {
   const pdf = new Uint8Array([37, 80, 68, 70]);
   const png = new Uint8Array([137, 80, 78, 71]);

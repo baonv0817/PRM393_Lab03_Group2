@@ -149,4 +149,21 @@ void main() {
     expect(report.createdAt.isAtSameMomentAs(created), isTrue);
     expect(reportFromData('r2', {'uid': 'u1'}, now: now).createdAt, now);
   });
+
+  test('a user profile reads its optional fields; an unknown payment method is ignored', () {
+    final profile = userProfileFromData('u1', {
+      'displayName': 'Quân',
+      'email': 'quan@fpt.edu.vn',
+      'studentId': 'SE183398',
+      'phone': '0912345678',
+      'defaultKioskId': 'q9-t4',
+      'defaultPaymentMethod': 'cash',
+    });
+    expect(profile.studentId, 'SE183398');
+    expect(profile.defaultKioskId, 'q9-t4');
+    expect(profile.defaultPaymentMethod, PaymentMethod.cash);
+    expect(userProfileFromData('u1', {'defaultPaymentMethod': 'bitcoin'}).defaultPaymentMethod, isNull);
+    expect(userProfileFromData('u1', null).displayName, '');
+    expect(appUserFromData('u1', {'defaultKioskId': 'q9-t4'}, fallbackName: 'Q').defaultKioskId, 'q9-t4');
+  });
 }

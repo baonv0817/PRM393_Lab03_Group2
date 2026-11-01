@@ -118,7 +118,7 @@ class FirebaseDemoViewModel extends ChangeNotifier with SafeChangeNotifier {
             notifyListeners();
           },
           onError: (Object error, StackTrace stack) {
-            _log(error, stack, 'firebase_demo.watchReports');
+            crash.recordNonFatal(error, stack, 'firebase_demo.watchReports');
             _reports = ViewError(error is AppException ? error.message : 'Không tải được danh sách tệp.');
             notifyListeners();
           },
@@ -135,7 +135,7 @@ class FirebaseDemoViewModel extends ChangeNotifier with SafeChangeNotifier {
           analytics.logEvent(AnalyticsEvents.exportReport, {'file_size_kb': value.sizeKb, 'source': 'firebase_demo'}),
         );
       case Err(:final error):
-        _log(error, error.stackTrace ?? StackTrace.current, 'firebase_demo.export');
+        crash.recordNonFatal(error, error.stackTrace, 'firebase_demo.export');
     }
     notifyListeners();
     return result;
@@ -185,11 +185,6 @@ class FirebaseDemoViewModel extends ChangeNotifier with SafeChangeNotifier {
     _stage = ExportStage.saving;
     notifyListeners();
     return reports.save(uid: uid, fileName: file.fileName, file: uploaded);
-  }
-
-  void _log(Object error, StackTrace stack, String reason) {
-    if (error is CancelledException) return;
-    unawaited(crash.recordError(error is AppException ? error.cause ?? error : error, stack, reason: reason));
   }
 
   @override
