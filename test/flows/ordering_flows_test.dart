@@ -164,6 +164,9 @@ void main() {
         await tester.tap(find.text('Huỷ đơn').last);
         await tester.pumpAndSettle();
         expect(find.text('S10'), findsOneWidget);
+        await tester.tap(find.byTooltip('Đóng'));
+        await tester.pumpAndSettle();
+        expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
         expect((deps.orders as FakeOrderRepository).all.single.status, OrderStatus.cancelled);
         expect(tester.takeException(), isNull);
       },

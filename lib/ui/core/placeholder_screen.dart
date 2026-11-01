@@ -2,8 +2,6 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
-/// Temporary screen until the owner finishes the real one. Replace it with the real screen in
-/// `lib/router/routes_pX.dart`; delete this screen once every route has a real screen.
 class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({
     super.key,
@@ -11,20 +9,28 @@ class PlaceholderScreen extends StatelessWidget {
     required this.title,
     required this.owner,
     this.showBack = true,
+    this.onExit,
   });
 
   final String code;
   final String title;
   final String owner;
   final bool showBack;
+  final VoidCallback? onExit;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final canPop = Navigator.of(context).canPop();
     return Scaffold(
       appBar: AppTopBar(
         title: title,
-        onBack: showBack && Navigator.of(context).canPop() ? () => Navigator.of(context).maybePop() : null,
+        closes: !canPop,
+        onBack: !showBack
+            ? null
+            : canPop
+            ? () => Navigator.of(context).maybePop()
+            : onExit,
       ),
       body: Center(
         child: Padding(
