@@ -35,7 +35,7 @@ class ProfileViewModel extends ChangeNotifier with SafeChangeNotifier {
         _orderCount = ViewData(value);
       case Err(:final error):
         _orderCount = ViewError(error.message);
-        unawaited(crash.recordError(error.cause ?? error, error.stackTrace, reason: 'profile.countMyOrders'));
+        crash.recordNonFatal(error, error.stackTrace, 'profile.countMyOrders');
     }
     notifyListeners();
   }

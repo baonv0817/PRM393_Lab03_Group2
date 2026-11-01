@@ -25,7 +25,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     _configSub = remoteConfig.watchUpdates().listen((_) {
       _applyQuickItems();
       notifyListeners();
-    }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchRemoteConfig'));
+    }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchRemoteConfig'));
   }
 
   final MenuRepository menu;
@@ -111,20 +111,20 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
       _selectedKioskId = id;
       _sessionKnown = true;
       _applyKiosk();
-    }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchSelectedKiosk'));
+    }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchSelectedKiosk'));
     _cartSub = cart.watchCart(uid).listen((current) {
       _cart = current;
       for (final id in _desired.keys.toList()) {
         if (!_writes.containsKey(id)) _settle(id);
       }
       notifyListeners();
-    }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchCart'));
+    }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchCart'));
     _ordersSub = orders.watchMyOrders(uid).listen((list) {
       final mine = list.where((o) => o.status != OrderStatus.cancelled).toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       _lastOrder = mine.firstOrNull;
       notifyListeners();
-    }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchMyOrders'));
+    }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchMyOrders'));
   }
 
   void _cancelSubscriptions() {
@@ -173,13 +173,10 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   }
 
   void _fail(Object error, StackTrace stack, String reason) {
-    _log(error, stack, reason);
+    crash.recordNonFatal(error, stack, reason);
     _state = ViewError(error is AppException ? error.message : 'Không tải được thực đơn. Kiểm tra mạng rồi thử lại.');
     notifyListeners();
   }
-
-  void _log(Object error, StackTrace stack, String reason) =>
-      unawaited(crash.recordError(error is AppException ? error.cause ?? error : error, stack, reason: reason));
 
   Future<Result<void>> _addToCart(MenuItem item) async {
     final result = await cart.addItem(
@@ -191,7 +188,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
       case Ok():
         await analytics.logEvent(AnalyticsEvents.addToCart, {'item_id': item.id, 'quantity': 1, 'source': 'home'});
       case Err(:final error):
-        _log(error, error.stackTrace ?? StackTrace.current, 'home.addToCart');
+        crash.recordNonFatal(error, error.stackTrace, 'home.addToCart');
     }
     return result;
   }
@@ -213,7 +210,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
       if (result is Ok<void>) _written[item.id] = target;
       if (result case Err(:final error)) {
         _desired.remove(item.id);
-        _log(error, error.stackTrace ?? StackTrace.current, 'home.changeQuantity');
+        crash.recordNonFatal(error, error.stackTrace, 'home.changeQuantity');
         notifyListeners();
       }
       done.complete(result);
@@ -248,7 +245,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     for (final item in order.items) {
       final result = await cart.addItem(uid, kioskId: order.kioskId, item: item);
       if (result case Err(:final error)) {
-        _log(error, error.stackTrace ?? StackTrace.current, 'home.reorderLast');
+        crash.recordNonFatal(error, error.stackTrace, 'home.reorderLast');
         return Result.error(error);
       }
     }

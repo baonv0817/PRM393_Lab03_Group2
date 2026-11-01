@@ -24,7 +24,7 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
       onError: (Object e, StackTrace s) {
         _initialized = true;
         _message = 'Không kiểm tra được trạng thái đăng nhập. Kiểm tra mạng rồi mở lại ứng dụng.';
-        unawaited(_crash.recordError(e, s, reason: 'auth.authStateChanges'));
+        _crash.recordNonFatal(e, s, 'auth.authStateChanges');
         notifyListeners();
       },
     );
@@ -77,7 +77,7 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
         _message = 'Bạn đã huỷ đăng nhập. Chọn tài khoản Google để tiếp tục.';
       case Err(:final error):
         _message = error.message;
-        unawaited(_crash.recordError(error.cause ?? error, error.stackTrace, reason: 'auth.signInWithGoogle'));
+        _crash.recordNonFatal(error, error.stackTrace, 'auth.signInWithGoogle');
     }
     notifyListeners();
     return result;
@@ -93,7 +93,7 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
         await _session.clear();
       case Err(:final error):
         _message = error.message;
-        unawaited(_crash.recordError(error.cause ?? error, error.stackTrace, reason: 'auth.signOut'));
+        _crash.recordNonFatal(error, error.stackTrace, 'auth.signOut');
         notifyListeners();
     }
     return result;

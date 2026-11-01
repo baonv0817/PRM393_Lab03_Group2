@@ -80,7 +80,7 @@ class KioskViewModel extends ChangeNotifier with SafeChangeNotifier {
         notifyListeners();
       },
       onError: (Object error, StackTrace stack) {
-        _log(error, stack, 'kiosks.watchKiosks');
+        crash.recordNonFatal(error, stack, 'kiosks.watchKiosks');
         _error = error is AppException ? error.message : 'Không tải được danh sách kiosk.';
         notifyListeners();
       },
@@ -89,7 +89,7 @@ class KioskViewModel extends ChangeNotifier with SafeChangeNotifier {
     _cartSub = cart.watchCart(uid).listen((value) {
       _cart = value;
       notifyListeners();
-    }, onError: (Object error, StackTrace stack) => _log(error, stack, 'kiosks.watchCart'));
+    }, onError: (Object error, StackTrace stack) => crash.recordNonFatal(error, stack, 'kiosks.watchCart'));
   }
 
   void search(String text) {
@@ -109,18 +109,13 @@ class KioskViewModel extends ChangeNotifier with SafeChangeNotifier {
     if (choiceEmptiesCart) {
       final cleared = await cart.clear(uid);
       if (cleared case Err(:final error)) {
-        _log(error, error.stackTrace ?? StackTrace.current, 'kiosks.clearCart');
+        crash.recordNonFatal(error, error.stackTrace, 'kiosks.clearCart');
         return Result.error(error);
       }
     }
     final selected = await session.selectKiosk(kiosk.id);
     if (selected case Err(:final error)) return Result.error(error);
     return Result.ok(kiosk);
-  }
-
-  void _log(Object error, StackTrace stack, String reason) {
-    if (error is CancelledException) return;
-    unawaited(crash.recordError(error is AppException ? error.cause ?? error : error, stack, reason: reason));
   }
 
   @override

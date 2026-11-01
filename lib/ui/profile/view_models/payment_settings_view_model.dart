@@ -44,7 +44,7 @@ class PaymentSettingsViewModel extends ChangeNotifier with SafeChangeNotifier {
             notifyListeners();
           },
           onError: (Object error, StackTrace stack) {
-            _log(error, stack, 'paymentSettings.watchProfile');
+            crash.recordNonFatal(error, stack, 'paymentSettings.watchProfile');
             _saved = ViewError(error is AppException ? error.message : 'Không tải được cài đặt thanh toán.');
             notifyListeners();
           },
@@ -63,14 +63,9 @@ class PaymentSettingsViewModel extends ChangeNotifier with SafeChangeNotifier {
       case Ok():
         return Result.ok(method);
       case Err(:final error):
-        _log(error, error.stackTrace ?? StackTrace.current, 'paymentSettings.save');
+        crash.recordNonFatal(error, error.stackTrace, 'paymentSettings.save');
         return Result.error(error);
     }
-  }
-
-  void _log(Object error, StackTrace stack, String reason) {
-    if (error is CancelledException) return;
-    unawaited(crash.recordError(error is AppException ? error.cause ?? error : error, stack, reason: reason));
   }
 
   @override

@@ -76,7 +76,7 @@ class StudentInfoViewModel extends ChangeNotifier with SafeChangeNotifier {
             notifyListeners();
           },
           onError: (Object error, StackTrace stack) {
-            _log(error, stack, 'studentInfo.watchProfile');
+            crash.recordNonFatal(error, stack, 'studentInfo.watchProfile');
             _profile = ViewError(error is AppException ? error.message : 'Không tải được hồ sơ.');
             notifyListeners();
           },
@@ -84,7 +84,7 @@ class StudentInfoViewModel extends ChangeNotifier with SafeChangeNotifier {
     _kioskSub = menu.watchKiosks().listen((value) {
       _kiosks = value;
       notifyListeners();
-    }, onError: (Object error, StackTrace stack) => _log(error, stack, 'studentInfo.watchKiosks'));
+    }, onError: (Object error, StackTrace stack) => crash.recordNonFatal(error, stack, 'studentInfo.watchKiosks'));
   }
 
   void setName(String value) => _update(() => _name = value);
@@ -114,14 +114,9 @@ class StudentInfoViewModel extends ChangeNotifier with SafeChangeNotifier {
       defaultKioskId: defaultKioskId,
     );
     if (result case Err(:final error) when error is! ValidationException) {
-      _log(error, error.stackTrace ?? StackTrace.current, 'studentInfo.save');
+      crash.recordNonFatal(error, error.stackTrace, 'studentInfo.save');
     }
     return result;
-  }
-
-  void _log(Object error, StackTrace stack, String reason) {
-    if (error is CancelledException) return;
-    unawaited(crash.recordError(error is AppException ? error.cause ?? error : error, stack, reason: reason));
   }
 
   @override
