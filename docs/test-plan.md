@@ -36,6 +36,9 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | TC-11 | Open a push notification | App in background, permission granted | Tap the notification in the system notification shade | The app opens the screen related to the notification | Native | Not run |
 | TC-12 | Seller accepts and delivers an order | 1 pending order, signed in with the staff role | Open the order, Accept, mark Ready, Scan the code and confirm delivery | The order status changes to delivered; report the order code | Happy path | Not run |
 | TC-13 | Analytics event logged | Analytics debug on | Run TC-03 then check Logcat | A `purchase` event with the right parameters is present | Happy path | Not run |
+| TC-14 | Choose a kiosk (S27) | Signed in, 1 item in the cart from Kiosk Q9 · Tầng 2 | On Home tap the kiosk name, choose "Kiosk Q9 · Tầng 4", tap Choose this kiosk ("Chọn kiosk này") | A dialog warns that the cart will be emptied; after confirming, Home shows the new kiosk; report the kiosk name and the cart count | Error path | Not run |
+| TC-15 | Student profile (S16) | Signed in | Profile, Student profile ("Hồ sơ sinh viên"), type "SE12" as the student ID, tap Save ("Lưu hồ sơ"); then type "SE183398" and save | First an error under the field, then "Đã lưu hồ sơ."; report both messages | Error path | Not run |
+| TC-16 | Default payment method (S17) | Signed in | Profile, Payment methods ("Phương thức thanh toán"), choose cash, tap Save ("Lưu mặc định") | "Đã đặt Tiền mặt tại kiosk làm mặc định." shows and cash stays selected after reopening; report the selected method | Happy path | Not run |
 
 The instructions above are summaries; the full versions are in `e2e_test/`. Everyone adds cases for the screens they own (if section 7 of the handout is not covered).
 

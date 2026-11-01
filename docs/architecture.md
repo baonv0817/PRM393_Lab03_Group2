@@ -33,7 +33,7 @@ lib/
     firebase_dependencies.dart  builds the Firebase implementations (P3, T22 and T33)
     firebase_setup.dart         Firebase.initializeApp, optional local emulators
   routing/
-    router.dart                 GoRouter, redirect by sign-in and role, tab shells
+    router.dart                 GoRouter, redirect by sign-in and role (splash until the sign-in state is known), tab shells
     routes.dart                 AppRoutes: every path as a constant
     routes_p1.dart … routes_p5.dart   each owner wires their own screens here
   domain/models/                plain data classes, one file per model, models.dart exports them all
@@ -136,15 +136,15 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | `seller_menu/` | K08, K09, K14, K15 | P2 | `SellerMenuViewModel`, `MenuItemFormViewModel` | `MenuRepository`, `StorageService` |
 | `seller_shop/` | K10, K11 | P2 | `ShopViewModel`, `ShiftStatsViewModel` | `MenuRepository` (kiosks), `OrderRepository` |
 | `auth/` | S26 | P3 | `AuthViewModel` (app-wide) | `AuthService`, `AnalyticsService`, `CrashService`, `SessionRepository`, `MessagingService` |
-| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `PaymentSettingsViewModel`, `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `CrashService`, `RemoteConfigService`, `AnalyticsService`, `StorageService`, `ReportFileService`, `ReportRepository`; later `UserRepository` |
-| `kiosk_picker/` | S27 | P3 | `KioskViewModel` | `MenuRepository` (kiosks) |
+| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `StudentInfoViewModel` (S16), `PaymentSettingsViewModel` (S17), `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `UserRepository`, `MenuRepository` (kiosks), `CrashService`, `RemoteConfigService`, `AnalyticsService`, `StorageService`, `ReportFileService`, `ReportRepository` |
+| `kiosk_picker/` | S27 | P3 | `KioskViewModel` | `MenuRepository` (kiosks), `SessionRepository`, `CartRepository`, `CrashService` |
 | `seller_orders/` | K01–K06, K12 | P4 | `SellerOrdersViewModel`, `SellerOrderDetailViewModel`, `ScanViewModel` | `OrderRepository`, `AuthService` |
 | `seller_incidents/` | K13 | P4 | `IncidentsViewModel` | `IncidentRepository` |
 | `favorites/`, `reorder/` | S13, S14 | P5 | `FavoritesViewModel`, `ReorderViewModel` | `FavoriteRepository`, `OrderRepository`, `CartRepository` |
 | `notifications/` | S18, S19 | P5 | `NotificationSettingsViewModel`, `NotificationCenterViewModel` | `NotificationRepository`, `MessagingService` |
 | `search/`, `offline/` | S28, S30 | P5 | `SearchViewModel`, `ConnectivityViewModel` | `MenuRepository` |
 
-Repositories that do not exist yet (task T34) are created by the feature owner: `SlotRepository`, `VoucherRepository` (P1), `ReviewRepository`, `IncidentRepository` create side (P2), `IncidentRepository` handling side (P4), `FavoriteRepository`, `NotificationRepository` (P5), `UserRepository` (P3).
+Repositories that do not exist yet (task T34) are created by the feature owner: `SlotRepository`, `VoucherRepository` (P1), `ReviewRepository`, `IncidentRepository` create side (P2), `IncidentRepository` handling side (P4), `FavoriteRepository`, `NotificationRepository` (P5). `UserRepository` (P3) exists.
 
 ## 6. Adding a repository or service
 
@@ -157,6 +157,7 @@ The Firebase implementations that exist (T22, T33):
 | `MessagingService` | `firebase_messaging_service.dart`, `notification_inbox.dart` | Keeps at most 5 FCM tokens in `users/{uid}.fcmTokens`; every message received (foreground, background, opened from terminated) is saved once to `users/{uid}/notifications` |
 | `RemoteConfigService` | `firebase_remote_config_service.dart` | In-app defaults `RemoteKeys.defaults` (tested against `firebase/remote-config-defaults.json`); `watchUpdates()` emits when the console publishes, so screens change without a rebuild |
 | `MenuRepository`, `CartRepository`, `OrderRepository` | `lib/data/repositories/firestore/` | Mapping in `firestore_mappers.dart`. Every write that depends on current data runs in a transaction, so the rules never see a stale state |
+| `UserRepository` | `lib/data/repositories/firestore/firestore_user_repository.dart` | The profile in `users/{uid}` (S16, S17); validation rules live in `UserProfile` and are repeated in `firestore.rules`. `AuthViewModel` selects `defaultKioskId` at sign-in |
 | `ReportRepository` | `lib/data/repositories/firestore/firestore_report_repository.dart` | Metadata of uploaded files in `reports`; only the owner lists them (`uid == me`, newest first) |
 | `ReportFileService` | `lib/data/services/pdf/pdf_report_file_service.dart` | Builds PDFs with the `pdf` package and the Nunito font (Vietnamese text); no SDK. T43 adds its single-order receipt here |
 | `StorageService` | `lib/data/services/cloudinary/cloudinary_storage_service.dart` | Unsigned upload to Cloudinary under `breakbite/<folder>/<ownerId>/`, with progress |

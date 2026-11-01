@@ -42,8 +42,8 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P5 | Not started |
 | S14 | Quick reorder | (bottom sheet) | ReorderSheet | ReorderViewModel | Firestore orders (uid) | P5 | Not started |
 | S15 | Profile (Cá nhân) | /profile | ProfileScreen | ProfileViewModel, AuthViewModel | Firebase Auth, Firestore orders (count) | P3 | Done |
-| S16 | Student profile | /profile/info | StudentInfoScreen | ProfileViewModel | Firestore users/{uid} | P3 | Not started |
-| S17 | Payment methods | /profile/payment | PaymentSettingsScreen | PaymentSettingsViewModel | Firestore users/{uid} | P3 | Not started |
+| S16 | Student profile | /profile/info | StudentInfoScreen | StudentInfoViewModel | Firestore users/{uid}, kiosks | P3 | Done |
+| S17 | Payment methods | /profile/payment | PaymentSettingsScreen | PaymentSettingsViewModel | Firestore users/{uid} | P3 | Done |
 | S18 | Notification settings | /profile/notifications | NotificationSettingsScreen | NotificationSettingsViewModel | Firestore users/{uid}, FCM | P5 | Not started |
 | S19 | Notifications | /notifications | NotificationCenterScreen | NotificationCenterViewModel | Firestore users/{uid}/notifications, FCM | P5 | Not started |
 | S20 | Pickup (QR code) | /orders/:id/pickup | PickupQrScreen | PickupViewModel | Firestore orders/{id} | P2 | Not started |
@@ -54,7 +54,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S25 | Pick a time slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id} | P1 | Not started |
 | S26 | Sign-in (Google instead of email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth, users/{uid} | P3 | Done |
 | S26-OTP | Enter the verification code (dropped, see deviation D01) | — | — | — | — | P3 | Not started |
-| S27 | Choose a kiosk (Q9 floor 2, floor 4, Student Cultural House) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks | P3 | Not started |
+| S27 | Choose a kiosk (Q9 floor 2, floor 4, Student Cultural House) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks, carts/{uid}; SessionRepository | P3 | Done |
 | S28 | Search results | /search | SearchScreen | SearchViewModel | Firestore menu_items | P5 | Not started |
 | S28-EMPTY | No results | (state of /search) | EmptyView | SearchViewModel | — | P5 | Not started |
 | S29 | Choose a voucher | /cart/vouchers | VoucherPickerScreen | VoucherViewModel | Firestore vouchers | P1 | Not started |
@@ -126,6 +126,9 @@ Every place that differs from Figma is recorded here with the reason, and **Figm
 | D06 | S02 has category chips (Tất cả, Tacos, Mì trộn…), a banner with an "Đặt ngay" button and a price-tag icon, and a "Đặt lại đơn gần đây" row that is always shown | Chips removed (filtering items belongs to the Menu tab S03; chips on Home only filter a short list and confuse); the banner is compact and the whole block is tappable; "Reorder" only shows once there is an order and states the items and total; item cards use real photos instead of icons; the title is "Món nhanh · tối đa 5 phút" (a 5-minute item still counts as quick) | Less visual clutter, no redundant parts, everything on screen is backed by real data | Not yet |
 | D07 | S15 ends with "Xoá dữ liệu trên máy này" and has 5 rows; S26 has a Back button and "Tiếp tục không cần tài khoản" | S15 ends with "Đăng xuất" behind a confirmation dialog and adds a sixth row "Khu demo Firebase"; S26 has no Back button and no way to continue without an account | Sign-out is required by the Lab 3 handout (it also clears the local data); the demo area must be reachable from Profile; a consequence of D01 and D03 | Not yet |
 | D08 | No Firebase demo area | S15 has a sixth row "Khu demo Firebase" that opens a demo screen: link to the notification center, Remote Config values with where each came from, Crashlytics test error and test crash (behind a confirmation), PDF export and upload with progress, URL and the list of my files | The Lab 3 handout requires a Firebase demo area on the Profile screen; built only from existing components (section, list rows, buttons, empty and error states) so it matches the rest of the app | Not yet |
+| D09 | S27 cards end with "Cách bạn khoảng 2 phút đi bộ"; choosing a kiosk only switches it | The third line is the kiosk's location; a closed kiosk also shows its notice; switching away from a cart of another kiosk asks first, because a cart belongs to one kiosk | The app has no location permission or walking distances; the data model allows one kiosk per cart, so the customer must know the cart will be emptied | Not yet |
+| D10 | S17 shows a wallet balance ("Số dư ví: 120.000đ") and a counter number for cash; S16 has no hint for the default kiosk | S17 subtitles describe the method ("Trừ vào thẻ sinh viên", "Trả khi nhận món tại kiosk"); S16 explains that the default kiosk is picked at every sign-in and shows field errors under each field | There is no wallet or counter data, and payments are simulated (D02); showing invented numbers would be hard-coded data | Not yet |
+| D11 | The app opens straight on Onboarding or Home | A splash screen (logo and spinner) shows for the moment the app needs to learn the sign-in state, then opens Onboarding, sign-in, Home or the seller app | Without it Home was built before the user was known and wrote the cart for an empty user id; the splash is not a new screen in the flow | Not yet |
 | | | | | |
 
 Add a row whenever you find a new deviation.

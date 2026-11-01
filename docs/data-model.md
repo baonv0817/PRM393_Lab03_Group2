@@ -52,15 +52,17 @@ The id is the Firebase Auth uid. Created on the first Google sign-in (T30). Only
 
 | Field | Type | Written by | Notes |
 |---|---|---|---|
-| `displayName` | string | owner | Taken from the Google account, editable in S16 |
+| `displayName` | string | owner | Taken from the Google account, editable in S16 (1–60 characters when changed) |
 | `email` | string | on create only | From Google; the owner **cannot** change it |
 | `photoUrl` | string? | owner | |
 | `role` | string | on create: `user`; then admin only | `user`, `staff`, `admin` |
 | `kioskId` | string? | admin | Only staff have it; a staff member with no kiosk cannot handle anything |
-| `studentId` | string? | owner | Student ID (S16) |
+| `studentId` | string? | owner | Student ID (S16): 2 capital letters and 6 digits, for example `SE183398` |
 | `defaultPaymentMethod` | string? | owner | `momo`, `vnpay`, `card`, `cash` (S17) |
 | `notificationPrefs` | map? | owner | `{orderStatus: bool, promo: bool}` (S18) |
 | `fcmTokens` | list<string>? | owner | At most 5. Add this device's token after sign-in, remove it on sign-out |
+| `phone` | string? | owner | 10 digits starting with 0 (S16) |
+| `defaultKioskId` | string? | owner | Must be an existing kiosk (S16); the app selects it at every sign-in |
 | `lastLoginAt` | ts? | owner | |
 
 Subcollections (only the owner can read and write):
