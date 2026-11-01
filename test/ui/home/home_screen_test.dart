@@ -186,4 +186,69 @@ void main() {
       expect(h.analytics.events.map((e) => e.name), contains('reorder'));
     });
   });
+
+  group('quantity on the card', () {
+    testWidgets('after the first add the + becomes a stepper; the notice shows only that first time', (tester) async {
+      final h = await pumpHome(tester);
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier('s02.item.m1.add'), findsNothing);
+      expect(find.bySemanticsIdentifier('s02.item.m1.qty'), findsOneWidget);
+      expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.inc'));
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.inc'));
+      await tester.pumpAndSettle();
+      expect(tester.getSemantics(find.bySemanticsIdentifier('s02.item.m1.qty')).label, 'Số lượng 3');
+      expect(find.byTooltip('Giỏ hàng, 3 món'), findsOneWidget);
+      expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsNothing);
+      expect((await h.cart.watchCart('u1').first).items.single.quantity, 3);
+    });
+
+    testWidgets('stepping down to zero removes the item and brings the + back', (tester) async {
+      final h = await pumpHome(tester);
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Bỏ Combo Tacos Bò Phô Mai khỏi giỏ'), findsOneWidget);
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.dec'));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier('s02.item.m1.add'), findsOneWidget);
+      expect((await h.cart.watchCart('u1').first).isEmpty, isTrue);
+    });
+
+    for (final size in [TestScreens.narrow, TestScreens.wide]) {
+      testWidgets('the stepper fits beside the price at ${size.width.round()} dp with 48 dp buttons', (tester) async {
+        await pumpHome(tester, size: size);
+        await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(tester.getSize(find.byTooltip('Thêm 1 Combo Tacos Bò Phô Mai')).height, greaterThanOrEqualTo(48));
+        expect(find.text('39.000đ'), findsOneWidget);
+      });
+    }
+
+    testWidgets('with reduce motion on nothing flies and adding still works', (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+        disableAnimations: true,
+      );
+      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      final h = await pumpHome(tester);
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+      await tester.pump();
+      expect(find.byType(ClipOval), findsNothing);
+      await tester.pumpAndSettle();
+      expect((await h.cart.watchCart('u1').first).items, hasLength(1));
+    });
+
+    testWidgets('adding plays the fly-to-cart animation and leaves nothing behind', (tester) async {
+      await pumpHome(tester);
+      await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(ClipOval), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.byType(ClipOval), findsNothing);
+    });
+  });
 }

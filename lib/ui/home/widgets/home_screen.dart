@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
@@ -5,20 +7,25 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/ui/home/widgets/fly_to_cart.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// S02 Home: kiosk header (wait time, notifications, cart), search field, a compact banner (Remote
-/// Config), quick items with photos and a Reorder card once there is an order.
-///
-/// Compared with Figma v2 the category chips are dropped (filtering belongs to the Menu tab; chips on
-/// Home only filter a short list and confuse) and so is the banner button (the whole banner is tappable),
-/// see deviation D06. The screen only draws `HomeViewModel`; filtering, limits and cart writes live there.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _cartKey = GlobalKey();
+  final _imageKeys = <String, GlobalKey>{};
+
+  GlobalKey _imageKeyOf(String itemId) => _imageKeys.putIfAbsent(itemId, GlobalKey.new);
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +43,7 @@ class HomeScreen extends StatelessWidget {
             AppSpacing.lg,
           ),
           children: [
-            _Header(vm: vm),
+            _Header(vm: vm, cartKey: _cartKey),
             const SizedBox(height: AppSpacing.sm),
             TestId(
               's02.search',
@@ -55,7 +62,12 @@ class HomeScreen extends StatelessWidget {
               child: Text('Món nhanh · tối đa 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: AppSpacing.sm),
-            _QuickSection(vm: vm, onAdd: (item) => _add(context, vm, item)),
+            _QuickSection(
+              vm: vm,
+              imageKeyOf: _imageKeyOf,
+              onAdd: (item) => _add(vm, item),
+              onChange: (item, delta) => _change(vm, item, delta),
+            ),
             if (vm.lastOrder case final order?) ...[
               const SizedBox(height: AppSpacing.xxs),
               TestId(
@@ -63,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                 child: ListenableBuilder(
                   listenable: vm.reorderLast,
                   builder: (context, _) =>
-                      _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(context, vm)),
+                      _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(vm)),
                 ),
               ),
             ],
@@ -73,24 +85,43 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _add(BuildContext context, HomeViewModel vm, MenuItem item) async {
+  Future<void> _add(HomeViewModel vm, MenuItem item) async {
+    final wasEmpty = vm.cartCount == 0;
+    if (!vm.blocksAdd(item)) {
+      unawaited(
+        flyToCart(
+          context: context,
+          from: _imageKeyOf(item.id),
+          to: _cartKey,
+          child: MenuItemImage(imageUrl: item.imageUrl, size: 56),
+        ),
+      );
+    }
     final result = await vm.addToCart.execute(item);
-    if (!context.mounted || result == null) return;
+    if (!mounted || result == null) return;
     switch (result) {
       case Ok():
-        showAddedSnackbar(
-          context,
-          message: 'Đã thêm ${item.name} vào giỏ',
-          onViewCart: () => context.push(AppRoutes.cart),
-        );
+        if (wasEmpty) {
+          showAddedSnackbar(
+            context,
+            message: 'Đã thêm ${item.name} vào giỏ',
+            onViewCart: () => context.push(AppRoutes.cart),
+          );
+        }
       case Err(:final error):
-        _showError(context, error.message);
+        _showError(error.message);
     }
   }
 
-  Future<void> _reorder(BuildContext context, HomeViewModel vm) async {
+  Future<void> _change(HomeViewModel vm, MenuItem item, int delta) async {
+    final result = await vm.changeQuantity(item, delta);
+    if (!mounted) return;
+    if (result case Err(:final error)) _showError(error.message);
+  }
+
+  Future<void> _reorder(HomeViewModel vm) async {
     final result = await vm.reorderLast.execute();
-    if (!context.mounted || result == null) return;
+    if (!mounted || result == null) return;
     switch (result) {
       case Ok(value: 0):
         break;
@@ -101,18 +132,20 @@ class HomeScreen extends StatelessWidget {
           onViewCart: () => context.push(AppRoutes.cart),
         );
       case Err(:final error):
-        _showError(context, error.message);
+        _showError(error.message);
     }
   }
 
-  void _showError(BuildContext context, String message) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  void _showError(String message) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.vm});
+  const _Header({required this.vm, required this.cartKey});
 
   final HomeViewModel vm;
+  final GlobalKey cartKey;
 
   @override
   Widget build(BuildContext context) {
@@ -195,11 +228,15 @@ class _Header extends StatelessWidget {
         ),
         TestId(
           's02.cart',
-          child: AppBadgeIconButton(
-            icon: Icons.shopping_cart,
-            semanticLabel: cartLabel,
-            count: vm.cartCount,
-            onPressed: () => context.push(AppRoutes.cart),
+          child: BumpOnIncrease(
+            value: vm.cartCount,
+            child: AppBadgeIconButton(
+              key: cartKey,
+              icon: Icons.shopping_cart,
+              semanticLabel: cartLabel,
+              count: vm.cartCount,
+              onPressed: () => context.push(AppRoutes.cart),
+            ),
           ),
         ),
       ],
@@ -207,7 +244,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Promo banner: two lines, the whole block is tappable (no extra button).
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner({required this.onTap});
 
@@ -254,15 +290,15 @@ class _PromoBanner extends StatelessWidget {
   }
 }
 
-/// Minimum height of the loading, empty and error area; it grows when the message needs more room
-/// (narrow phones, large text).
 const _stateArea = BoxConstraints(minHeight: 300);
 
 class _QuickSection extends StatelessWidget {
-  const _QuickSection({required this.vm, required this.onAdd});
+  const _QuickSection({required this.vm, required this.imageKeyOf, required this.onAdd, required this.onChange});
 
   final HomeViewModel vm;
+  final GlobalKey Function(String itemId) imageKeyOf;
   final void Function(MenuItem item) onAdd;
+  final void Function(MenuItem item, int delta) onChange;
 
   @override
   Widget build(BuildContext context) {
@@ -285,6 +321,10 @@ class _QuickSection extends StatelessWidget {
                 item: item,
                 onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
                 onAdd: item.soldOut ? null : () => onAdd(item),
+                quantity: vm.quantityOf(item.id),
+                onIncrement: vm.canIncrease(item.id) ? () => onChange(item, 1) : null,
+                onDecrement: () => onChange(item, -1),
+                imageKey: imageKeyOf(item.id),
                 testId: 's02.item.${item.id}',
               ),
             ),
@@ -294,13 +334,11 @@ class _QuickSection extends StatelessWidget {
   }
 }
 
-/// Reorder the latest order: shown only once there is an order, with the items and the total.
 class _ReorderCard extends StatelessWidget {
   const _ReorderCard({required this.order, required this.onTap});
 
   final Order order;
 
-  /// `null` while the reorder runs, which disables the card.
   final VoidCallback? onTap;
 
   String get _summary {

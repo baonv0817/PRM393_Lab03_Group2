@@ -7,17 +7,26 @@ import 'package:breakbite/ui/core/widgets/test_id.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:flutter/material.dart';
 
-/// Lab 2 Card/Food: dish, drink, sold out.
 class FoodCard extends StatelessWidget {
-  const FoodCard({super.key, required this.item, required this.onTap, required this.onAdd, this.testId});
+  const FoodCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+    required this.onAdd,
+    this.quantity = 0,
+    this.onIncrement,
+    this.onDecrement,
+    this.imageKey,
+    this.testId,
+  });
 
   final MenuItem item;
   final VoidCallback onTap;
-
-  /// `null` when sold out.
   final VoidCallback? onAdd;
-
-  /// Optional [TestId] of the card; its add button gets `<testId>.add`.
+  final int quantity;
+  final VoidCallback? onIncrement;
+  final VoidCallback? onDecrement;
+  final Key? imageKey;
   final String? testId;
 
   @override
@@ -26,8 +35,39 @@ class FoodCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final dim = item.soldOut ? colors.muted : null;
+    final Widget action;
+    if (item.soldOut) {
+      action = Container(
+        key: const ValueKey('soldOut'),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
+        decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
+        child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
+      );
+    } else if (quantity > 0) {
+      action = _QuantityStepper(
+        key: const ValueKey('stepper'),
+        name: item.name,
+        quantity: quantity,
+        onIncrement: onIncrement,
+        onDecrement: onDecrement,
+        testId: testId,
+      );
+    } else {
+      action = _withTestId(
+        testId == null ? null : '$testId.add',
+        AppIconButton(
+          key: const ValueKey('add'),
+          icon: Icons.add,
+          semanticLabel: 'Thêm ${item.name} vào giỏ',
+          onPressed: onAdd,
+          filled: true,
+        ),
+      );
+    }
     final card = Semantics(
-      label: '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}',
+      label:
+          '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}'
+          '${quantity > 0 ? ', $quantity trong giỏ' : ''}',
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -36,8 +76,10 @@ class FoodCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               children: [
-                // Dish photo; if missing, MenuItemImage shows the soft logo.
-                MenuItemImage(imageUrl: item.imageUrl, size: 80),
+                KeyedSubtree(
+                  key: imageKey,
+                  child: MenuItemImage(imageUrl: item.imageUrl, size: 80),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -57,30 +99,31 @@ class FoodCard extends StatelessWidget {
                           Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        formatVnd(item.priceVnd),
-                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              formatVnd(item.priceVnd),
+                              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOutBack,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, animation) => FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(scale: animation, alignment: Alignment.centerRight, child: child),
+                            ),
+                            layoutBuilder: (current, previous) =>
+                                Stack(alignment: Alignment.centerRight, children: [...previous, ?current]),
+                            child: action,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                if (item.soldOut)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-                    decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                    child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
-                  )
-                else
-                  _withTestId(
-                    testId == null ? null : '$testId.add',
-                    AppIconButton(
-                      icon: Icons.add,
-                      semanticLabel: 'Thêm ${item.name} vào giỏ',
-                      onPressed: onAdd,
-                      filled: true,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -93,7 +136,76 @@ class FoodCard extends StatelessWidget {
   static Widget _withTestId(String? id, Widget child) => id == null ? child : TestId(id, child: child);
 }
 
-/// Lab 2 AppBar: title, 48 × 48 Back button.
+class _QuantityStepper extends StatelessWidget {
+  const _QuantityStepper({
+    super.key,
+    required this.name,
+    required this.quantity,
+    required this.onIncrement,
+    required this.onDecrement,
+    this.testId,
+  });
+
+  final String name;
+  final int quantity;
+  final VoidCallback? onIncrement;
+  final VoidCallback? onDecrement;
+  final String? testId;
+
+  Widget _id(String suffix, Widget child) => testId == null ? child : TestId('$testId.$suffix', child: child);
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final colors = context.appColors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.selected,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.selectedBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _id(
+            'dec',
+            AppIconButton(
+              icon: quantity == 1 ? Icons.delete_outline : Icons.remove,
+              semanticLabel: quantity == 1 ? 'Bỏ $name khỏi giỏ' : 'Bớt 1 $name',
+              onPressed: onDecrement,
+            ),
+          ),
+          _id(
+            'qty',
+            Semantics(
+              liveRegion: true,
+              label: 'Số lượng $quantity',
+              excludeSemantics: true,
+              child: SizedBox(
+                width: 24,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                  child: Text(
+                    '$quantity',
+                    key: ValueKey(quantity),
+                    textAlign: TextAlign.center,
+                    style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          _id(
+            'inc',
+            AppIconButton(icon: Icons.add, semanticLabel: 'Thêm 1 $name', onPressed: onIncrement, filled: true),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppTopBar({super.key, required this.title, this.onBack, this.actions});
 
@@ -122,11 +234,9 @@ class AppNavTab {
 
   final String label;
 
-  /// Filled icon (Figma uses filled icons for both selected and unselected tabs).
   final IconData icon;
 }
 
-/// Lab 2 4-tab NavBar (shared by customer and seller).
 class AppNavBar extends StatelessWidget {
   const AppNavBar({super.key, required this.tabs, required this.selectedIndex, required this.onSelected});
 
@@ -151,7 +261,6 @@ class AppNavBar extends StatelessWidget {
   }
 }
 
-/// Lab 2 confirmation dialog (cancel order, reject order…). Returns `true` when confirmed.
 Future<bool?> showAppDialog(
   BuildContext context, {
   required String title,

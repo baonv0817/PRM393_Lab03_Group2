@@ -56,7 +56,10 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   String? _selectedKioskId;
   bool _sessionKnown = false;
   Kiosk? _kiosk;
-  int _cartCount = 0;
+  Cart _cart = Cart.empty;
+  final _desired = <String, int>{};
+  final _writes = <String, Future<void>>{};
+  final _written = <String, int>{};
   Order? _lastOrder;
 
   ViewState<List<MenuItem>> get state => _state;
@@ -73,7 +76,20 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     return 'Sẵn sàng · chờ $low–${k.waitMinutes + 1} phút';
   }
 
-  int get cartCount => _cartCount;
+  int get cartCount {
+    var total = 0;
+    for (final line in _cart.items) {
+      total += _desired[line.itemId] ?? line.quantity;
+    }
+    return total;
+  }
+
+  int quantityOf(String itemId) =>
+      _desired[itemId] ?? _cart.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
+
+  bool canIncrease(String itemId) => quantityOf(itemId) < Cart.maxQuantity;
+
+  bool blocksAdd(MenuItem item) => !_cart.isEmpty && _cart.kioskId != item.kioskId;
 
   int get unreadNotifications => 0;
 
@@ -97,7 +113,10 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
       _applyKiosk();
     }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchSelectedKiosk'));
     _cartSub = cart.watchCart(uid).listen((current) {
-      _cartCount = current.itemCount;
+      _cart = current;
+      for (final id in _desired.keys.toList()) {
+        if (!_writes.containsKey(id)) _settle(id);
+      }
       notifyListeners();
     }, onError: (Object e, StackTrace s) => _log(e, s, 'home.watchCart'));
     _ordersSub = orders.watchMyOrders(uid).listen((list) {
@@ -175,6 +194,52 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
         _log(error, error.stackTrace ?? StackTrace.current, 'home.addToCart');
     }
     return result;
+  }
+
+  Future<Result<void>> changeQuantity(MenuItem item, int delta) {
+    final current = quantityOf(item.id);
+    final next = (current + delta).clamp(0, Cart.maxQuantity);
+    if (next == current) return Future.value(const Result.ok(null));
+    _desired[item.id] = next;
+    notifyListeners();
+    final done = Completer<Result<void>>();
+    final write = (_writes[item.id] ?? Future<void>.value()).then((_) async {
+      final target = _desired[item.id];
+      if (target == null || target == _written[item.id]) {
+        done.complete(const Result.ok(null));
+        return;
+      }
+      final result = await cart.setQuantity(uid, item.id, target);
+      if (result is Ok<void>) _written[item.id] = target;
+      if (result case Err(:final error)) {
+        _desired.remove(item.id);
+        _log(error, error.stackTrace ?? StackTrace.current, 'home.changeQuantity');
+        notifyListeners();
+      }
+      done.complete(result);
+    });
+    _writes[item.id] = write;
+    unawaited(
+      write.whenComplete(() {
+        if (identical(_writes[item.id], write)) {
+          _writes.remove(item.id);
+          _written.remove(item.id);
+          _settle(item.id);
+        }
+      }),
+    );
+    if (delta > 0) {
+      unawaited(analytics.logEvent(AnalyticsEvents.addToCart, {'item_id': item.id, 'quantity': 1, 'source': 'home'}));
+    }
+    return done.future;
+  }
+
+  void _settle(String itemId) {
+    final stored = _cart.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
+    if (_desired[itemId] == stored) {
+      _desired.remove(itemId);
+      notifyListeners();
+    }
   }
 
   Future<Result<int>> _reorderLast() async {
