@@ -43,11 +43,28 @@ This is where the team is most likely to step on each other. When you change a s
 | `lib/data/services/`, `lib/data/repositories/` | the whole team | One interface per file. A new one is its own file plus one export line in `services.dart` or `repositories.dart` (`docs/architecture.md` section 6) |
 | `lib/config/dependencies.dart`, `dev/fake_dependencies.dart` | the whole team | Add exactly one field and one provider line, and one line in each place that builds them |
 | `dev/fakes/` | the whole team | One fake per file, plus one export line in `fakes.dart` |
-| `lib/domain/models/` | the whole team | One model per file. Only **add**: a new file, or a new field with a default value at the end. Do not rename or delete, so other people's code still compiles. If you change the data structure, do all 4 places (`docs/data-model.md`) |
+| `lib/domain/models/` | the whole team | One model per file. Only **add**: a new file, or a new field with a default value at the end. Do not rename or delete, so other people's code still compiles. If you change the data structure, follow section 3.1 |
 | `analysis_options.yaml`, `test/architecture_test.dart` | P1 | Changing a lint or a layer rule is a team decision: a separate small PR, announced to everyone |
-| `firebase/firestore.rules`, `docs/data-model.md` | P3 reviews | Change together with tests in `firebase/tests/rules.test.mjs`; `npm test` must pass |
+| `firebase/firestore.rules`, `docs/data-model.md` | P3 reviews | Change together with tests in `firebase/tests/rules.test.mjs` and, when stored data changes, a migration (section 3.1); `npm test` must pass |
 | Firebase implementations (`lib/data/services/firebase/`, `lib/data/repositories/firestore/`, `lib/config/firebase_dependencies.dart`) | P3 (shared ones); the feature owner (their own repositories) | The only places allowed to import the Firebase SDK |
 | `pubspec.yaml` | the whole team | When adding a package, record it in the versions table in `README.md` and tell the team |
+
+### 3.1 Changing the data structure: everyone ships a migration
+
+Documents already in the real Firestore do not change when the code changes. Whoever changes how data is stored also moves the existing data, in the **same PR**, with a migration script; nobody edits documents by hand in the console.
+
+A migration is needed when a stored field is renamed, removed, changes type or meaning, becomes required, when an enum value or a document id format changes, or when the rules start rejecting documents that exist today. It is not needed for a new optional field that has a default in the model, a new collection, or a change that only adds code (a getter, a method) to a model.
+
+| Step | Who | What |
+|---|---|---|
+| 1 | The PR author | Update the 4 places in `docs/data-model.md` (that document, `lib/domain/models/`, `firebase/firestore.rules`, `firebase/tests/rules.test.mjs`), plus the seed and indexes when affected |
+| 2 | The PR author | Add `firebase/seed/migrations/<yyyy-mm>-<task>-<name>.mjs` with `MIGRATION_ID`, `plan`, `apply`, `verify`, register it at the end of `migrations/index.mjs`, and add a test with old-structure documents to `migrate.test.mjs` (see `firebase/README.md`, "Adding a migration") |
+| 3 | The PR author | Run `npm run test:migrate` in `firebase/seed` and `npm test` in `firebase/tests`; both must pass |
+| 4 | The PR author | No migration needed? Write `No migration needed: <reason>` in the PR description |
+| 5 | The holder of the service-account key (P3) | After the merge, roll it out with the runbook in `firebase/README.md` (backup, dry run, indexes, `--apply`, rules) and post the result in the PR |
+| 6 | Everyone | After pulling, run `node migrate.mjs --status` against your Emulator data, or re-seed it, before testing |
+
+The **Firebase checks** workflow enforces this on every PR: it fails when `lib/domain/models/`, `firebase/firestore.rules`, `firebase/firestore.indexes.json` or `docs/data-model.md` change without a file in `firebase/seed/migrations/` or a `No migration needed:` reason, and it runs the rules and migration tests.
 
 ## 4. Git conventions
 

@@ -72,10 +72,10 @@ When the structure changes, existing documents in the real project are moved to 
 | Script | Does | Writes? |
 |---|---|---|
 | `backup.mjs` | Saves every document (subcollections included) to one JSON file, by default `~/breakbite-backups/<project>-<time>.json`. On Spark this replaces `gcloud firestore export`, which needs a Cloud Storage bucket (Blaze) | No |
-| `migrate.mjs` | Runs `migrations/t31-data-model.mjs`. **A dry run by default**: prints each planned change and warning. `--apply` writes, then verifies the result and checks that a second run would change nothing. On a real project `--apply` refuses to run without `--backup=<file>` of the same project taken in the last 24 hours | Only with `--apply` |
+| `migrate.mjs` | Runs, in order, every migration in `migrations/index.mjs` that the project has not applied yet (each one leaves a `_migrations/<id>` document). `--status` lists them as applied or pending; `--only=<id>` runs one. **A dry run by default**: prints each planned change and warning. `--apply` writes, then verifies the result and checks that a second run would change nothing. On a real project `--apply` refuses to run without `--backup=<file>` of the same project taken in the last 24 hours | Only with `--apply` |
 | `restore.mjs` | Rollback: writes a backup back exactly as it was. `--prune` also deletes documents that are not in the backup (the ones a migration moved to a new id) | Yes |
 
-`npm run test:migrate` loads documents in the **old** structure into the Emulator and checks: a dry run writes nothing; `--apply` gives the new structure (every check in `verify()` passes); a second run plans 0 changes; `restore --prune` brings back exactly the old data. Result on 01/11/2026: 6 tests, 6 passed. On data already in the new structure (`seed.mjs` then `migrate.mjs`) it plans 0 changes.
+`npm run test:migrate` loads documents in the **old** structure into the Emulator and checks: a dry run writes nothing; `--apply` gives the new structure (every check in `verify()` passes); a second run plans 0 changes; `restore --prune` brings back exactly the old data. It also checks that every registered migration has a unique, dated id and `plan`, `apply`, `verify`, and runs `migrate.mjs` itself (`--status`, dry run, `--apply`, "Up to date"). Result on 01/11/2026: 8 tests, 8 passed. On data already in the new structure (`seed.mjs` then `migrate.mjs`) it plans 0 changes.
 
 ### What the T31 migration changes
 
@@ -90,6 +90,18 @@ When the structure changes, existing documents in the real project are moved to 
 
 A second incident on the same order, or a voucher with no usable amount, is **not** changed: the script prints a warning and a person decides.
 
+### Adding a migration
+
+Required whenever stored data has to change (`CONTRIBUTING.md` section 3.1). Copy the shape of `migrations/t31-data-model.mjs`:
+
+1. Create `migrations/<yyyy-mm>-<task>-<name>.mjs` exporting `MIGRATION_ID` (the same name, ids sort by date), `plan(db, admin)` returning `{ ops, warnings, counts }` without writing, `apply(db, admin, plan)` that writes the ops and the `_migrations/<MIGRATION_ID>` document, and `verify(db, admin)` returning the list of documents that still break the new rules.
+2. `plan` must be idempotent: a document already in the new shape gives no op, so a second run plans 0 changes. Anything a person must decide becomes a warning, not a guess.
+3. Add it at the **end** of the list in `migrations/index.mjs`; never reorder or edit a migration that has already been rolled out, write a new one instead.
+4. In `migrate.test.mjs`, load documents in the old shape into the Emulator and check: the dry run writes nothing, `apply` passes `verify`, a second run plans nothing, `restore --prune` brings the old data back.
+5. `npm run test:migrate` (needs Java 21 and the Firebase CLI on `PATH`, for example `firebase/tests/node_modules/.bin`). The **Firebase checks** workflow runs the same tests on the PR.
+
+After the merge the key holder runs the rollout below and posts the output of `node migrate.mjs --status` in the PR.
+
 ### Rolling it out to the real project
 
 The project owner runs this, with the service-account key from the previous section. Do it when nobody is testing on the real project (about 15 minutes).
@@ -102,7 +114,9 @@ npm install
 # 1. Backup (read only). Note the file path it prints.
 node backup.mjs --project=breakbite-1315b --yes
 
-# 2. Dry run: read every change and WARNING line. Stop here if something looks wrong.
+# 2. Pending migrations, then a dry run: read every change and WARNING line.
+node migrate.mjs --project=breakbite-1315b --yes --status
+# Stop here if something looks wrong.
 node migrate.mjs --project=breakbite-1315b --yes
 
 # 3. Indexes first: new indexes only add capability. If it asks to delete the old reviews(itemId, createdAt) index, answer yes.
@@ -123,6 +137,8 @@ firebase deploy --only firestore:rules --project breakbite-1315b
 ```
 
 7. Smoke test on a phone with the real build: sign in, Home shows the menu with categories, apply `BBSTUDENT` to a 40K cart, a staff account marks an item sold out, the Firestore console shows `_migrations/2026-11-t31-data-model`.
+
+Rolled out to `breakbite-1315b` on 01/11/2026: backup of 111 documents, 111 changes with 0 warnings, "Verify: 0 problems. A second run would change 0 documents.", catalog re-seeded (slots until 06/11), all 14 indexes ready before the new rules were released. Step 7 is still to do on a phone.
 
 Wait for the index build in step 3 (console, Firestore, Indexes: every index **Enabled**) before step 6; a query whose index is still building fails with `failed-precondition`.
 

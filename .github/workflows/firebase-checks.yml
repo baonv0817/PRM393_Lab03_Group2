@@ -1,0 +1,75 @@
+name: Firebase checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    paths:
+      - 'firebase/**'
+      - 'lib/domain/models/**'
+      - 'docs/data-model.md'
+      - '.github/workflows/firebase-checks.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'firebase/**'
+      - 'lib/domain/models/**'
+      - 'docs/data-model.md'
+      - '.github/workflows/firebase-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  migration-required:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: A data structure change comes with a migration
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          changed=$(git diff --name-only "origin/$BASE_REF...HEAD")
+          echo "$changed"
+          schema=$(echo "$changed" | grep -E '^(lib/domain/models/|firebase/firestore\.rules$|firebase/firestore\.indexes\.json$|docs/data-model\.md$)' || true)
+          migration=$(echo "$changed" | grep -E '^firebase/seed/migrations/' || true)
+          if [ -z "$schema" ]; then
+            echo "No data structure files changed."
+            exit 0
+          fi
+          if [ -n "$migration" ]; then
+            echo "Migration included: $migration"
+            exit 0
+          fi
+          if printf '%s' "$PR_BODY" | grep -qE 'No migration needed:[[:space:]]*[[:alnum:]]'; then
+            echo "The PR description explains why no migration is needed."
+            exit 0
+          fi
+          echo "::error::These files change the data structure: $(echo $schema). Add a migration in firebase/seed/migrations/ (CONTRIBUTING.md section 3.1), or write 'No migration needed: <reason>' in the PR description."
+          exit 1
+
+  firebase-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install
+        run: |
+          npm ci --prefix firebase/tests
+          npm ci --prefix firebase/seed
+          echo "$GITHUB_WORKSPACE/firebase/tests/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Rules tests
+        working-directory: firebase/tests
+        run: npm test
+      - name: Migration tests
+        working-directory: firebase/seed
+        run: npm run test:migrate
