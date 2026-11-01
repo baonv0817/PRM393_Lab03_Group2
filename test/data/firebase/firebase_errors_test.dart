@@ -58,4 +58,14 @@ void main() {
     final source = Stream<int>.error(_firebase('unavailable'));
     await expectLater(guardStream(source), emitsError(isA<NetworkException>()));
   });
+
+  test('guardStream ends quietly when the rules refuse a listener because the user just signed out', () async {
+    final source = Stream<int>.error(_firebase('permission-denied'));
+    await expectLater(guardStream(source, signedOut: () => true), emitsDone);
+  });
+
+  test('guardStream still reports a refused listener while the user is signed in', () async {
+    final source = Stream<int>.error(_firebase('permission-denied'));
+    await expectLater(guardStream(source, signedOut: () => false), emitsError(isA<PermissionDeniedException>()));
+  });
 }

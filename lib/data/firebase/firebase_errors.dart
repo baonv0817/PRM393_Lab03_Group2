@@ -2,13 +2,11 @@ import 'dart:async';
 
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/utils/result.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
-/// Turns any error thrown by Firebase, Google Sign-In or HTTP into the one [AppException] the rest
-/// of the app understands. Every Firebase implementation goes through this function (or [guard]),
-/// so the same failure always shows the same message.
 AppException toAppException(Object error, [StackTrace? stack]) {
   if (error is AppException) return error;
   return switch (error) {
@@ -45,13 +43,6 @@ AppException _fromFirebaseCode(String code, Object error, StackTrace? stack) => 
   _ => ServiceException(cause: error, stackTrace: stack),
 };
 
-/// Runs [action] and wraps its outcome in a [Result]: the standard body of every one-shot method
-/// of a Firebase repository or service.
-///
-/// ```dart
-/// Future<Result<void>> setSoldOut(String id, bool soldOut) =>
-///     guard(() => _items.doc(id).update({'soldOut': soldOut, ...Stamp.updated()}));
-/// ```
 Future<Result<T>> guard<T>(Future<T> Function() action) async {
   try {
     return Result.ok(await action());
@@ -60,7 +51,25 @@ Future<Result<T>> guard<T>(Future<T> Function() action) async {
   }
 }
 
-/// Maps the error events of a realtime stream to [AppException], so view models see the same
-/// types as with [guard].
-Stream<T> guardStream<T>(Stream<T> source) =>
-    source.handleError((Object error, StackTrace stack) => throw toAppException(error, stack));
+Stream<T> guardStream<T>(Stream<T> source, {bool Function()? signedOut}) {
+  final isSignedOut = signedOut ?? _noCurrentUser;
+  return source.transform(
+    StreamTransformer<T, T>.fromHandlers(
+      handleError: (error, stack, sink) {
+        if (error is FirebaseException && error.code == 'permission-denied' && isSignedOut()) {
+          sink.close();
+          return;
+        }
+        sink.addError(toAppException(error, stack), stack);
+      },
+    ),
+  );
+}
+
+bool _noCurrentUser() {
+  try {
+    return Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser == null;
+  } catch (_) {
+    return false;
+  }
+}

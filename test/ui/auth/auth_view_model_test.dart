@@ -128,6 +128,19 @@ void main() {
     vm.dispose();
   });
 
+  test('the kiosk_id key in Crashlytics follows the kiosk a customer picks', () async {
+    final crash = FakeCrashService();
+    final session = InMemorySessionRepository();
+    final vm = make(auth: FakeAuthService(signedIn: true), crash: crash, session: session);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(crash.keys['kiosk_id'], 'none');
+    await session.selectKiosk('q9-t2');
+    await Future<void>.delayed(Duration.zero);
+    expect(crash.keys['kiosk_id'], 'q9-t2');
+    vm.dispose();
+  });
+
   test('sign-out detaches the device token before signing out', () async {
     final messaging = FakeMessagingService();
     final vm = make(auth: FakeAuthService(signedIn: true), messaging: messaging);
