@@ -9,6 +9,7 @@ export 'menu_image.dart';
 export 'payment_method_tile.dart';
 export 'pickup_qr_code.dart';
 export 'quantity_stepper.dart';
+export 'quick_actions.dart';
 export 'selectable_card.dart';
 export 'skeleton.dart';
 export 'state_views.dart';

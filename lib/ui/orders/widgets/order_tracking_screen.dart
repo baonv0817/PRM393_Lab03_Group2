@@ -261,35 +261,56 @@ class _Body extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          alignment: WrapAlignment.spaceAround,
-          children: [
-            if (vm.canChange)
-              TestId(
-                's07.edit',
-                child: TextButton(
-                  onPressed: () => context.push(AppRoutes.orderEditOf(order.id)),
-                  child: const Text('Sửa đơn'),
+        const SizedBox(height: AppSpacing.md),
+        if (showCode)
+          ListenableBuilder(
+            listenable: vm.cancel,
+            builder: (context, _) => QuickActionRow(
+              actions: [
+                QuickAction(
+                  label: 'Sửa đơn',
+                  icon: Icons.edit_outlined,
+                  testId: 's07.edit',
+                  onPressed: vm.canChange ? () => context.push(AppRoutes.orderEditOf(order.id)) : null,
                 ),
-              ),
-            if (vm.canChange)
-              ListenableBuilder(
-                listenable: vm.cancel,
-                builder: (context, _) => TestId(
-                  's07.cancel',
-                  child: TextButton(
-                    onPressed: vm.cancel.running ? null : onCancel,
-                    child: Text(vm.cancel.running ? 'Đang huỷ…' : 'Huỷ đơn'),
-                  ),
+                QuickAction(
+                  label: vm.cancel.running ? 'Đang huỷ…' : 'Huỷ đơn',
+                  icon: Icons.cancel_outlined,
+                  tone: QuickActionTone.destructive,
+                  testId: 's07.cancel',
+                  onPressed: vm.canChange && !vm.cancel.running ? onCancel : null,
                 ),
-              ),
-            TestId(
-              's07.home',
-              child: TextButton(onPressed: () => context.go(AppRoutes.home), child: const Text('Về trang chủ')),
+                QuickAction(
+                  label: 'Về trang chủ',
+                  icon: Icons.home_outlined,
+                  testId: 's07.home',
+                  onPressed: () => context.go(AppRoutes.home),
+                ),
+              ],
             ),
-          ],
-        ),
+          )
+        else
+          TestId(
+            's07.home',
+            child: AppButton(
+              label: 'Về trang chủ',
+              icon: Icons.home_outlined,
+              variant: AppButtonVariant.secondary,
+              large: true,
+              onPressed: () => context.go(AppRoutes.home),
+            ),
+          ),
+        if (showCode && !vm.canChange) ...[
+          const SizedBox(height: AppSpacing.xs),
+          TestId(
+            's07.locked',
+            child: Text(
+              'Bếp đã nhận đơn nên không sửa hay huỷ được nữa.',
+              textAlign: TextAlign.center,
+              style: text.bodyMedium?.copyWith(color: colors.muted),
+            ),
+          ),
+        ],
       ],
     );
   }

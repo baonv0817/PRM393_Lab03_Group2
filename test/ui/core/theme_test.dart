@@ -5,7 +5,6 @@ import 'package:breakbite/ui/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// WCAG 2.x contrast ratio.
 double contrast(Color a, Color b) {
   double lum(Color c) {
     double ch(double v) => v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
@@ -27,6 +26,7 @@ void main() {
       'accent text on background': (AppPalette.primaryText, AppPalette.background),
       'success text on card': (AppPalette.success, AppPalette.surface),
       'error text on card': (AppPalette.error, AppPalette.surface),
+      'error text on its light background': (AppPalette.error, AppPalette.errorContainer),
       'primary text on selected item': (AppPalette.onPrimary, AppPalette.selected),
     };
     pairs.forEach((name, p) {

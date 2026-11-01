@@ -151,27 +151,18 @@ class _GatewayScreenState extends State<GatewayScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              child: SizedBox(
-                width: double.infinity,
-                child: TestId(
-                  's06g.decline',
-                  child: AppButton(
-                    label: 'Từ chối giao dịch',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: vm.place.running ? null : () => _leave(GatewayOutcome.declined),
-                  ),
-                ),
-              ),
-            ),
             ListenableBuilder(
               listenable: vm.place,
               builder: (context, _) => BottomActionButton(
                 label: 'Xác nhận thanh toán',
+                icon: Icons.lock_outline,
                 testId: 's06g.pay',
                 loading: vm.place.running,
                 onPressed: vm.place.running ? null : _pay,
+                secondaryLabel: 'Từ chối giao dịch',
+                secondaryIcon: Icons.close,
+                secondaryTestId: 's06g.decline',
+                onSecondary: () => _leave(GatewayOutcome.declined),
               ),
             ),
           ],

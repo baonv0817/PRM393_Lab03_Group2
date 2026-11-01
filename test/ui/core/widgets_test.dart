@@ -164,4 +164,55 @@ void main() {
     expect(find.text('Hai'), findsOneWidget);
     expect(find.text('Một'), findsNothing);
   });
+
+  testWidgets('a large secondary button is as tall as the primary one beside it', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const BottomActionButton(
+          label: 'Xác nhận thanh toán',
+          onPressed: null,
+          secondaryLabel: 'Từ chối giao dịch',
+          secondaryIcon: Icons.close,
+          onSecondary: null,
+        ),
+      ),
+    );
+    final primary = tester.getSize(find.byType(FilledButton));
+    final secondary = tester.getSize(find.byType(OutlinedButton));
+    expect(primary.height, AppButton.largeHeight);
+    expect(secondary.height, primary.height);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+  });
+
+  testWidgets('a destructive button is filled with the error color', (tester) async {
+    await tester.pumpWidget(host(AppButton(label: 'Huỷ đơn', variant: AppButtonVariant.destructive, onPressed: () {})));
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    final context = tester.element(find.byType(FilledButton));
+    expect(button.style!.backgroundColor!.resolve({}), Theme.of(context).colorScheme.error);
+  });
+
+  testWidgets('quick actions show an icon and a label; a disabled one cannot be tapped', (tester) async {
+    var edits = 0;
+    await tester.pumpWidget(
+      host(
+        QuickActionRow(
+          actions: [
+            QuickAction(label: 'Sửa đơn', icon: Icons.edit_outlined, onPressed: () => edits++),
+            const QuickAction(
+              label: 'Huỷ đơn',
+              icon: Icons.cancel_outlined,
+              tone: QuickActionTone.destructive,
+              onPressed: null,
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.cancel_outlined), findsOneWidget);
+    await tester.tap(find.text('Sửa đơn'));
+    await tester.tap(find.text('Huỷ đơn'));
+    expect(edits, 1);
+    expect(tester.getSize(find.byType(QuickActionRow)).height, greaterThanOrEqualTo(72));
+  });
 }
