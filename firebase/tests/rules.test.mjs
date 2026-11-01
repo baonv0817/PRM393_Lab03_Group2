@@ -1,6 +1,3 @@
-// Security Rules tests on the Firebase Emulator: every role (user, staff, admin) and every collection
-// has at least one allowed and one denied case. Run `npm test` in this folder. Data model:
-// docs/data-model.md.
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
@@ -24,10 +21,8 @@ after(async () => {
   await env.cleanup();
 });
 
-// DB-16: what the app adds to every write.
 const created = () => ({ createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
 const touched = () => ({ updatedAt: serverTimestamp() });
-// Already stored documents (written with rules disabled).
 const stored = () => ({ createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
 const future = Timestamp.fromDate(new Date('2100-01-01'));
 const past = Timestamp.fromDate(new Date('2020-01-01'));
@@ -543,7 +538,6 @@ describe('unknown collections', () => {
   });
 });
 
-// Kept as the fallback if Cloudinary is not approved (docs/data-model.md section 6).
 describe('Cloud Storage (fallback, not used by the app)', () => {
   const pdf = new Uint8Array([37, 80, 68, 70]);
   const png = new Uint8Array([137, 80, 78, 71]);

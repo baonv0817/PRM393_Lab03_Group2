@@ -52,7 +52,6 @@ String? authRedirect({
   return null;
 }
 
-/// The app's router. Each owner edits their own `routes_pX.dart`, not this file.
 GoRouter createRouter(AuthViewModel auth) {
   return GoRouter(
     initialLocation: AppRoutes.home,
@@ -64,7 +63,6 @@ GoRouter createRouter(AuthViewModel auth) {
       onboardingDone: auth.onboardingDone,
     ),
     routes: [
-      // Specific routes come before parameterized ones.
       ...p2Routes,
       ...p1Routes,
       ...p3Routes,
