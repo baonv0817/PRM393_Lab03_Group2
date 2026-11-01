@@ -1,17 +1,49 @@
+import 'dart:async';
+
 import 'package:breakbite/config/dependencies.dart';
 import 'package:breakbite/config/firebase_setup.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
+import 'package:breakbite/data/services/cloudinary/cloudinary_storage_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_analytics_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_crash_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_messaging_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_remote_config_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 
-/// Initializes Firebase (or the local emulators, see [useFirebaseEmulator]) and builds the real
-/// implementations.
-///
-/// TODO(T22): build the SDK-wrapping services in `lib/data/services/firebase/`. TODO(T33): build the
-/// Firestore repositories in `lib/data/repositories/firestore/` with the helpers in `lib/data/firebase/`.
-/// File storage: `CloudinaryStorageService(CloudinaryConfig.fromEnvironment())`; session:
-/// `InMemorySessionRepository()`.
 Future<AppDependencies> createFirebaseDependencies() async {
   await initializeFirebase();
-  throw UnimplementedError(
-    'Firebase đã khởi tạo nhưng chưa có service thật. Chạy bản dữ liệu giả: flutter run -t dev/main_dev.dart, '
-    'hoặc hoàn thành task T22 và T33.',
+  final crashlytics = FirebaseCrashlytics.instance;
+  reportUncaughtErrors(crashlytics);
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  final db = FirebaseFirestore.instance;
+  final remoteConfig = FirebaseRemoteConfigService(
+    FirebaseRemoteConfig.instance,
+    minimumFetchInterval: kDebugMode ? Duration.zero : const Duration(hours: 1),
+  );
+  await remoteConfig.initialize();
+  unawaited(remoteConfig.fetchAndActivate());
+
+  return AppDependencies(
+    auth: FirebaseAuthService(auth: FirebaseAuth.instance, db: db),
+    analytics: FirebaseAnalyticsService(FirebaseAnalytics.instance),
+    crash: FirebaseCrashService(crashlytics),
+    messaging: FirebaseMessagingService(messaging: FirebaseMessaging.instance, db: db),
+    storage: CloudinaryStorageService(CloudinaryConfig.fromEnvironment()),
+    remoteConfig: remoteConfig,
+    menu: FirestoreMenuRepository(db),
+    cart: FirestoreCartRepository(db),
+    orders: FirestoreOrderRepository(db),
+    session: InMemorySessionRepository(),
   );
 }

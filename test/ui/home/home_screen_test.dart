@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import '../../../dev/fakes/fakes.dart';
+import '../../helpers/orders.dart';
 import '../../helpers/pump.dart';
 
 class _FailingMenu extends FakeMenuRepository {
@@ -60,9 +61,9 @@ void main() {
     expect(find.text('Đang tải…'), findsNothing);
     expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
     expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
-    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget); // 5 minutes still counts as quick
+    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget);
     expect(find.text('Trà Đào Chanh Sả'), findsOneWidget);
-    expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing); // sold out
+    expect(find.text('Tacos Gà Giòn Sốt Cay'), findsNothing);
   });
 
   testWidgets('every quick item shows its real photo (not the placeholder logo)', (tester) async {
@@ -133,8 +134,8 @@ void main() {
 
     expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
     expect(find.text('Xem giỏ'), findsOneWidget);
-    expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget); // the cart badge updates
-    final items = await h.cart.watchCart('u1').first;
+    expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget);
+    final items = (await h.cart.watchCart('u1').first).items;
     expect(items.single.itemId, 'm1');
     expect(h.analytics.events.single.name, 'add_to_cart');
   });
@@ -159,13 +160,13 @@ void main() {
 
     testWidgets('with an order it shows a summary; tapping adds the items to the cart', (tester) async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(
+      await placeTestOrder(
+        orders,
         uid: 'u1',
         items: const [
           CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000),
           CartItem(itemId: 'm3', name: 'Trà Đào Chanh Sả', priceVnd: 20000),
         ],
-        totalVnd: 59000,
         method: PaymentMethod.momo,
         kioskId: 'q9-t2',
       );
@@ -181,7 +182,7 @@ void main() {
       await tester.tap(find.text('Đặt lại đơn gần đây'));
       await tester.pumpAndSettle();
       expect(find.text('Đã thêm 2 món của đơn gần đây vào giỏ'), findsOneWidget);
-      expect((await h.cart.watchCart('u1').first).map((e) => e.itemId), ['m1', 'm3']);
+      expect((await h.cart.watchCart('u1').first).items.map((e) => e.itemId), ['m1', 'm3']);
       expect(h.analytics.events.map((e) => e.name), contains('reorder'));
     });
   });

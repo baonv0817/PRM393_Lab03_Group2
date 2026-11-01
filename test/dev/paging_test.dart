@@ -4,6 +4,7 @@ import 'package:breakbite/utils/paged.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../dev/fakes/fakes.dart';
+import '../helpers/orders.dart';
 
 final class _ForeignCursor implements PageCursor {}
 
@@ -64,23 +65,17 @@ void main() {
     final orders = FakeOrderRepository();
     final ids = <String>[];
     for (var i = 0; i < 3; i++) {
-      final created = await orders.createOrder(
+      final created = await placeTestOrder(
+        orders,
         uid: 'u1',
         items: const [CartItem(itemId: 'm1', name: 'Combo', priceVnd: 39000)],
-        totalVnd: 39000,
         method: PaymentMethod.momo,
         kioskId: 'q9-t2',
       );
-      ids.add(created.valueOrNull!);
+      ids.add(created);
       await Future<void>.delayed(const Duration(milliseconds: 2));
     }
-    await orders.createOrder(
-      uid: 'someone-else',
-      items: const [],
-      totalVnd: 0,
-      method: PaymentMethod.cash,
-      kioskId: 'q9-t2',
-    );
+    await placeTestOrder(orders, uid: 'someone-else', method: PaymentMethod.cash, kioskId: 'q9-t2');
 
     final first = (await orders.fetchMyOrders('u1', limit: 2)).valueOrNull!;
     final rest = (await orders.fetchMyOrders('u1', limit: 2, after: first.next)).valueOrNull!;

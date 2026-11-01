@@ -1,10 +1,6 @@
-/// How much a voucher takes off: exactly one of two shapes, so a voucher can never be both a fixed
-/// amount and a percentage. Stored as `discount: {type: 'fixed', amountVnd}` or
-/// `discount: {type: 'percent', percent, maxVnd}`; the rules check the same shapes and formula.
 sealed class VoucherDiscount {
   const VoucherDiscount();
 
-  /// Amount taken off a subtotal, never more than the subtotal.
   int amountFor(int subtotalVnd);
 }
 
@@ -17,7 +13,6 @@ final class FixedDiscount extends VoucherDiscount {
   int amountFor(int subtotalVnd) => amountVnd < subtotalVnd ? amountVnd : subtotalVnd;
 }
 
-/// A percentage always has a cap, so a large order cannot get an unbounded discount.
 final class PercentDiscount extends VoucherDiscount {
   const PercentDiscount({required this.percent, required this.maxVnd});
 
@@ -32,6 +27,8 @@ final class PercentDiscount extends VoucherDiscount {
   }
 }
 
+enum VoucherProblem { inactive, notStarted, expired, outsideActiveHours, belowMinimum }
+
 class Voucher {
   const Voucher({
     required this.code,
@@ -45,22 +42,18 @@ class Voucher {
     this.active = true,
   });
 
-  /// The upper-case code is also the document id.
   final String code;
   final String title;
   final VoucherDiscount discount;
   final int minOrderVnd;
   final DateTime? startsAt;
   final DateTime expiresAt;
-
-  /// Daily window in Vietnam time, `"HH:mm"` (the Golden Hour code only works 10:15–10:30).
   final String? activeFrom;
   final String? activeTo;
   final bool active;
 
   bool isExpired(DateTime now) => now.isAfter(expiresAt);
 
-  /// Whether [now] (any time zone) falls inside the daily window; always true without one.
   bool isWithinActiveHours(DateTime now) {
     final from = _minutes(activeFrom);
     final to = _minutes(activeTo);
@@ -70,12 +63,17 @@ class Voucher {
     return current >= from && current < to;
   }
 
-  /// Discount for an order with subtotal [subtotalVnd]; 0 when the order does not qualify.
-  int discountFor(int subtotalVnd, DateTime now) {
-    final notStarted = startsAt != null && now.isBefore(startsAt!);
-    if (!active || notStarted || isExpired(now) || !isWithinActiveHours(now) || subtotalVnd < minOrderVnd) return 0;
-    return discount.amountFor(subtotalVnd);
+  VoucherProblem? problemFor(int subtotalVnd, DateTime now) {
+    if (!active) return VoucherProblem.inactive;
+    if (startsAt != null && now.isBefore(startsAt!)) return VoucherProblem.notStarted;
+    if (isExpired(now)) return VoucherProblem.expired;
+    if (!isWithinActiveHours(now)) return VoucherProblem.outsideActiveHours;
+    if (subtotalVnd < minOrderVnd) return VoucherProblem.belowMinimum;
+    return null;
   }
+
+  int discountFor(int subtotalVnd, DateTime now) =>
+      problemFor(subtotalVnd, now) == null ? discount.amountFor(subtotalVnd) : 0;
 
   static int? _minutes(String? hhmm) {
     if (hhmm == null) return null;

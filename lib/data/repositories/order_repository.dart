@@ -1,32 +1,43 @@
 import 'package:breakbite/domain/models/cart_item.dart';
 import 'package:breakbite/domain/models/order.dart';
+import 'package:breakbite/domain/models/order_draft.dart';
 import 'package:breakbite/utils/paged.dart';
 import 'package:breakbite/utils/result.dart';
 
 abstract interface class OrderRepository {
-  /// Returns the new order id.
-  Future<Result<String>> createOrder({
-    required String uid,
-    required List<CartItem> items,
-    required int totalVnd,
-    required PaymentMethod method,
-    required String kioskId,
-  });
+  static const minReadyIn = Duration(minutes: 1);
+
+  Future<Result<String>> placeOrder(OrderDraft draft);
 
   Stream<Order?> watchOrder(String id);
 
-  /// Live view of the newest orders of [uid] (S07, S02 reorder card).
-  Stream<List<Order>> watchMyOrders(String uid);
+  Stream<List<Order>> watchMyOrders(String uid, {int limit = Paged.defaultLimit});
 
-  /// Orders of [uid], newest first, one page at a time (S08, S11, S14). Pass the previous page's
-  /// `next` as [after] to load older orders. Fails with `ValidationException` for a bad [limit] or cursor.
+  Stream<List<Order>> watchMyActiveOrders(String uid);
+
   Future<Result<Paged<Order>>> fetchMyOrders(String uid, {int limit = Paged.defaultLimit, PageCursor? after});
 
-  Future<Result<void>> cancelOrder(String id);
+  Future<Result<int>> countMyOrders(String uid);
 
-  /// Seller only.
-  Stream<List<Order>> watchAllOrders();
+  Future<Result<void>> editPendingOrder(
+    Order order, {
+    required List<CartItem> items,
+    String? voucherCode,
+    String? pickupSlotId,
+    String note = '',
+  });
 
-  /// Seller only.
-  Future<Result<void>> updateStatus(String id, OrderStatus status);
+  Future<Result<void>> cancelMyOrder(Order order, {String? reason});
+
+  Stream<List<Order>> watchKioskQueue(String kioskId);
+
+  Future<Result<List<Order>>> findReadyByPickupCode(String kioskId, String pickupCode);
+
+  Future<Result<void>> accept(Order order, {required Duration readyIn});
+
+  Future<Result<void>> markReady(Order order);
+
+  Future<Result<void>> deliver(Order order);
+
+  Future<Result<void>> reject(Order order, {required String reason});
 }

@@ -125,7 +125,7 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | Folder `lib/ui/…` | Screens | Owner | ViewModel | Depends on |
 |---|---|---|---|---|
 | `onboarding/` | S01 | P1 | (uses `AuthViewModel`) | — |
-| `home/` | S02, S21 | P1 | `HomeViewModel` | `MenuRepository`, `CartRepository`, `OrderRepository`, `SessionRepository`, `RemoteConfigService`, `AnalyticsService` |
+| `home/` | S02, S21 | P1 | `HomeViewModel` | `MenuRepository`, `CartRepository`, `OrderRepository`, `SessionRepository`, `RemoteConfigService` (live updates), `AnalyticsService`, `CrashService` |
 | `menu/` | S03, S04, S22 | P1 | `MenuViewModel`, `ItemDetailViewModel`, `AlternativesViewModel` | `MenuRepository`, `CartRepository`, `AnalyticsService` |
 | `cart/` | S05, S25, S29 | P1 | `CartViewModel`, `PickupTimeViewModel`, `VoucherViewModel` | `CartRepository`, `SlotRepository`, `VoucherRepository`, `AnalyticsService` |
 | `checkout/` | S06, S06-GATEWAY | P1 | `CheckoutViewModel` | `OrderRepository`, `CartRepository`, `AnalyticsService`, `CrashService` |
@@ -135,8 +135,8 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | `review/`, `incident/` | S23, S24 | P2 | `ReviewViewModel`, `IncidentViewModel` | `ReviewRepository`, `IncidentRepository`, `StorageService` |
 | `seller_menu/` | K08, K09, K14, K15 | P2 | `SellerMenuViewModel`, `MenuItemFormViewModel` | `MenuRepository`, `StorageService` |
 | `seller_shop/` | K10, K11 | P2 | `ShopViewModel`, `ShiftStatsViewModel` | `MenuRepository` (kiosks), `OrderRepository` |
-| `auth/` | S26 | P3 | `AuthViewModel` (app-wide) | `AuthService`, `AnalyticsService`, `CrashService` |
-| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel`, `PaymentSettingsViewModel`, `FirebaseDemoViewModel` | `AuthService`, `UserRepository`, `RemoteConfigService`, `CrashService`, `StorageService` |
+| `auth/` | S26 | P3 | `AuthViewModel` (app-wide) | `AuthService`, `AnalyticsService`, `CrashService`, `SessionRepository`, `MessagingService` |
+| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `PaymentSettingsViewModel`, `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `CrashService`; later `UserRepository`, `RemoteConfigService`, `StorageService` |
 | `kiosk_picker/` | S27 | P3 | `KioskViewModel` | `MenuRepository` (kiosks) |
 | `seller_orders/` | K01–K06, K12 | P4 | `SellerOrdersViewModel`, `SellerOrderDetailViewModel`, `ScanViewModel` | `OrderRepository`, `AuthService` |
 | `seller_incidents/` | K13 | P4 | `IncidentsViewModel` | `IncidentRepository` |
@@ -147,6 +147,18 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 Repositories that do not exist yet (task T34) are created by the feature owner: `SlotRepository`, `VoucherRepository` (P1), `ReviewRepository`, `IncidentRepository` create side (P2), `IncidentRepository` handling side (P4), `FavoriteRepository`, `NotificationRepository` (P5), `UserRepository` (P3).
 
 ## 6. Adding a repository or service
+
+The Firebase implementations that exist (T22, T33):
+
+| Interface | Implementation | Notes |
+|---|---|---|
+| `AuthService` | `lib/data/services/firebase/firebase_auth_service.dart` | Google Sign-In 7 → Firebase Auth; creates `users/{uid}` (role `user`) on the first sign-in; the auth stream follows `users/{uid}` live, so a role set by an admin applies without signing in again |
+| `AnalyticsService`, `CrashService` | `firebase_analytics_service.dart`, `firebase_crash_service.dart` | Never throw; parameters are turned into strings and numbers. Uncaught errors go to Crashlytics from `firebase_setup.dart` |
+| `MessagingService` | `firebase_messaging_service.dart`, `notification_inbox.dart` | Keeps at most 5 FCM tokens in `users/{uid}.fcmTokens`; every message received (foreground, background, opened from terminated) is saved once to `users/{uid}/notifications` |
+| `RemoteConfigService` | `firebase_remote_config_service.dart` | In-app defaults `RemoteKeys.defaults` (tested against `firebase/remote-config-defaults.json`); `watchUpdates()` emits when the console publishes, so screens change without a rebuild |
+| `MenuRepository`, `CartRepository`, `OrderRepository` | `lib/data/repositories/firestore/` | Mapping in `firestore_mappers.dart`. Every write that depends on current data runs in a transaction, so the rules never see a stale state |
+
+To add one:
 
 1. Interface in its own file: `lib/data/repositories/<name>_repository.dart` (or `lib/data/services/<name>_service.dart`), one export line in `repositories.dart` (or `services.dart`).
 2. Fake in `dev/fakes/fake_<name>_repository.dart`, one export line in `dev/fakes/fakes.dart`.

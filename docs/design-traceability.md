@@ -41,7 +41,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S12 | Order detail | /orders/:id/detail | OrderDetailScreen | OrderDetailViewModel | Firestore orders/{id} | P2 | Not started |
 | S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P5 | Not started |
 | S14 | Quick reorder | (bottom sheet) | ReorderSheet | ReorderViewModel | Firestore orders (uid) | P5 | Not started |
-| S15 | Profile (Cá nhân) | /profile | ProfileScreen | ProfileViewModel | Firestore users/{uid} | P3 | Not started |
+| S15 | Profile (Cá nhân) | /profile | ProfileScreen | ProfileViewModel, AuthViewModel | Firebase Auth, Firestore orders (count) | P3 | Done |
 | S16 | Student profile | /profile/info | StudentInfoScreen | ProfileViewModel | Firestore users/{uid} | P3 | Not started |
 | S17 | Payment methods | /profile/payment | PaymentSettingsScreen | PaymentSettingsViewModel | Firestore users/{uid} | P3 | Not started |
 | S18 | Notification settings | /profile/notifications | NotificationSettingsScreen | NotificationSettingsViewModel | Firestore users/{uid}, FCM | P5 | Not started |
@@ -52,7 +52,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S23 | Review an item | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews | P2 | Not started |
 | S24 | Report an incident | /orders/:id/incident | IncidentScreen | IncidentViewModel | Firestore incidents | P2 | Not started |
 | S25 | Pick a time slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id} | P1 | Not started |
-| S26 | Sign-in (Google instead of email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth | P3 | Not started |
+| S26 | Sign-in (Google instead of email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth, users/{uid} | P3 | Done |
 | S26-OTP | Enter the verification code (dropped, see deviation D01) | — | — | — | — | P3 | Not started |
 | S27 | Choose a kiosk (Q9 floor 2, floor 4, Student Cultural House) | /kiosks | KioskPickerScreen | KioskViewModel | Firestore kiosks | P3 | Not started |
 | S28 | Search results | /search | SearchScreen | SearchViewModel | Firestore menu_items | P5 | Not started |
@@ -109,6 +109,8 @@ K07 does not exist in the design.
 | Loading, Empty, Error | `LoadingView`, `EmptyView`, `ErrorView` | `message`, `onRetry` | P1 |
 | Snackbar "added to cart" | `AddedSnackbar` | `onViewCart` | P1 |
 
+Design tokens: the colors and sizes come from the **v2 frames** (Page 03), checked pixel by pixel on 2026-11-01: background `#FAF8F5`, card `#FFFFFF`, selected `#FFF1DE`, input fill `#F3F0EA`, border `#E4DFD8`, primary `#F69D39`, primary text `#622B14`, secondary text `#6B5F55`, link text `#B45309`, input border `#8A7A70`. The token board on Page 04 is older (background `#FFF5E5`, secondary text `#8A5D48`, Body Large 15 sp) and must be brought in line with the v2 frames (T83). Every text color pair is checked for WCAG AA contrast ≥ 4.5:1 in `test/ui/core/theme_test.dart`. Top bars use Headline 20 sp Bold with a 1 dp bottom border, as in the v2 frames.
+
 ## 5. Deviations from the design
 
 Every place that differs from Figma is recorded here with the reason, and **Figma must be updated** (the person making the note, in the last column). A deviation that is not recorded is graded as an error.
@@ -121,6 +123,7 @@ Every place that differs from Figma is recorded here with the reason, and **Figm
 | D04 | The customer app and the seller app are two separate areas, Figma does not say how one is chosen | An account with the staff or admin role goes to the seller app; a customer cannot open `/seller/*` | Lab 3 handout, architecture section and role-based rules | Not yet |
 | D05 | S01 has a link "Đăng nhập bằng email @fpt.edu.vn"; "Bắt đầu đặt món" and "Bỏ qua" open Home directly | The link reads "Đăng nhập bằng Google"; all three buttons go to the sign-in screen S26 (S01 only shows to signed-out users, each time the app opens). The location line, the sub-text and the three-benefit card were removed, and the logo and the BreakBite name were added | A consequence of D01 and D03; fewer meaningless texts | Not yet |
 | D06 | S02 has category chips (Tất cả, Tacos, Mì trộn…), a banner with an "Đặt ngay" button and a price-tag icon, and a "Đặt lại đơn gần đây" row that is always shown | Chips removed (filtering items belongs to the Menu tab S03; chips on Home only filter a short list and confuse); the banner is compact and the whole block is tappable; "Reorder" only shows once there is an order and states the items and total; item cards use real photos instead of icons; the title is "Món nhanh · tối đa 5 phút" (a 5-minute item still counts as quick) | Less visual clutter, no redundant parts, everything on screen is backed by real data | Not yet |
+| D07 | S15 ends with "Xoá dữ liệu trên máy này" and has 5 rows; S26 has a Back button and "Tiếp tục không cần tài khoản" | S15 ends with "Đăng xuất" behind a confirmation dialog and adds a sixth row "Khu demo Firebase"; S26 has no Back button and no way to continue without an account | Sign-out is required by the Lab 3 handout (it also clears the local data); the demo area must be reachable from Profile; a consequence of D01 and D03 | Not yet |
 | | | | | |
 
 Add a row whenever you find a new deviation.

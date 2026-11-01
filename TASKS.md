@@ -125,20 +125,44 @@ The "Depends on" column shows which task must be finished first.
 
 Have a short meeting at the start and the middle of each week; anyone who falls behind a milestone should say so right away so the work can be redistributed.
 
-## Foundation progress (skeleton already built)
+## Progress (checked against the code on 2026-11-01)
 
-The foundation that lets 5 people work in parallel is already in the repo. It needs review; it is not considered finished.
+Status is what the code and the evidence show, not what was planned. "Done in code" means the code and its tests are finished but the evidence the handout asks for (screenshots, console, device run) is still missing. Main screens built: **4 of 44** (S01, S02, S15, S26).
 
-| Task | Status | Notes |
-|---|---|---|
-| T03 | Done | `flutter create`, pinned versions and `flutterfire configure` done (project `breakbite-1315b`) |
-| T20 | Skeleton done | MVVM skeleton, router, DI, `ViewState`; P1 must update `docs/architecture.md` to match the code |
-| T21 | Skeleton done | Theme from the Lab 2 tokens and shared widgets; the Nunito font is in `assets/fonts/`; S02 is a reference screen built to Figma v2 |
-| T22 | Partial | Interfaces, fakes and models exist; **P3 must write the Firebase implementations** and wire them in `lib/config/firebase_dependencies.dart` |
-| T31 | Partial | The data model skeleton is settled (`docs/data-model.md`), rules and indexes are deployed, **82/82 rules tests pass**. The seed and role-assignment scripts are written and verified on the Emulator (`firebase/seed/`). Loaded into the real Firestore on 29/10/2026 (3 kiosks, 25 items, 3 vouchers, 40 slots). **Remaining:** assign the staff and admin roles to members with `set-role.mjs` after they sign in to the app once |
-| T01 | Partial | Project `breakbite-1315b` (Spark): Android app, P1's machine SHA-1, Google Auth, Firestore (`asia-southeast1`), rules and Remote Config deployed. **Remaining:** Crashlytics, the other 4 machines' SHA-1, invite the 4 other members to the project |
-| T02 | Not started | Owner P5. Needs an Android device and the ARTEMIS API key |
-| T40 | Partial | S01 Onboarding and S02 Home are done, built to Figma v2 (reference screens for the team). Remaining: S03–S08, S21, S22, S25, S29 |
-| T33, T34 | Not started | Nobody has written the Firestore versions of `MenuRepository`, `CartRepository`, `OrderRepository` and the per-feature services yet |
+| Task | Owner | Status | Done | What exists | Still missing |
+|---|---|---|---|---|---|
+| T00 | P1 | Done | 100% | Repo, PR rules, templates, conventions | Only 3 of 5 members have commits so far |
+| T01 | P3 | Partial | 70% | Project `breakbite-1315b`, Android app, Google Auth, Firestore `asia-southeast1`, rules, Remote Config | Turn on Crashlytics, add the other 4 machines' SHA-1, invite the 4 members |
+| T02 | P5 | Partial | 30% | ARTEMIS client pinned, environment guide in `e2e_test/README.md` | Android device, model API key, one sample ARTEMIS run |
+| T03 | P1 | Done | 100% | `flutter create`, pinned versions, `flutterfire configure` | — |
+| T10 | P1 | Done | 100% | Every S and K screen has a route, widget, data source and owner | Owners keep their rows up to date |
+| T11 | P4 | Not started | 0% | — | Written confirmation from the lecturer (team of 5, both apps, D01, Cloudinary instead of Storage, deadline) |
+| T20 | P1 | Done | 100% | MVVM layers, router per owner, DI, `ViewState`, `Result`, `Command`, `Paged`; layer rules checked by `test/architecture_test.dart` | — |
+| T21 | P1 | Partial | 85% | Theme from the Figma v2 frames, shared widgets with tests, WCAG contrast tests | A widget catalog checked at 360 dp and 412 dp |
+| T22 | P3 | Done | 100% | Firebase Auth, Analytics, Crashlytics, Messaging, Remote Config in `lib/data/services/firebase/` | — |
+| T30 | P3 | Done in code | 90% | S26 Google Sign-In, `users/{uid}` with role `user`, routing by auth state and role, cancel and offline messages, S15 sign-out with confirmation | Screenshots on a device and of the Users tab in the console |
+| T31 | P3 | Partial | 85% | Data model, rules (82 rules tests), indexes, seed, backup, restore and migration scripts | Run the migration on the real Firestore (`firebase/README.md`), give staff and admin roles with `set-role.mjs` |
+| T32 | P3 | Partial | 60% | `CloudinaryStorageService` written, tested and wired; unsigned preset in `env/cloudinary.json` | A real upload on a device with progress and URL, the file's metadata in Firestore, the lecturer's approval to use Cloudinary |
+| T33 | P3 | Done | 100% | Firestore Menu, Cart and Order repositories; ordering in one transaction; checked against the real rules on the Emulator (`integration_test/`, 10 tests) | — |
+| T34 | Each owner | Not started | 0% | — | Slot, Voucher, Review, Incident, Favorite, Notification repositories |
+| T40 | P1 | Partial | 15% | S01, S02 (with S02-LOADING, S02-ADDED) | S03–S08, S21, S22, S25, S29; the repositories they need already exist (T33) |
+| T41 | P2 | Not started | 0% | `OrderRepository.editPendingOrder` and `cancelMyOrder` are ready | S09–S12, S20, S23, S24 |
+| T42 | P3 | Partial | 35% | S15, S26 | S16, S17, S27, the Firebase demo area |
+| T43 | P2 | Not started | 0% | `StorageService` is ready | Make the PDF, upload it, show progress and URL |
+| T44 | P4 | Not started | 0% | `OrderRepository` staff methods (`watchKioskQueue`, `accept`, `markReady`, `deliver`, `reject`, `findReadyByPickupCode`) are ready | K01–K06, K12, K13 |
+| T45 | P2 | Not started | 0% | `MenuRepository.upsertItem` and `setSoldOut` are ready | K08–K11, K14, K15 |
+| T46 | P5 | Not started | 0% | — | S13, S14, S18, S19, S28, S30 |
+| T50 | P5 | Partial | 40% | Plan with 11 events; 4 are logged in code (`login`, `logout`, `add_to_cart`, `reorder`); `setUserId` after sign-in | At least 3 more events in code, DebugView screenshots |
+| T51 | P3 | Done in code | 60% | Handled errors recorded from real error paths, uncaught errors reported, user ID and the `role` and `kiosk_id` keys | Crashlytics turned on in the console, test crash button in the demo area, dashboard screenshots |
+| T52 | P3 | Done in code | 75% | 2 parameters change Home (quick item count, Golden Hour banner), values update live without a rebuild; defaults file matches the code (tested) | Before and after screenshots, values in the console |
+| T53 | P5 | Partial | 50% | `MessagingService`: Android 13+ permission, token per user, messages saved to the inbox in all 3 states | S19 notification list, tapping a notification opens its screen, console test in each state |
+| T60 | P5 | Partial | 50% | 13 test cases written in `docs/test-plan.md` | Run them, record results |
+| T61 | Everyone | Partial | 10% | `TestId` labels on S01, S02, S15, S26 | Every other screen |
+| T62 | P5 | Partial | 10% | `e2e_test/test_auth.py` skeleton | At least 10 tests, 3 runs each, pass-rate table |
+| T63 | P5 | Not started | 0% | — | Exploratory session report |
+| T70 | P4 | Partial | 10% | Review record template | Run an AI review on a PR, save the output in `evidence/` |
+| T71 | Everyone | Not started | 0% | — | At least 5 findings decided, 3 fix commits with `CR-xx` |
+| T72 | P1 | Not started | 0% | — | MVVM check across the repo |
+| T80–T83 | P4, P1 | Not started | 0% | — | Report, slides, video, Figma update and checklist |
 
 How to work in parallel: everyone edits their own route file (`lib/routing/routes_pX.dart`) to replace the placeholder screen with the real one; run `dev/main_dev.dart` (F5 "fake data") while Firebase is not connected. Fake data lives in `dev/`, outside `lib/`, so it is never part of the submitted build.

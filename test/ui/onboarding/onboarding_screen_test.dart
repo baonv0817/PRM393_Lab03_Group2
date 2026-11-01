@@ -15,6 +15,7 @@ Future<AuthViewModel> pumpOnboarding(WidgetTester tester) async {
     FakeAnalyticsService(),
     FakeCrashService(),
     InMemorySessionRepository(),
+    FakeMessagingService(),
   );
   await pumpScreen(
     tester,
@@ -40,7 +41,6 @@ void main() {
     expect(find.text('Bỏ qua'), findsOneWidget);
     expect(find.text('Bắt đầu đặt món'), findsOneWidget);
     expect(find.text('Đăng nhập bằng Google'), findsOneWidget);
-    // Unneeded secondary text has been removed.
     expect(find.textContaining('Không phải xếp hàng'), findsNothing);
     expect(find.text('Chuẩn bị dự kiến 3–5 phút'), findsNothing);
     expect(find.text('Campus Q9 · Tầng 2'), findsNothing);

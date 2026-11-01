@@ -86,6 +86,15 @@ class FakeMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<Result<Map<String, MenuItem>>> getItems(Iterable<String> ids) async {
+    final wanted = ids.toSet();
+    return Result.ok({
+      for (final item in _menu.value)
+        if (wanted.contains(item.id)) item.id: item,
+    });
+  }
+
+  @override
   Stream<List<Kiosk>> watchKiosks() => _kiosks.stream;
 
   @override
@@ -108,12 +117,12 @@ class FakeMenuRepository implements MenuRepository {
   };
 
   @override
-  Future<Result<void>> upsertItem(MenuItem item) async {
+  Future<Result<String>> upsertItem(MenuItem item) async {
     final list = [..._menu.value];
     final i = list.indexWhere((e) => e.id == item.id);
     i == -1 ? list.add(item) : list[i] = item;
     _menu.set(list);
-    return const Result.ok(null);
+    return Result.ok(item.id);
   }
 
   @override

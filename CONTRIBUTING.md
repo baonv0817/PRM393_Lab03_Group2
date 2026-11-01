@@ -152,8 +152,8 @@ flutter test                                     # includes test/architecture_te
 |---|---|---|
 | Formatting | `dart format`, 120 columns. Turn on *Format On Save* in VS Code | `dart format` |
 | Imports | Inside `lib/` always `package:breakbite/…`, sorted. Tests import fakes with a relative path: `../../../dev/fakes/fakes.dart` | lints `always_use_package_imports`, `directives_ordering` |
-| Language | Identifiers, comments, test names, commits and docs in English. Only text shown to users is Vietnamese | review |
-| Comments | Explain *why*, not *what*. `///` on public classes and on members whose behaviour is not obvious from the name. No commented-out code; no `TODO` without a task ID (`TODO(T33): …`) | review |
+| Language | Identifiers, test names, commits and docs in English. Only text shown to users is Vietnamese | review |
+| Comments | **No comments in code** (`//`, `///`, `/* */`), including commented-out code and `TODO`. Names, narrow types and test names carry the meaning; explanations go into `docs/`. Only machine directives stay (`// ignore: …`). A file you edit loses its old comments | review |
 | Naming | Files `snake_case`: `<name>_screen.dart`, `<name>_view_model.dart`, `<name>_repository.dart`, `<name>_service.dart`, fakes `fake_<name>_….dart`. A test mirrors the path of what it tests and ends in `_test.dart` | review |
 | Types | Strict casts, inference and raw types; declared return types; no `dynamic` calls | analyzer, lints |
 | Async | Await every `Future` or wrap it in `unawaited(…)`; cancel every `StreamSubscription` in `dispose()` | lints `unawaited_futures`, `cancel_subscriptions` |
