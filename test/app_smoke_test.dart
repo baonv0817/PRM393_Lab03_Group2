@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../dev/fake_dependencies.dart';
+import '../dev/fakes/fakes.dart';
 
 void main() {
   testWidgets('signed out: shows Onboarding (S01) first, tapping Skip goes to sign-in (S26)', (tester) async {
@@ -59,5 +60,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('K02'), findsOneWidget);
     expect(find.text('Quét mã'), findsOneWidget);
+  });
+
+  testWidgets('opening the app already signed in: the cart belongs to the user and switching kiosk warns first', (
+    tester,
+  ) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final cart = deps.cart as FakeCartRepository;
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
+    await tester.pumpAndSettle();
+    expect(cart.current('dev-user').items, hasLength(1));
+    expect(cart.current('').items, isEmpty);
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Kiosk Q9 · Tầng 2').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsIdentifier('s27.kiosk.q9-t4'));
+    await tester.pump();
+    await tester.tap(find.bySemanticsIdentifier('s27.confirm'));
+    await tester.pumpAndSettle();
+    expect(find.text('Đổi sang Kiosk Q9 · Tầng 4?'), findsOneWidget);
+    await tester.tap(find.text('Đổi kiosk'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kiosk Q9 · Tầng 4'), findsOneWidget);
+    expect(cart.current('dev-user').isEmpty, isTrue);
   });
 }

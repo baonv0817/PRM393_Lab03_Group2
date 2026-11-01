@@ -1,3 +1,4 @@
+import 'package:breakbite/domain/models/kiosk.dart';
 import 'package:breakbite/domain/models/order.dart';
 import 'package:breakbite/domain/models/voucher.dart';
 import 'package:intl/intl.dart';
@@ -39,4 +40,19 @@ String voucherProblemMessage(Voucher voucher, VoucherProblem problem) => switch 
   VoucherProblem.outsideActiveHours =>
     'Mã ${voucher.code} chỉ dùng từ ${voucher.activeFrom} đến ${voucher.activeTo} mỗi ngày.',
   VoucherProblem.belowMinimum => 'Đơn tối thiểu ${formatVnd(voucher.minOrderVnd)} để dùng mã ${voucher.code}.',
+};
+
+String kioskStatusLabel(Kiosk kiosk, {required DateTime now}) {
+  if (!kiosk.open) return kiosk.openTime == null ? 'Đang đóng cửa' : 'Đóng · mở lại ${kiosk.openTime}';
+  final pausedUntil = kiosk.pausedUntil;
+  if (pausedUntil != null && pausedUntil.isAfter(now)) return 'Tạm ngưng · nhận đơn lại lúc ${formatTime(pausedUntil)}';
+  final low = kiosk.waitMinutes > 1 ? kiosk.waitMinutes - 1 : 1;
+  return 'Mở · chờ $low–${kiosk.waitMinutes + 1} phút';
+}
+
+String paymentMethodLabel(PaymentMethod method) => switch (method) {
+  PaymentMethod.momo => 'Ví MoMo',
+  PaymentMethod.vnpay => 'VNPAY-QR',
+  PaymentMethod.card => 'Thẻ SV / Ví BreakBite',
+  PaymentMethod.cash => 'Tiền mặt tại kiosk',
 };
