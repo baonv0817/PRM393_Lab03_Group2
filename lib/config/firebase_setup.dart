@@ -1,30 +1,47 @@
+import 'package:breakbite/data/services/firebase/notification_inbox.dart';
 import 'package:breakbite/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-/// `--dart-define=USE_FIREBASE_EMULATOR=true` points Auth and Firestore at the local Emulator Suite
-/// (`firebase emulators:start`, see `docs/setup.md`), so rules and flows can be tried and ARTEMIS can
-/// run without touching the real project. Only honoured in debug builds.
 const useFirebaseEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR');
 
-/// Host of the Emulator Suite. Defaults to `10.0.2.2` on the Android emulator (the host machine) and
-/// `localhost` elsewhere; a physical phone needs the computer's LAN address.
 const _emulatorHost = String.fromEnvironment('FIREBASE_EMULATOR_HOST');
 
-/// Ports from `firebase.json`.
 const firestoreEmulatorPort = 8080;
 const authEmulatorPort = 9099;
 
-/// Initializes Firebase for this platform and, when asked, connects to the emulators. Call once,
-/// before any Firebase service is used.
+bool get usingFirebaseEmulator => useFirebaseEmulator && kDebugMode;
+
 Future<void> initializeFirebase() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  if (!useFirebaseEmulator || !kDebugMode) return;
+  if (!usingFirebaseEmulator) return;
   final host = emulatorHost();
   FirebaseFirestore.instance.useFirestoreEmulator(host, firestoreEmulatorPort);
   await FirebaseAuth.instance.useAuthEmulator(host, authEmulatorPort);
+}
+
+void reportUncaughtErrors(FirebaseCrashlytics crashlytics) {
+  FlutterError.onError = crashlytics.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    crashlytics.recordError(error, stack, fatal: true);
+    return true;
+  };
+}
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await initializeFirebase();
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
+  try {
+    await saveToInbox(FirebaseFirestore.instance, uid, message);
+  } catch (error) {
+    debugPrint('Background notification was not saved: $error');
+  }
 }
 
 String emulatorHost() {

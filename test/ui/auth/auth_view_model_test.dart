@@ -21,11 +21,13 @@ AuthViewModel make({
   FakeAnalyticsService? analytics,
   FakeCrashService? crash,
   InMemorySessionRepository? session,
+  FakeMessagingService? messaging,
 }) => AuthViewModel(
   auth ?? FakeAuthService(),
   analytics ?? FakeAnalyticsService(),
   crash ?? FakeCrashService(),
   session ?? InMemorySessionRepository(),
+  messaging ?? FakeMessagingService(),
 );
 
 void main() {
@@ -96,6 +98,41 @@ void main() {
     expect(vm.user, isNull);
     expect(session.selectedKioskId, isNull);
     expect(analytics.events.map((e) => e.name), contains('logout'));
+    vm.dispose();
+  });
+
+  test('a new user is attached to push messaging, asked for permission and tagged in Crashlytics', () async {
+    final messaging = FakeMessagingService();
+    final crash = FakeCrashService();
+    final vm = make(
+      auth: FakeAuthService(role: UserRole.staff, signedIn: true),
+      messaging: messaging,
+      crash: crash,
+    );
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(messaging.attached, ['dev-staff']);
+    expect(messaging.permissionRequests, 1);
+    expect(crash.keys['role'], 'staff');
+    expect(crash.keys.containsKey('kiosk_id'), isTrue);
+    vm.dispose();
+  });
+
+  test('sign-out detaches the device token before signing out', () async {
+    final messaging = FakeMessagingService();
+    final vm = make(auth: FakeAuthService(signedIn: true), messaging: messaging);
+    await Future<void>.delayed(Duration.zero);
+    await vm.signOut.execute();
+    expect(messaging.detached, ['dev-user']);
+    vm.dispose();
+  });
+
+  test('the login event is logged only for an explicit sign-in, not when a saved session is restored', () async {
+    final analytics = FakeAnalyticsService();
+    final vm = make(auth: FakeAuthService(signedIn: true), analytics: analytics);
+    await Future<void>.delayed(Duration.zero);
+    expect(analytics.userId, 'dev-user');
+    expect(analytics.events.map((e) => e.name), isNot(contains('login')));
     vm.dispose();
   });
 }

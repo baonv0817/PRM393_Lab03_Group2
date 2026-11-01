@@ -24,6 +24,7 @@ class BreakBiteApp extends StatelessWidget {
             context.read<AnalyticsService>(),
             context.read<CrashService>(),
             context.read<SessionRepository>(),
+            context.read<MessagingService>(),
           ),
         ),
       ],
