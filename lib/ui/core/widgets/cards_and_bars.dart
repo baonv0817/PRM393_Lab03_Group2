@@ -187,13 +187,14 @@ Future<bool?> showAppDialog(
   );
 }
 
-/// "Added to cart" notice with a View cart button (S02-ADDED, S03-ADDED).
 void showAddedSnackbar(BuildContext context, {required String message, required VoidCallback onViewCart}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(message),
+        persist: false,
+        duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: 'Xem giỏ',
           textColor: Theme.of(context).colorScheme.primary,

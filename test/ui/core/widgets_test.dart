@@ -75,4 +75,26 @@ void main() {
     expect(find.byType(IconButton), findsNothing);
     expect(find.text('35.000đ'), findsOneWidget);
   });
+
+  testWidgets('the added-to-cart notice closes by itself, so it never covers the next screen', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showAddedSnackbar(context, message: 'Đã thêm Tacos vào giỏ', onViewCart: () {}),
+              child: const Text('add'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Xem giỏ'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Xem giỏ'), findsNothing);
+  });
 }
