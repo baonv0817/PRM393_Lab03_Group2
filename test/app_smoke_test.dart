@@ -75,7 +75,7 @@ void main() {
     expect(cart.current('').items, isEmpty);
     await tester.tap(find.bySemanticsIdentifier('s02.cart'));
     await tester.pumpAndSettle();
-    expect(find.text('S05'), findsOneWidget);
+    expect(find.bySemanticsIdentifier('s05.item.m1'), findsOneWidget);
     await tester.tap(find.byTooltip('Quay lại'));
     await tester.pumpAndSettle();
 

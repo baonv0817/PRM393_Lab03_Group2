@@ -3,17 +3,19 @@ import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/cart/view_models/cart_view_model.dart';
+import 'package:breakbite/ui/cart/widgets/cart_screen.dart';
+import 'package:breakbite/ui/checkout/view_models/checkout_view_model.dart';
+import 'package:breakbite/ui/checkout/widgets/checkout_screen.dart';
+import 'package:breakbite/ui/checkout/widgets/gateway_screen.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
 import 'package:breakbite/ui/home/widgets/home_screen.dart';
 import 'package:breakbite/ui/onboarding/widgets/onboarding_screen.dart';
+import 'package:breakbite/ui/orders/view_models/order_tracking_view_model.dart';
+import 'package:breakbite/ui/orders/widgets/order_tracking_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-// P1: ordering flow S01–S08, S25, S29 (S21 is a state of Home, S22 is the alternatives screen).
-// See docs/design-traceability.md.
-
-/// Tab root: S02 Home. The pattern for wiring a real screen: create the ViewModel in the route,
-/// the screen only reads it.
 final GoRoute homeRoute = GoRoute(
   path: AppRoutes.home,
   builder: (context, state) {
@@ -34,21 +36,65 @@ final GoRoute homeRoute = GoRoute(
   },
 );
 
-/// Tab root: S03 Menu.
 final GoRoute menuRoute = placeholderRoute(AppRoutes.menu, 'S03', 'Thực đơn', 'P1', showBack: false);
 
-/// Tab root: S08 Orders.
 final GoRoute ordersRoute = placeholderRoute(AppRoutes.orders, 'S08', 'Đơn hàng', 'P1', showBack: false);
 
-/// Full-screen routes of P1.
 final List<GoRoute> p1Routes = [
   GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
   placeholderRoute(AppRoutes.menuItem, 'S04', 'Chi tiết món', 'P1'),
   placeholderRoute(AppRoutes.menuAlternatives, 'S22', 'Món hết, gợi ý thay thế', 'P1'),
-  placeholderRoute(AppRoutes.cart, 'S05', 'Giỏ hàng', 'P1'),
+  GoRoute(
+    path: AppRoutes.cart,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => CartViewModel(
+        cart: context.read<CartRepository>(),
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+      ),
+      child: const CartScreen(),
+    ),
+  ),
   placeholderRoute(AppRoutes.cartPickupTime, 'S25', 'Hẹn giờ nhận', 'P1'),
   placeholderRoute(AppRoutes.cartVouchers, 'S29', 'Chọn mã giảm giá', 'P1'),
-  placeholderRoute(AppRoutes.checkout, 'S06', 'Thanh toán', 'P1'),
-  placeholderRoute(AppRoutes.checkoutGateway, 'S06-GATEWAY', 'Cổng thanh toán', 'P1'),
-  placeholderRoute(AppRoutes.order, 'S07', 'Theo dõi đơn', 'P1'),
+  GoRoute(
+    path: AppRoutes.checkout,
+    builder: (context, state) {
+      final user = context.read<AuthViewModel>().user;
+      return ChangeNotifierProvider(
+        create: (_) => CheckoutViewModel(
+          cart: context.read<CartRepository>(),
+          menu: context.read<MenuRepository>(),
+          orders: context.read<OrderRepository>(),
+          users: context.read<UserRepository>(),
+          analytics: context.read<AnalyticsService>(),
+          crash: context.read<CrashService>(),
+          uid: user?.uid ?? '',
+          customerName: user?.displayName ?? 'Khách',
+        ),
+        child: const CheckoutScreen(),
+      );
+    },
+  ),
+  GoRoute(
+    path: AppRoutes.checkoutGateway,
+    redirect: (context, state) => state.extra is CheckoutViewModel ? null : AppRoutes.cart,
+    builder: (context, state) => ChangeNotifierProvider<CheckoutViewModel>.value(
+      value: state.extra! as CheckoutViewModel,
+      child: const GatewayScreen(),
+    ),
+  ),
+  GoRoute(
+    path: AppRoutes.order,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => OrderTrackingViewModel(
+        orders: context.read<OrderRepository>(),
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        orderId: state.pathParameters['id'] ?? '',
+      ),
+      child: const OrderTrackingScreen(),
+    ),
+  ),
 ];
