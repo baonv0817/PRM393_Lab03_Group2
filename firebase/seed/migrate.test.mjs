@@ -1,10 +1,10 @@
-// Runs the T31 migration against documents in the old structure on the Emulator:
-//   npm run test:migrate
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 
 import { connect } from './admin.mjs';
 import { dumpAll, restoreAll } from './firestore-json.mjs';
+import { MIGRATIONS } from './migrations/index.mjs';
 import { MIGRATION_ID, apply, categoryOf, dishIdOf, plan, verify } from './migrations/t31-data-model.mjs';
 
 const { admin, db } = connect([]);
@@ -147,4 +147,33 @@ test('T31 migration on old-structure data', async (t) => {
     await restoreAll(db, admin, before, { prune: true });
     assert.deepEqual(await dumpAll(db, admin), before);
   });
+});
+
+test('migrations are registered once, in date order, with plan, apply and verify', () => {
+  const ids = MIGRATIONS.map((m) => m.MIGRATION_ID);
+  assert.deepEqual(ids, [...new Set(ids)].sort());
+  for (const migration of MIGRATIONS) {
+    assert.match(migration.MIGRATION_ID, /^\d{4}-\d{2}-[a-z0-9-]+$/);
+    for (const fn of ['plan', 'apply', 'verify']) {
+      assert.equal(typeof migration[fn], 'function', `${migration.MIGRATION_ID}.${fn}`);
+    }
+  }
+});
+
+test('migrate.mjs runs every pending migration once and reports the status', async () => {
+  await clear();
+  const writer = db.bulkWriter();
+  for (const [path, data] of Object.entries(OLD)) writer.set(db.doc(path), data);
+  await writer.close();
+  const run = (...args) =>
+    execFileSync(process.execPath, ['migrate.mjs', ...args], { cwd: import.meta.dirname, encoding: 'utf8' });
+
+  assert.match(run('--status'), new RegExp(`PENDING  ${MIGRATION_ID}`));
+  assert.match(run(), /Dry run: nothing written/);
+  assert.equal((await db.doc(`_migrations/${MIGRATION_ID}`).get()).exists, false);
+
+  assert.match(run('--apply'), /Verify: 0 problems\. A second run would change 0 documents\./);
+  assert.match(run('--status'), new RegExp(`applied  ${MIGRATION_ID}`));
+  assert.match(run(), /Up to date: all \d+ migrations are applied/);
+  assert.match(run(`--only=${MIGRATION_ID}`), /: 0 changes/);
 });
