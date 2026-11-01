@@ -42,6 +42,17 @@ String voucherProblemMessage(Voucher voucher, VoucherProblem problem) => switch 
   VoucherProblem.belowMinimum => 'Đơn tối thiểu ${formatVnd(voucher.minOrderVnd)} để dùng mã ${voucher.code}.',
 };
 
+String voucherBenefit(Voucher voucher) {
+  final amount = switch (voucher.discount) {
+    FixedDiscount(:final amountVnd) => 'Giảm ${formatVnd(amountVnd)}',
+    PercentDiscount(:final percent, :final maxVnd) => 'Giảm $percent%, tối đa ${formatVnd(maxVnd)}',
+  };
+  return voucher.minOrderVnd > 0 ? '$amount cho đơn từ ${formatVnd(voucher.minOrderVnd)}' : amount;
+}
+
+String orderItemsSummary(Order order) =>
+    '${order.items.map((e) => '${e.name} ×${e.quantity}').join(', ')} · ${formatVnd(order.totalVnd)}';
+
 String kioskStatusLabel(Kiosk kiosk, {required DateTime now}) {
   if (!kiosk.open) return kiosk.openTime == null ? 'Đang đóng cửa' : 'Đóng · mở lại ${kiosk.openTime}';
   final pausedUntil = kiosk.pausedUntil;

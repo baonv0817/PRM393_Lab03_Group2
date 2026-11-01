@@ -171,7 +171,7 @@ class _Body extends StatelessWidget {
                       ),
                       TestId(
                         's07.status',
-                        child: _Badge(label: vm.badge, warning: cancelled),
+                        child: StatusBadge(label: vm.badge, warning: cancelled),
                       ),
                     ],
                   ),
@@ -291,29 +291,6 @@ class _Body extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.warning});
-
-  final String label;
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    final text = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
-      decoration: BoxDecoration(
-        color: warning ? scheme.errorContainer : colors.selected,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: warning ? scheme.error : scheme.primary),
-      ),
-      child: Text(label, style: text.labelLarge?.copyWith(color: warning ? scheme.error : colors.primaryText)),
     );
   }
 }

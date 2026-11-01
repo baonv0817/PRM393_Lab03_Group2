@@ -53,6 +53,7 @@ MenuItem menuItemFromData(String id, Json data) => MenuItem(
   kioskId: _string(data['kioskId']),
   description: _string(data['description']),
   imageUrl: _stringOrNull(data['imageUrl']),
+  availableAgainAt: readDate(data['availableAgainAt']),
 );
 
 Json menuItemToData(MenuItem item, {required String dishId}) => {

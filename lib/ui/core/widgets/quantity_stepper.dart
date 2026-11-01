@@ -12,6 +12,7 @@ class QuantityStepper extends StatelessWidget {
     required this.onIncrement,
     required this.onDecrement,
     this.testId,
+    this.removesAtOne = true,
   });
 
   final String name;
@@ -19,6 +20,7 @@ class QuantityStepper extends StatelessWidget {
   final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
   final String? testId;
+  final bool removesAtOne;
 
   Widget _id(String suffix, Widget child) => testId == null ? child : TestId('$testId.$suffix', child: child);
 
@@ -38,8 +40,8 @@ class QuantityStepper extends StatelessWidget {
           _id(
             'dec',
             AppIconButton(
-              icon: quantity == 1 ? Icons.delete_outline : Icons.remove,
-              semanticLabel: quantity == 1 ? 'Bỏ $name khỏi giỏ' : 'Bớt 1 $name',
+              icon: quantity == 1 && removesAtOne ? Icons.delete_outline : Icons.remove,
+              semanticLabel: quantity == 1 && removesAtOne ? 'Bỏ $name khỏi giỏ' : 'Bớt 1 $name',
               onPressed: onDecrement,
             ),
           ),

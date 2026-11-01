@@ -7,11 +7,9 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
-import 'package:breakbite/ui/home/widgets/fly_to_cart.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -23,10 +21,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _cartKey = GlobalKey();
-  final _imageKeys = <String, GlobalKey>{};
-
-  GlobalKey _imageKeyOf(String itemId) => _imageKeys.putIfAbsent(itemId, GlobalKey.new);
+  final _flight = CartFlight();
 
   @override
   Widget build(BuildContext context) {
@@ -34,90 +29,72 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      floatingActionButton: _CartButton(
-        flyTargetKey: _cartKey,
+      floatingActionButton: CartFab(
+        flight: _flight,
         count: vm.cartCount,
         onPressed: () => context.push(AppRoutes.cart),
+        testId: 's02.cart',
       ),
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.xs,
-            AppSpacing.screenPadding,
-            _cartButtonClearance,
-          ),
-          children: [
-            _Header(vm: vm),
-            const SizedBox(height: AppSpacing.sm),
-            TestId(
-              's02.search',
-              child: AppSearchField(
-                hint: 'Tìm Tacos, Mì trộn, Đồ uống...',
-                onTap: () => context.push(AppRoutes.search),
-              ),
-            ),
-            if (vm.promoBannerEnabled) ...[
-              const SizedBox(height: AppSpacing.md),
-              TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            Semantics(
-              header: true,
-              child: Text('Món nhanh · tối đa 5 phút', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _QuickSection(
-              vm: vm,
-              imageKeyOf: _imageKeyOf,
-              onAdd: (item) => _add(vm, item),
-              onChange: (item, delta) => _change(vm, item, delta),
-            ),
-            if (vm.lastOrder case final order?) ...[
-              const SizedBox(height: AppSpacing.xxs),
-              TestId(
-                's02.reorder',
-                child: ListenableBuilder(
-                  listenable: vm.reorderLast,
-                  builder: (context, _) =>
-                      _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(vm)),
+        child: vm.kiosk == null && vm.state is ViewLoading<List<MenuItem>>
+            ? const _HomeSkeleton()
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.xs,
+                  AppSpacing.screenPadding,
+                  cartFabClearance,
                 ),
+                children: [
+                  _Header(vm: vm),
+                  const SizedBox(height: AppSpacing.sm),
+                  TestId(
+                    's02.search',
+                    child: AppSearchField(
+                      hint: 'Tìm Tacos, Mì trộn, Đồ uống...',
+                      onTap: () => context.push(AppRoutes.search),
+                    ),
+                  ),
+                  if (vm.promoBannerEnabled) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
+                  ],
+                  const SizedBox(height: AppSpacing.lg),
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      'Món nhanh · tối đa 5 phút',
+                      style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _QuickSection(
+                    vm: vm,
+                    imageKeyOf: _flight.imageKeyOf,
+                    onAdd: (item) => _flight.add(
+                      context,
+                      item: item,
+                      blocked: vm.blocksAdd(item),
+                      write: () => vm.addToCart.execute(item),
+                    ),
+                    onChange: (item, delta) => _flight.change(context, () => vm.changeQuantity(item, delta)),
+                  ),
+                  if (vm.lastOrder case final order?) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    TestId(
+                      's02.reorder',
+                      child: ListenableBuilder(
+                        listenable: vm.reorderLast,
+                        builder: (context, _) =>
+                            _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(vm)),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ],
-        ),
       ),
     );
-  }
-
-  Future<void> _add(HomeViewModel vm, MenuItem item) async {
-    if (!vm.blocksAdd(item)) {
-      unawaited(
-        flyToCart(
-          context: context,
-          from: _imageKeyOf(item.id),
-          to: _cartKey,
-          child: MenuItemImage(imageUrl: item.imageUrl),
-        ),
-      );
-    }
-    final result = await vm.addToCart.execute(item);
-    if (!mounted || result == null) return;
-    switch (result) {
-      case Ok():
-        unawaited(
-          SemanticsService.sendAnnouncement(View.of(context), 'Đã thêm ${item.name} vào giỏ', TextDirection.ltr),
-        );
-      case Err(:final error):
-        showAppMessage(context, error.message);
-    }
-  }
-
-  Future<void> _change(HomeViewModel vm, MenuItem item, int delta) async {
-    final result = await vm.changeQuantity(item, delta);
-    if (!mounted) return;
-    if (result case Err(:final error)) showAppMessage(context, error.message);
   }
 
   Future<void> _reorder(HomeViewModel vm) async {
@@ -226,60 +203,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-const _cartButtonClearance = 96.0;
-
-class _CartButton extends StatelessWidget {
-  const _CartButton({required this.flyTargetKey, required this.count, required this.onPressed});
-
-  static const size = 56.0;
-
-  final GlobalKey flyTargetKey;
-  final int count;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return KeyedSubtree(
-      key: flyTargetKey,
-      child: SizedBox.square(
-        dimension: size,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 260),
-          switchInCurve: Curves.easeOutBack,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-          child: count == 0
-              ? const SizedBox.shrink(key: ValueKey('empty'))
-              : BumpOnIncrease(
-                  key: const ValueKey('cart'),
-                  value: count,
-                  child: TestId(
-                    's02.cart',
-                    child: FloatingActionButton(
-                      heroTag: null,
-                      onPressed: onPressed,
-                      tooltip: 'Giỏ hàng, $count món',
-                      backgroundColor: scheme.primary,
-                      foregroundColor: scheme.onPrimary,
-                      shape: const CircleBorder(),
-                      child: Badge(
-                        backgroundColor: scheme.onPrimary,
-                        textColor: scheme.surface,
-                        textStyle: text.labelLarge?.copyWith(fontSize: 12),
-                        label: Text('$count'),
-                        child: const Icon(Icons.shopping_cart),
-                      ),
-                    ),
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-}
-
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner({required this.onTap});
 
@@ -328,6 +251,52 @@ class _PromoBanner extends StatelessWidget {
 
 const _stateArea = BoxConstraints(minHeight: 300);
 
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.screenPadding,
+      AppSpacing.sm,
+      AppSpacing.screenPadding,
+      AppSpacing.md,
+    ),
+    children: const [
+      SkeletonList(
+        leading: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FractionallySizedBox(widthFactor: 0.6, child: SkeletonBox(height: 16, radius: AppRadius.pill)),
+                    SizedBox(height: AppSpacing.xs),
+                    FractionallySizedBox(widthFactor: 0.45, child: SkeletonBox(height: 12, radius: AppRadius.pill)),
+                  ],
+                ),
+              ),
+              SkeletonBox(height: 40, circle: true),
+            ],
+          ),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(height: 52),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(height: 72, radius: AppRadius.card),
+          SizedBox(height: AppSpacing.lg),
+          FractionallySizedBox(
+            widthFactor: 0.6,
+            alignment: Alignment.centerLeft,
+            child: SkeletonBox(height: 16, radius: AppRadius.pill),
+          ),
+          SizedBox(height: AppSpacing.sm),
+        ],
+      ),
+    ],
+  );
+}
+
 class _QuickSection extends StatelessWidget {
   const _QuickSection({required this.vm, required this.imageKeyOf, required this.onAdd, required this.onChange});
 
@@ -339,7 +308,7 @@ class _QuickSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (vm.state) {
-      ViewLoading<List<MenuItem>>() => ConstrainedBox(constraints: _stateArea, child: const LoadingView()),
+      ViewLoading<List<MenuItem>>() => const SkeletonList(),
       ViewEmpty<List<MenuItem>>(:final message) => ConstrainedBox(
         constraints: _stateArea,
         child: EmptyView(message: message ?? 'Chưa có món nhanh lúc này'),

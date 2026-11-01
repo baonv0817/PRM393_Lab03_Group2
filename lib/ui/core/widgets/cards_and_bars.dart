@@ -69,6 +69,7 @@ class FoodCard extends StatelessWidget {
     final card = Semantics(
       label:
           '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}'
+          '${item.soldOut && item.availableAgainAt != null ? ', có lại lúc ${formatTime(item.availableAgainAt!)}' : ''}'
           '${quantity > 0 ? ', $quantity trong giỏ' : ''}',
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -94,13 +95,19 @@ class FoodCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: AppSpacing.xxs),
-                      Row(
-                        children: [
-                          Icon(Icons.schedule, size: 16, color: colors.muted),
-                          const SizedBox(width: AppSpacing.xxs),
-                          Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
-                        ],
-                      ),
+                      if (item.soldOut && item.availableAgainAt != null)
+                        Text(
+                          'Có lại lúc ${formatTime(item.availableAgainAt!)}',
+                          style: text.bodyMedium?.copyWith(color: colors.muted),
+                        )
+                      else
+                        Row(
+                          children: [
+                            Icon(Icons.schedule, size: 16, color: colors.muted),
+                            const SizedBox(width: AppSpacing.xxs),
+                            Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                          ],
+                        ),
                       Row(
                         children: [
                           Expanded(

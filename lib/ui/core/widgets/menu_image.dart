@@ -3,21 +3,19 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/widgets/brand.dart';
 import 'package:flutter/material.dart';
 
-/// Dish image. `imageUrl` is an image path bundled in the app (`assets/images/menu/…`) or an
-/// `https://` link (an image the seller uploaded to Cloud Storage). A missing or broken image shows the soft logo.
 class MenuItemImage extends StatelessWidget {
-  const MenuItemImage({super.key, required this.imageUrl, this.size = 80});
+  const MenuItemImage({super.key, required this.imageUrl, this.size = 80, this.height});
 
   final String? imageUrl;
   final double size;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
-    // The dish name is already in the card's accessibility label, so the image needs no extra label.
     return ExcludeSemantics(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.input),
-        child: SizedBox.square(dimension: size, child: _image(context)),
+        child: SizedBox(width: size, height: height ?? size, child: _image(context)),
       ),
     );
   }

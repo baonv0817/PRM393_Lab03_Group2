@@ -56,9 +56,9 @@ Future<Harness> pumpHome(
 void main() {
   testWidgets('shows loading then the quick items, without sold-out items', (tester) async {
     await pumpHome(tester, settle: false);
-    expect(find.text('Đang tải…'), findsOneWidget);
+    expect(find.byType(FoodCardSkeleton), findsNWidgets(3));
     await tester.pumpAndSettle();
-    expect(find.text('Đang tải…'), findsNothing);
+    expect(find.byType(FoodCardSkeleton), findsNothing);
     expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
     expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
     expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsOneWidget);
