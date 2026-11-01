@@ -5,6 +5,7 @@ import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
 import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/data/services/cloudinary/cloudinary_storage_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_analytics_service.dart';
@@ -12,6 +13,7 @@ import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_crash_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_messaging_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_remote_config_service.dart';
+import 'package:breakbite/data/services/pdf/pdf_report_file_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,9 +43,11 @@ Future<AppDependencies> createFirebaseDependencies() async {
     messaging: FirebaseMessagingService(messaging: FirebaseMessaging.instance, db: db),
     storage: CloudinaryStorageService(CloudinaryConfig.fromEnvironment()),
     remoteConfig: remoteConfig,
+    reportFiles: PdfReportFileService(),
     menu: FirestoreMenuRepository(db),
     cart: FirestoreCartRepository(db),
     orders: FirestoreOrderRepository(db),
+    reports: FirestoreReportRepository(db),
     session: InMemorySessionRepository(),
   );
 }

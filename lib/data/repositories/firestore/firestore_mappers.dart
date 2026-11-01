@@ -186,3 +186,14 @@ Order orderFromData(String id, Json data, {DateTime? now}) => Order(
   cancelledAt: readDate(data['cancelledAt']),
   updatedAt: readDate(data['updatedAt']),
 );
+
+Report reportFromData(String id, Json data, {required DateTime now}) => Report(
+  id: id,
+  uid: _string(data['uid']),
+  fileName: _string(data['fileName']),
+  url: _string(data['url']),
+  publicId: _string(data['publicId']),
+  sizeKb: _int(data['sizeKb']),
+  createdAt: readDateOr(data['createdAt'], now),
+  orderId: _stringOrNull(data['orderId']),
+);

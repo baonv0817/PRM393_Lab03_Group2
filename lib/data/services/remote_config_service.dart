@@ -6,6 +6,8 @@ abstract final class RemoteKeys {
   static const defaults = <String, Object>{quickItemsLimit: 5, promoBannerEnabled: true, pickupSlotEnabled: true};
 }
 
+enum RemoteValueSource { inApp, console }
+
 abstract interface class RemoteConfigService {
   Future<void> fetchAndActivate();
 
@@ -14,4 +16,8 @@ abstract interface class RemoteConfigService {
   int getInt(String key);
 
   bool getBool(String key);
+
+  RemoteValueSource sourceOf(String key);
+
+  DateTime? get lastFetchedAt;
 }

@@ -59,6 +59,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S28-EMPTY | No results | (state of /search) | EmptyView | SearchViewModel | — | P5 | Not started |
 | S29 | Choose a voucher | /cart/vouchers | VoucherPickerScreen | VoucherViewModel | Firestore vouchers | P1 | Not started |
 | S30 | Offline | (app-wide state) | OfflineView | ConnectivityViewModel | connectivity_plus | P5 | Not started |
+| DEMO | Firebase demo area (Khu demo Firebase), not in the Lab 2 design, see D08 | /profile/firebase-demo | FirebaseDemoScreen | FirebaseDemoViewModel | Remote Config, Crashlytics, Cloudinary, Firestore reports, link to S19 | P3 | Done |
 
 ## 2. Seller app (K01–K15)
 
@@ -124,6 +125,7 @@ Every place that differs from Figma is recorded here with the reason, and **Figm
 | D05 | S01 has a link "Đăng nhập bằng email @fpt.edu.vn"; "Bắt đầu đặt món" and "Bỏ qua" open Home directly | The link reads "Đăng nhập bằng Google"; all three buttons go to the sign-in screen S26 (S01 only shows to signed-out users, each time the app opens). The location line, the sub-text and the three-benefit card were removed, and the logo and the BreakBite name were added | A consequence of D01 and D03; fewer meaningless texts | Not yet |
 | D06 | S02 has category chips (Tất cả, Tacos, Mì trộn…), a banner with an "Đặt ngay" button and a price-tag icon, and a "Đặt lại đơn gần đây" row that is always shown | Chips removed (filtering items belongs to the Menu tab S03; chips on Home only filter a short list and confuse); the banner is compact and the whole block is tappable; "Reorder" only shows once there is an order and states the items and total; item cards use real photos instead of icons; the title is "Món nhanh · tối đa 5 phút" (a 5-minute item still counts as quick) | Less visual clutter, no redundant parts, everything on screen is backed by real data | Not yet |
 | D07 | S15 ends with "Xoá dữ liệu trên máy này" and has 5 rows; S26 has a Back button and "Tiếp tục không cần tài khoản" | S15 ends with "Đăng xuất" behind a confirmation dialog and adds a sixth row "Khu demo Firebase"; S26 has no Back button and no way to continue without an account | Sign-out is required by the Lab 3 handout (it also clears the local data); the demo area must be reachable from Profile; a consequence of D01 and D03 | Not yet |
+| D08 | No Firebase demo area | S15 has a sixth row "Khu demo Firebase" that opens a demo screen: link to the notification center, Remote Config values with where each came from, Crashlytics test error and test crash (behind a confirmation), PDF export and upload with progress, URL and the list of my files | The Lab 3 handout requires a Firebase demo area on the Profile screen; built only from existing components (section, list rows, buttons, empty and error states) so it matches the rest of the app | Not yet |
 | | | | | |
 
 Add a row whenever you find a new deviation.

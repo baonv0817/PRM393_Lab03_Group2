@@ -10,5 +10,6 @@ export 'menu_item.dart';
 export 'order.dart';
 export 'order_draft.dart';
 export 'pickup_slot.dart';
+export 'report.dart';
 export 'review.dart';
 export 'voucher.dart';

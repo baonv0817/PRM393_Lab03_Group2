@@ -5,6 +5,7 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:breakbite/ui/profile/view_models/profile_view_model.dart';
+import 'package:breakbite/ui/profile/widgets/profile_section.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -57,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
-          _Section(
+          ProfileSection(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
@@ -95,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _Section(
+          ProfileSection(
             child: Column(
               children: [
                 for (final (index, entry) in _entries.indexed) ...[
@@ -137,21 +138,4 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surface,
-    clipBehavior: Clip.antiAlias,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      side: BorderSide(color: context.appColors.border),
-    ),
-    child: child,
-  );
 }
