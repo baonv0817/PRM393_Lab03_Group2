@@ -51,7 +51,7 @@ Rule that applies to every service: screens never call an SDK. Each service sits
 
 | | |
 |---|---|
-| Behaviour | Uncaught Flutter and platform errors are reported (`reportUncaughtErrors`). Handled errors from real error paths (network, permission, a failed write) are recorded through `crash.recordNonFatal`, which sends the real cause and skips actions the user cancelled. User id and the custom keys `role` and `kiosk_id` are set after sign-in. The demo area has "Ghi lỗi thử" (non-fatal) and "Làm sập app thử" (test crash, behind a confirmation). Turned on in the console on 01/11/2026 |
+| Behaviour | Uncaught Flutter and platform errors are reported (`reportUncaughtErrors`). Handled errors from real error paths (network, permission, a failed write) are recorded through `crash.recordNonFatal`, which sends the real cause and skips actions the user cancelled. User id and the custom keys `role` and `kiosk_id` (the staff member's kiosk, otherwise the kiosk the customer picked) are set after sign-in and follow a kiosk change. A listener the rules refuse right after sign-out ends quietly instead of being reported. The demo area has "Ghi lỗi thử" (non-fatal) and "Làm sập app thử" (test crash, behind a confirmation). Turned on in the console on 01/11/2026 |
 | Code | `lib/data/services/firebase/firebase_crash_service.dart`, `lib/data/services/crash_service.dart`, `lib/config/firebase_setup.dart` |
 | Failure handling | Reporting itself never throws |
 | Proof | `test/data/services/crash_service_test.dart`, view model tests that assert `crash.errors` on failures |

@@ -28,6 +28,10 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
         notifyListeners();
       },
     );
+    _kioskSub = _session.watchSelectedKioskId().listen((id) {
+      _selectedKioskId = id;
+      if (_user != null) unawaited(_syncKioskKey());
+    }, onError: (Object e, StackTrace s) => _crash.recordNonFatal(e, s, 'auth.watchSelectedKiosk'));
   }
 
   final AuthService _auth;
@@ -36,6 +40,8 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
   final SessionRepository _session;
   final MessagingService _messaging;
   late final StreamSubscription<AppUser?> _sub;
+  late final StreamSubscription<String?> _kioskSub;
+  String? _selectedKioskId;
 
   late final signIn = Command0<AppUser>(_signIn);
 
@@ -112,12 +118,15 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
       await _messaging.requestPermission();
     }
     await _crash.setKey('role', user.role.name);
-    await _crash.setKey('kiosk_id', user.kioskId ?? 'none');
+    await _syncKioskKey();
   }
+
+  Future<void> _syncKioskKey() => _crash.setKey('kiosk_id', _user?.kioskId ?? _selectedKioskId ?? 'none');
 
   @override
   void dispose() {
     unawaited(_sub.cancel());
+    unawaited(_kioskSub.cancel());
     signIn.dispose();
     signOut.dispose();
     super.dispose();
