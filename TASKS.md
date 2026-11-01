@@ -132,7 +132,7 @@ Status is what the code and the evidence show, not what was planned. "Done in co
 | Task | Owner | Status | Done | What exists | Still missing |
 |---|---|---|---|---|---|
 | T00 | P1 | Done | 100% | Repo, PR rules, templates, conventions | Only 3 of 5 members have commits so far |
-| T01 | P3 | Partial | 85% | Project `breakbite-1315b`, Android app, Google Auth, Firestore `asia-southeast1`, rules, Remote Config; Crashlytics turned on (01/11/2026, the console waits for the first crash) | Add the other machines' SHA-1 (only P1's is registered), invite the other members to the project |
+| T01 | P3 | Partial | 85% | Project `breakbite-1315b`, Android app, Google Auth, Firestore `asia-southeast1`, rules, Remote Config; Crashlytics turned on (01/11/2026, the console waits for the first crash); P3's debug SHA-1 added and `google-services.json` refreshed | Add the SHA-1 of the other members' machines (P1's and P3's are registered), invite the other members to the project |
 | T02 | P5 | Partial | 30% | ARTEMIS client pinned, environment guide in `e2e_test/README.md` | Android device, model API key, one sample ARTEMIS run |
 | T03 | P1 | Done | 100% | `flutter create`, pinned versions, `flutterfire configure` | — |
 | T10 | P1 | Done | 100% | Every S and K screen has a route, widget, data source and owner | Owners keep their rows up to date |
