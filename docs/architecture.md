@@ -136,7 +136,7 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | `seller_menu/` | K08, K09, K14, K15 | P2 | `SellerMenuViewModel`, `MenuItemFormViewModel` | `MenuRepository`, `StorageService` |
 | `seller_shop/` | K10, K11 | P2 | `ShopViewModel`, `ShiftStatsViewModel` | `MenuRepository` (kiosks), `OrderRepository` |
 | `auth/` | S26 | P3 | `AuthViewModel` (app-wide) | `AuthService`, `AnalyticsService`, `CrashService`, `SessionRepository`, `MessagingService` |
-| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `PaymentSettingsViewModel`, `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `CrashService`; later `UserRepository`, `RemoteConfigService`, `StorageService` |
+| `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `PaymentSettingsViewModel`, `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `CrashService`, `RemoteConfigService`, `AnalyticsService`, `StorageService`, `ReportFileService`, `ReportRepository`; later `UserRepository` |
 | `kiosk_picker/` | S27 | P3 | `KioskViewModel` | `MenuRepository` (kiosks) |
 | `seller_orders/` | K01–K06, K12 | P4 | `SellerOrdersViewModel`, `SellerOrderDetailViewModel`, `ScanViewModel` | `OrderRepository`, `AuthService` |
 | `seller_incidents/` | K13 | P4 | `IncidentsViewModel` | `IncidentRepository` |
@@ -157,6 +157,9 @@ The Firebase implementations that exist (T22, T33):
 | `MessagingService` | `firebase_messaging_service.dart`, `notification_inbox.dart` | Keeps at most 5 FCM tokens in `users/{uid}.fcmTokens`; every message received (foreground, background, opened from terminated) is saved once to `users/{uid}/notifications` |
 | `RemoteConfigService` | `firebase_remote_config_service.dart` | In-app defaults `RemoteKeys.defaults` (tested against `firebase/remote-config-defaults.json`); `watchUpdates()` emits when the console publishes, so screens change without a rebuild |
 | `MenuRepository`, `CartRepository`, `OrderRepository` | `lib/data/repositories/firestore/` | Mapping in `firestore_mappers.dart`. Every write that depends on current data runs in a transaction, so the rules never see a stale state |
+| `ReportRepository` | `lib/data/repositories/firestore/firestore_report_repository.dart` | Metadata of uploaded files in `reports`; only the owner lists them (`uid == me`, newest first) |
+| `ReportFileService` | `lib/data/services/pdf/pdf_report_file_service.dart` | Builds PDFs with the `pdf` package and the Nunito font (Vietnamese text); no SDK. T43 adds its single-order receipt here |
+| `StorageService` | `lib/data/services/cloudinary/cloudinary_storage_service.dart` | Unsigned upload to Cloudinary under `breakbite/<folder>/<ownerId>/`, with progress |
 
 To add one:
 

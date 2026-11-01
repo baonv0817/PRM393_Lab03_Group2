@@ -142,19 +142,19 @@ Status is what the code and the evidence show, not what was planned. "Done in co
 | T22 | P3 | Done | 100% | Firebase Auth, Analytics, Crashlytics, Messaging, Remote Config in `lib/data/services/firebase/` | — |
 | T30 | P3 | Done in code | 90% | S26 Google Sign-In, `users/{uid}` with role `user`, routing by auth state and role, cancel and offline messages, S15 sign-out with confirmation | Screenshots on a device and of the Users tab in the console |
 | T31 | P3 | Partial | 95% | Data model, rules (82 rules tests), indexes, seed, backup, restore and migration scripts; migration rolled out to the real Firestore on 01/11/2026 (111 documents, verify 0 problems), catalog re-seeded, the 14 indexes and the new rules deployed | Give staff and admin roles with `set-role.mjs` after each member signs in once; smoke test on a phone (step 7 in `firebase/README.md`) |
-| T32 | P3 | Partial | 60% | `CloudinaryStorageService` written, tested and wired; unsigned preset in `env/cloudinary.json` | A real upload on a device with progress and URL, the file's metadata in Firestore, the lecturer's approval to use Cloudinary |
+| T32 | P3 | Partial | 75% | `CloudinaryStorageService` written, tested and wired; unsigned preset in `env/cloudinary.json`; the Firebase demo area uploads a generated PDF to `reports/{uid}/` with progress and URL and saves its metadata in `reports` (owner-only rules, tested) | A real upload on a device, a screenshot of the Cloudinary media library, the lecturer's approval to use Cloudinary |
 | T33 | P3 | Done | 100% | Firestore Menu, Cart and Order repositories; ordering in one transaction; checked against the real rules on the Emulator (`integration_test/`, 10 tests) | — |
 | T34 | Each owner | Not started | 0% | — | Slot, Voucher, Review, Incident, Favorite, Notification repositories |
 | T40 | P1 | Partial | 15% | S01, S02 (with S02-LOADING, S02-ADDED) | S03–S08, S21, S22, S25, S29; the repositories they need already exist (T33) |
 | T41 | P2 | Not started | 0% | `OrderRepository.editPendingOrder` and `cancelMyOrder` are ready | S09–S12, S20, S23, S24 |
-| T42 | P3 | Partial | 35% | S15, S26 | S16, S17, S27, the Firebase demo area |
+| T42 | P3 | Partial | 55% | S15, S26, the Firebase demo area (notification center link, Remote Config values with their source, Crashlytics test error and test crash, PDF export and upload with progress, URL and the list of my files) | S16, S17, S27 |
 | T43 | P2 | Not started | 0% | `StorageService` is ready | Make the PDF, upload it, show progress and URL |
 | T44 | P4 | Not started | 0% | `OrderRepository` staff methods (`watchKioskQueue`, `accept`, `markReady`, `deliver`, `reject`, `findReadyByPickupCode`) are ready | K01–K06, K12, K13 |
 | T45 | P2 | Not started | 0% | `MenuRepository.upsertItem` and `setSoldOut` are ready | K08–K11, K14, K15 |
 | T46 | P5 | Not started | 0% | — | S13, S14, S18, S19, S28, S30 |
-| T50 | P5 | Partial | 40% | Plan with 11 events; 4 are logged in code (`login`, `logout`, `add_to_cart`, `reorder`); `setUserId` after sign-in | At least 3 more events in code, DebugView screenshots |
-| T51 | P3 | Done in code | 60% | Handled errors recorded from real error paths, uncaught errors reported, user ID and the `role` and `kiosk_id` keys | Crashlytics turned on in the console, test crash button in the demo area, dashboard screenshots |
-| T52 | P3 | Done in code | 75% | 2 parameters change Home (quick item count, Golden Hour banner), values update live without a rebuild; defaults file matches the code (tested) | Before and after screenshots, values in the console |
+| T50 | P5 | Partial | 45% | Plan with 11 events; 5 are logged in code (`login`, `logout`, `add_to_cart`, `reorder`, `export_report`); `setUserId` after sign-in | At least 2 more events in code, DebugView screenshots |
+| T51 | P3 | Done in code | 75% | Handled errors recorded from real error paths, uncaught errors reported, user ID and the `role` and `kiosk_id` keys | Dashboard screenshots of the non-fatal error and the crash with the key (Crashlytics is on; the demo area has both test buttons) |
+| T52 | P3 | Done in code | 75% | 2 parameters change Home (quick item count, Golden Hour banner), values update live without a rebuild; defaults file matches the code (tested); the demo area shows each value and whether it came from the console | Before and after screenshots, values in the console |
 | T53 | P5 | Partial | 50% | `MessagingService`: Android 13+ permission, token per user, messages saved to the inbox in all 3 states | S19 notification list, tapping a notification opens its screen, console test in each state |
 | T60 | P5 | Partial | 50% | 13 test cases written in `docs/test-plan.md` | Run them, record results |
 | T61 | Everyone | Partial | 10% | `TestId` labels on S01, S02, S15, S26 | Every other screen |

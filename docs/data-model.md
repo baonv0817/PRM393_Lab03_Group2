@@ -204,7 +204,7 @@ The id is the order id: **at most one incident per order**, so K13 cannot be flo
 
 ### 3.9 `reports/{id}`
 
-Metadata of a generated PDF (T43); the file itself is on Cloudinary. Only the owner creates and reads; nobody edits or deletes.
+Metadata of a generated PDF (the orders summary from the Firebase demo area, the receipt of T43); the file itself is on Cloudinary. Only the owner creates and reads; nobody edits or deletes.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -270,7 +270,7 @@ Every composite index is in `firebase/firestore.indexes.json`. Firestore creates
 | S19 Notifications | `users/{uid}/notifications` orderBy `createdAt desc`, *paged*; unread dot: `read == false` count | automatic |
 | S23 Review | `reviews/{orderId}_{itemId}`; a dish's reviews: `reviews` where `dishId == d` orderBy `createdAt desc` | (dishId, createdAt desc) |
 | S24 Incident report | `incidents/{orderId}`; the customer's list: where `uid == me` orderBy `createdAt desc` | (uid, createdAt desc) |
-| T43 Receipts | `reports` where `uid == me` orderBy `createdAt desc` | (uid, createdAt desc) — add when the screen lists them |
+| Firebase demo area, T43 receipts | `reports` where `uid == me` orderBy `createdAt desc` limit 10 | (uid, createdAt desc) |
 | K02 Order queue | `orders` where `kioskId == mine` and `status in [pending, preparing, ready]` orderBy `createdAt desc` | (kioskId, status, createdAt desc) |
 | K05 Scan code | `orders` where `kioskId == mine` and `pickupCode == c` and `status == 'ready'` | (kioskId, pickupCode, status) |
 | K08 Menu management | like S03, without filtering `soldOut` | (kioskId, name) |
