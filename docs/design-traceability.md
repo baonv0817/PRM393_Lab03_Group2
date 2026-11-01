@@ -15,7 +15,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S01 | Onboarding | /onboarding | OnboardingScreen | AuthViewModel (onboardingDone) | — | P1 | Done |
 | S02 | Home (Trang chủ) | /home | HomeScreen | HomeViewModel | Firestore menu_items, kiosks | P1 | Done |
 | S02-LOADING | Home loading | (state of /home) | LoadingView | HomeViewModel | — | P1 | Done |
-| S02-ADDED | Home, item added to cart | (state of /home) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Done |
+| S02-ADDED | Home, item added to cart | (state of /home) | Fly-to-cart animation, quantity stepper on the card, AddedSnackbar on the first add | HomeViewModel | Firestore carts/{uid} | P1 | Done |
 | S03 | Menu (Thực đơn) | /menu | MenuScreen | MenuViewModel | Firestore menu_items | P1 | Not started |
 | S03-ADDED | Menu, item added to cart | (state of /menu) | AddedSnackbar | CartViewModel | Firestore carts/{uid} | P1 | Not started |
 | S04 | Item detail | /menu/:id | ItemDetailScreen | ItemDetailViewModel | Firestore menu_items/{id} | P1 | Not started |
@@ -129,6 +129,7 @@ Every place that differs from Figma is recorded here with the reason, and **Figm
 | D09 | S27 cards end with "Cách bạn khoảng 2 phút đi bộ"; choosing a kiosk only switches it | The third line is the kiosk's location; a closed kiosk also shows its notice; switching away from a cart of another kiosk asks first, because a cart belongs to one kiosk | The app has no location permission or walking distances; the data model allows one kiosk per cart, so the customer must know the cart will be emptied | Not yet |
 | D10 | S17 shows a wallet balance ("Số dư ví: 120.000đ") and a counter number for cash; S16 has no hint for the default kiosk | S17 subtitles describe the method ("Trừ vào thẻ sinh viên", "Trả khi nhận món tại kiosk"); S16 explains that the default kiosk is picked at every sign-in and shows field errors under each field | There is no wallet or counter data, and payments are simulated (D02); showing invented numbers would be hard-coded data | Not yet |
 | D11 | The app opens straight on Onboarding or Home | A splash screen (logo and spinner) shows for the moment the app needs to learn the sign-in state, then opens Onboarding, sign-in, Home or the seller app | Without it Home was built before the user was known and wrote the cart for an empty user id; the splash is not a new screen in the flow | Not yet |
+| D12 | S02 item card: price on the left, a + button on the right; S02-ADDED shows an "added" snackbar after every add | Price and action share the bottom row of the card. The first + makes the dish photo fly into the cart icon (the icon bounces) and turns into a stepper [− n +] (a bin icon at 1); later taps change the number in place, which updates at once and is saved in the background. The snackbar with "Xem giỏ" shows only when the cart was empty. Reduce motion turns the flight off | Adding the same item again only raised a hidden count; the stepper shows what is in the cart and lets the customer correct it without opening the cart, and one notice per add was noise | Not yet |
 | | | | | |
 
 Add a row whenever you find a new deviation.
