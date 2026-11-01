@@ -18,6 +18,8 @@ class AppDependencies {
     required this.reports,
     required this.session,
     required this.users,
+    required this.vouchers,
+    required this.slots,
   });
 
   final AuthService auth;
@@ -34,6 +36,9 @@ class AppDependencies {
   final ReportRepository reports;
   final SessionRepository session;
   final UserRepository users;
+  final VoucherRepository vouchers;
+  final SlotRepository slots;
+
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
     Provider<AnalyticsService>.value(value: analytics),
@@ -48,5 +53,7 @@ class AppDependencies {
     Provider<ReportRepository>.value(value: reports),
     Provider<SessionRepository>.value(value: session),
     Provider<UserRepository>.value(value: users),
+    Provider<VoucherRepository>.value(value: vouchers),
+    Provider<SlotRepository>.value(value: slots),
   ];
 }

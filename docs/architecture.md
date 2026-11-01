@@ -159,6 +159,7 @@ The Firebase implementations that exist (T22, T33):
 | `MenuRepository`, `CartRepository`, `OrderRepository` | `lib/data/repositories/firestore/` | Mapping in `firestore_mappers.dart`. Every write that depends on current data runs in a transaction, so the rules never see a stale state |
 | `UserRepository` | `lib/data/repositories/firestore/firestore_user_repository.dart` | The profile in `users/{uid}` (S16, S17); validation rules live in `UserProfile` and are repeated in `firestore.rules`. `AuthViewModel` selects `defaultKioskId` at sign-in |
 | `ReportRepository` | `lib/data/repositories/firestore/firestore_report_repository.dart` | Metadata of uploaded files in `reports`; only the owner lists them (`uid == me`, newest first) |
+| `VoucherRepository`, `SlotRepository` | `firestore_voucher_repository.dart`, `firestore_slot_repository.dart` | Active vouchers (`active == true`) for S29; a kiosk's upcoming slots (`startAt >= now`, ordered, at most 28) for S25. Single-field queries, no composite index |
 | `ReportFileService` | `lib/data/services/pdf/pdf_report_file_service.dart` | Builds PDFs with the `pdf` package and the Nunito font (Vietnamese text); no SDK. T43 adds its single-order receipt here |
 | `StorageService` | `lib/data/services/cloudinary/cloudinary_storage_service.dart` | Unsigned upload to Cloudinary under `breakbite/<folder>/<ownerId>/`, with progress |
 

@@ -5,7 +5,9 @@ import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_slot_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_user_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
 import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite/data/services/firebase/notification_inbox.dart';
 import 'package:breakbite/data/services/storage_service.dart';
@@ -181,13 +183,18 @@ void main() {
     expect(emitted!.uid, customerUid);
   });
 
-  testWidgets('customer: menu, kiosks and vouchers load; an unknown code is not found', (tester) async {
+  testWidgets('customer: menu, kiosks, vouchers and upcoming slots load; an unknown code is not found', (tester) async {
     final items = await menu.watchMenu('q9-t2').first;
     expect(items.map((e) => e.dishId), ['tacos-bo', 'tra-dao']);
     expect((await menu.watchKiosks().first).length, 3);
     expect(ok(await menu.getVoucher(' bbstudent ')).discount, isA<FixedDiscount>());
     expect(err(await menu.getVoucher('NOPE99')), isA<NotFoundException>());
     expect(ok(await menu.getItems(['q9-t2-tacos-bo', 'missing'])).keys, ['q9-t2-tacos-bo']);
+    final active = await FirestoreVoucherRepository(db).watchActiveVouchers().first;
+    expect(active.map((v) => v.code), ['BBSTUDENT']);
+    final upcoming = await FirestoreSlotRepository(db).watchUpcomingSlots('q9-t2', from: DateTime.now()).first;
+    expect(upcoming.map((s) => s.id), ['slot-a', 'slot-b']);
+    expect(upcoming.first.remaining, 2);
   });
 
   testWidgets('customer: the cart is created, edited and refuses items of another kiosk', (tester) async {

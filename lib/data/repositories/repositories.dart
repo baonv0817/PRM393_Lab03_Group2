@@ -5,4 +5,6 @@ export 'menu_repository.dart';
 export 'order_repository.dart';
 export 'report_repository.dart';
 export 'session_repository.dart';
+export 'slot_repository.dart';
 export 'user_repository.dart';
+export 'voucher_repository.dart';

@@ -3,11 +3,12 @@ import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/utils/result.dart';
 
+import 'fake_voucher_repository.dart';
 import 'live_value.dart';
 
 class FakeMenuRepository implements MenuRepository {
-  final _menu = LiveValue<List<MenuItem>>(const [
-    MenuItem(
+  final _menu = LiveValue<List<MenuItem>>([
+    const MenuItem(
       id: 'm1',
       dishId: 'tacos-bo',
       name: 'Combo Tacos Bò Phô Mai',
@@ -17,7 +18,7 @@ class FakeMenuRepository implements MenuRepository {
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/tacos-bo.jpg',
     ),
-    MenuItem(
+    const MenuItem(
       id: 'm2',
       dishId: 'mi-tron-ga',
       name: 'Mì Trộn Gà Cay Hàn Quốc',
@@ -27,7 +28,7 @@ class FakeMenuRepository implements MenuRepository {
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/mi-tron-ga.jpg',
     ),
-    MenuItem(
+    const MenuItem(
       id: 'm3',
       dishId: 'tra-dao',
       name: 'Trà Đào Chanh Sả',
@@ -47,8 +48,9 @@ class FakeMenuRepository implements MenuRepository {
       soldOut: true,
       kioskId: 'q9-t2',
       imageUrl: 'assets/images/menu/tacos-ga.jpg',
+      availableAgainAt: DateTime(2026, 11, 2, 10, 30),
     ),
-    MenuItem(
+    const MenuItem(
       id: 'm5',
       dishId: 'banh-mi',
       name: 'Bánh Mì Chả Lụa Trứng',
@@ -58,7 +60,7 @@ class FakeMenuRepository implements MenuRepository {
       kioskId: 'q9-t4',
       imageUrl: 'assets/images/menu/banh-mi.jpg',
     ),
-    MenuItem(
+    const MenuItem(
       id: 'm6',
       dishId: 'cafe-sua',
       name: 'Cà Phê Sữa Đá',
@@ -98,23 +100,13 @@ class FakeMenuRepository implements MenuRepository {
   Stream<List<Kiosk>> watchKiosks() => _kiosks.stream;
 
   @override
-  Future<Result<Voucher>> getVoucher(String code) async => switch (code) {
-    'BBSTUDENT' => Result.ok(
-      Voucher(code: code, discount: const FixedDiscount(10000), expiresAt: DateTime(2100), minOrderVnd: 40000),
-    ),
-    'BB20' => Result.ok(Voucher(code: code, discount: const FixedDiscount(20000), expiresAt: DateTime(2020))),
-    'GIOVANG' => Result.ok(
-      Voucher(
-        code: code,
-        discount: const PercentDiscount(percent: 15, maxVnd: 15000),
-        expiresAt: DateTime(2100),
-        minOrderVnd: 30000,
-        activeFrom: '10:15',
-        activeTo: '10:30',
-      ),
-    ),
-    _ => const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.')),
-  };
+  Future<Result<Voucher>> getVoucher(String code) async {
+    final normalized = code.trim().toUpperCase();
+    final voucher = fakeVouchers.where((v) => v.code == normalized).firstOrNull;
+    return voucher == null
+        ? const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.'))
+        : Result.ok(voucher);
+  }
 
   @override
   Future<Result<String>> upsertItem(MenuItem item) async {
