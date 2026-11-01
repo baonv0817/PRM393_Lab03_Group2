@@ -17,5 +17,9 @@ Issue: Closes #  <!-- or Refs # when this PR is only part of the task -->
 - [ ] `docs/design-traceability.md` updated (status and deviations)
 - [ ] Shared files touched? Owner told before merging (CONTRIBUTING.md section 3)
 - [ ] No keys or secrets in the diff
+- [ ] Data structure changed? Migration added in `firebase/seed/migrations/` and `npm run test:migrate` passes (CONTRIBUTING.md section 3.1)
+
+## Data structure
+No migration needed: <!-- write the reason, or delete this line when the PR adds a migration -->
 
 ## Screenshots

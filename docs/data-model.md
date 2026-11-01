@@ -1,6 +1,6 @@
 # Firestore and file storage data model
 
-The source of truth for the data of the customer app (S01–S30) and the seller app (K01–K15). Any change to the data structure must update **all four places in the same PR**: this document, `lib/domain/models/`, `firebase/firestore.rules`, `firebase/tests/rules.test.mjs` (and the seed and indexes when they are affected). Document owner: P3.
+The source of truth for the data of the customer app (S01–S30) and the seller app (K01–K15). Any change to the data structure must update **all four places in the same PR**: this document, `lib/domain/models/`, `firebase/firestore.rules`, `firebase/tests/rules.test.mjs` (and the seed and indexes when they are affected), plus a migration in `firebase/seed/migrations/` when data already stored has to change (`CONTRIBUTING.md` section 3.1). Document owner: P3.
 
 Firebase project: `breakbite-1315b`, Firestore `(default)`, region `asia-southeast1`.
 
