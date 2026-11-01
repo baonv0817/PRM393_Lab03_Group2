@@ -4,7 +4,10 @@
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, increment, serverTimestamp, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import {
+  collection, deleteDoc, doc, getDoc, getDocs, increment, limit, orderBy, query, serverTimestamp, setDoc, updateDoc, where,
+  Timestamp,
+} from 'firebase/firestore';
 import { getBytes, ref, uploadBytes } from 'firebase/storage';
 
 let env;
@@ -497,6 +500,12 @@ describe('reports (R-29)', () => {
     await assertFails(getDoc(doc(as('u2'), 'reports/r5')));
     await assertFails(updateDoc(doc(as('u1'), 'reports/r5'), { fileName: 'x.pdf', ...touched() }));
     await assertFails(deleteDoc(doc(as('u1'), 'reports/r5')));
+  });
+  test('listing my own reports, newest first: allowed; listing without the uid filter or someone else\x27s: denied', async () => {
+    const mine = (db, uid) => query(collection(db, 'reports'), where('uid', '==', uid), orderBy('createdAt', 'desc'), limit(10));
+    await assertSucceeds(getDocs(mine(as('u1'), 'u1')));
+    await assertFails(getDocs(mine(as('u2'), 'u1')));
+    await assertFails(getDocs(query(collection(as('u1'), 'reports'), limit(10))));
   });
 });
 

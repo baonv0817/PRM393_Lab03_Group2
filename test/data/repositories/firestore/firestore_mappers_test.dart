@@ -132,4 +132,21 @@ void main() {
     });
     expect(slot.isFull, isTrue);
   });
+
+  test('a report reads its metadata; a pending server time falls back to now', () {
+    final now = DateTime.utc(2026, 11, 2, 3);
+    final report = reportFromData('r1', {
+      'uid': 'u1',
+      'fileName': 'breakbite-don-hang.pdf',
+      'url': 'https://res.cloudinary.com/demo/x.pdf',
+      'publicId': 'breakbite/reports/u1/x',
+      'sizeKb': 9,
+      'createdAt': Timestamp.fromDate(created),
+    }, now: now);
+    expect(report.uid, 'u1');
+    expect(report.sizeKb, 9);
+    expect(report.orderId, isNull);
+    expect(report.createdAt.isAtSameMomentAs(created), isTrue);
+    expect(reportFromData('r2', {'uid': 'u1'}, now: now).createdAt, now);
+  });
 }

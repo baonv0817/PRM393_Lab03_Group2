@@ -68,6 +68,27 @@ class FirebaseRemoteConfigService implements RemoteConfigService {
     }
   }
 
+  @override
+  RemoteValueSource sourceOf(String key) {
+    try {
+      return _config.getValue(key).source == ValueSource.valueRemote
+          ? RemoteValueSource.console
+          : RemoteValueSource.inApp;
+    } catch (_) {
+      return RemoteValueSource.inApp;
+    }
+  }
+
+  @override
+  DateTime? get lastFetchedAt {
+    try {
+      final fetchedAt = _config.lastFetchTime;
+      return fetchedAt.year < 2000 ? null : fetchedAt;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> dispose() async {
     await _realtime?.cancel();
     await _changes.close();

@@ -3,9 +3,6 @@ import 'package:breakbite/data/services/services.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-/// All of the app's services and repositories, built once: the Firebase version is in `firebase_dependencies.dart`,
-/// the fake version in `dev/fake_dependencies.dart`. To add a repository: one field here, one line in
-/// [providers], and one line in each place that builds it.
 class AppDependencies {
   const AppDependencies({
     required this.auth,
@@ -14,9 +11,11 @@ class AppDependencies {
     required this.messaging,
     required this.storage,
     required this.remoteConfig,
+    required this.reportFiles,
     required this.menu,
     required this.cart,
     required this.orders,
+    required this.reports,
     required this.session,
   });
 
@@ -26,13 +25,13 @@ class AppDependencies {
   final MessagingService messaging;
   final StorageService storage;
   final RemoteConfigService remoteConfig;
+  final ReportFileService reportFiles;
 
   final MenuRepository menu;
   final CartRepository cart;
   final OrderRepository orders;
+  final ReportRepository reports;
   final SessionRepository session;
-
-  /// Provides each part separately so a route reads only what it needs: `context.read<MenuRepository>()`.
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
     Provider<AnalyticsService>.value(value: analytics),
@@ -40,9 +39,11 @@ class AppDependencies {
     Provider<MessagingService>.value(value: messaging),
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
+    Provider<ReportFileService>.value(value: reportFiles),
     Provider<MenuRepository>.value(value: menu),
     Provider<CartRepository>.value(value: cart),
     Provider<OrderRepository>.value(value: orders),
+    Provider<ReportRepository>.value(value: reports),
     Provider<SessionRepository>.value(value: session),
   ];
 }
