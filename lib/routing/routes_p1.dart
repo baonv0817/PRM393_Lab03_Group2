@@ -4,15 +4,25 @@ import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/cart/view_models/cart_view_model.dart';
+import 'package:breakbite/ui/cart/view_models/pickup_time_view_model.dart';
+import 'package:breakbite/ui/cart/view_models/voucher_picker_view_model.dart';
 import 'package:breakbite/ui/cart/widgets/cart_screen.dart';
+import 'package:breakbite/ui/cart/widgets/pickup_time_screen.dart';
+import 'package:breakbite/ui/cart/widgets/voucher_picker_screen.dart';
 import 'package:breakbite/ui/checkout/view_models/checkout_view_model.dart';
 import 'package:breakbite/ui/checkout/widgets/checkout_screen.dart';
 import 'package:breakbite/ui/checkout/widgets/gateway_screen.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
 import 'package:breakbite/ui/home/widgets/home_screen.dart';
+import 'package:breakbite/ui/menu/view_models/item_detail_view_model.dart';
+import 'package:breakbite/ui/menu/view_models/menu_view_model.dart';
+import 'package:breakbite/ui/menu/widgets/item_detail_screen.dart';
+import 'package:breakbite/ui/menu/widgets/menu_screen.dart';
 import 'package:breakbite/ui/onboarding/widgets/onboarding_screen.dart';
 import 'package:breakbite/ui/orders/view_models/order_tracking_view_model.dart';
+import 'package:breakbite/ui/orders/view_models/orders_view_model.dart';
 import 'package:breakbite/ui/orders/widgets/order_tracking_screen.dart';
+import 'package:breakbite/ui/orders/widgets/orders_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -36,13 +46,52 @@ final GoRoute homeRoute = GoRoute(
   },
 );
 
-final GoRoute menuRoute = placeholderRoute(AppRoutes.menu, 'S03', 'Thực đơn', 'P1', showBack: false);
+final GoRoute menuRoute = GoRoute(
+  path: AppRoutes.menu,
+  builder: (context, state) => ChangeNotifierProvider(
+    create: (_) => MenuViewModel(
+      menu: context.read<MenuRepository>(),
+      cart: context.read<CartRepository>(),
+      session: context.read<SessionRepository>(),
+      analytics: context.read<AnalyticsService>(),
+      crash: context.read<CrashService>(),
+      uid: context.read<AuthViewModel>().user?.uid ?? '',
+    ),
+    child: const MenuScreen(),
+  ),
+);
 
-final GoRoute ordersRoute = placeholderRoute(AppRoutes.orders, 'S08', 'Đơn hàng', 'P1', showBack: false);
+final GoRoute ordersRoute = GoRoute(
+  path: AppRoutes.orders,
+  builder: (context, state) => ChangeNotifierProvider(
+    create: (_) => OrdersViewModel(
+      orders: context.read<OrderRepository>(),
+      cart: context.read<CartRepository>(),
+      session: context.read<SessionRepository>(),
+      analytics: context.read<AnalyticsService>(),
+      crash: context.read<CrashService>(),
+      uid: context.read<AuthViewModel>().user?.uid ?? '',
+    ),
+    child: const OrdersScreen(),
+  ),
+);
 
 final List<GoRoute> p1Routes = [
   GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingScreen()),
-  placeholderRoute(AppRoutes.menuItem, 'S04', 'Chi tiết món', 'P1'),
+  GoRoute(
+    path: AppRoutes.menuItem,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => ItemDetailViewModel(
+        menu: context.read<MenuRepository>(),
+        cart: context.read<CartRepository>(),
+        analytics: context.read<AnalyticsService>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+        itemId: state.pathParameters['id'] ?? '',
+      ),
+      child: const ItemDetailScreen(),
+    ),
+  ),
   placeholderRoute(AppRoutes.menuAlternatives, 'S22', 'Món hết, gợi ý thay thế', 'P1'),
   GoRoute(
     path: AppRoutes.cart,
@@ -56,8 +105,33 @@ final List<GoRoute> p1Routes = [
       child: const CartScreen(),
     ),
   ),
-  placeholderRoute(AppRoutes.cartPickupTime, 'S25', 'Hẹn giờ nhận', 'P1'),
-  placeholderRoute(AppRoutes.cartVouchers, 'S29', 'Chọn mã giảm giá', 'P1'),
+  GoRoute(
+    path: AppRoutes.cartPickupTime,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => PickupTimeViewModel(
+        slots: context.read<SlotRepository>(),
+        cart: context.read<CartRepository>(),
+        menu: context.read<MenuRepository>(),
+        remoteConfig: context.read<RemoteConfigService>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+      ),
+      child: const PickupTimeScreen(),
+    ),
+  ),
+  GoRoute(
+    path: AppRoutes.cartVouchers,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => VoucherPickerViewModel(
+        vouchers: context.read<VoucherRepository>(),
+        menu: context.read<MenuRepository>(),
+        cart: context.read<CartRepository>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+      ),
+      child: const VoucherPickerScreen(),
+    ),
+  ),
   GoRoute(
     path: AppRoutes.checkout,
     builder: (context, state) {

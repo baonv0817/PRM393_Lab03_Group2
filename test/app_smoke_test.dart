@@ -47,7 +47,12 @@ void main() {
     expect(find.byType(NavigationDestination), findsNWidgets(4));
     await tester.tap(find.text('Thực đơn'));
     await tester.pumpAndSettle();
-    expect(find.text('S03'), findsOneWidget);
+    expect(find.bySemanticsIdentifier('s03.search'), findsOneWidget);
+    expect(find.bySemanticsIdentifier('s03.item.m1'), findsOneWidget);
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Đang xử lý (0)'), findsOneWidget);
+    expect(find.bySemanticsIdentifier('s08.empty'), findsOneWidget);
     await tester.tap(find.text('Cá nhân'));
     await tester.pumpAndSettle();
     expect(find.text('Hồ sơ sinh viên'), findsOneWidget);
