@@ -97,4 +97,71 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Xem giỏ'), findsNothing);
   });
+
+  group('UserAvatar', () {
+    test('the initial is the first letter of the given name, which comes last in Vietnamese names', () {
+      expect(UserAvatar.initialOf('Nguyễn Minh Quân'), 'Q');
+      expect(UserAvatar.initialOf('  ân  '), 'Â');
+      expect(UserAvatar.initialOf(''), '');
+    });
+
+    testWidgets('without a photo it shows the initial, without a name a person icon', (tester) async {
+      await tester.pumpWidget(host(const UserAvatar(name: 'Nguyễn Minh Quân')));
+      expect(find.text('Q'), findsOneWidget);
+      await tester.pumpWidget(host(const UserAvatar(name: '', photoUrl: 'http://not-secure')));
+      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets('a photo that cannot load falls back to the initial', (tester) async {
+      await tester.pumpWidget(host(const UserAvatar(name: 'Quân', photoUrl: 'https://example.invalid/a.png')));
+      await tester.pumpAndSettle();
+      expect(find.text('Q'), findsOneWidget);
+    });
+  });
+
+  testWidgets('SelectableCard reports its selection to screen readers and reacts to taps', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        SelectableCard(
+          testId: 'x.card',
+          selected: true,
+          onTap: () => taps++,
+          semanticLabel: 'Kiosk A',
+          child: const Text('Kiosk A'),
+        ),
+      ),
+    );
+    expect(tester.getSemantics(find.bySemanticsIdentifier('x.card')), isSemantics(isSelected: true, label: 'Kiosk A'));
+    expect(find.byIcon(Icons.radio_button_checked), findsOneWidget);
+    await tester.tap(find.text('Kiosk A'));
+    expect(taps, 1);
+  });
+
+  testWidgets('BottomActionButton spans the width, shows loading and can be disabled', (tester) async {
+    await tester.pumpWidget(host(const BottomActionButton(label: 'Lưu', testId: 'x.save', onPressed: null)));
+    expect(find.bySemanticsIdentifier('x.save'), findsOneWidget);
+    expect(tester.getSize(find.byType(AppButton)).width, greaterThan(700));
+  });
+
+  testWidgets('showAppMessage replaces the message on screen instead of queueing', (tester) async {
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () {
+              showAppMessage(context, 'Một');
+              showAppMessage(context, 'Hai');
+            },
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hai'), findsOneWidget);
+    expect(find.text('Một'), findsNothing);
+  });
 }

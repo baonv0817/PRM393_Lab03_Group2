@@ -312,3 +312,9 @@ void showAddedSnackbar(BuildContext context, {required String message, required 
       ),
     );
 }
+
+void showAppMessage(BuildContext context, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
+}
