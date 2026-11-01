@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
+import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/ui/core/view_state.dart';
@@ -10,6 +11,7 @@ import 'package:breakbite/utils/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../dev/fakes/fakes.dart';
+import '../../helpers/orders.dart';
 
 class _FailingMenu extends FakeMenuRepository {
   @override
@@ -18,7 +20,8 @@ class _FailingMenu extends FakeMenuRepository {
 
 class _FailingCart extends FakeCartRepository {
   @override
-  Future<Result<void>> addItem(String uid, CartItem item) async => const Result.error(PermissionDeniedException());
+  Future<Result<void>> addItem(String uid, {required String kioskId, required CartItem item}) async =>
+      const Result.error(PermissionDeniedException());
 }
 
 class _ClosedFirstMenu extends FakeMenuRepository {
@@ -119,7 +122,7 @@ void main() {
     await vm.addToCart.execute(vm.state.dataOrNull!.first);
     await settle();
     expect(vm.cartCount, 2);
-    expect((await cart.watchCart('u1').first).single.quantity, 2);
+    expect((await cart.watchCart('u1').first).items.single.quantity, 2);
     expect(analytics.events.first.name, 'add_to_cart');
     expect(analytics.events.first.params!['source'], 'home');
     vm.dispose();
@@ -143,7 +146,7 @@ void main() {
       await settle();
       expect(vm.kiosk!.id, 'q9-t2');
       expect(vm.state.dataOrNull!.every((e) => e.kioskId == 'q9-t2'), isTrue);
-      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']); // no m5, m6 from floor 4
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']);
       vm.dispose();
     });
 
@@ -218,7 +221,7 @@ void main() {
     final second = await vm.addToCart.execute(item);
     await first;
     expect(second, isNull);
-    expect((await cart.watchCart('u1').first).single.quantity, 1);
+    expect((await cart.watchCart('u1').first).items.single.quantity, 1);
     vm.dispose();
   });
 
@@ -241,37 +244,31 @@ void main() {
 
     test('uses the newest order that is not cancelled', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(
-        uid: 'u1',
-        items: const [_tacos],
-        totalVnd: 39000,
-        method: PaymentMethod.momo,
-        kioskId: 'q9-t2',
-      );
+      await placeTestOrder(orders, uid: 'u1', items: const [_tacos], method: PaymentMethod.momo, kioskId: 'q9-t2');
       await Future<void>.delayed(const Duration(milliseconds: 2));
-      final newer = (await orders.createOrder(
+      final newer = await placeTestOrder(
+        orders,
         uid: 'u1',
         items: const [_tea],
-        totalVnd: 40000,
         method: PaymentMethod.cash,
         kioskId: 'q9-t2',
-      )).valueOrNull!;
+      );
       final vm = make(orders: orders);
       await settle();
       expect(vm.lastOrder!.id, newer);
 
-      await orders.cancelOrder(newer);
+      await orders.cancelMyOrder(orders.all.firstWhere((o) => o.id == newer));
       await settle();
-      expect(vm.lastOrder!.items.single.itemId, 'm1'); // falls back to the previous order
+      expect(vm.lastOrder!.items.single.itemId, 'm1');
       vm.dispose();
     });
 
     test('ignores orders of other users', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(
+      await placeTestOrder(
+        orders,
         uid: 'someone-else',
         items: const [_tacos],
-        totalVnd: 39000,
         method: PaymentMethod.momo,
         kioskId: 'q9-t2',
       );
@@ -283,10 +280,10 @@ void main() {
 
     test('reorder adds the same items and quantities to the cart and logs the reorder event', () async {
       final orders = FakeOrderRepository();
-      await orders.createOrder(
+      await placeTestOrder(
+        orders,
         uid: 'u1',
         items: const [_tacos, _tea],
-        totalVnd: 79000,
         method: PaymentMethod.momo,
         kioskId: 'q9-t2',
       );
@@ -296,10 +293,34 @@ void main() {
       await settle();
 
       expect((await vm.reorderLast.execute())!.valueOrNull, 2);
-      final items = await cart.watchCart('u1').first;
+      final items = (await cart.watchCart('u1').first).items;
       expect(items.map((e) => '${e.itemId}x${e.quantity}'), ['m1x1', 'm3x2']);
       expect(analytics.events.single.name, 'reorder');
       vm.dispose();
     });
+  });
+
+  test('a Remote Config change published from the console updates the quick list without a reload', () async {
+    final rc = FakeRemoteConfigService();
+    final vm = make(rc: rc);
+    await settle();
+    expect(vm.state.dataOrNull!.length, greaterThan(1));
+    rc.publish(RemoteKeys.quickItemsLimit, 1);
+    await settle();
+    expect(vm.state.dataOrNull, hasLength(1));
+    rc.publish(RemoteKeys.promoBannerEnabled, false);
+    expect(vm.promoBannerEnabled, isFalse);
+    vm.dispose();
+  });
+
+  test('reordering an order from another kiosk switches Home to that kiosk', () async {
+    final orders = FakeOrderRepository();
+    await placeTestOrder(orders, uid: 'u1', items: const [_tacos], kioskId: 'q9-t4');
+    final session = InMemorySessionRepository(selectedKioskId: 'q9-t2');
+    final vm = make(orders: orders, session: session);
+    await settle();
+    expect((await vm.reorderLast.execute())!.valueOrNull, 1);
+    expect(session.selectedKioskId, 'q9-t4');
+    vm.dispose();
   });
 }
