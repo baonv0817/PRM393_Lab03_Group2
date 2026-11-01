@@ -73,6 +73,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(cart.current('dev-user').items, hasLength(1));
     expect(cart.current('').items, isEmpty);
+    await tester.tap(find.bySemanticsIdentifier('s02.cart'));
+    await tester.pumpAndSettle();
+    expect(find.text('S05'), findsOneWidget);
+    await tester.tap(find.byTooltip('Quay lại'));
+    await tester.pumpAndSettle();
 
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();

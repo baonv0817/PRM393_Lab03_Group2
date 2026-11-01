@@ -8,8 +8,8 @@ Future<void> flyToCart({
   required GlobalKey from,
   required GlobalKey to,
   required Widget child,
-  double size = 56,
-  Duration duration = const Duration(milliseconds: 650),
+  double size = 80,
+  Duration duration = const Duration(milliseconds: 600),
 }) async {
   if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
   final overlay = Overlay.maybeOf(context);
@@ -22,8 +22,9 @@ Future<void> flyToCart({
   final start = overlayBox.globalToLocal(fromBox.localToGlobal(fromBox.size.center(Offset.zero)));
   final end = overlayBox.globalToLocal(toBox.localToGlobal(toBox.size.center(Offset.zero)));
   final control = Offset(start.dx + (end.dx - start.dx) * 0.25, math.min(start.dy, end.dy) - 60);
+  final scheme = Theme.of(context).colorScheme;
   final controller = AnimationController(vsync: overlay, duration: duration);
-  final progress = CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
+  final progress = CurvedAnimation(parent: controller, curve: Curves.easeInOutCubic);
 
   late final OverlayEntry entry;
   entry = OverlayEntry(
@@ -33,7 +34,7 @@ Future<void> flyToCart({
         final t = progress.value;
         final u = 1 - t;
         final point = start * (u * u) + control * (2 * u * t) + end * (t * t);
-        final scale = 1 - 0.65 * t;
+        final scale = 0.8 - 0.55 * t;
         return Positioned(
           left: point.dx - size / 2,
           top: point.dy - size / 2,
@@ -42,9 +43,18 @@ Future<void> flyToCart({
               opacity: t < 0.85 ? 1 : (1 - t) / 0.15,
               child: Transform.scale(
                 scale: scale,
-                child: SizedBox.square(
-                  dimension: size,
-                  child: ClipOval(child: child),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 3),
+                    boxShadow: [
+                      BoxShadow(color: scheme.shadow.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 3)),
+                    ],
+                  ),
+                  child: SizedBox.square(
+                    dimension: size,
+                    child: ClipOval(child: child),
+                  ),
                 ),
               ),
             ),

@@ -11,6 +11,7 @@ import 'package:breakbite/ui/home/widgets/fly_to_cart.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -33,6 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
+      floatingActionButton: _CartButton(
+        flyTargetKey: _cartKey,
+        count: vm.cartCount,
+        onPressed: () => context.push(AppRoutes.cart),
+      ),
       body: SafeArea(
         bottom: false,
         child: ListView(
@@ -40,10 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
             AppSpacing.screenPadding,
             AppSpacing.xs,
             AppSpacing.screenPadding,
-            AppSpacing.lg,
+            _cartButtonClearance,
           ),
           children: [
-            _Header(vm: vm, cartKey: _cartKey),
+            _Header(vm: vm),
             const SizedBox(height: AppSpacing.sm),
             TestId(
               's02.search',
@@ -86,14 +92,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _add(HomeViewModel vm, MenuItem item) async {
-    final wasEmpty = vm.cartCount == 0;
     if (!vm.blocksAdd(item)) {
       unawaited(
         flyToCart(
           context: context,
           from: _imageKeyOf(item.id),
           to: _cartKey,
-          child: MenuItemImage(imageUrl: item.imageUrl, size: 56),
+          child: MenuItemImage(imageUrl: item.imageUrl),
         ),
       );
     }
@@ -101,13 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted || result == null) return;
     switch (result) {
       case Ok():
-        if (wasEmpty) {
-          showAddedSnackbar(
-            context,
-            message: 'Đã thêm ${item.name} vào giỏ',
-            onViewCart: () => context.push(AppRoutes.cart),
-          );
-        }
+        unawaited(
+          SemanticsService.sendAnnouncement(View.of(context), 'Đã thêm ${item.name} vào giỏ', TextDirection.ltr),
+        );
       case Err(:final error):
         _showError(error.message);
     }
@@ -142,10 +143,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.vm, required this.cartKey});
+  const _Header({required this.vm});
 
   final HomeViewModel vm;
-  final GlobalKey cartKey;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +153,6 @@ class _Header extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final kiosk = vm.kiosk;
     final status = vm.kioskStatus;
-    final cartLabel = vm.cartCount == 0 ? 'Giỏ hàng, trống' : 'Giỏ hàng, ${vm.cartCount} món';
     final bellLabel = vm.unreadNotifications == 0 ? 'Thông báo' : 'Thông báo, ${vm.unreadNotifications} chưa đọc';
 
     return Row(
@@ -226,20 +225,61 @@ class _Header extends StatelessWidget {
             onPressed: () => context.push(AppRoutes.notifications),
           ),
         ),
-        TestId(
-          's02.cart',
-          child: BumpOnIncrease(
-            value: vm.cartCount,
-            child: AppBadgeIconButton(
-              key: cartKey,
-              icon: Icons.shopping_cart,
-              semanticLabel: cartLabel,
-              count: vm.cartCount,
-              onPressed: () => context.push(AppRoutes.cart),
-            ),
-          ),
-        ),
       ],
+    );
+  }
+}
+
+const _cartButtonClearance = 96.0;
+
+class _CartButton extends StatelessWidget {
+  const _CartButton({required this.flyTargetKey, required this.count, required this.onPressed});
+
+  static const size = 56.0;
+
+  final GlobalKey flyTargetKey;
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return KeyedSubtree(
+      key: flyTargetKey,
+      child: SizedBox.square(
+        dimension: size,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+          child: count == 0
+              ? const SizedBox.shrink(key: ValueKey('empty'))
+              : BumpOnIncrease(
+                  key: const ValueKey('cart'),
+                  value: count,
+                  child: TestId(
+                    's02.cart',
+                    child: FloatingActionButton(
+                      heroTag: null,
+                      onPressed: onPressed,
+                      tooltip: 'Giỏ hàng, $count món',
+                      backgroundColor: scheme.primary,
+                      foregroundColor: scheme.onPrimary,
+                      shape: const CircleBorder(),
+                      child: Badge(
+                        backgroundColor: scheme.onPrimary,
+                        textColor: scheme.surface,
+                        textStyle: text.labelLarge?.copyWith(fontSize: 12),
+                        label: Text('$count'),
+                        child: const Icon(Icons.shopping_cart),
+                      ),
+                    ),
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }

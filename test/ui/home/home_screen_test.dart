@@ -73,12 +73,14 @@ void main() {
     expect(find.byType(BreakBiteLogo), findsNothing);
   });
 
-  testWidgets('the header shows the kiosk, its wait time, notifications and the cart', (tester) async {
+  testWidgets('the header shows the kiosk, its wait time and notifications; the cart button waits for an item', (
+    tester,
+  ) async {
     await pumpHome(tester);
     expect(find.text('Kiosk Q9 · Tầng 2'), findsOneWidget);
     expect(find.text('Sẵn sàng · chờ 5–7 phút'), findsOneWidget);
     expect(find.byTooltip('Thông báo'), findsOneWidget);
-    expect(find.byTooltip('Giỏ hàng, trống'), findsOneWidget);
+    expect(find.bySemanticsIdentifier('s02.cart'), findsNothing);
   });
 
   testWidgets('shows the kiosk chosen in the session and switches when it changes (S27)', (tester) async {
@@ -94,7 +96,7 @@ void main() {
 
   testWidgets('key elements carry stable test ids for ARTEMIS', (tester) async {
     await pumpHome(tester);
-    for (final id in ['s02.search', 's02.promo', 's02.notifications', 's02.cart', 's02.item.m1', 's02.item.m1.add']) {
+    for (final id in ['s02.search', 's02.promo', 's02.notifications', 's02.item.m1', 's02.item.m1.add']) {
       expect(find.bySemanticsIdentifier(id), findsOneWidget, reason: id);
     }
   });
@@ -127,13 +129,13 @@ void main() {
     expect(find.text('Thử lại'), findsOneWidget);
   });
 
-  testWidgets('tapping + writes the cart, logs the event and shows the "Đã thêm" snackbar', (tester) async {
+  testWidgets('tapping + writes the cart, logs the event and shows the cart button without a snackbar', (tester) async {
     final h = await pumpHome(tester);
     await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
-    expect(find.text('Xem giỏ'), findsOneWidget);
+    expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsNothing);
+    expect(find.bySemanticsIdentifier('s02.cart'), findsOneWidget);
     expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget);
     final items = (await h.cart.watchCart('u1').first).items;
     expect(items.single.itemId, 'm1');
@@ -188,13 +190,13 @@ void main() {
   });
 
   group('quantity on the card', () {
-    testWidgets('after the first add the + becomes a stepper; the notice shows only that first time', (tester) async {
+    testWidgets('after the first add the + becomes a stepper and the cart button counts every portion', (tester) async {
       final h = await pumpHome(tester);
       await tester.tap(find.bySemanticsIdentifier('s02.item.m1.add'));
       await tester.pumpAndSettle();
       expect(find.bySemanticsIdentifier('s02.item.m1.add'), findsNothing);
       expect(find.bySemanticsIdentifier('s02.item.m1.qty'), findsOneWidget);
-      expect(find.text('Đã thêm Combo Tacos Bò Phô Mai vào giỏ'), findsOneWidget);
+      expect(find.byTooltip('Giỏ hàng, 1 món'), findsOneWidget);
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
 
@@ -216,6 +218,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.bySemanticsIdentifier('s02.item.m1.add'), findsOneWidget);
       expect((await h.cart.watchCart('u1').first).isEmpty, isTrue);
+      expect(find.bySemanticsIdentifier('s02.cart'), findsNothing);
     });
 
     for (final size in [TestScreens.narrow, TestScreens.wide]) {
