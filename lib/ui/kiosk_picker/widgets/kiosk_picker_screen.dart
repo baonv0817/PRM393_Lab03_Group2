@@ -29,14 +29,10 @@ class KioskPickerScreen extends StatelessWidget {
     if (!context.mounted || result == null) return;
     switch (result) {
       case Ok(:final value):
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('Đã chọn ${value.name}.')));
+        showAppMessage(context, 'Đã chọn ${value.name}.');
         if (context.canPop()) context.pop();
       case Err(:final error):
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(error.message)));
+        showAppMessage(context, error.message);
     }
   }
 
@@ -93,29 +89,13 @@ class KioskPickerScreen extends StatelessWidget {
               ),
             },
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenPadding,
-                AppSpacing.xs,
-                AppSpacing.screenPadding,
-                AppSpacing.md,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ListenableBuilder(
-                  listenable: vm.confirm,
-                  builder: (context, _) => TestId(
-                    's27.confirm',
-                    child: AppButton(
-                      label: 'Chọn kiosk này',
-                      loading: vm.confirm.running,
-                      onPressed: vm.canConfirm ? () => _confirm(context, vm) : null,
-                    ),
-                  ),
-                ),
-              ),
+          ListenableBuilder(
+            listenable: vm.confirm,
+            builder: (context, _) => BottomActionButton(
+              label: 'Chọn kiosk này',
+              testId: 's27.confirm',
+              loading: vm.confirm.running,
+              onPressed: vm.canConfirm ? () => _confirm(context, vm) : null,
             ),
           ),
         ],
@@ -142,79 +122,52 @@ class _KioskCard extends StatelessWidget {
     final place = kiosk.location;
     final statusColor = accepting ? colors.success : scheme.error;
 
-    return TestId(
-      's27.kiosk.${kiosk.id}',
-      child: Semantics(
-        button: true,
-        selected: selected,
-        inMutuallyExclusiveGroup: true,
-        label: '${kiosk.name}. $status${place.isEmpty ? '' : '. $place'}',
-        excludeSemantics: true,
-        child: Material(
-          color: selected ? colors.selected : scheme.surface,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            side: BorderSide(color: selected ? scheme.primary : colors.border, width: selected ? 1.5 : 1),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.location_on, color: colors.primaryText),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(kiosk.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Flexible(
-                              child: Text(
-                                status,
-                                style: accepting
-                                    ? text.bodyMedium?.copyWith(color: colors.muted)
-                                    : text.bodyMedium?.copyWith(color: scheme.error, fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (place.isNotEmpty) ...[
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(place, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                        ],
-                        if (!accepting && kiosk.notice != null) ...[
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(kiosk.notice!, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                        ],
-                      ],
+    return SelectableCard(
+      testId: 's27.kiosk.${kiosk.id}',
+      selected: selected,
+      onTap: onTap,
+      semanticLabel: '${kiosk.name}. $status${place.isEmpty ? '' : '. $place'}',
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.location_on, color: colors.primaryText),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(kiosk.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: AppSpacing.xxs),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  SizedBox(
-                    width: AppA11y.minTouchTarget,
-                    height: AppA11y.minTouchTarget,
-                    child: Icon(
-                      selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: selected ? scheme.primary : colors.muted,
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        status,
+                        style: accepting
+                            ? text.bodyMedium?.copyWith(color: colors.muted)
+                            : text.bodyMedium?.copyWith(color: scheme.error, fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+                if (place.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(place, style: text.bodyMedium?.copyWith(color: colors.muted)),
                 ],
-              ),
+                if (!accepting && kiosk.notice != null) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(kiosk.notice!, style: text.bodyMedium?.copyWith(color: colors.muted)),
+                ],
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

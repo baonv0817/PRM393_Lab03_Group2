@@ -23,21 +23,15 @@ class FirebaseDemoScreen extends StatelessWidget {
     RemoteKeys.pickupSlotEnabled: 'Hẹn giờ nhận món',
   };
 
-  static void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   static Future<void> _copy(BuildContext context, String url) async {
     await Clipboard.setData(ClipboardData(text: url));
-    if (context.mounted) _snack(context, 'Đã chép đường dẫn tệp.');
+    if (context.mounted) showAppMessage(context, 'Đã chép đường dẫn tệp.');
   }
 
   Future<void> _recordTestError(BuildContext context, FirebaseDemoViewModel demo) async {
     final result = await demo.recordTestError.execute();
     if (result is Ok<void> && context.mounted) {
-      _snack(context, 'Đã ghi một lỗi thử. Crashlytics hiện lỗi này sau vài phút.');
+      showAppMessage(context, 'Đã ghi một lỗi thử. Crashlytics hiện lỗi này sau vài phút.');
     }
   }
 
@@ -57,9 +51,9 @@ class FirebaseDemoScreen extends StatelessWidget {
     if (!context.mounted || result == null) return;
     switch (result) {
       case Ok():
-        _snack(context, 'Đã tải tệp lên.');
+        showAppMessage(context, 'Đã tải tệp lên.');
       case Err(:final error):
-        _snack(context, error.message);
+        showAppMessage(context, error.message);
     }
   }
 

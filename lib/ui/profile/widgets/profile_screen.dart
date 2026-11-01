@@ -1,12 +1,12 @@
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/auth/widgets/sign_out_button.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:breakbite/ui/profile/view_models/profile_view_model.dart';
 import 'package:breakbite/ui/profile/widgets/profile_section.dart';
-import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -28,27 +28,10 @@ class ProfileScreen extends StatelessWidget {
     (id: 'firebaseDemo', icon: Icons.science_outlined, label: 'Khu demo Firebase', path: AppRoutes.firebaseDemo),
   ];
 
-  Future<void> _confirmSignOut(BuildContext context, AuthViewModel auth) async {
-    final confirmed = await showAppDialog(
-      context,
-      title: 'Đăng xuất?',
-      message: 'Dữ liệu tạm trên máy này sẽ được xoá. Giỏ hàng và đơn hàng vẫn lưu trong tài khoản của bạn.',
-      confirmLabel: 'Đăng xuất',
-      destructive: true,
-    );
-    if (confirmed != true) return;
-    final result = await auth.signOut.execute();
-    if (!context.mounted) return;
-    if (result case Err(:final error)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final profile = context.watch<ProfileViewModel>();
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final user = auth.user;
@@ -63,11 +46,7 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: colors.surfaceVariant,
-                    child: Icon(Icons.person, color: colors.primaryText, semanticLabel: 'Ảnh đại diện'),
-                  ),
+                  UserAvatar(name: user?.displayName ?? '', photoUrl: user?.photoUrl),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
@@ -117,23 +96,7 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Center(
-            child: ListenableBuilder(
-              listenable: auth.signOut,
-              builder: (context, _) => TestId(
-                's15.signOut',
-                child: TextButton.icon(
-                  onPressed: auth.signOut.running ? null : () => _confirmSignOut(context, auth),
-                  style: TextButton.styleFrom(
-                    foregroundColor: scheme.error,
-                    minimumSize: const Size(AppA11y.minTouchTarget, AppA11y.minTouchTarget),
-                  ),
-                  icon: const Icon(Icons.logout),
-                  label: Text(auth.signOut.running ? 'Đang đăng xuất…' : 'Đăng xuất'),
-                ),
-              ),
-            ),
-          ),
+          const Center(child: SignOutButton(testId: 's15.signOut')),
         ],
       ),
     );

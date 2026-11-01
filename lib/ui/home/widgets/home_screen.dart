@@ -110,14 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
           SemanticsService.sendAnnouncement(View.of(context), 'Đã thêm ${item.name} vào giỏ', TextDirection.ltr),
         );
       case Err(:final error):
-        _showError(error.message);
+        showAppMessage(context, error.message);
     }
   }
 
   Future<void> _change(HomeViewModel vm, MenuItem item, int delta) async {
     final result = await vm.changeQuantity(item, delta);
     if (!mounted) return;
-    if (result case Err(:final error)) _showError(error.message);
+    if (result case Err(:final error)) showAppMessage(context, error.message);
   }
 
   Future<void> _reorder(HomeViewModel vm) async {
@@ -133,13 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
           onViewCart: () => context.push(AppRoutes.cart),
         );
       case Err(:final error):
-        _showError(error.message);
+        showAppMessage(context, error.message);
     }
   }
-
-  void _showError(String message) => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
 }
 
 class _Header extends StatelessWidget {

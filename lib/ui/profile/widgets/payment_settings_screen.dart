@@ -27,9 +27,7 @@ class PaymentSettingsScreen extends StatelessWidget {
       Ok(:final value) => 'Đã đặt ${paymentMethodLabel(value)} làm mặc định.',
       Err(:final error) => error.message,
     };
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    showAppMessage(context, message);
   }
 
   @override
@@ -70,29 +68,13 @@ class PaymentSettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.xs,
-                  AppSpacing.screenPadding,
-                  AppSpacing.md,
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ListenableBuilder(
-                    listenable: vm.save,
-                    builder: (context, _) => TestId(
-                      's17.save',
-                      child: AppButton(
-                        label: 'Lưu mặc định',
-                        loading: vm.save.running,
-                        onPressed: vm.hasChanges ? () => _save(context, vm) : null,
-                      ),
-                    ),
-                  ),
-                ),
+            ListenableBuilder(
+              listenable: vm.save,
+              builder: (context, _) => BottomActionButton(
+                label: 'Lưu mặc định',
+                testId: 's17.save',
+                loading: vm.save.running,
+                onPressed: vm.hasChanges ? () => _save(context, vm) : null,
               ),
             ),
           ],
@@ -119,63 +101,37 @@ class _MethodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final label = paymentMethodLabel(method);
-    return TestId(
-      's17.method.${method.name}',
-      child: Semantics(
-        button: true,
-        selected: selected,
-        inMutuallyExclusiveGroup: true,
-        label: '$label. $subtitle',
-        excludeSemantics: true,
-        child: Material(
-          color: selected ? colors.selected : scheme.surface,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            side: BorderSide(color: selected ? scheme.primary : colors.border, width: selected ? 1.5 : 1),
+    return SelectableCard(
+      testId: 's17.method.${method.name}',
+      selected: selected,
+      onTap: onTap,
+      semanticLabel: '$label. $subtitle',
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppRadius.chip),
+            ),
+            child: Icon(icon, color: colors.primaryText),
           ),
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: colors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(AppRadius.chip),
-                    ),
-                    child: Icon(icon, color: colors.primaryText),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                        Text(subtitle, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: AppA11y.minTouchTarget,
-                    height: AppA11y.minTouchTarget,
-                    child: Icon(
-                      selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: selected ? scheme.primary : colors.muted,
-                    ),
-                  ),
-                ],
-              ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                Text(subtitle, style: text.bodyMedium?.copyWith(color: colors.muted)),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

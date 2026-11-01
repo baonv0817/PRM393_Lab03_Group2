@@ -60,9 +60,7 @@ class _StudentFormState extends State<_StudentForm> {
       Ok() => 'Đã lưu hồ sơ.',
       Err(:final error) => error.message,
     };
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    showAppMessage(context, message);
   }
 
   @override
@@ -143,29 +141,13 @@ class _StudentFormState extends State<_StudentForm> {
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.xs,
-              AppSpacing.screenPadding,
-              AppSpacing.md,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ListenableBuilder(
-                listenable: vm.save,
-                builder: (context, _) => TestId(
-                  's16.save',
-                  child: AppButton(
-                    label: 'Lưu hồ sơ',
-                    loading: vm.save.running,
-                    onPressed: vm.hasChanges ? _save : null,
-                  ),
-                ),
-              ),
-            ),
+        ListenableBuilder(
+          listenable: vm.save,
+          builder: (context, _) => BottomActionButton(
+            label: 'Lưu hồ sơ',
+            testId: 's16.save',
+            loading: vm.save.running,
+            onPressed: vm.hasChanges ? _save : null,
           ),
         ),
       ],
