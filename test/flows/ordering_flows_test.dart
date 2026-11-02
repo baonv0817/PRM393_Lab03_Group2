@@ -250,6 +250,41 @@ void main() {
     expect(find.text('Đơn gần đây'), findsOneWidget);
   });
 
+  testWidgets('S08 opens the full history (S11), an order there opens S12, and Back retraces the steps', (
+    tester,
+  ) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    await orders.cancelMyOrder(orders.all.single);
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+
+    await tapId(tester, 's08.tab.history');
+    await tapId(tester, 's08.allHistory');
+    expect(byId('s11.grouping.week'), findsOneWidget);
+    expect(byId('s11.order.$id'), findsOneWidget);
+
+    await tester.tap(byId('s11.grouping.month'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Tháng'), findsOneWidget);
+
+    await tapId(tester, 's11.order.$id');
+    expect(byId('s12.header'), findsOneWidget);
+    await tester.tap(find.byTooltip('Quay lại'));
+    await tester.pumpAndSettle();
+    expect(byId('s11.grouping.week'), findsOneWidget);
+    await tester.tap(find.byTooltip('Quay lại'));
+    await tester.pumpAndSettle();
+    expect(byId('s08.tab.history'), findsOneWidget);
+  });
+
   testWidgets('S08 reorders a finished order into the cart and the snackbar opens it', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;
