@@ -76,8 +76,8 @@ K07 does not exist in the design.
 | K05-ERR | Invalid code | (state of /seller/scan) | ErrorView | ScanViewModel | — | P4 | Not started |
 | K06 | Confirm handover | /seller/orders/:id/deliver | DeliverScreen | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
 | K06-CASH | Handover, collect cash | (state of deliver) | DeliverScreen | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
-| K08 | Menu management | /seller/menu | SellerMenuScreen | SellerMenuViewModel | Firestore menu_items | P2 | Not started |
-| K09 | Mark item sold out | (dialog) | SoldOutDialog | SellerMenuViewModel | Firestore menu_items/{id} | P2 | Not started |
+| K08 | Menu management | /seller/menu | SellerMenuScreen | SellerMenuViewModel | Firestore menu_items of the staff member's kiosk (`AppUser.kioskId`), kiosks (name). Items by category with a filter (all, on sale, sold out) and a switch per item; an account without a kiosk gets an explanation. Add and edit come with K14 and K15 | P2 | Done |
+| K09 | Mark item sold out | (dialog) | SoldOutSheet (a bottom sheet, `_SoldOutSheet`) | SellerMenuViewModel | Firestore menu_items/{id}: `soldOut`, `soldOutReason`, `availableAgainAt` (customers see "Có lại lúc"). Reason: out of ingredients (default), machine broken, other; expected back: unknown, in 30 minutes, 1 hour or 2 hours | P2 | Done |
 | K10 | Shop | /seller/shop | ShopScreen | ShopViewModel | Firestore kiosks/{id} | P2 | Not started |
 | K11 | Shift statistics | /seller/stats | ShiftStatsScreen | ShiftStatsViewModel | Firestore orders (aggregation) | P2 | Not started |
 | K12 | Reject order | (dialog) | RejectDialog | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |

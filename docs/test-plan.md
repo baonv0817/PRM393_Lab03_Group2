@@ -18,6 +18,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | Export and upload | Firebase demo area, S12 |
 | Push notification | S19 |
 | Seller | K01, K02, K03, K04, K05, K06 |
+| Seller menu | K08, K09 |
 
 ## 2. Test cases
 
@@ -47,6 +48,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | TC-22 | Enlarged pickup QR code (S20) | 1 order just placed, the kitchen has not accepted it | Orders ("Đơn hàng"), open the order, tap "Phóng to mã QR" | The QR code shows large with the 6-digit code in two groups and "Kiosk chưa nhận đơn. Mã dùng được khi món sẵn sàng."; closing returns to the order; report the code shown | Happy path | Not run |
 | TC-23 | Report a problem (S24) | 1 delivered order | Orders ("Đơn hàng"), open the delivered order, tap "Báo sự cố với đơn này", choose "Thiếu món", type "Thiếu 1 ly trà đào", tap "Gửi báo cáo" | "Đã gửi báo cáo. Kiosk sẽ xem sớm." shows, then the report with "Đã gửi, chờ kiosk xem"; the form does not come back when the order is opened again; report the status shown | Happy path | Not run |
 | TC-24 | Rate an item (S23) | 1 delivered order | Orders ("Đơn hàng"), open the delivered order, tap "Đánh giá món", tap the 4th star of the first item, choose "Ngon", type "Vỏ giòn", tap "Gửi đánh giá" | "Đã gửi 1 đánh giá. Cảm ơn bạn!" shows and the order opens again; reopening "Đánh giá món" shows "Đã đánh giá" on that item with 4 stars; report the rating label shown ("Tốt") | Happy path | Not run |
+| TC-25 | Mark an item sold out (K08, K09) | Signed in with the staff role at Kiosk Q9 · Tầng 2 | Open the "Món" tab, switch off the first item, choose "Máy móc hỏng" and "Sau 1 giờ", tap "Báo hết hàng"; then, in the customer app, open the menu | The row says "Máy móc hỏng · dự kiến có lại lúc …"; the customer menu shows the item as sold out with "Có lại lúc …" and it cannot be added; report the row text | Happy path | Not run |
 
 The instructions above are summaries; the full versions are in `e2e_test/`. Everyone adds cases for the screens they own (if section 7 of the handout is not covered).
 
