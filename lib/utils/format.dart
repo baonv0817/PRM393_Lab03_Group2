@@ -49,6 +49,25 @@ String incidentStatusLabel(IncidentStatus status) => switch (status) {
   IncidentStatus.resolved => 'Đã xử lý',
 };
 
+/// The quick tags of a review (S23); an unknown tag is shown as it was stored.
+String reviewTagLabel(String tag) => switch (tag) {
+  'tasty' => 'Ngon',
+  'fast' => 'Ra món nhanh',
+  'hot' => 'Còn nóng',
+  'wellPacked' => 'Đóng gói kỹ',
+  _ => tag,
+};
+
+/// What a star rating means, said under the stars (S23).
+String ratingLabel(int stars) => switch (stars) {
+  1 => 'Rất tệ',
+  2 => 'Chưa tốt',
+  3 => 'Bình thường',
+  4 => 'Tốt',
+  5 => 'Tuyệt vời',
+  _ => 'Chạm vào sao để chấm điểm',
+};
+
 String voucherProblemMessage(Voucher voucher, VoucherProblem problem) => switch (problem) {
   VoucherProblem.inactive => 'Mã ${voucher.code} đã ngừng áp dụng.',
   VoucherProblem.notStarted => 'Mã ${voucher.code} chưa đến thời gian áp dụng.',

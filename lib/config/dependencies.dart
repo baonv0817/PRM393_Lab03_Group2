@@ -21,6 +21,7 @@ class AppDependencies {
     required this.vouchers,
     required this.slots,
     required this.incidents,
+    required this.reviews,
   });
 
   final AuthService auth;
@@ -40,6 +41,7 @@ class AppDependencies {
   final VoucherRepository vouchers;
   final SlotRepository slots;
   final IncidentRepository incidents;
+  final ReviewRepository reviews;
 
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
@@ -58,5 +60,6 @@ class AppDependencies {
     Provider<VoucherRepository>.value(value: vouchers),
     Provider<SlotRepository>.value(value: slots),
     Provider<IncidentRepository>.value(value: incidents),
+    Provider<ReviewRepository>.value(value: reviews),
   ];
 }

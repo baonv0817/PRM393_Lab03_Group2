@@ -233,6 +233,19 @@ class _Body extends StatelessWidget {
               ),
             ),
           ),
+        if (vm.canReview) ...[
+          const SizedBox(height: AppSpacing.sm),
+          TestId(
+            's12.review',
+            child: AppButton(
+              label: 'Đánh giá món',
+              icon: Icons.star_outline,
+              variant: AppButtonVariant.secondary,
+              large: true,
+              onPressed: () => context.push(AppRoutes.orderReviewOf(order.id)),
+            ),
+          ),
+        ],
         if (vm.canReportIncident) ...[
           const SizedBox(height: AppSpacing.sm),
           TestId(

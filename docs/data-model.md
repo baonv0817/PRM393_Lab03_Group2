@@ -270,7 +270,7 @@ Every composite index is in `firebase/firestore.indexes.json`. Firestore creates
 | S08 tab "Lịch sử", S11, S14 | `orders` where `uid == me` orderBy `createdAt desc`, *paged* | (uid, createdAt desc) |
 | S13 Favorites | `users/{uid}/favorites` orderBy `createdAt desc`; then `menu_items` where `kioskId == k` and `dishId in [...]` (≤ 30) for price and stock | automatic; (kioskId, dishId) |
 | S19 Notifications | `users/{uid}/notifications` orderBy `createdAt desc`, *paged*; unread dot: `read == false` count | automatic |
-| S23 Review | `reviews/{orderId}_{itemId}`; a dish's reviews: `reviews` where `dishId == d` orderBy `createdAt desc` | (dishId, createdAt desc) |
+| S23 Review | `reviews/{orderId}_{itemId}`; the customer's reviews of one order: `reviews` where `uid == me` and `orderId == x`; a dish's reviews: `reviews` where `dishId == d` orderBy `createdAt desc` | (dishId, createdAt desc) for a dish; none for one order |
 | S24 Incident report | `incidents/{orderId}`; the customer's report of one order: where `uid == me` and `orderId == x` (a query, because `get` of a missing document is refused by the owner rule); the customer's list: where `uid == me` orderBy `createdAt desc` | (uid, createdAt desc) for the list; none for the single order |
 | Firebase demo area, T43 receipts | `reports` where `uid == me` orderBy `createdAt desc` limit 10 | (uid, createdAt desc) |
 | K02 Order queue | `orders` where `kioskId == mine` and `status in [pending, preparing, ready]` orderBy `createdAt desc` | (kioskId, status, createdAt desc) |

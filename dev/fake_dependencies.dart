@@ -24,5 +24,6 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     vouchers: FakeVoucherRepository(),
     slots: FakeSlotRepository(),
     incidents: FakeIncidentRepository(),
+    reviews: FakeReviewRepository(),
   );
 }

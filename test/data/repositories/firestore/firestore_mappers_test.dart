@@ -150,6 +150,39 @@ void main() {
     expect(reportFromData('r2', {'uid': 'u1'}, now: now).createdAt, now);
   });
 
+  test('a review reads its rating, tags and comment; a missing or odd value falls back safely', () {
+    final now = DateTime.utc(2026, 11, 2, 3);
+    final review = reviewFromData('o6_q9-t2-tacos', {
+      'orderId': 'o6',
+      'itemId': 'q9-t2-tacos',
+      'dishId': 'tacos',
+      'kioskId': 'q9-t2',
+      'uid': 'u1',
+      'authorName': 'Quân N.',
+      'rating': 4,
+      'comment': 'Ngon',
+      'tags': ['tasty', 'hot'],
+      'createdAt': Timestamp.fromDate(created),
+      'updatedAt': Timestamp.fromDate(created),
+    }, now: now);
+    expect(review.id, 'o6_q9-t2-tacos');
+    expect((review.rating, review.comment), (4, 'Ngon'));
+    expect(review.tags, ['tasty', 'hot']);
+    expect(review.authorName, 'Quân N.');
+    expect(review.createdAt.isAtSameMomentAs(created), isTrue);
+    expect(review.updatedAt!.isAtSameMomentAs(created), isTrue);
+
+    final odd = reviewFromData('x', {
+      'rating': 9,
+      'tags': ['tasty', 7, null, 'fast'],
+    }, now: now);
+    expect(odd.rating, 5, reason: 'a rating above 5 is cut to 5');
+    expect(odd.tags, ['tasty', 'fast']);
+    expect((odd.comment, odd.authorName), ('', ''));
+    expect(odd.createdAt, now, reason: 'a review still being written has no server time yet');
+    expect(reviewFromData('y', {'tags': 'tasty'}, now: now).tags, isEmpty);
+  });
+
   test('an incident reads the customer report and the kiosk answer; unknown values fall back safely', () {
     final now = DateTime.utc(2026, 11, 2, 3);
     final open = incidentFromData('o6', {

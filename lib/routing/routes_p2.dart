@@ -9,12 +9,14 @@ import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model
 import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_history_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/pickup_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/review_view_model.dart';
 import 'package:breakbite/ui/order_manage/widgets/edit_order_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/incident_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/pickup_screen.dart';
+import 'package:breakbite/ui/order_manage/widgets/review_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -100,7 +102,23 @@ final List<GoRoute> p2Routes = [
       child: const PickupScreen(),
     ),
   ),
-  placeholderRoute(AppRoutes.orderReview, 'S23', 'Đánh giá món', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderReview,
+    builder: (context, state) {
+      final user = context.read<AuthViewModel>().user;
+      return ChangeNotifierProvider(
+        create: (_) => ReviewViewModel(
+          orders: context.read<OrderRepository>(),
+          reviews: context.read<ReviewRepository>(),
+          crash: context.read<CrashService>(),
+          uid: user?.uid ?? '',
+          displayName: user?.displayName ?? '',
+          orderId: state.pathParameters['id'] ?? '',
+        ),
+        child: const ReviewScreen(),
+      );
+    },
+  ),
   GoRoute(
     path: AppRoutes.orderIncident,
     builder: (context, state) {

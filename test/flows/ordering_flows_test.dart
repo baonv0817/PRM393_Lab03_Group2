@@ -285,6 +285,42 @@ void main() {
     expect(byId('s08.tab.history'), findsOneWidget);
   });
 
+  testWidgets('S12 opens S23, an item is rated and sent, and the review shows as sent when reopened', (tester) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    Order current() => orders.all.firstWhere((o) => o.id == id);
+    await orders.accept(current(), readyIn: const Duration(minutes: 5));
+    await orders.markReady(current());
+    await orders.deliver(current());
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('#$id'));
+    await tester.pumpAndSettle();
+
+    await tapId(tester, 's12.review');
+    expect(find.text('Đánh giá món'), findsWidgets);
+    await tester.tap(byId('s23.item.m1.star.5'));
+    await tester.pumpAndSettle();
+    await tester.tap(byId('s23.item.m1.tag.tasty'));
+    await tester.pumpAndSettle();
+    await tapId(tester, 's23.submit');
+
+    expect(find.text('Đã gửi 1 đánh giá. Cảm ơn bạn!'), findsOneWidget);
+    final review = (deps.reviews as FakeReviewRepository).all.single;
+    expect((review.orderId, review.itemId, review.uid, review.rating), (id, 'm1', 'dev-user', 5));
+    expect(find.text('Chi tiết đơn'), findsOneWidget);
+
+    await tapId(tester, 's12.review');
+    expect(byId('s23.item.m1.reviewed'), findsOneWidget);
+  });
+
   testWidgets('S12 opens S24, a problem is reported once, and the report shows its status', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;

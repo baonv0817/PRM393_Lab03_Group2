@@ -109,6 +109,10 @@ class _Harness {
           path: AppRoutes.orderIncident,
           builder: (context, state) => Scaffold(body: Text('S24 ${state.pathParameters['id']}')),
         ),
+        GoRoute(
+          path: AppRoutes.orderReview,
+          builder: (context, state) => Scaffold(body: Text('S23 ${state.pathParameters['id']}')),
+        ),
       ],
     );
     addTearDown(router.dispose);
@@ -176,6 +180,30 @@ void main() {
     await tester.tap(byId('s12.track'));
     await tester.pumpAndSettle();
     expect(find.text('S07 $id'), findsOneWidget);
+  });
+
+  testWidgets('S12 of a received order offers to rate the items, which opens S23', (tester) async {
+    final harness = _Harness();
+    final id = await harness.deliveredOrder();
+    await harness.pump(tester, id);
+
+    expect(byId('s12.review'), findsOneWidget);
+    await tester.tap(byId('s12.review'));
+    await tester.pumpAndSettle();
+    expect(find.text('S23 $id'), findsOneWidget);
+  });
+
+  testWidgets('S12 of an order that is not received or was cancelled does not offer a review', (tester) async {
+    final harness = _Harness();
+    final pending = await placeTestOrder(harness.orders, uid: 'u1');
+    await harness.pump(tester, pending);
+    expect(byId('s12.review'), findsNothing);
+
+    final other = _Harness();
+    final cancelled = await placeTestOrder(other.orders, uid: 'u1');
+    await other.orders.cancelMyOrder(other.orders.all.single);
+    await other.pump(tester, cancelled);
+    expect(byId('s12.review'), findsNothing);
   });
 
   testWidgets('S12 of a received order offers to report a problem, which opens S24', (tester) async {
