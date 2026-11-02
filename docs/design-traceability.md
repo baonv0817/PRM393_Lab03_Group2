@@ -49,7 +49,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S20 | Pickup (QR code) | /orders/:id/pickup | PickupScreen | PickupViewModel | Firestore orders/{id} (realtime); opened from the "Phóng to mã QR" button of S07 | P2 | Done |
 | S21 | Home when the counter is closed | (state of /home) | ClosedBanner | HomeViewModel | Firestore kiosks/{id} | P1 | Not started |
 | S22 | Item sold out, suggested alternatives | /menu/:id/alternatives | AlternativesScreen | AlternativesViewModel | Firestore menu_items | P1 | Not started |
-| S23 | Review an item | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews | P2 | Not started |
+| S23 | Review an item | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews/{orderId}_{itemId} (`ReviewRepository`; the customer's reviews of the order follow live). Stars, quick tags and a comment for each item of a received order; a review already sent can be changed. Opened from the "Đánh giá món" button of S12 | P2 | Done |
 | S24 | Report an incident | /orders/:id/incident | IncidentScreen | IncidentViewModel | Firestore incidents/{orderId} (`IncidentRepository`, create side; the report and the kiosk's answer follow live). Opened from the "Báo sự cố với đơn này" button of S12, offered for received orders. No photo (D21 to record if Figma has one) | P2 | Done |
 | S25 | Pick a time slot | /cart/pickup-time | PickupTimeScreen | PickupTimeViewModel | Firestore kiosks/{id}/slots (`SlotRepository`), carts/{uid}; Remote Config `pickup_slot_enabled` | P1 | Done |
 | S26 | Sign-in (Google instead of email OTP) | /sign-in | SignInScreen | AuthViewModel | Firebase Auth, users/{uid} | P3 | Done |
