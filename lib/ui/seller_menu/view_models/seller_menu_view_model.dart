@@ -36,8 +36,14 @@ class SellerMenuViewModel extends ChangeNotifier with SafeChangeNotifier {
       'Tài khoản này chưa được gán kiosk nên chưa có món để quản lý. Nhờ quản trị viên gán kiosk cho bạn.';
   static const emptyMessage = 'Kiosk chưa có món nào.';
 
-  /// When a sold-out item is expected back, counted from now; `null` means "not known".
-  static const backChoices = <Duration?>[null, Duration(minutes: 30), Duration(hours: 1), Duration(hours: 2)];
+  /// The two times K09 offers as "Có lại lúc": the first half hour at least 15 minutes from now, and the one
+  /// after it. The third choice, "Hết ngày", has no time.
+  List<DateTime> get backOptions {
+    final earliest = now.add(const Duration(minutes: 15));
+    final hour = DateTime(earliest.year, earliest.month, earliest.day, earliest.hour);
+    final first = hour.add(Duration(minutes: earliest.minute == 0 ? 0 : (earliest.minute <= 30 ? 30 : 60)));
+    return [first, first.add(const Duration(minutes: 30))];
+  }
 
   final MenuRepository menu;
   final CrashService crash;
@@ -139,21 +145,20 @@ class SellerMenuViewModel extends ChangeNotifier with SafeChangeNotifier {
     ];
   }
 
-  /// What the row says about an item: on sale, or why it is sold out and when it is expected back.
+  /// What a row says after the price: "Còn hàng", or "Hết" with the time it is expected back.
   String statusLine(MenuItem item) {
-    if (!item.soldOut) return 'Đang bán';
-    final reason = item.soldOutReason == null ? 'Hết hàng' : soldOutReasonLabel(item.soldOutReason!);
+    if (!item.soldOut) return 'Còn hàng';
     final back = item.availableAgainAt;
-    if (back == null) return reason;
-    if (back.isBefore(now)) return '$reason · đã quá giờ dự kiến, bật lại khi có hàng';
-    return '$reason · dự kiến có lại lúc ${formatTime(back)}';
+    if (back == null) return 'Hết';
+    if (back.isBefore(now)) return 'Hết · quá giờ dự kiến';
+    return 'Hết · có lại ${formatTime(back)}';
   }
 
   /// The switch of this item is working; it cannot be flipped again until the write is done.
   bool isBusy(String itemId) => _busy.contains(itemId);
 
-  Future<Result<void>> markSoldOut(MenuItem item, {required SoldOutReason reason, Duration? backIn}) =>
-      _write(item, soldOut: true, reason: reason, backAt: backIn == null ? null : now.add(backIn));
+  Future<Result<void>> markSoldOut(MenuItem item, {required SoldOutReason reason, DateTime? backAt}) =>
+      _write(item, soldOut: true, reason: reason, backAt: backAt);
 
   Future<Result<void>> markAvailable(MenuItem item) => _write(item, soldOut: false);
 

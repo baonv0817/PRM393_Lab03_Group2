@@ -150,7 +150,7 @@ void main() {
 
         expect(vm.bars.map((b) => b.hour), [8, 9, 10, 11, 12]);
         expect(vm.bars.map((b) => b.count), [0, 3, 0, 0, 0]);
-        expect(vm.bars.first.label, '08');
+        expect(vm.bars.first.label, '8h');
         expect(vm.maxBarCount, 3);
         expect(vm.peakLabel, 'Cao điểm 09:00 · 3 đơn');
         vm.dispose();

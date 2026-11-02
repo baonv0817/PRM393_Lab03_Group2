@@ -26,7 +26,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Món')));
     await tester.pumpAndSettle();
-    expect(find.text('4 món · 1 hết hàng'), findsOneWidget);
+    expect(find.text('Món tại quầy'), findsOneWidget);
 
     await tester.tap(byId('k08.add'));
     await tester.pumpAndSettle();
@@ -40,7 +40,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Đã thêm "Bún bò Huế" vào thực đơn.'), findsOneWidget);
-    expect(find.text('5 món · 1 hết hàng'), findsOneWidget);
     expect(byId('k08.item.q9-t2-bun-bo-hue'), findsOneWidget);
     final customerMenu = await deps.menu.watchMenu('q9-t2').first;
     expect(customerMenu.map((i) => i.name), contains('Bún bò Huế'));
@@ -53,7 +52,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Đã lưu thay đổi của "Bún bò Huế".'), findsOneWidget);
-    expect(find.text('48.000đ'), findsOneWidget);
+    expect(find.text('48.000đ · Còn hàng'), findsOneWidget);
     final changed = (await deps.menu.getItem('q9-t2-bun-bo-hue')) as Ok<MenuItem>;
     expect(changed.value.priceVnd, 48000);
   });
@@ -71,8 +70,7 @@ void main() {
 
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Món')));
     await tester.pumpAndSettle();
-    expect(find.text('Quản lý món'), findsOneWidget);
-    expect(find.text('Kiosk Q9 · Tầng 2'), findsOneWidget);
+    expect(find.text('Món tại quầy'), findsOneWidget);
 
     Future<MenuItem> customerSees(String id) async =>
         (await deps.menu.watchMenu('q9-t2').first).firstWhere((i) => i.id == id);

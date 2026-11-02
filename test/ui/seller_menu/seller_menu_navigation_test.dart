@@ -52,16 +52,18 @@ void main() {
     expect(find.text('K14'), findsOneWidget);
   });
 
-  testWidgets('K08 the edit button of an item opens the form for that item', (tester) async {
+  testWidgets('K08 tapping an item opens the form for that item', (tester) async {
     await _pump(tester, FakeMenuRepository());
 
-    expect(find.byTooltip('Sửa Combo Tacos Bò Phô Mai'), findsOneWidget);
+    expect(find.bySemanticsLabel('Sửa Combo Tacos Bò Phô Mai'), findsOneWidget);
     await tester.tap(byId('k08.item.m1.edit'));
     await tester.pumpAndSettle();
     expect(find.text('K15 m1'), findsOneWidget);
   });
 
-  testWidgets('K08 of a kiosk with no items invites adding the first one, without the floating button', (tester) async {
+  testWidgets('K08 of a kiosk with no items invites adding the first one, without the add button in the top bar', (
+    tester,
+  ) async {
     await _pump(tester, FakeMenuRepository(), kioskId: 'nvh-t1');
 
     expect(byId('k08.add'), findsNothing);

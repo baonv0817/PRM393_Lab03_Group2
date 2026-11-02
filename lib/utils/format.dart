@@ -59,8 +59,8 @@ String itemCategoryLabel(ItemCategory category) => switch (category) {
 /// Why an item is sold out, as staff pick it in K09.
 String soldOutReasonLabel(SoldOutReason reason) => switch (reason) {
   SoldOutReason.outOfIngredients => 'Hết nguyên liệu',
-  SoldOutReason.machineBroken => 'Máy móc hỏng',
-  SoldOutReason.other => 'Lý do khác',
+  SoldOutReason.machineBroken => 'Máy hỏng',
+  SoldOutReason.other => 'Khác',
 };
 
 /// The quick tags of a review (S23); an unknown tag is shown as it was stored.

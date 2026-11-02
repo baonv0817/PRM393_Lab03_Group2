@@ -16,6 +16,10 @@ import '../../helpers/pump.dart';
 
 Finder byId(String id) => find.bySemanticsIdentifier(id);
 
+/// The number the preparation-time stepper shows.
+String qty(String id) =>
+    (find.descendant(of: byId('$id.qty'), matching: find.byType(Text)).evaluate().first.widget as Text).data!;
+
 Finder field(String id) => find.descendant(of: byId(id), matching: find.byType(TextField));
 
 class _OfflineGet extends FakeMenuRepository {
@@ -109,18 +113,24 @@ void main() {
       await _pump(tester, FakeMenuRepository(), size: size);
 
       expect(find.text('Thêm món mới'), findsOneWidget);
-      for (final id in ['name', 'price', 'prep', 'description']) {
-        expect(byId('k14.$id'), findsOneWidget);
+      for (final id in ['name', 'price', 'prep.dec', 'prep.inc', 'inStock', 'description']) {
+        expect(byId('k14.$id'), findsOneWidget, reason: id);
       }
       for (final category in ItemCategory.values) {
         expect(byId('k14.category.${category.name}'), findsOneWidget);
       }
       expect(find.text('Tên món'), findsOneWidget);
-      expect(find.text('Giá bán'), findsOneWidget);
+      expect(find.text('Giá (đ)'), findsOneWidget);
+      expect(find.text('Danh mục'), findsOneWidget);
       expect(find.text('Thời gian chuẩn bị'), findsOneWidget);
-      expect(tester.widget<TextField>(field('k14.prep')).controller!.text, '5');
+      expect(find.text('Còn hàng'), findsOneWidget);
+      expect(find.text('Lưu món'), findsOneWidget);
+      expect(qty('k14.prep'), '5');
+      expect(
+        tester.widget<Switch>(find.descendant(of: byId('k14.inStock'), matching: find.byType(Switch))).value,
+        isTrue,
+      );
       expect(_saveEnabled(tester, 'k14.save'), isTrue);
-      expect(find.text('Bật hoặc tắt bán món ở màn Quản lý món.'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -142,14 +152,47 @@ void main() {
     expect(find.text('Nhập giá món.'), findsOneWidget);
   });
 
-  testWidgets('K14 the price and the preparation time take digits only', (tester) async {
+  testWidgets('K14 the price takes digits only', (tester) async {
     await _pump(tester, FakeMenuRepository());
 
     await _type(tester, 'k14.price', '4a5.0,00');
-    await _type(tester, 'k14.prep', '1x2');
 
     expect(tester.widget<TextField>(field('k14.price')).controller!.text, '45000');
-    expect(tester.widget<TextField>(field('k14.prep')).controller!.text, '12');
+  });
+
+  testWidgets('K14 the stepper changes the preparation time a minute at a time and stops at 0 and 120', (tester) async {
+    await _pump(tester, FakeMenuRepository());
+
+    await _tap(tester, 'k14.prep.inc');
+    expect(qty('k14.prep'), '6');
+    for (var i = 0; i < 7; i++) {
+      await _tap(tester, 'k14.prep.dec');
+    }
+    expect(qty('k14.prep'), '0');
+    final dec = tester.widget<IconButton>(find.descendant(of: byId('k14.prep.dec'), matching: find.byType(IconButton)));
+    expect(dec.onPressed, isNull);
+    for (var i = 0; i < 125; i++) {
+      await tester.tap(byId('k14.prep.inc'));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    expect(qty('k14.prep'), '120');
+    final inc = tester.widget<InkResponse>(
+      find.descendant(of: byId('k14.prep.inc'), matching: find.byType(InkResponse)),
+    );
+    expect(inc.onTap, isNull);
+  });
+
+  testWidgets('K14 an item added with "Còn hàng" off starts sold out', (tester) async {
+    final menu = FakeMenuRepository();
+    await _pump(tester, menu);
+
+    await _type(tester, 'k14.name', 'Bún bò Huế');
+    await _type(tester, 'k14.price', '45000');
+    await _tap(tester, 'k14.inStock');
+    await _tap(tester, 'k14.save');
+
+    expect((await _item(menu, 'q9-t2-bun-bo-hue')).soldOut, isTrue);
   });
 
   testWidgets('K14 adds the item, tells the staff member and returns to the menu', (tester) async {
@@ -159,7 +202,7 @@ void main() {
     await _type(tester, 'k14.name', 'Bún bò Huế');
     await _tap(tester, 'k14.category.other');
     await _type(tester, 'k14.price', '45000');
-    await _type(tester, 'k14.prep', '6');
+    await _tap(tester, 'k14.prep.inc');
     await _type(tester, 'k14.description', 'Cay vừa');
     await _tap(tester, 'k14.save');
 
@@ -213,12 +256,55 @@ void main() {
     expect(find.text('Sửa món'), findsOneWidget);
     expect(tester.widget<TextField>(field('k15.name')).controller!.text, 'Combo Tacos Bò Phô Mai');
     expect(tester.widget<TextField>(field('k15.price')).controller!.text, '39000');
-    expect(tester.widget<TextField>(field('k15.prep')).controller!.text, '4');
-    expect(find.text('Bật hoặc tắt bán món ở màn Quản lý món.'), findsOneWidget);
+    expect(qty('k15.prep'), '4');
+    expect(
+      tester.widget<Switch>(find.descendant(of: byId('k15.inStock'), matching: find.byType(Switch))).value,
+      isTrue,
+    );
+    expect(find.text('Xoá món'), findsNothing, reason: 'items are not deleted; a sold-out item is switched off');
     expect(_saveEnabled(tester, 'k15.save'), isFalse);
 
     await _type(tester, 'k15.price', '42000');
     expect(_saveEnabled(tester, 'k15.save'), isTrue);
+  });
+
+  testWidgets('K15 shows a sold-out item with "Còn hàng" off, and switching it on puts it back on sale', (
+    tester,
+  ) async {
+    final menu = FakeMenuRepository();
+    await _pump(tester, menu, itemId: 'm4');
+
+    expect(
+      tester.widget<Switch>(find.descendant(of: byId('k15.inStock'), matching: find.byType(Switch))).value,
+      isFalse,
+    );
+    expect(_saveEnabled(tester, 'k15.save'), isFalse);
+
+    await _tap(tester, 'k15.inStock');
+    expect(_saveEnabled(tester, 'k15.save'), isTrue);
+    await _tap(tester, 'k15.save');
+
+    final stored = await _item(menu, 'm4');
+    expect((stored.soldOut, stored.soldOutReason, stored.availableAgainAt), (false, null, null));
+  });
+
+  testWidgets('K15 switching "Còn hàng" off sets the item sold out; leaving it alone keeps a sold-out reason', (
+    tester,
+  ) async {
+    final menu = FakeMenuRepository();
+    await menu.setSoldOut('m4', true, reason: SoldOutReason.machineBroken, availableAgainAt: DateTime(2026, 11, 2, 11));
+    await _pump(tester, menu, itemId: 'm4');
+    await _type(tester, 'k15.price', '36000');
+    await _tap(tester, 'k15.save');
+
+    final kept = await _item(menu, 'm4');
+    expect((kept.priceVnd, kept.soldOut, kept.soldOutReason), (36000, true, SoldOutReason.machineBroken));
+    expect(kept.availableAgainAt, DateTime(2026, 11, 2, 11));
+
+    await _pump(tester, menu, itemId: 'm1');
+    await _tap(tester, 'k15.inStock');
+    await _tap(tester, 'k15.save');
+    expect((await _item(menu, 'm1')).soldOut, isTrue);
   });
 
   testWidgets('K15 saves the change, tells the staff member and returns to the menu', (tester) async {
@@ -273,8 +359,13 @@ void main() {
     expect(find.text('Thử lại'), findsOneWidget);
   });
 
-  testWidgets('K14 and K15 back goes to the menu when the form was opened without a history', (tester) async {
+  testWidgets('K14 closes with the X and K15 goes back with the arrow, both to the menu', (tester) async {
     await _pump(tester, FakeMenuRepository());
+    await tester.tap(find.byTooltip('Đóng'));
+    await tester.pumpAndSettle();
+    expect(find.text('K08'), findsOneWidget);
+
+    await _pump(tester, FakeMenuRepository(), itemId: 'm1');
     await tester.tap(find.byTooltip('Quay lại'));
     await tester.pumpAndSettle();
     expect(find.text('K08'), findsOneWidget);

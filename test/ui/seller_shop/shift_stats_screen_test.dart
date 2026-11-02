@@ -99,16 +99,15 @@ void main() {
     testWidgets('K11 at ${size.width.round()} dp shows the revenue, the counts and the chart', (tester) async {
       await _pump(tester, await _shift(), size: size);
 
-      expect(find.text('Thống kê ca'), findsOneWidget);
+      expect(find.text('Ca hôm nay'), findsOneWidget);
       expect(_textOf(tester, 'k11.shift'), contains('Kiosk Q9 · Tầng 2'));
       expect(_textOf(tester, 'k11.shift'), contains('Từ 00:00 hôm nay'));
       expect(_textOf(tester, 'k11.shift'), contains('Cập nhật lúc 12:00'));
-      expect(_textOf(tester, 'k11.revenue'), contains('74.000đ'));
-      expect(find.text('Từ 2 đơn đã giao'), findsOneWidget);
-      expect(_textOf(tester, 'k11.delivered'), 'Đã giao|2');
-      expect(_textOf(tester, 'k11.active'), 'Đang xử lý|1');
-      expect(_textOf(tester, 'k11.cancelled'), 'Đã huỷ|1');
-      expect(_textOf(tester, 'k11.prep'), 'Chuẩn bị trung bình|1 phút');
+      expect(_textOf(tester, 'k11.revenue'), 'Doanh thu|74.000đ');
+      expect(_textOf(tester, 'k11.delivered'), 'Đơn đã làm|2');
+      expect(find.text('Đang xử lý: 1 đơn'), findsOneWidget);
+      expect(_textOf(tester, 'k11.cancelled'), 'Đơn huỷ|1');
+      expect(_textOf(tester, 'k11.prep'), 'Làm trung bình|1 phút');
       expect(find.text('Cao điểm 09:00 · 3 đơn'), findsOneWidget);
       expect(byId('k11.bar.9'), findsOneWidget);
       expect(byId('k11.bar.12'), findsOneWidget, reason: 'the chart runs up to the current hour');
@@ -121,7 +120,7 @@ void main() {
 
     expect(find.bySemanticsLabel('9 giờ: 3 đơn'), findsOneWidget);
     expect(find.bySemanticsLabel('10 giờ: 0 đơn'), findsOneWidget);
-    expect(find.bySemanticsLabel('Đã huỷ: 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Đơn huỷ: 1'), findsOneWidget);
   });
 
   testWidgets('K11 says when the shift has no order, and refreshing picks up a new one', (tester) async {
@@ -136,7 +135,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(byId('k11.empty'), findsNothing);
-    expect(_textOf(tester, 'k11.active'), 'Đang xử lý|1');
+    expect(find.text('Đang xử lý: 1 đơn'), findsOneWidget);
     expect(find.text('0đ'), findsOneWidget);
   });
 
@@ -160,7 +159,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Chưa cập nhật được: ${const NetworkException().message}'), findsOneWidget);
-    expect(_textOf(tester, 'k11.delivered'), 'Đã giao|2');
+    expect(_textOf(tester, 'k11.delivered'), 'Đơn đã làm|2');
   });
 
   testWidgets('K11 shows an error with retry when the first read fails, and a message without a kiosk', (tester) async {

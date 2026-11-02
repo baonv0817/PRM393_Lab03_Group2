@@ -132,26 +132,24 @@ class _BodyState extends State<_Body> {
           children: [
             TestId(
               'k10.status',
-              child: ProfileSection(
+              child: Material(
+                color: scheme.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  side: BorderSide(
+                    color: vm.acceptsOrders ? colors.success : colors.border,
+                    width: vm.acceptsOrders ? 2 : 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(kiosk.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        vm.statusLine,
-                        style: text.bodyMedium?.copyWith(
-                          color: vm.acceptsOrders ? colors.success : scheme.error,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
                           Expanded(
-                            child: Text('Đang nhận đơn', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                            child: Text('Đang nhận đơn', style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                           ),
                           TestId(
                             'k10.open',
@@ -171,19 +169,43 @@ class _BodyState extends State<_Body> {
                           ),
                         ],
                       ),
+                      Text(kiosk.name, style: text.bodyMedium?.copyWith(color: colors.muted)),
+                      Text(
+                        vm.statusLine,
+                        style: text.bodyMedium?.copyWith(
+                          color: vm.acceptsOrders ? colors.success : scheme.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text('Tắt để khách thấy "Quán đóng"', style: text.bodyMedium?.copyWith(color: colors.muted)),
                     ],
                   ),
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _Heading('Tạm ngưng nhận đơn', text),
+            TestId(
+              'k10.pause.15',
+              child: AppButton(
+                label: 'Tạm ngưng nhận đơn ${_pauseLabel(ShopViewModel.pauseChoices.first)}',
+                variant: AppButtonVariant.secondary,
+                large: true,
+                onPressed: vm.applying
+                    ? null
+                    : () => widget.onApply(
+                        vm.pauseFor(ShopViewModel.pauseChoices.first),
+                        'Tạm ngưng nhận đơn ${_pauseLabel(ShopViewModel.pauseChoices.first)}.',
+                      ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                for (final d in ShopViewModel.pauseChoices)
+                Text('Tạm ngưng lâu hơn:', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                for (final d in ShopViewModel.pauseChoices.skip(1))
                   TestId(
                     'k10.pause.${d.inMinutes}',
                     child: AppChip(
@@ -211,6 +233,17 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ],
+            const SizedBox(height: AppSpacing.md),
+            TestId(
+              'k10.stats',
+              child: ProfileSection(
+                child: ListTile(
+                  title: Text('Thống kê ca hôm nay', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.sellerStats),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.md),
             _Heading('Thời gian chờ', text),
             const SizedBox(height: AppSpacing.xxs),
@@ -307,19 +340,6 @@ class _BodyState extends State<_Body> {
                   labelText: 'Số đơn tối đa mỗi khung giờ nhận món',
                   helperText: 'Để trống nếu không giới hạn.',
                   errorText: showErrors ? vm.maxOrdersError : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            TestId(
-              'k10.stats',
-              child: ProfileSection(
-                child: ListTile(
-                  leading: const Icon(Icons.bar_chart),
-                  title: Text('Thống kê ca', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                  subtitle: const Text('Doanh thu, số đơn và giờ cao điểm hôm nay'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push(AppRoutes.sellerStats),
                 ),
               ),
             ),

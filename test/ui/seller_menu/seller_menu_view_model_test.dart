@@ -106,7 +106,7 @@ void main() {
         final result = await vm.markSoldOut(
           item,
           reason: SoldOutReason.outOfIngredients,
-          backIn: const Duration(minutes: 30),
+          backAt: DateTime(2026, 11, 2, 9, 30),
         );
         await pumpEventQueue();
 
@@ -114,13 +114,13 @@ void main() {
         final stored = (await menu.getItem('m1') as Ok<MenuItem>).value;
         expect((stored.soldOut, stored.soldOutReason), (true, SoldOutReason.outOfIngredients));
         expect(stored.availableAgainAt, DateTime(2026, 11, 2, 9, 30));
-        expect(vm.statusLine(stored), 'Hết nguyên liệu · dự kiến có lại lúc 09:30');
+        expect(vm.statusLine(stored), 'Hết · có lại 09:30');
         expect(vm.summary, '4 món · 2 hết hàng');
         vm.dispose();
       },
     );
 
-    test('without an expected time the row only gives the reason', () async {
+    test('without an expected time the row only says it is out', () async {
       final menu = FakeMenuRepository();
       final vm = _vm(menu);
       await pumpEventQueue();
@@ -128,7 +128,8 @@ void main() {
       await vm.markSoldOut(vm.groups.first.items.first, reason: SoldOutReason.machineBroken);
       final stored = (await menu.getItem('m1') as Ok<MenuItem>).value;
       expect(stored.availableAgainAt, isNull);
-      expect(vm.statusLine(stored), 'Máy móc hỏng');
+      expect(vm.statusLine(stored), 'Hết');
+      expect(stored.soldOutReason, SoldOutReason.machineBroken);
       vm.dispose();
     });
 
@@ -136,7 +137,7 @@ void main() {
       final menu = FakeMenuRepository();
       final vm = _vm(menu);
       await pumpEventQueue();
-      await vm.markSoldOut(vm.groups.first.items.first, reason: SoldOutReason.other, backIn: const Duration(hours: 1));
+      await vm.markSoldOut(vm.groups.first.items.first, reason: SoldOutReason.other, backAt: DateTime(2026, 11, 2, 10));
 
       final soldItem = (await menu.getItem('m1') as Ok<MenuItem>).value;
       final result = await vm.markAvailable(soldItem);
@@ -144,7 +145,7 @@ void main() {
 
       expect(result, isA<Ok<void>>());
       expect((stored.soldOut, stored.soldOutReason, stored.availableAgainAt), (false, null, null));
-      expect(vm.statusLine(stored), 'Đang bán');
+      expect(vm.statusLine(stored), 'Còn hàng');
       vm.dispose();
     });
 
@@ -153,7 +154,7 @@ void main() {
       await pumpEventQueue();
       final soldOut = vm.groups.first.items.firstWhere((i) => i.soldOut);
 
-      expect(vm.statusLine(soldOut), 'Hết hàng · đã quá giờ dự kiến, bật lại khi có hàng');
+      expect(vm.statusLine(soldOut), 'Hết · quá giờ dự kiến');
       vm.dispose();
     });
 
@@ -162,8 +163,24 @@ void main() {
       await pumpEventQueue();
       final soldOut = vm.groups.first.items.firstWhere((i) => i.soldOut);
 
-      expect(vm.statusLine(soldOut), 'Hết hàng · dự kiến có lại lúc 10:30');
+      expect(vm.statusLine(soldOut), 'Hết · có lại 10:30');
       vm.dispose();
+    });
+
+    test('K09 offers the next two half hours at least 15 minutes ahead', () async {
+      Future<List<String>> optionsAt(DateTime at) async {
+        final vm = _vm(FakeMenuRepository(), now: at);
+        await pumpEventQueue();
+        final times = vm.backOptions.map((t) => '${t.hour}:${t.minute.toString().padLeft(2, '0')}').toList();
+        vm.dispose();
+        return times;
+      }
+
+      expect(await optionsAt(DateTime(2026, 11, 2, 9)), ['9:30', '10:00']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 12)), ['10:30', '11:00']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 20)), ['11:00', '11:30']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 45)), ['11:00', '11:30']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 23, 50)), ['0:30', '1:00']);
     });
 
     test('while an item is being saved its switch is busy, and a second change is ignored', () async {

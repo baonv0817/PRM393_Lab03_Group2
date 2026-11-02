@@ -33,10 +33,10 @@ class SellerMenuScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => _SoldOutSheet(item: item),
+      builder: (context) => _SoldOutSheet(item: item, backOptions: vm.backOptions),
     );
     if (choice == null || !context.mounted) return;
-    final result = await vm.markSoldOut(item, reason: choice.reason, backIn: choice.backIn);
+    final result = await vm.markSoldOut(item, reason: choice.reason, backAt: choice.backAt);
     if (!context.mounted) return;
     switch (result) {
       case Ok():
@@ -50,17 +50,20 @@ class SellerMenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<SellerMenuViewModel>();
     return Scaffold(
-      appBar: const AppTopBar(title: 'Quản lý món'),
-      floatingActionButton: vm.canAdd
-          ? TestId(
+      appBar: AppTopBar(
+        title: 'Món tại quầy',
+        actions: [
+          if (vm.canAdd)
+            TestId(
               'k08.add',
-              child: FloatingActionButton.extended(
+              child: AppIconButton(
+                icon: Icons.add,
+                semanticLabel: 'Thêm món',
                 onPressed: () => context.push(AppRoutes.sellerMenuNew),
-                icon: const Icon(Icons.add),
-                label: const Text('Thêm món'),
               ),
-            )
-          : null,
+            ),
+        ],
+      ),
       body: switch (vm.state) {
         ViewLoading() => const LoadingView(message: 'Đang tải thực đơn…'),
         ViewError(:final message) => TestId(
@@ -95,7 +98,6 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final emptyFilter = vm.emptyFilterMessage;
     return Align(
@@ -110,26 +112,6 @@ class _Body extends StatelessWidget {
             AppSpacing.xl * 3,
           ),
           children: [
-            TestId(
-              'k08.summary',
-              child: ProfileSection(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        vm.kioskName.isEmpty ? 'Kiosk của bạn' : vm.kioskName,
-                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(vm.summary, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.xs,
               children: [
@@ -144,7 +126,7 @@ class _Body extends StatelessWidget {
                 TestId(
                   'k08.filter.available',
                   child: AppChip(
-                    label: 'Đang bán (${vm.availableCount})',
+                    label: 'Đang bán',
                     selected: vm.filter == SellerMenuFilter.available,
                     onSelected: (_) => vm.setFilter(SellerMenuFilter.available),
                   ),
@@ -152,7 +134,7 @@ class _Body extends StatelessWidget {
                 TestId(
                   'k08.filter.soldOut',
                   child: AppChip(
-                    label: 'Hết hàng (${vm.soldOutCount})',
+                    label: 'Hết',
                     selected: vm.filter == SellerMenuFilter.soldOut,
                     onSelected: (_) => vm.setFilter(SellerMenuFilter.soldOut),
                   ),
@@ -167,20 +149,12 @@ class _Body extends StatelessWidget {
                   child: Text(emptyFilter, textAlign: TextAlign.center, style: text.bodyLarge),
                 ),
               ),
-            for (final group in vm.groups) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final item in vm.groups.expand((g) => g.items))
               Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.xs),
-                child: Semantics(
-                  header: true,
-                  child: Text(group.label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                ),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                child: _ItemRow(vm: vm, item: item, onToggle: onToggle),
               ),
-              for (final item in group.items)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                  child: _ItemRow(vm: vm, item: item, onToggle: onToggle),
-                ),
-            ],
           ],
         ),
       ),
@@ -201,51 +175,56 @@ class _ItemRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final id = 'k08.item.${item.id}';
-    final status = vm.statusLine(item);
     return TestId(
       id,
       child: ProfileSection(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.xs, AppSpacing.sm),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                    Text(formatVnd(item.priceVnd), style: text.bodyMedium),
-                    Text(
-                      status,
-                      style: text.bodyMedium?.copyWith(
-                        color: item.soldOut ? scheme.error : colors.success,
-                        fontWeight: FontWeight.w700,
+        child: Row(
+          children: [
+            // The text opens the item in K15; the switch is separate so it never opens it by mistake.
+            Expanded(
+              child: TestId(
+                '$id.edit',
+                child: Semantics(
+                  button: true,
+                  label: 'Sửa ${item.name}',
+                  excludeSemantics: true,
+                  child: InkWell(
+                    onTap: () => context.push(AppRoutes.sellerMenuEditOf(item.id)),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, 0, AppSpacing.sm),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                          Text(
+                            '${formatVnd(item.priceVnd)} · ${vm.statusLine(item)}',
+                            style: text.bodyMedium?.copyWith(
+                              color: item.soldOut ? scheme.error : colors.muted,
+                              fontWeight: item.soldOut ? FontWeight.w700 : FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-              TestId(
-                '$id.edit',
-                child: AppIconButton(
-                  icon: Icons.edit_outlined,
-                  semanticLabel: 'Sửa ${item.name}',
-                  onPressed: () => context.push(AppRoutes.sellerMenuEditOf(item.id)),
-                ),
-              ),
-              TestId(
-                '$id.switch',
-                child: Semantics(
-                  label: item.soldOut ? 'Bán lại ${item.name}' : 'Báo hết ${item.name}',
-                  toggled: !item.soldOut,
+            ),
+            TestId(
+              '$id.switch',
+              child: Semantics(
+                label: item.soldOut ? 'Bán lại ${item.name}' : 'Báo hết ${item.name}',
+                toggled: !item.soldOut,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                   child: Switch(
                     value: !item.soldOut,
                     onChanged: vm.isBusy(item.id) ? null : (onSale) => onToggle(item, onSale: onSale),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -254,22 +233,19 @@ class _ItemRow extends StatelessWidget {
 
 /// What staff picked in K09.
 class SoldOutChoice {
-  const SoldOutChoice({required this.reason, this.backIn});
+  const SoldOutChoice({required this.reason, this.backAt});
 
   final SoldOutReason reason;
-  final Duration? backIn;
+
+  /// When the item is expected back; `null` for "Hết ngày".
+  final DateTime? backAt;
 }
 
-String _backLabel(Duration? backIn) => switch (backIn) {
-  null => 'Chưa rõ',
-  final d when d.inMinutes < 60 => 'Sau ${d.inMinutes} phút',
-  final d => 'Sau ${d.inHours} giờ',
-};
-
 class _SoldOutSheet extends StatefulWidget {
-  const _SoldOutSheet({required this.item});
+  const _SoldOutSheet({required this.item, required this.backOptions});
 
   final MenuItem item;
+  final List<DateTime> backOptions;
 
   @override
   State<_SoldOutSheet> createState() => _SoldOutSheetState();
@@ -277,7 +253,7 @@ class _SoldOutSheet extends StatefulWidget {
 
 class _SoldOutSheetState extends State<_SoldOutSheet> {
   var _reason = SoldOutReason.outOfIngredients;
-  Duration? _backIn;
+  late DateTime? _backAt = widget.backOptions.first;
 
   @override
   Widget build(BuildContext context) {
@@ -295,50 +271,62 @@ class _SoldOutSheetState extends State<_SoldOutSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Báo hết ${widget.item.name}', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text('Đánh dấu hết món', style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: AppSpacing.xxs),
-            Text(
-              'Khách sẽ thấy món này hết hàng ngay và không thêm vào giỏ được.',
-              style: text.bodyMedium?.copyWith(color: colors.muted),
-            ),
+            Text(widget.item.name, style: text.bodyMedium?.copyWith(color: colors.muted)),
             const SizedBox(height: AppSpacing.sm),
-            for (final reason in SoldOutReason.values)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: SelectableCard(
-                  testId: 'k09.reason.${reason.name}',
-                  selected: _reason == reason,
-                  semanticLabel: soldOutReasonLabel(reason),
-                  onTap: () => setState(() => _reason = reason),
-                  child: Text(soldOutReasonLabel(reason), style: text.bodyLarge),
-                ),
-              ),
-            const SizedBox(height: AppSpacing.xs),
-            Text('Dự kiến có lại', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            Text('Lý do', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
               children: [
-                for (final back in SellerMenuViewModel.backChoices)
+                for (final reason in SoldOutReason.values)
                   TestId(
-                    'k09.back.${back?.inMinutes ?? 'unknown'}',
+                    'k09.reason.${reason.name}',
                     child: AppChip(
-                      label: _backLabel(back),
-                      selected: _backIn == back,
-                      onSelected: (_) => setState(() => _backIn = back),
+                      label: soldOutReasonLabel(reason),
+                      selected: _reason == reason,
+                      onSelected: (_) => setState(() => _reason = reason),
                     ),
                   ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
+            Text('Có lại lúc', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final back in widget.backOptions)
+                  TestId(
+                    'k09.back.${formatTime(back).replaceAll(':', '')}',
+                    child: AppChip(
+                      label: formatTime(back),
+                      selected: _backAt == back,
+                      onSelected: (_) => setState(() => _backAt = back),
+                    ),
+                  ),
+                TestId(
+                  'k09.back.endOfDay',
+                  child: AppChip(
+                    label: 'Hết ngày',
+                    selected: _backAt == null,
+                    onSelected: (_) => setState(() => _backAt = null),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: TestId(
                 'k09.confirm',
                 child: AppButton(
-                  label: 'Báo hết hàng',
+                  label: 'Xác nhận hết món',
                   large: true,
-                  onPressed: () => Navigator.of(context).pop(SoldOutChoice(reason: _reason, backIn: _backIn)),
+                  onPressed: () => Navigator.of(context).pop(SoldOutChoice(reason: _reason, backAt: _backAt)),
                 ),
               ),
             ),
@@ -348,8 +336,8 @@ class _SoldOutSheetState extends State<_SoldOutSheet> {
               child: TestId(
                 'k09.cancel',
                 child: AppButton(
-                  label: 'Giữ nguyên',
-                  variant: AppButtonVariant.secondary,
+                  label: 'Huỷ',
+                  variant: AppButtonVariant.text,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),

@@ -18,7 +18,7 @@ class HourBar {
   final int hour;
   final int count;
 
-  String get label => hour.toString().padLeft(2, '0');
+  String get label => '${hour}h';
 }
 
 /// K11: what the kiosk did today, from the start of the shift: revenue, orders by outcome, the average
