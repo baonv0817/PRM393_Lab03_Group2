@@ -100,6 +100,25 @@ class FirestoreMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<Result<void>> updateKiosk(String id, KioskSettings settings) async {
+    final problem = settings.problem;
+    if (problem != null) return Result.error(ValidationException(problem));
+    final notice = settings.notice?.trim() ?? '';
+    return guard(
+      () => _db.collection('kiosks').doc(id).update({
+        'open': settings.open,
+        'waitMinutes': settings.waitMinutes,
+        'pausedUntil': settings.pausedUntil == null ? FieldValue.delete() : Timestamp.fromDate(settings.pausedUntil!),
+        'maxOrdersPerSlot': settings.maxOrdersPerSlot ?? FieldValue.delete(),
+        'notice': notice.isEmpty ? FieldValue.delete() : notice,
+        'openTime': settings.openTime ?? FieldValue.delete(),
+        'closeTime': settings.closeTime ?? FieldValue.delete(),
+        ...Stamp.updated(),
+      }),
+    );
+  }
+
+  @override
   Future<Result<void>> setSoldOut(String id, bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt}) =>
       guard(
         () => _items.doc(id).update({

@@ -1,4 +1,5 @@
 import 'package:breakbite/domain/models/cart_item.dart';
+import 'package:breakbite/domain/models/kiosk_stats.dart';
 import 'package:breakbite/domain/models/order.dart';
 import 'package:breakbite/domain/models/order_draft.dart';
 import 'package:breakbite/utils/paged.dart';
@@ -40,4 +41,7 @@ abstract interface class OrderRepository {
   Future<Result<void>> deliver(Order order);
 
   Future<Result<void>> reject(Order order, {required String reason});
+
+  /// The figures of K11 for orders a kiosk received at or after [since] (staff of that kiosk only).
+  Future<Result<KioskStats>> kioskStats(String kioskId, {required DateTime since});
 }

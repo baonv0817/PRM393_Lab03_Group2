@@ -1,6 +1,5 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
-import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/edit_order_view_model.dart';
@@ -21,6 +20,10 @@ import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.d
 import 'package:breakbite/ui/seller_menu/view_models/seller_menu_view_model.dart';
 import 'package:breakbite/ui/seller_menu/widgets/menu_item_form_screen.dart';
 import 'package:breakbite/ui/seller_menu/widgets/seller_menu_screen.dart';
+import 'package:breakbite/ui/seller_shop/view_models/shift_stats_view_model.dart';
+import 'package:breakbite/ui/seller_shop/view_models/shop_view_model.dart';
+import 'package:breakbite/ui/seller_shop/widgets/shift_stats_screen.dart';
+import 'package:breakbite/ui/seller_shop/widgets/shop_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -41,7 +44,17 @@ final GoRoute sellerMenuRoute = GoRoute(
 );
 
 /// Seller tab root: K10 Shop.
-final GoRoute sellerShopRoute = placeholderRoute(AppRoutes.sellerShop, 'K10', 'Quán', 'P2', showBack: false);
+final GoRoute sellerShopRoute = GoRoute(
+  path: AppRoutes.sellerShop,
+  builder: (context, state) => ChangeNotifierProvider(
+    create: (_) => ShopViewModel(
+      menu: context.read<MenuRepository>(),
+      crash: context.read<CrashService>(),
+      kioskId: context.read<AuthViewModel>().user?.kioskId,
+    ),
+    child: const ShopScreen(),
+  ),
+);
 
 /// Full-screen routes of P2.
 final List<GoRoute> p2Routes = [
@@ -150,7 +163,18 @@ final List<GoRoute> p2Routes = [
       );
     },
   ),
-  placeholderRoute(AppRoutes.sellerStats, 'K11', 'Thống kê ca', 'P2'),
+  GoRoute(
+    path: AppRoutes.sellerStats,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => ShiftStatsViewModel(
+        orders: context.read<OrderRepository>(),
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        kioskId: context.read<AuthViewModel>().user?.kioskId,
+      ),
+      child: const ShiftStatsScreen(),
+    ),
+  ),
   GoRoute(
     path: AppRoutes.sellerMenuNew,
     builder: (context, state) => ChangeNotifierProvider(
