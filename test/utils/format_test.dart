@@ -26,4 +26,35 @@ void main() {
   test('every order status has a label', () {
     expect(OrderStatus.values.map(orderStatusLabel), ['Đã nhận đơn', 'Đang làm', 'Sẵn sàng', 'Hoàn tất', 'Đã huỷ']);
   });
+
+  group('order money', () {
+    Order order({PaymentStatus payment = PaymentStatus.paid, OrderStatus status = OrderStatus.delivered}) => Order(
+      id: 'a1',
+      uid: 'u1',
+      kioskId: 'q9-t2',
+      items: const [
+        CartItem(itemId: 'm1', name: 'Combo', priceVnd: 39000, quantity: 2),
+        CartItem(itemId: 'm2', name: 'Trà đào', priceVnd: 25000),
+      ],
+      totalVnd: 93000,
+      paymentMethod: PaymentMethod.momo,
+      paymentStatus: payment,
+      status: status,
+      createdAt: at,
+    );
+
+    test('the items total adds every line before a voucher', () {
+      expect(orderItemsTotalVnd(order()), 103000);
+    });
+
+    test('the payment label says where the money stands', () {
+      expect(orderPaymentLabel(order()), 'Đã thanh toán');
+      expect(orderPaymentLabel(order(status: OrderStatus.cancelled)), 'Được hoàn tiền');
+      expect(
+        orderPaymentLabel(order(payment: PaymentStatus.unpaid, status: OrderStatus.pending)),
+        'Trả tại quầy khi nhận',
+      );
+      expect(orderPaymentLabel(order(payment: PaymentStatus.unpaid, status: OrderStatus.cancelled)), 'Chưa thanh toán');
+    });
+  });
 }
