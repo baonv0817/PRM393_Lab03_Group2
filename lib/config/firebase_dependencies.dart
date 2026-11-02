@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:breakbite/config/dependencies.dart';
 import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
@@ -55,5 +56,6 @@ Future<AppDependencies> createFirebaseDependencies() async {
     users: FirestoreUserRepository(db),
     vouchers: FirestoreVoucherRepository(db),
     slots: FirestoreSlotRepository(db),
+    incidents: FirestoreIncidentRepository(db),
   );
 }

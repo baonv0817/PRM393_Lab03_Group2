@@ -1,3 +1,4 @@
+import 'package:breakbite/domain/models/incident.dart';
 import 'package:breakbite/domain/models/kiosk.dart';
 import 'package:breakbite/domain/models/order.dart';
 import 'package:breakbite/domain/models/voucher.dart';
@@ -31,6 +32,21 @@ String orderStatusLabel(OrderStatus status) => switch (status) {
   OrderStatus.ready => 'Sẵn sàng',
   OrderStatus.delivered => 'Hoàn tất',
   OrderStatus.cancelled => 'Đã huỷ',
+};
+
+String incidentTypeLabel(IncidentType type) => switch (type) {
+  IncidentType.missingItem => 'Thiếu món',
+  IncidentType.wrongItem => 'Sai món',
+  IncidentType.quality => 'Món chưa đạt chất lượng',
+  IncidentType.late => 'Làm món quá lâu',
+  IncidentType.other => 'Vấn đề khác',
+};
+
+/// Where a report stands, in the customer's words (S24).
+String incidentStatusLabel(IncidentStatus status) => switch (status) {
+  IncidentStatus.open => 'Đã gửi, chờ kiosk xem',
+  IncidentStatus.inProgress => 'Kiosk đang xử lý',
+  IncidentStatus.resolved => 'Đã xử lý',
 };
 
 String voucherProblemMessage(Voucher voucher, VoucherProblem problem) => switch (problem) {

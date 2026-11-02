@@ -27,6 +27,17 @@ void main() {
     expect(OrderStatus.values.map(orderStatusLabel), ['Đã nhận đơn', 'Đang làm', 'Sẵn sàng', 'Hoàn tất', 'Đã huỷ']);
   });
 
+  test('every kind and status of incident has a label for the customer', () {
+    expect(IncidentType.values.map(incidentTypeLabel), [
+      'Sai món',
+      'Thiếu món',
+      'Món chưa đạt chất lượng',
+      'Làm món quá lâu',
+      'Vấn đề khác',
+    ]);
+    expect(IncidentStatus.values.map(incidentStatusLabel), ['Đã gửi, chờ kiosk xem', 'Kiosk đang xử lý', 'Đã xử lý']);
+  });
+
   group('order money', () {
     Order order({PaymentStatus payment = PaymentStatus.paid, OrderStatus status = OrderStatus.delivered}) => Order(
       id: 'a1',

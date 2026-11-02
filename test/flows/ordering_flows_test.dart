@@ -285,6 +285,43 @@ void main() {
     expect(byId('s08.tab.history'), findsOneWidget);
   });
 
+  testWidgets('S12 opens S24, a problem is reported once, and the report shows its status', (tester) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    Order current() => orders.all.firstWhere((o) => o.id == id);
+    await orders.accept(current(), readyIn: const Duration(minutes: 5));
+    await orders.markReady(current());
+    await orders.deliver(current());
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('#$id'));
+    await tester.pumpAndSettle();
+
+    await tapId(tester, 's12.incident');
+    expect(byId('s24.header'), findsOneWidget);
+    await tester.tap(byId('s24.type.wrongItem'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Nhận sai món');
+    await tester.pumpAndSettle();
+    await tapId(tester, 's24.submit');
+
+    expect(find.text('Đã gửi báo cáo. Kiosk sẽ xem sớm.'), findsOneWidget);
+    expect(byId('s24.report'), findsOneWidget);
+    expect(find.text('Đã gửi, chờ kiosk xem'), findsOneWidget);
+    final report = (deps.incidents as FakeIncidentRepository).all.single;
+    expect((report.orderId, report.uid, report.type), (id, 'dev-user', IncidentType.wrongItem));
+
+    await tapId(tester, 's24.back');
+    expect(find.text('Chi tiết đơn'), findsOneWidget);
+  });
+
   testWidgets('S07 enlarges the pickup QR code in S20, and closing it returns to the order', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;

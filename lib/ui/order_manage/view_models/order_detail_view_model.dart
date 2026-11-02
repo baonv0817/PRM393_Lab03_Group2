@@ -130,6 +130,9 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     return status != null && status != OrderStatus.delivered && status != OrderStatus.cancelled;
   }
 
+  /// A problem can be reported once the food was received (S24).
+  bool get canReportIncident => order?.status == OrderStatus.delivered;
+
   String get statusLabel => order == null ? '' : orderStatusLabel(order!.status);
 
   /// The steps the order went through, only those that have happened.

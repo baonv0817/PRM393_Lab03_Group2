@@ -4,6 +4,7 @@ export 'fake_analytics_service.dart';
 export 'fake_auth_service.dart';
 export 'fake_cart_repository.dart';
 export 'fake_crash_service.dart';
+export 'fake_incident_repository.dart';
 export 'fake_menu_repository.dart';
 export 'fake_messaging_service.dart';
 export 'fake_order_repository.dart';

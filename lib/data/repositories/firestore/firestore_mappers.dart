@@ -200,6 +200,27 @@ Report reportFromData(String id, Json data, {required DateTime now}) => Report(
   orderId: _stringOrNull(data['orderId']),
 );
 
+Incident incidentFromData(String id, Json data, {required DateTime now}) => Incident(
+  orderId: _string(data['orderId'], id),
+  kioskId: _string(data['kioskId']),
+  uid: _string(data['uid']),
+  customerName: _string(data['customerName']),
+  type: readEnum(IncidentType.values, data['type'], IncidentType.other),
+  description: _string(data['description']),
+  photoUrl: _stringOrNull(data['photoUrl']),
+  status: readEnum(IncidentStatus.values, data['status'], IncidentStatus.open),
+  resolution: switch (data['resolution']) {
+    final String name => IncidentResolution.values.asNameMap()[name],
+    _ => null,
+  },
+  resolutionNote: _stringOrNull(data['resolutionNote']),
+  refundVnd: _intOrNull(data['refundVnd']),
+  handledBy: _stringOrNull(data['handledBy']),
+  createdAt: readDateOr(data['createdAt'], now),
+  resolvedAt: readDate(data['resolvedAt']),
+  updatedAt: readDate(data['updatedAt']),
+);
+
 UserProfile userProfileFromData(String uid, Json? data) => UserProfile(
   uid: uid,
   displayName: _string(data?['displayName']),

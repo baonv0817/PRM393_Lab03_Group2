@@ -105,6 +105,10 @@ class _Harness {
           path: AppRoutes.cart,
           builder: (context, state) => const Scaffold(body: Text('CART')),
         ),
+        GoRoute(
+          path: AppRoutes.orderIncident,
+          builder: (context, state) => Scaffold(body: Text('S24 ${state.pathParameters['id']}')),
+        ),
       ],
     );
     addTearDown(router.dispose);
@@ -168,9 +172,31 @@ void main() {
     await harness.pump(tester, id);
 
     expect(byId('s12.reorder'), findsNothing);
+    expect(byId('s12.incident'), findsNothing);
     await tester.tap(byId('s12.track'));
     await tester.pumpAndSettle();
     expect(find.text('S07 $id'), findsOneWidget);
+  });
+
+  testWidgets('S12 of a received order offers to report a problem, which opens S24', (tester) async {
+    final harness = _Harness();
+    final id = await harness.deliveredOrder();
+    await harness.pump(tester, id);
+
+    expect(byId('s12.incident'), findsOneWidget);
+    await tester.tap(byId('s12.incident'));
+    await tester.pumpAndSettle();
+    expect(find.text('S24 $id'), findsOneWidget);
+  });
+
+  testWidgets('S12 of a cancelled order does not offer to report a problem', (tester) async {
+    final harness = _Harness();
+    final id = await placeTestOrder(harness.orders, uid: 'u1');
+    await harness.orders.cancelMyOrder(harness.orders.all.single);
+    await harness.pump(tester, id);
+
+    expect(byId('s12.reorder'), findsOneWidget);
+    expect(byId('s12.incident'), findsNothing);
   });
 
   testWidgets('S12 reorder puts the items back in the cart and the snackbar opens it', (tester) async {

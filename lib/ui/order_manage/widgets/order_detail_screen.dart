@@ -233,6 +233,19 @@ class _Body extends StatelessWidget {
               ),
             ),
           ),
+        if (vm.canReportIncident) ...[
+          const SizedBox(height: AppSpacing.sm),
+          TestId(
+            's12.incident',
+            child: AppButton(
+              label: 'Báo sự cố với đơn này',
+              icon: Icons.report_problem_outlined,
+              variant: AppButtonVariant.secondary,
+              large: true,
+              onPressed: () => context.push(AppRoutes.orderIncidentOf(order.id)),
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.sm),
         ListenableBuilder(
           listenable: vm.exportReceipt,
