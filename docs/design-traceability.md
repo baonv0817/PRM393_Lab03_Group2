@@ -46,7 +46,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S17 | Payment methods | /profile/payment | PaymentSettingsScreen | PaymentSettingsViewModel | Firestore users/{uid} | P3 | Done |
 | S18 | Notification settings | /profile/notifications | NotificationSettingsScreen | NotificationSettingsViewModel | Firestore users/{uid}, FCM | P5 | Not started |
 | S19 | Notifications | /notifications | NotificationCenterScreen | NotificationCenterViewModel | Firestore users/{uid}/notifications, FCM | P5 | Not started |
-| S20 | Pickup (QR code) | /orders/:id/pickup | PickupQrScreen | PickupViewModel | Firestore orders/{id} | P2 | Not started |
+| S20 | Pickup (QR code) | /orders/:id/pickup | PickupScreen | PickupViewModel | Firestore orders/{id} (realtime); opened from the "Phóng to mã QR" button of S07 | P2 | Done |
 | S21 | Home when the counter is closed | (state of /home) | ClosedBanner | HomeViewModel | Firestore kiosks/{id} | P1 | Not started |
 | S22 | Item sold out, suggested alternatives | /menu/:id/alternatives | AlternativesScreen | AlternativesViewModel | Firestore menu_items | P1 | Not started |
 | S23 | Review an item | /orders/:id/review | ReviewScreen | ReviewViewModel | Firestore reviews | P2 | Not started |
