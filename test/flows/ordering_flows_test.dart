@@ -273,7 +273,7 @@ void main() {
 
     await tester.tap(byId('s11.grouping.month'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Tháng'), findsOneWidget);
+    expect(find.textContaining('Tháng này'), findsOneWidget);
 
     await tapId(tester, 's11.order.$id');
     expect(byId('s12.header'), findsOneWidget);

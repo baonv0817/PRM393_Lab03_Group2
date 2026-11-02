@@ -67,7 +67,7 @@ void main() {
       expect(vm.isReviewed('m1'), isFalse);
       expect(vm.canSubmit, isFalse);
       expect(vm.pendingCount, 0);
-      expect(vm.missingHint, 'Chạm vào sao để chấm điểm ít nhất một món.');
+      expect(vm.missingHint, 'Chọn số điểm cho ít nhất một món.');
       vm.dispose();
     });
 

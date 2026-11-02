@@ -37,6 +37,53 @@ OrderHistoryViewModel _vm(OrderRepository orders, {int pageSize = 20, FakeCrashS
 List<String> _ids(Iterable<Order> orders) => orders.map((o) => o.id).toList();
 
 void main() {
+  group('OrderHistoryViewModel spending card', () {
+    // Today is Wednesday 4 November. Spent this week: 20.000 + 30.000 on Monday and 10.000 today; Sunday 1 November
+    // is in the month but not in the week; a cancelled order and one from October count in neither.
+    final spending = [
+      _order('a', DateTime(2026, 11, 2, 9), total: 20000),
+      _order('b', DateTime(2026, 11, 2, 12), total: 30000),
+      _order('c', DateTime(2026, 11, 4, 9), total: 10000),
+      _order('d', DateTime(2026, 11, 1, 12), total: 40000),
+      _order('e', DateTime(2026, 11, 3, 12), status: OrderStatus.cancelled, total: 99000),
+      _order('f', DateTime(2026, 10, 30, 12), total: 70000),
+    ];
+
+    test('this week: the title, the total and what was spent on each day, Monday first', () async {
+      final vm = _vm(PagedOrders(spending));
+      await pumpEventQueue();
+
+      expect(vm.spendTitle, 'Chi tiêu tuần này');
+      expect(vm.spendTotal, 60000);
+      expect(vm.spendByWeekday, [50000, 0, 10000, 0, 0, 0, 0]);
+      expect(vm.peakWeekday, 0);
+      expect(OrderHistoryViewModel.weekdayLabels[vm.peakWeekday!], 'T2');
+      vm.dispose();
+    });
+
+    test('this month: follows the Tháng tab and adds the Sunday that is in November but not in this week', () async {
+      final vm = _vm(PagedOrders(spending));
+      await pumpEventQueue();
+
+      vm.setGrouping(HistoryGrouping.month);
+
+      expect(vm.spendTitle, 'Chi tiêu tháng 11');
+      expect(vm.spendTotal, 100000);
+      expect(vm.spendByWeekday, [50000, 0, 10000, 0, 0, 0, 40000]);
+      vm.dispose();
+    });
+
+    test('with nothing spent in the period the total is 0 and no day is the busiest', () async {
+      final vm = _vm(PagedOrders([_order('f', DateTime(2026, 10, 30, 12))]));
+      await pumpEventQueue();
+
+      expect(vm.spendTotal, 0);
+      expect(vm.spendByWeekday, List.filled(7, 0));
+      expect(vm.peakWeekday, isNull);
+      vm.dispose();
+    });
+  });
+
   group('OrderHistoryViewModel', () {
     test('by week: orders in progress are left out and each week says how many and what was spent', () async {
       final vm = _vm(PagedOrders(_all));

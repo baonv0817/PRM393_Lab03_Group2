@@ -135,6 +135,45 @@ class OrderHistoryViewModel extends ChangeNotifier with SafeChangeNotifier {
     ];
   }
 
+  // ---- The spending card: what was spent this week or this month, by day of the week ----
+
+  /// Mon to Sun, the labels of the bars.
+  static const weekdayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  /// "Chi tiêu tuần này" or "Chi tiêu tháng 11": the period follows the Tuần / Tháng tab and ends today.
+  String get spendTitle => _grouping == HistoryGrouping.week ? 'Chi tiêu tuần này' : 'Chi tiêu tháng ${_clock().month}';
+
+  /// Delivered orders of the loaded ones that were placed in the current week or month.
+  Iterable<Order> get _spent {
+    final now = _clock();
+    final start = _grouping == HistoryGrouping.week ? _weekStart(now) : DateTime(now.year, now.month);
+    final end = _grouping == HistoryGrouping.week
+        ? DateTime(start.year, start.month, start.day + 7)
+        : DateTime(now.year, now.month + 1);
+    return [...?_state.dataOrNull].where((o) {
+      final created = o.createdAt.toLocal();
+      return o.status == OrderStatus.delivered && !created.isBefore(start) && created.isBefore(end);
+    });
+  }
+
+  int get spendTotal => _spent.fold(0, (sum, o) => sum + o.totalVnd);
+
+  /// What was spent on each day of the week (Monday first), added up over the period.
+  List<int> get spendByWeekday {
+    final days = List.filled(7, 0);
+    for (final order in _spent) {
+      days[order.createdAt.toLocal().weekday - 1] += order.totalVnd;
+    }
+    return days;
+  }
+
+  /// Index into [weekdayLabels] of the day with the most spending, `null` when nothing was spent.
+  int? get peakWeekday {
+    final days = spendByWeekday;
+    final most = days.fold(0, (a, b) => b > a ? b : a);
+    return most == 0 ? null : days.indexOf(most);
+  }
+
   /// One order's row: when it was placed and how it ended.
   String title(Order order) => '#${order.orderCode} · ${formatDayMonth(order.createdAt)}';
 

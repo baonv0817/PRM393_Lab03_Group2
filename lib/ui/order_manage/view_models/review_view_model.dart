@@ -171,7 +171,7 @@ class ReviewViewModel extends ChangeNotifier with SafeChangeNotifier {
   String? get missingHint {
     if (canSubmit) return null;
     final anyRating = items.any((i) => draftOf(i.itemId).rating >= 1);
-    return anyRating ? 'Bạn chưa thay đổi gì so với đánh giá đã gửi.' : 'Chạm vào sao để chấm điểm ít nhất một món.';
+    return anyRating ? 'Bạn chưa thay đổi gì so với đánh giá đã gửi.' : 'Chọn số điểm cho ít nhất một món.';
   }
 
   Future<Result<int>> _submit() async {
