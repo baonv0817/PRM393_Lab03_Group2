@@ -213,6 +213,43 @@ void main() {
     expect(byId('s05.empty'), findsOneWidget);
   });
 
+  testWidgets('S08 opens a finished order in S12, which exports its receipt, then Back returns to the list', (
+    tester,
+  ) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    Order current() => orders.all.firstWhere((o) => o.id == id);
+    await orders.accept(current(), readyIn: const Duration(minutes: 5));
+    await orders.markReady(current());
+    await orders.deliver(current());
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.textContaining('#$id'));
+    await tester.pumpAndSettle();
+    expect(byId('s12.header'), findsOneWidget);
+    expect(find.text('Hoàn tất'), findsWidgets);
+
+    await tapId(tester, 's12.export');
+    await tester.scrollUntilVisible(byId('s12.export.card'), 120, scrollable: find.byType(Scrollable).first);
+    expect(byId('s12.export.card'), findsOneWidget);
+    final report = (deps.reports as FakeReportRepository).all.single;
+    expect(report.orderId, id);
+    expect(find.text(report.url), findsOneWidget);
+    expect((deps.analytics as FakeAnalyticsService).events.map((e) => e.name), contains('export_report'));
+
+    await tester.tap(find.byTooltip('Quay lại'));
+    await tester.pumpAndSettle();
+    expect(find.text('Đơn gần đây'), findsOneWidget);
+  });
+
   testWidgets('S08 reorders a finished order into the cart and the snackbar opens it', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;
