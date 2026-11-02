@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import {
-  collection, deleteDoc, doc, getDoc, getDocs, increment, limit, orderBy, query, serverTimestamp, setDoc, updateDoc, where,
-  Timestamp,
+  average, collection, count, deleteDoc, deleteField, doc, getAggregateFromServer, getDoc, getDocs, increment, limit,
+  orderBy, query, serverTimestamp, setDoc, sum, updateDoc, where, Timestamp,
 } from 'firebase/firestore';
 import { getBytes, ref, uploadBytes } from 'firebase/storage';
 
@@ -148,6 +148,23 @@ describe('users', () => {
   });
 });
 
+describe('K11 shift statistics', () => {
+  const since = Timestamp.fromDate(new Date('2020-01-01'));
+  const shift = (db, kioskId) => query(
+    collection(db, 'orders'), where('kioskId', '==', kioskId), where('createdAt', '>=', since));
+  test('staff count, sum and average the delivered orders of their own kiosk, and read the newest ones', async () => {
+    const delivered = query(shift(as('s1'), 'k1'), where('status', '==', 'delivered'));
+    await assertSucceeds(getAggregateFromServer(delivered, { n: count(), revenue: sum('totalVnd'), prep: average('prepSeconds') }));
+    await assertSucceeds(getAggregateFromServer(query(shift(as('s1'), 'k1'), where('status', 'in', ['pending', 'preparing', 'ready'])), { n: count() }));
+    await assertSucceeds(getDocs(query(shift(as('s1'), 'k1'), orderBy('createdAt', 'desc'), limit(500))));
+  });
+  test('staff cannot read the statistics of another kiosk, and users cannot read any', async () => {
+    await assertFails(getAggregateFromServer(shift(as('s1'), 'k2'), { n: count() }));
+    await assertFails(getDocs(query(shift(as('s1'), 'k2'), limit(500))));
+    await assertFails(getAggregateFromServer(shift(as('u1'), 'k1'), { n: count() }));
+  });
+});
+
 describe('kiosks and slots', () => {
   test('signed-out users cannot read kiosks; users can', async () => {
     await assertFails(getDoc(doc(as(null), 'kiosks/k1')));
@@ -159,6 +176,19 @@ describe('kiosks and slots', () => {
   test('staff edit the operating fields of their own kiosk: allowed; another kiosk: denied', async () => {
     await assertSucceeds(updateDoc(doc(as('s1'), 'kiosks/k1'), { open: false, waitMinutes: 8, pausedUntil: future, ...touched() }));
     await assertFails(updateDoc(doc(as('s1'), 'kiosks/k2'), { open: false, ...touched() }));
+  });
+  test('K10: staff write the shop settings as the app does, removing the fields they empty', async () => {
+    const k1 = doc(as('s1'), 'kiosks/k1');
+    await assertSucceeds(updateDoc(k1, {
+      open: true, waitMinutes: 9, pausedUntil: future, maxOrdersPerSlot: 5, notice: 'Hết sốt',
+      openTime: '06:30', closeTime: '17:00', ...touched(),
+    }));
+    await assertSucceeds(updateDoc(k1, {
+      open: true, waitMinutes: 9, pausedUntil: deleteField(), maxOrdersPerSlot: deleteField(), notice: deleteField(),
+      openTime: deleteField(), closeTime: deleteField(), ...touched(),
+    }));
+    await assertFails(updateDoc(k1, { open: true, waitMinutes: 121, ...touched() }));
+    await assertFails(updateDoc(k1, { open: true, waitMinutes: 6, maxOrdersPerSlot: 0, ...touched() }));
   });
   test('staff rename their kiosk or set a negative wait time: denied (admin only, valid values)', async () => {
     await assertFails(updateDoc(doc(as('s1'), 'kiosks/k1'), { name: 'Renamed', ...touched() }));

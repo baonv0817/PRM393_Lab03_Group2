@@ -134,7 +134,7 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | `order_manage/` (S23) | S23 | P2 | `ReviewViewModel` (built; S23 lives in `order_manage/` because it opens from S12) | `OrderRepository`, `ReviewRepository`, `CrashService` |
 | `order_manage/` (S24) | S24 | P2 | `IncidentViewModel` (built; S24 lives in `order_manage/` because it opens from S12) | `OrderRepository`, `IncidentRepository` (create side and the report of an order), `CrashService` |
 | `seller_menu/` | K08, K09, K14, K15 | P2 | `SellerMenuViewModel` (K08, K09, built), `MenuItemFormViewModel` (K14, K15, built) | `MenuRepository` (the kiosk comes from `AppUser.kioskId`), `CrashService` |
-| `seller_shop/` | K10, K11 | P2 | `ShopViewModel`, `ShiftStatsViewModel` | `MenuRepository` (kiosks), `OrderRepository` |
+| `seller_shop/` | K10, K11 | P2 | `ShopViewModel` (K10, built), `ShiftStatsViewModel` (K11, built) | `MenuRepository` (`watchKiosks`, `updateKiosk`), `OrderRepository` (`kioskStats`), `CrashService` |
 | `auth/` | S26 | P3 | `AuthViewModel` (app-wide) | `AuthService`, `AnalyticsService`, `CrashService`, `SessionRepository`, `MessagingService` |
 | `profile/` | S15, S16, S17, Firebase demo | P3 | `ProfileViewModel` (S15: order count), `StudentInfoViewModel` (S16), `PaymentSettingsViewModel` (S17), `FirebaseDemoViewModel`; sign-out goes through `AuthViewModel` | `OrderRepository`, `UserRepository`, `MenuRepository` (kiosks), `CrashService`, `RemoteConfigService`, `AnalyticsService`, `StorageService`, `ReportFileService`, `ReportRepository` |
 | `kiosk_picker/` | S27 | P3 | `KioskViewModel` | `MenuRepository` (kiosks), `SessionRepository`, `CartRepository`, `CrashService` |
