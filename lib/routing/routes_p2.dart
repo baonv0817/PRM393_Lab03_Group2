@@ -3,9 +3,11 @@ import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/edit_order_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_history_view_model.dart';
+import 'package:breakbite/ui/order_manage/widgets/edit_order_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
@@ -34,7 +36,18 @@ final List<GoRoute> p2Routes = [
       child: const OrderHistoryScreen(),
     ),
   ),
-  placeholderRoute(AppRoutes.orderEdit, 'S09', 'Sửa đơn', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderEdit,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => EditOrderViewModel(
+        orders: context.read<OrderRepository>(),
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        orderId: state.pathParameters['id'] ?? '',
+      ),
+      child: const EditOrderScreen(),
+    ),
+  ),
   GoRoute(
     path: AppRoutes.orderCancelled,
     builder: (context, state) => ChangeNotifierProvider(

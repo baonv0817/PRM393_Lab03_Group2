@@ -285,6 +285,34 @@ void main() {
     expect(byId('s08.tab.history'), findsOneWidget);
   });
 
+  testWidgets('S07 opens S09, a changed quantity is saved, and S07 shows the new total', (tester) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+    await tapId(tester, 's08.order.$id.open');
+    expect(find.text('Tổng 39.000đ · Đã thanh toán Ví MoMo'), findsOneWidget);
+
+    await tapId(tester, 's07.edit');
+    expect(byId('s09.header'), findsOneWidget);
+    await tapId(tester, 's09.item.m1.inc');
+    expect(find.text('78.000đ'), findsWidgets);
+    await tapId(tester, 's09.save');
+
+    expect(find.text('Đã cập nhật đơn.'), findsOneWidget);
+    expect(byId('s09.header'), findsNothing);
+    expect(find.text('Combo ×2'), findsOneWidget);
+    expect(find.text('Tổng 78.000đ · Đã thanh toán Ví MoMo'), findsOneWidget);
+    expect(orders.all.single.items.single.quantity, 2);
+  });
+
   testWidgets('S08 reorders a finished order into the cart and the snackbar opens it', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;
