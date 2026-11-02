@@ -1,5 +1,6 @@
 import 'package:breakbite/domain/models/incident.dart';
 import 'package:breakbite/domain/models/kiosk.dart';
+import 'package:breakbite/domain/models/menu_item.dart';
 import 'package:breakbite/domain/models/order.dart';
 import 'package:breakbite/domain/models/voucher.dart';
 import 'package:intl/intl.dart';
@@ -47,6 +48,19 @@ String incidentStatusLabel(IncidentStatus status) => switch (status) {
   IncidentStatus.open => 'Đã gửi, chờ kiosk xem',
   IncidentStatus.inProgress => 'Kiosk đang xử lý',
   IncidentStatus.resolved => 'Đã xử lý',
+};
+
+String itemCategoryLabel(ItemCategory category) => switch (category) {
+  ItemCategory.food => 'Món ăn',
+  ItemCategory.drink => 'Đồ uống',
+  ItemCategory.other => 'Khác',
+};
+
+/// Why an item is sold out, as staff pick it in K09.
+String soldOutReasonLabel(SoldOutReason reason) => switch (reason) {
+  SoldOutReason.outOfIngredients => 'Hết nguyên liệu',
+  SoldOutReason.machineBroken => 'Máy móc hỏng',
+  SoldOutReason.other => 'Lý do khác',
 };
 
 /// The quick tags of a review (S23); an unknown tag is shown as it was stored.
