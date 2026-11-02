@@ -37,7 +37,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S08-EMPTY | No orders yet | (state of /orders) | EmptyView with "Xem thực đơn" | OrdersViewModel | — | P1 | Done |
 | S09 | Edit order | /orders/:id/edit | EditOrderScreen | EditOrderViewModel | Firestore orders/{id} | P2 | Not started |
 | S10 | Cancelled order | /orders/:id/cancelled | OrderCancelledScreen | OrderCancelledViewModel | Firestore orders/{id} (realtime), carts/{uid} (reorder) | P2 | Done |
-| S11 | History by week and month | /orders/history | HistoryScreen | HistoryViewModel | Firestore orders (uid) | P2 | Not started |
+| S11 | History by week and month | /orders/history | OrderHistoryScreen | OrderHistoryViewModel | Firestore orders (uid), a page at a time (`fetchMyOrders` with a cursor) | P2 | Done |
 | S12 | Order detail | /orders/:id/detail | OrderDetailScreen | OrderDetailViewModel | Firestore orders/{id} (realtime), reports (receipts of this order), carts/{uid} (reorder), file storage (receipt upload) | P2 | Done (S23 and S24 links come with those screens) |
 | S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P5 | Not started |
 | S14 | Quick reorder | (bottom sheet) | ReorderSheet | ReorderViewModel | Firestore orders (uid) | P5 | Not started |

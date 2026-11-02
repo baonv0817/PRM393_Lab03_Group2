@@ -130,8 +130,7 @@ One folder per feature under `lib/ui/`; the owner creates it when building the f
 | `cart/` | S05, S25, S29 | P1 | `CartViewModel`, `PickupTimeViewModel`, `VoucherViewModel` | `CartRepository`, `SlotRepository`, `VoucherRepository`, `AnalyticsService` |
 | `checkout/` | S06, S06-GATEWAY | P1 | `CheckoutViewModel` | `OrderRepository`, `CartRepository`, `AnalyticsService`, `CrashService` |
 | `orders/` | S07, S08 | P1 | `OrderTrackingViewModel`, `OrdersViewModel` | `OrderRepository` |
-| `order_manage/` | S09, S10, S12, S20 | P2 | `EditOrderViewModel`, `OrderCancelledViewModel` (S10, built), `OrderDetailViewModel` (S12, built), `PickupViewModel` | `OrderRepository`, `CartRepository` and `SessionRepository` (reorder), `AnalyticsService`, `CrashService`; S12 also `ReportFileService`, `StorageService` and `ReportRepository` (PDF receipt, T43) |
-| `history/` | S11 | P2 | `HistoryViewModel` | `OrderRepository` |
+| `order_manage/` | S09, S10, S11, S12, S20 | P2 | `EditOrderViewModel`, `OrderCancelledViewModel` (S10, built), `OrderHistoryViewModel` (S11, built; S11 shares the folder because it opens S12), `OrderDetailViewModel` (S12, built), `PickupViewModel` | `OrderRepository`, `CartRepository` and `SessionRepository` (reorder), `AnalyticsService`, `CrashService`; S12 also `ReportFileService`, `StorageService` and `ReportRepository` (PDF receipt, T43) |
 | `review/`, `incident/` | S23, S24 | P2 | `ReviewViewModel`, `IncidentViewModel` | `ReviewRepository`, `IncidentRepository`, `StorageService` |
 | `seller_menu/` | K08, K09, K14, K15 | P2 | `SellerMenuViewModel`, `MenuItemFormViewModel` | `MenuRepository`, `StorageService` |
 | `seller_shop/` | K10, K11 | P2 | `ShopViewModel`, `ShiftStatsViewModel` | `MenuRepository` (kiosks), `OrderRepository` |
