@@ -5,8 +5,10 @@ import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/order_history_view_model.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
+import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +23,17 @@ final GoRoute sellerShopRoute = placeholderRoute(AppRoutes.sellerShop, 'K10', 'Q
 
 /// Full-screen routes of P2.
 final List<GoRoute> p2Routes = [
-  placeholderRoute(AppRoutes.ordersHistory, 'S11', 'Lịch sử đơn', 'P2'),
+  GoRoute(
+    path: AppRoutes.ordersHistory,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => OrderHistoryViewModel(
+        orders: context.read<OrderRepository>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+      ),
+      child: const OrderHistoryScreen(),
+    ),
+  ),
   placeholderRoute(AppRoutes.orderEdit, 'S09', 'Sửa đơn', 'P2'),
   GoRoute(
     path: AppRoutes.orderCancelled,
