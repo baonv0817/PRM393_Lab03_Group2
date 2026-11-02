@@ -15,6 +15,7 @@ class FakeAuthService implements AuthService {
     uid: role == UserRole.user ? 'dev-user' : 'dev-staff',
     displayName: role == UserRole.user ? 'Minh Quân' : 'Cô Hạnh',
     role: role,
+    kioskId: role == UserRole.user ? null : 'q9-t2',
   );
 
   @override

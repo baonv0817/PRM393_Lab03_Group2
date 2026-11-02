@@ -39,6 +39,11 @@ void main() {
     expect(ratingLabel(0), 'Chạm vào sao để chấm điểm');
   });
 
+  test('categories and sold-out reasons have a label', () {
+    expect(ItemCategory.values.map(itemCategoryLabel), ['Món ăn', 'Đồ uống', 'Khác']);
+    expect(SoldOutReason.values.map(soldOutReasonLabel), ['Hết nguyên liệu', 'Máy móc hỏng', 'Lý do khác']);
+  });
+
   test('every kind and status of incident has a label for the customer', () {
     expect(IncidentType.values.map(incidentTypeLabel), [
       'Sai món',

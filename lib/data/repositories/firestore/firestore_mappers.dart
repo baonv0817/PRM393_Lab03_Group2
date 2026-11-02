@@ -54,6 +54,10 @@ MenuItem menuItemFromData(String id, Json data) => MenuItem(
   description: _string(data['description']),
   imageUrl: _stringOrNull(data['imageUrl']),
   availableAgainAt: readDate(data['availableAgainAt']),
+  soldOutReason: switch (data['soldOutReason']) {
+    final String name => SoldOutReason.values.asNameMap()[name],
+    _ => null,
+  },
 );
 
 Json menuItemToData(MenuItem item, {required String dishId}) => {

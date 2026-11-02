@@ -26,6 +26,15 @@ void main() {
     expect(data.keys, containsAll(['kioskId', 'dishId', 'name', 'priceVnd', 'prepMinutes', 'soldOut']));
   });
 
+  test('a sold-out item reads its reason; an unknown reason is ignored', () {
+    final back = Timestamp.fromDate(created);
+    final sold = menuItemFromData('x', {'soldOut': true, 'soldOutReason': 'machineBroken', 'availableAgainAt': back});
+    expect((sold.soldOut, sold.soldOutReason), (true, SoldOutReason.machineBroken));
+    expect(sold.availableAgainAt!.isAtSameMomentAs(created), isTrue);
+    expect(menuItemFromData('x', {'soldOut': true, 'soldOutReason': 'lazy'}).soldOutReason, isNull);
+    expect(menuItemFromData('x', {'soldOut': false}).soldOutReason, isNull);
+  });
+
   test('an unknown category reads as other instead of failing', () {
     expect(menuItemFromData('x', {'category': 'Tacos'}).category, ItemCategory.other);
   });

@@ -17,6 +17,8 @@ import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/pickup_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/review_screen.dart';
+import 'package:breakbite/ui/seller_menu/view_models/seller_menu_view_model.dart';
+import 'package:breakbite/ui/seller_menu/widgets/seller_menu_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -24,7 +26,17 @@ import 'package:provider/provider.dart';
 // A specific route (for example /orders/history) must come before a parameterized one (/orders/:id).
 
 /// Seller tab root: K08 Menu management.
-final GoRoute sellerMenuRoute = placeholderRoute(AppRoutes.sellerMenu, 'K08', 'Quản lý món', 'P2', showBack: false);
+final GoRoute sellerMenuRoute = GoRoute(
+  path: AppRoutes.sellerMenu,
+  builder: (context, state) => ChangeNotifierProvider(
+    create: (_) => SellerMenuViewModel(
+      menu: context.read<MenuRepository>(),
+      crash: context.read<CrashService>(),
+      kioskId: context.read<AuthViewModel>().user?.kioskId,
+    ),
+    child: const SellerMenuScreen(),
+  ),
+);
 
 /// Seller tab root: K10 Shop.
 final GoRoute sellerShopRoute = placeholderRoute(AppRoutes.sellerShop, 'K10', 'Quán', 'P2', showBack: false);

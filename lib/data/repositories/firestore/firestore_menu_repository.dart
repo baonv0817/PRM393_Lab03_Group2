@@ -100,14 +100,17 @@ class FirestoreMenuRepository implements MenuRepository {
   }
 
   @override
-  Future<Result<void>> setSoldOut(String id, bool soldOut) => guard(
-    () => _items.doc(id).update({
-      'soldOut': soldOut,
-      if (!soldOut) 'soldOutReason': FieldValue.delete(),
-      if (!soldOut) 'availableAgainAt': FieldValue.delete(),
-      ...Stamp.updated(),
-    }),
-  );
+  Future<Result<void>> setSoldOut(String id, bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt}) =>
+      guard(
+        () => _items.doc(id).update({
+          'soldOut': soldOut,
+          'soldOutReason': soldOut && reason != null ? reason.name : FieldValue.delete(),
+          'availableAgainAt': soldOut && availableAgainAt != null
+              ? Timestamp.fromDate(availableAgainAt)
+              : FieldValue.delete(),
+          ...Stamp.updated(),
+        }),
+      );
 
   String? _validate(MenuItem item, String dishId) {
     if (item.kioskId.isEmpty) return 'Món phải thuộc một kiosk.';
