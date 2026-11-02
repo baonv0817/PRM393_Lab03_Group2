@@ -7,10 +7,12 @@ import 'package:breakbite/ui/order_manage/view_models/edit_order_view_model.dart
 import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_history_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/pickup_view_model.dart';
 import 'package:breakbite/ui/order_manage/widgets/edit_order_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
+import 'package:breakbite/ui/order_manage/widgets/pickup_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -85,7 +87,17 @@ final List<GoRoute> p2Routes = [
       );
     },
   ),
-  placeholderRoute(AppRoutes.orderPickup, 'S20', 'Nhận món bằng mã QR', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderPickup,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => PickupViewModel(
+        orders: context.read<OrderRepository>(),
+        crash: context.read<CrashService>(),
+        orderId: state.pathParameters['id'] ?? '',
+      ),
+      child: const PickupScreen(),
+    ),
+  ),
   placeholderRoute(AppRoutes.orderReview, 'S23', 'Đánh giá món', 'P2'),
   placeholderRoute(AppRoutes.orderIncident, 'S24', 'Báo sự cố', 'P2'),
   placeholderRoute(AppRoutes.sellerStats, 'K11', 'Thống kê ca', 'P2'),
