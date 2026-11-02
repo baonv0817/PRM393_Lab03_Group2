@@ -133,6 +133,30 @@ void main() {
     expect(IncidentType.missingItem.name, 'missingItem');
     expect(IncidentStatus.inProgress.name, 'inProgress');
     expect(ItemCategory.values.map((c) => c.name), ['food', 'drink', 'other']);
+    expect(SoldOutReason.values.map((r) => r.name), ['outOfIngredients', 'machineBroken', 'other']);
+  });
+
+  group('MenuItem sold out', () {
+    final back = DateTime(2026, 11, 2, 10, 30);
+    const item = MenuItem(id: 'm1', name: 'Combo', priceVnd: 39000, category: ItemCategory.food, prepMinutes: 4);
+
+    test('withSoldOut replaces the reason and the expected time, and drops both when available again', () {
+      final sold = item.withSoldOut(true, reason: SoldOutReason.machineBroken, availableAgainAt: back);
+      expect((sold.soldOut, sold.soldOutReason, sold.availableAgainAt), (true, SoldOutReason.machineBroken, back));
+
+      final again = sold.withSoldOut(true, reason: SoldOutReason.other);
+      expect((again.soldOutReason, again.availableAgainAt), (SoldOutReason.other, null));
+
+      final available = sold.withSoldOut(false, reason: SoldOutReason.other, availableAgainAt: back);
+      expect((available.soldOut, available.soldOutReason, available.availableAgainAt), (false, null, null));
+    });
+
+    test('copyWith keeps the reason and time while sold out and drops them when switched back', () {
+      final sold = item.withSoldOut(true, reason: SoldOutReason.outOfIngredients, availableAgainAt: back);
+      expect(sold.copyWith(priceVnd: 40000).soldOutReason, SoldOutReason.outOfIngredients);
+      expect(sold.copyWith(soldOut: false).soldOutReason, isNull);
+      expect(sold.copyWith(soldOut: false).availableAgainAt, isNull);
+    });
   });
 
   test('notification ids are deterministic so the same event is never stored twice', () {

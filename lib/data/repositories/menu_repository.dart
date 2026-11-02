@@ -16,5 +16,7 @@ abstract interface class MenuRepository {
 
   Future<Result<String>> upsertItem(MenuItem item);
 
-  Future<Result<void>> setSoldOut(String id, bool soldOut);
+  /// Staff set an item sold out (K09) or available again. [reason] and [availableAgainAt] describe a sold-out
+  /// item (the expected time is shown to customers) and are dropped when the item is available again.
+  Future<Result<void>> setSoldOut(String id, bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt});
 }
