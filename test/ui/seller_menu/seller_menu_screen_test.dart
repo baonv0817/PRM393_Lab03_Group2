@@ -64,22 +64,25 @@ Future<MenuItem> _item(FakeMenuRepository menu, String id) async => (await menu.
 
 void main() {
   for (final size in const [TestScreens.narrow, TestScreens.wide, Size(1024, 768)]) {
-    testWidgets('K08 at ${size.width.round()} dp lists the menu by category with a switch per item', (tester) async {
+    testWidgets('K08 at ${size.width.round()} dp lists the menu as a flat list with a switch per item', (tester) async {
       await _pump(tester, FakeMenuRepository(), size: size);
 
-      expect(find.text('Quản lý món'), findsOneWidget);
-      expect(find.text('Kiosk Q9 · Tầng 2'), findsOneWidget);
-      expect(find.text('4 món · 1 hết hàng'), findsOneWidget);
-      expect(find.text('Món ăn'), findsOneWidget);
-      expect(find.text('Đồ uống'), findsOneWidget);
+      expect(find.text('Món tại quầy'), findsOneWidget);
+      expect(byId('k08.add'), findsOneWidget, reason: 'the add button is in the top bar, as in Figma');
+      expect(find.text('Món ăn'), findsNothing, reason: 'the list is flat, without category headings');
       for (final id in ['m1', 'm2', 'm3', 'm4']) {
         expect(byId('k08.item.$id'), findsOneWidget);
       }
       expect(byId('k08.item.m5'), findsNothing, reason: 'the other kiosk\'s items are not shown');
-      expect(find.text('Đang bán'), findsNWidgets(3));
-      expect(find.text('Hết hàng · dự kiến có lại lúc 10:30'), findsOneWidget);
-      expect(find.text('Đang bán (3)'), findsOneWidget);
-      expect(find.text('Hết hàng (1)'), findsOneWidget);
+      expect(find.text('39.000đ · Còn hàng'), findsOneWidget);
+      expect(find.text('35.000đ · Hết · có lại 10:30'), findsOneWidget);
+      expect(find.textContaining('Còn hàng'), findsNWidgets(3));
+      double top(String id) => tester.getTopLeft(byId('k08.item.$id')).dy;
+      final ids = ['m1', 'm2', 'm3', 'm4']..sort((x, y) => top(x).compareTo(top(y)));
+      expect(ids, ['m1', 'm2', 'm4', 'm3'], reason: 'food first, then drinks, each by name');
+      for (final label in ['Tất cả', 'Đang bán', 'Hết']) {
+        expect(find.bySemanticsLabel(label), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     });
   }
@@ -89,23 +92,27 @@ void main() {
     await _pump(tester, menu);
 
     await _tap(tester, 'k08.item.m1.switch');
-    expect(find.text('Báo hết Combo Tacos Bò Phô Mai'), findsOneWidget);
+    expect(find.text('Đánh dấu hết món'), findsOneWidget);
+    expect(find.text('Combo Tacos Bò Phô Mai'), findsNWidgets(2), reason: 'the row and the sheet');
     for (final reason in SoldOutReason.values) {
       expect(byId('k09.reason.${reason.name}'), findsOneWidget);
     }
+    // At 9:00 the choices are the next two half hours and "Hết ngày"; the first is selected.
+    for (final id in ['k09.back.0930', 'k09.back.1000', 'k09.back.endOfDay']) {
+      expect(byId(id), findsOneWidget, reason: id);
+    }
     await _tap(tester, 'k09.reason.machineBroken');
-    await _tap(tester, 'k09.back.60');
+    await _tap(tester, 'k09.back.1000');
     await _tap(tester, 'k09.confirm');
 
     expect(find.text('Combo Tacos Bò Phô Mai đã chuyển sang hết hàng.'), findsOneWidget);
-    expect(find.text('Máy móc hỏng · dự kiến có lại lúc 10:00'), findsOneWidget);
-    expect(find.text('Hết hàng (2)'), findsOneWidget);
+    expect(find.text('39.000đ · Hết · có lại 10:00'), findsOneWidget);
     final stored = await _item(menu, 'm1');
     expect((stored.soldOut, stored.soldOutReason), (true, SoldOutReason.machineBroken));
     expect(stored.availableAgainAt, DateTime(2026, 11, 2, 10));
   });
 
-  testWidgets('K09 confirming at once uses "out of ingredients" with no expected time', (tester) async {
+  testWidgets('K09 confirming at once uses "out of ingredients" and the first time offered', (tester) async {
     final menu = FakeMenuRepository();
     await _pump(tester, menu);
 
@@ -115,9 +122,21 @@ void main() {
     final stored = await _item(menu, 'm2');
     expect(
       (stored.soldOut, stored.soldOutReason, stored.availableAgainAt),
-      (true, SoldOutReason.outOfIngredients, null),
+      (true, SoldOutReason.outOfIngredients, DateTime(2026, 11, 2, 9, 30)),
     );
-    expect(find.text('Hết nguyên liệu'), findsOneWidget);
+    expect(find.text('35.000đ · Hết · có lại 09:30'), findsOneWidget);
+  });
+
+  testWidgets('K09 "Hết ngày" stores no expected time', (tester) async {
+    final menu = FakeMenuRepository();
+    await _pump(tester, menu);
+
+    await _tap(tester, 'k08.item.m2.switch');
+    await _tap(tester, 'k09.back.endOfDay');
+    await _tap(tester, 'k09.confirm');
+
+    expect((await _item(menu, 'm2')).availableAgainAt, isNull);
+    expect(find.text('35.000đ · Hết'), findsOneWidget);
   });
 
   testWidgets('K09 keeping the item as it is changes nothing', (tester) async {
@@ -128,7 +147,7 @@ void main() {
     await _tap(tester, 'k09.cancel');
 
     expect((await _item(menu, 'm1')).soldOut, isFalse);
-    expect(find.text('4 món · 1 hết hàng'), findsOneWidget);
+    expect(find.textContaining('Hết ·'), findsOneWidget, reason: 'only the item that was already sold out');
     expect(find.textContaining('đã chuyển sang hết hàng'), findsNothing);
   });
 
@@ -139,8 +158,8 @@ void main() {
     await _tap(tester, 'k08.item.m4.switch');
 
     expect(find.text('Tacos Gà Giòn Sốt Cay đã bán lại.'), findsOneWidget);
-    expect(find.text('Đang bán'), findsNWidgets(4));
-    expect(find.text('4 món · 0 hết hàng'), findsOneWidget);
+    expect(find.textContaining('Còn hàng'), findsNWidgets(4));
+    expect(find.textContaining('Hết ·'), findsNothing);
     final stored = await _item(menu, 'm4');
     expect((stored.soldOut, stored.availableAgainAt), (false, null));
   });
@@ -178,7 +197,7 @@ void main() {
     await _tap(tester, 'k09.confirm');
 
     expect(find.text(const NetworkException().message), findsOneWidget);
-    expect(find.text('Đang bán'), findsNWidgets(3));
+    expect(find.textContaining('Còn hàng'), findsNWidgets(3));
     expect((await _item(menu, 'm1')).soldOut, isFalse);
   });
 

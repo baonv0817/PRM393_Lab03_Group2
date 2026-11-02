@@ -27,7 +27,7 @@ class ShiftStatsScreen extends StatelessWidget {
     final vm = context.watch<ShiftStatsViewModel>();
     return Scaffold(
       appBar: AppTopBar(
-        title: 'Thống kê ca',
+        title: 'Ca hôm nay',
         onBack: () => _back(context),
         actions: [
           if (vm.hasKiosk)
@@ -88,6 +88,25 @@ class _Body extends StatelessWidget {
             AppSpacing.xl,
           ),
           children: [
+            _FigureRow(
+              left: _Figure(id: 'k11.delivered', label: 'Đơn đã làm', value: '${stats.deliveredCount}'),
+              right: _Figure(id: 'k11.revenue', label: 'Doanh thu', value: vm.revenueLabel),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _FigureRow(
+              left: _Figure(id: 'k11.prep', label: 'Làm trung bình', value: vm.averagePrepLabel),
+              right: _Figure(id: 'k11.cancelled', label: 'Đơn huỷ', value: '${stats.cancelledCount}'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _Chart(vm: vm),
+            const SizedBox(height: AppSpacing.sm),
+            TestId(
+              'k11.active',
+              child: Text(
+                'Đang xử lý: ${stats.activeCount} đơn',
+                style: text.bodyMedium?.copyWith(color: colors.muted),
+              ),
+            ),
             TestId(
               'k11.shift',
               child: Text(
@@ -99,39 +118,6 @@ class _Body extends StatelessWidget {
                 style: text.bodyMedium?.copyWith(color: colors.muted),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            TestId(
-              'k11.revenue',
-              child: ProfileSection(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Doanh thu', style: text.titleSmall?.copyWith(color: colors.muted)),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        vm.revenueLabel,
-                        style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: colors.primaryText),
-                      ),
-                      Text('Từ ${stats.deliveredCount} đơn đã giao', style: text.bodyMedium),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _FigureRow(
-              left: _Figure(id: 'k11.delivered', label: 'Đã giao', value: '${stats.deliveredCount}'),
-              right: _Figure(id: 'k11.active', label: 'Đang xử lý', value: '${stats.activeCount}'),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _FigureRow(
-              left: _Figure(id: 'k11.cancelled', label: 'Đã huỷ', value: '${stats.cancelledCount}'),
-              right: _Figure(id: 'k11.prep', label: 'Chuẩn bị trung bình', value: vm.averagePrepLabel),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _Chart(vm: vm),
           ],
         ),
       ),
@@ -221,7 +207,7 @@ class _Chart extends StatelessWidget {
             children: [
               Semantics(
                 header: true,
-                child: Text('Đơn theo giờ', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                child: Text('Số đơn theo giờ', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
               ),
               if (peakLabel != null) Text(peakLabel, style: text.bodyMedium?.copyWith(color: colors.muted)),
               const SizedBox(height: AppSpacing.sm),
@@ -250,7 +236,9 @@ class _Chart extends StatelessWidget {
                                     width: _barWidth - AppSpacing.md,
                                     height: peak == 0 ? 2 : (_plotHeight * bar.count / peak).clamp(2, _plotHeight),
                                     decoration: BoxDecoration(
-                                      color: bar.count == 0 ? colors.border : scheme.primary,
+                                      color: bar.hour == vm.stats.peakHour && bar.count > 0
+                                          ? scheme.primary
+                                          : colors.border,
                                       borderRadius: const BorderRadius.vertical(
                                         top: Radius.circular(AppRadius.chip / 2),
                                       ),

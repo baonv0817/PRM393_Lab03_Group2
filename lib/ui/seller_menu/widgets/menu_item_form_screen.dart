@@ -4,6 +4,7 @@ import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
+import 'package:breakbite/ui/profile/widgets/profile_section.dart';
 import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
@@ -36,14 +37,14 @@ class MenuItemFormScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<MenuItemFormViewModel>();
     return Scaffold(
-      appBar: AppTopBar(title: vm.isNew ? 'Thêm món mới' : 'Sửa món', onBack: () => _back(context)),
+      appBar: AppTopBar(title: vm.isNew ? 'Thêm món mới' : 'Sửa món', onBack: () => _back(context), closes: vm.isNew),
       // In the bottom bar, not in the body: a message from the Scaffold then appears above the button
       // instead of covering it.
       bottomNavigationBar: vm.state is ViewData<MenuItem?>
           ? ListenableBuilder(
               listenable: vm.save,
               builder: (context, _) => BottomActionButton(
-                label: vm.isNew ? 'Thêm món' : 'Lưu thay đổi',
+                label: vm.isNew ? 'Lưu món' : 'Lưu thay đổi',
                 testId: '${vm.isNew ? 'k14' : 'k15'}.save',
                 loading: vm.save.running,
                 onPressed: vm.canSave && !vm.save.running ? () => _save(context, vm) : null,
@@ -83,14 +84,12 @@ class _Form extends StatefulWidget {
 class _FormState extends State<_Form> {
   late final _name = TextEditingController(text: widget.vm.name);
   late final _price = TextEditingController(text: widget.vm.price);
-  late final _prep = TextEditingController(text: widget.vm.prepMinutes);
   late final _description = TextEditingController(text: widget.vm.description);
 
   @override
   void dispose() {
     _name.dispose();
     _price.dispose();
-    _prep.dispose();
     _description.dispose();
     super.dispose();
   }
@@ -120,17 +119,13 @@ class _FormState extends State<_Form> {
                 onChanged: vm.setName,
                 maxLength: MenuItemFormViewModel.maxNameLength,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: 'Tên món',
-                  hintText: 'Ví dụ: Trà đào cam sả',
-                  errorText: vm.nameError,
-                ),
+                decoration: InputDecoration(labelText: 'Tên món', hintText: 'Nhập tên món', errorText: vm.nameError),
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Semantics(
               header: true,
-              child: Text('Loại món', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              child: Text('Danh mục', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
@@ -155,26 +150,54 @@ class _FormState extends State<_Form> {
                 onChanged: vm.setPrice,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(8)],
-                decoration: InputDecoration(
-                  labelText: 'Giá bán',
-                  hintText: 'Ví dụ: 35000',
-                  suffixText: 'đ',
-                  errorText: vm.priceError,
+                decoration: InputDecoration(labelText: 'Giá (đ)', hintText: 'Nhập giá', errorText: vm.priceError),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              header: true,
+              child: Text('Thời gian chuẩn bị', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            ProfileSection(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('phút', style: text.bodyLarge?.copyWith(color: colors.muted)),
+                    QuantityStepper(
+                      name: 'thời gian chuẩn bị',
+                      quantity: vm.prepMinutesValue,
+                      testId: '$p.prep',
+                      removesAtOne: false,
+                      onDecrement: vm.prepMinutesValue > 0 ? () => vm.changePrepMinutes(-1) : null,
+                      onIncrement: vm.prepMinutesValue < MenuItemFormViewModel.maxPrepMinutes
+                          ? () => vm.changePrepMinutes(1)
+                          : null,
+                    ),
+                  ],
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            TestId(
-              '$p.prep',
-              child: TextField(
-                controller: _prep,
-                onChanged: vm.setPrepMinutes,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-                decoration: InputDecoration(
-                  labelText: 'Thời gian chuẩn bị',
-                  suffixText: 'phút',
-                  errorText: vm.prepError,
+            ProfileSection(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.sm, AppSpacing.xs),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text('Còn hàng', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    ),
+                    TestId(
+                      '$p.inStock',
+                      child: Semantics(
+                        label: 'Còn hàng',
+                        toggled: vm.inStock,
+                        child: Switch(value: vm.inStock, onChanged: vm.setInStock),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -195,14 +218,6 @@ class _FormState extends State<_Form> {
                 ),
               ),
             ),
-            if (!vm.isNew)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Text(
-                  'Bật hoặc tắt bán món ở màn Quản lý món.',
-                  style: text.bodyMedium?.copyWith(color: colors.muted),
-                ),
-              ),
           ],
         ),
       ),

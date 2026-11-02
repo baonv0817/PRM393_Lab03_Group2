@@ -55,6 +55,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   String _prep = '$defaultPrepMinutes';
   String _description = '';
   ItemCategory _category = ItemCategory.food;
+
+  /// What the "Còn hàng" switch was set to; `null` while it was not touched, so the item keeps the state it has.
+  bool? _inStockChoice;
   bool _attempted = false;
   String? _takenSlug;
 
@@ -101,6 +104,24 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   String get prepMinutes => _prep;
   String get description => _description;
   ItemCategory get category => _category;
+
+  /// The item is on sale: the switch as the staff member left it, or the item's own state.
+  bool get inStock => _inStockChoice ?? !(_loaded?.soldOut ?? false);
+
+  /// The preparation time for the stepper; the default while the field holds something that is not a number.
+  int get prepMinutesValue => (_prepValue ?? defaultPrepMinutes).clamp(0, maxPrepMinutes);
+
+  void setInStock(bool value) {
+    if (value == inStock) return;
+    _inStockChoice = value;
+    notifyListeners();
+  }
+
+  /// The − and + of the preparation time, one minute at a time between 0 and [maxPrepMinutes].
+  void changePrepMinutes(int delta) {
+    _prep = '${(prepMinutesValue + delta).clamp(0, maxPrepMinutes)}';
+    notifyListeners();
+  }
 
   void setName(String value) {
     _name = value.length > maxNameLength ? value.substring(0, maxNameLength) : value;
@@ -172,7 +193,8 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         saved.priceVnd != _priceValue ||
         saved.prepMinutes != _prepValue ||
         saved.description != _description.trim() ||
-        saved.category != _category;
+        saved.category != _category ||
+        inStock == saved.soldOut;
   }
 
   bool get canSave => hasChanges;
@@ -206,12 +228,14 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         prepMinutes: _prepValue!,
         kioskId: kiosk,
         description: description,
-      );
+      ).withSoldOut(!inStock);
     } else {
-      // Start from the item as it is now, so a sold-out switch flipped meanwhile is not undone by this save.
+      // Start from the item as it is now, so a sold-out switch flipped meanwhile in K08 is not undone by this
+      // save, unless the "Còn hàng" switch was touched here.
       final current = await menu.getItem(itemId!);
       final base = current.valueOrNull ?? _loaded!;
-      item = MenuItem(
+      final choice = _inStockChoice;
+      final changed = MenuItem(
         id: base.id,
         name: name,
         priceVnd: _priceValue!,
@@ -225,6 +249,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         availableAgainAt: base.availableAgainAt,
         soldOutReason: base.soldOutReason,
       );
+      item = choice == null || choice == !base.soldOut ? changed : changed.withSoldOut(!choice);
     }
     final result = await menu.upsertItem(item);
     if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.save');

@@ -49,7 +49,7 @@ void main() {
 
     await tester.tap(byId('k10.stats'));
     await tester.pumpAndSettle();
-    expect(find.text('Thống kê ca'), findsOneWidget);
+    expect(find.text('Ca hôm nay'), findsOneWidget);
     // No order was placed today, so the shift is empty; the figures themselves are tested with a fixed clock.
     expect(find.text(ShiftStatsViewModel.emptyMessage), findsOneWidget);
     expect(byId('k11.refresh'), findsOneWidget);
