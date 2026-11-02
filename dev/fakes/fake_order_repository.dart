@@ -10,14 +10,16 @@ import 'live_value.dart';
 import 'paging.dart';
 
 class FakeOrderRepository implements OrderRepository {
-  FakeOrderRepository({this.vouchers = const {}, this.cart, this.voucherLookup});
+  /// [startAt] is the time of the first order; the clock then moves a minute for every step.
+  FakeOrderRepository({this.vouchers = const {}, this.cart, this.voucherLookup, DateTime? startAt})
+    : _clock = startAt ?? DateTime(2026, 11, 2, 9);
 
   final Map<String, Voucher> vouchers;
   final CartRepository? cart;
   final Future<Result<Voucher>> Function(String code)? voucherLookup;
   final _orders = LiveValue<List<Order>>(const []);
   var _seq = 203;
-  var _clock = DateTime(2026, 11, 2, 9);
+  DateTime _clock;
 
   static const _active = [OrderStatus.pending, OrderStatus.preparing, OrderStatus.ready];
 

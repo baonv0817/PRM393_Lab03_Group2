@@ -18,6 +18,8 @@ Future<void> main() async {
   final dependencies = createFakeDependencies(
     role: _devRole == 'staff' ? UserRole.staff : UserRole.user,
     signedIn: _devSignedIn,
+    // Seeded orders are placed this morning, so the shift statistics and "Tuần này" have them whatever the date.
+    orderClock: _devSeed ? DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 8) : null,
   );
   if (_devSeed) await seedDevOrders(dependencies);
   runApp(BreakBiteApp(dependencies: dependencies));
