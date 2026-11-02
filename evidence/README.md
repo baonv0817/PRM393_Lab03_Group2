@@ -32,6 +32,15 @@ Screenshots and tool output that back every claim in the report. A criterion wit
 | `fcm/5-inbox.png` | Open S19 after the three messages (P5) | The three notifications in the list |
 | `analytics/<event>.png` | Analytics, DebugView with debug mode on (`adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite`) (P5) | Each event of `docs/analytics-plan.md` with its parameters |
 
+## Screens of P2 (S09–S12, S20, S23, S24, K08–K11, K14, K15)
+
+Taken from the app running on an **Android emulator** (Pixel 7, API 36) with fake data, not with the real Firebase and not on a phone: `flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=DEV_ROLE=user --dart-define=DEV_SEED=true` for the customer screens and `DEV_ROLE=staff` for the seller screens (`DEV_SEED` adds the orders of the fake customer, `dev/dev_seed.dart`). Redo them on the real build once a staff account exists (the table above explains how).
+
+| Folder | Content |
+|---|---|
+| `p2/<ID>.png` | The app screen at 540 × 1200. `S07.png`, `S07-dialog.png`, `S12-bottom.png` and `S23.png` (before choosing anything) show how some screens are reached or what is below the fold |
+| `figma/p2-<ID>.png` | Figma (Final UI v2, `PRM323-Lab2-Group2/assets/figma/final-ui-v2/`) on the left and the app on the right, for the slides. What still differs is in `docs/design-traceability.md` section 5 (D21 to D27) |
+
 ## Other criteria
 
 | Folder | Owner | Content |

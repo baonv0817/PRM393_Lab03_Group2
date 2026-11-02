@@ -4,7 +4,9 @@ import 'package:breakbite/domain/models/models.dart';
 
 import 'fakes/fakes.dart';
 
-AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool signedIn = false}) {
+/// [orderClock] is when the first order of the fake order repository is placed (a fixed morning by default, so
+/// tests do not depend on today's date).
+AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool signedIn = false, DateTime? orderClock}) {
   final menu = FakeMenuRepository();
   final cart = FakeCartRepository();
   return AppDependencies(
@@ -17,7 +19,7 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     reportFiles: FakeReportFileService(),
     menu: menu,
     cart: cart,
-    orders: FakeOrderRepository(cart: cart, voucherLookup: menu.getVoucher),
+    orders: FakeOrderRepository(cart: cart, voucherLookup: menu.getVoucher, startAt: orderClock),
     reports: FakeReportRepository(),
     session: InMemorySessionRepository(),
     users: FakeUserRepository(),
