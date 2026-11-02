@@ -7,7 +7,7 @@ Updated 31/10/2026. Per-task details, done-when criteria and dependencies: [`TAS
 | Role | Owner | GitHub | Main rubric points (out of 10) |
 |---|---|---|---|
 | **P1** Ordering: menu, cart, checkout, order tracking | `[name, student ID]` | `[@…]` | UI/UX 0.75 · Architecture 0.75 · Functionality F1, F2, F3 |
-| **P2** After ordering, plus seller menu management | `[name, student ID]` | `[@…]` | Functionality (post-order screens, seller menu and stats) |
+| **P2** After ordering, plus seller menu management | Nguyễn Hoàng An, SE193905 | `@Mikan382` | Functionality (post-order screens, seller menu and stats) |
 | **P3** Firebase, accounts, profile | `[name, student ID]` | `[@…]` | Firebase 2.0 · Auth, Firestore, file storage (Cloudinary), Crashlytics, Remote Config |
 | **P4** Seller order handling, code review, report | `[name, student ID]` | `[@…]` | Functionality (seller orders) · Code review 0.5 · Slides and video 2.0 |
 | **P5** Testing, notifications, search | `[name, student ID]` | `[@…]` | FCM 0.5 · Analytics · ARTEMIS tests 1.5 · Functionality (search, favorites, notifications) |
