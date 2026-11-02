@@ -39,6 +39,34 @@ class _OfflineSave extends FakeOrderRepository {
   }) async => const Result.error(NetworkException());
 }
 
+/// Fails the first save, then behaves like the normal repository.
+class _FailsOnce extends FakeOrderRepository {
+  _FailsOnce() : super(vouchers: {for (final v in fakeVouchers) v.code: v});
+
+  var _failed = false;
+
+  @override
+  Future<Result<void>> editPendingOrder(
+    Order order, {
+    required List<CartItem> items,
+    String? voucherCode,
+    String? pickupSlotId,
+    String note = '',
+  }) {
+    if (!_failed) {
+      _failed = true;
+      return Future.value(const Result.error(NetworkException()));
+    }
+    return super.editPendingOrder(
+      order,
+      items: items,
+      voucherCode: voucherCode,
+      pickupSlotId: pickupSlotId,
+      note: note,
+    );
+  }
+}
+
 const _combo = CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000, quantity: 2, note: 'Ít cay');
 const _tea = CartItem(itemId: 'm2', name: 'Trà đào', priceVnd: 25000);
 
@@ -242,6 +270,22 @@ void main() {
     expect(find.text(const NetworkException().message), findsOneWidget);
     expect(find.text('132.000đ'), findsOneWidget);
     expect(_saveEnabled(tester), isTrue);
+  });
+
+  testWidgets('S09 can save again at once after a failed save: the message does not cover the button', (tester) async {
+    final orders = _FailsOnce();
+    final id = await _place(orders);
+    await _pump(tester, orders, id);
+    await _tap(tester, 's09.item.m1.inc');
+
+    await tester.tap(byId('s09.save'));
+    await tester.pumpAndSettle();
+    expect(find.text(const NetworkException().message), findsOneWidget);
+
+    await tester.tap(byId('s09.save'));
+    await tester.pumpAndSettle();
+    expect(find.text('S07 $id'), findsOneWidget);
+    expect(orders.all.single.items.first.quantity, 3);
   });
 
   testWidgets('S09 of an order the kitchen already took is locked, with a way to the order', (tester) async {

@@ -201,6 +201,23 @@ void main() {
     expect(harness.reviews.all, isEmpty);
   });
 
+  testWidgets('S23 can send again at once after a failed send: the message does not cover the button', (tester) async {
+    final harness = _Harness();
+    final id = await harness.deliveredOrder();
+    harness.reviews.failNextSave = const NetworkException();
+    await harness.pump(tester, id);
+    await _tap(tester, 's23.item.m1.star.3');
+
+    await tester.tap(byId('s23.submit'));
+    await tester.pumpAndSettle();
+    expect(find.text(const NetworkException().message), findsOneWidget);
+
+    await tester.tap(byId('s23.submit'));
+    await tester.pumpAndSettle();
+    expect(harness.reviews.all, hasLength(1));
+    expect(find.text('S12 $id'), findsOneWidget);
+  });
+
   testWidgets('S23 back returns to the order detail when it was opened without a history', (tester) async {
     final harness = _Harness();
     final id = await harness.deliveredOrder();

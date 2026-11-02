@@ -36,6 +36,22 @@ class ReviewScreen extends StatelessWidget {
     final vm = context.watch<ReviewViewModel>();
     return Scaffold(
       appBar: AppTopBar(title: 'Đánh giá món', onBack: () => _back(context, vm)),
+      // In the bottom bar, not in the body: a message from the Scaffold then appears above the button
+      // instead of covering it.
+      bottomNavigationBar: vm.state is ViewData<Order>
+          ? ListenableBuilder(
+              listenable: vm.submit,
+              builder: (context, _) {
+                final pending = vm.pendingCount;
+                return BottomActionButton(
+                  label: pending > 0 ? 'Gửi đánh giá ($pending món)' : 'Gửi đánh giá',
+                  testId: 's23.submit',
+                  loading: vm.submit.running,
+                  onPressed: vm.canSubmit && !vm.submit.running ? () => _submit(context, vm) : null,
+                );
+              },
+            )
+          : null,
       body: switch (vm.state) {
         ViewLoading() => const LoadingView(message: 'Đang tải đơn hàng…'),
         ViewError(:final message) => TestId(
@@ -50,61 +66,41 @@ class ReviewScreen extends StatelessWidget {
             onAction: () => context.go(AppRoutes.orders),
           ),
         ),
-        ViewData(:final data) => _Form(vm: vm, order: data, onSubmit: () => _submit(context, vm)),
+        ViewData(:final data) => _Form(vm: vm, order: data),
       },
     );
   }
 }
 
 class _Form extends StatelessWidget {
-  const _Form({required this.vm, required this.order, required this.onSubmit});
+  const _Form({required this.vm, required this.order});
 
   final ReviewViewModel vm;
   final Order order;
-  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final hint = vm.missingHint;
-    final pending = vm.pendingCount;
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+      ),
       children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.md,
-              AppSpacing.screenPadding,
-              AppSpacing.md,
+        Text('Đơn #${order.orderCode} · ${order.kioskName}', style: text.bodyMedium?.copyWith(color: colors.muted)),
+        for (final item in vm.items) ...[const SizedBox(height: AppSpacing.sm), _ItemCard(vm: vm, item: item)],
+        if (hint != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: TestId(
+              's23.hint',
+              child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted)),
             ),
-            children: [
-              Text(
-                'Đơn #${order.orderCode} · ${order.kioskName}',
-                style: text.bodyMedium?.copyWith(color: colors.muted),
-              ),
-              for (final item in vm.items) ...[const SizedBox(height: AppSpacing.sm), _ItemCard(vm: vm, item: item)],
-              if (hint != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: TestId(
-                    's23.hint',
-                    child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                  ),
-                ),
-            ],
           ),
-        ),
-        ListenableBuilder(
-          listenable: vm.submit,
-          builder: (context, _) => BottomActionButton(
-            label: pending > 0 ? 'Gửi đánh giá ($pending món)' : 'Gửi đánh giá',
-            testId: 's23.submit',
-            loading: vm.submit.running,
-            onPressed: vm.canSubmit && !vm.submit.running ? onSubmit : null,
-          ),
-        ),
       ],
     );
   }

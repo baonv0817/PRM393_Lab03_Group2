@@ -46,6 +46,19 @@ class EditOrderScreen extends StatelessWidget {
     final vm = context.watch<EditOrderViewModel>();
     return Scaffold(
       appBar: AppTopBar(title: 'Sửa đơn', onBack: () => _back(context, vm)),
+      // In the bottom bar, not in the body: a message from the Scaffold then appears above the button
+      // instead of covering it.
+      bottomNavigationBar: vm.state is ViewData<Order> && !vm.locked
+          ? ListenableBuilder(
+              listenable: vm.save,
+              builder: (context, _) => BottomActionButton(
+                label: 'Lưu thay đổi',
+                testId: 's09.save',
+                loading: vm.save.running,
+                onPressed: vm.canSave && !vm.save.running ? () => _save(context, vm) : null,
+              ),
+            )
+          : null,
       body: switch (vm.state) {
         ViewLoading() => const LoadingView(message: 'Đang tải đơn hàng…'),
         ViewError(:final message) => TestId(
@@ -69,22 +82,7 @@ class EditOrderScreen extends StatelessWidget {
             onAction: () => context.go(AppRoutes.orderOf(data.id)),
           ),
         ),
-        ViewData(:final data) => Column(
-          children: [
-            Expanded(
-              child: _Body(vm: vm, order: data, onEditNote: (item) => _editNote(context, vm, item)),
-            ),
-            ListenableBuilder(
-              listenable: vm.save,
-              builder: (context, _) => BottomActionButton(
-                label: 'Lưu thay đổi',
-                testId: 's09.save',
-                loading: vm.save.running,
-                onPressed: vm.canSave && !vm.save.running ? () => _save(context, vm) : null,
-              ),
-            ),
-          ],
-        ),
+        ViewData(:final data) => _Body(vm: vm, order: data, onEditNote: (item) => _editNote(context, vm, item)),
       },
     );
   }

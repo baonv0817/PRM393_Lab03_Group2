@@ -167,6 +167,23 @@ void main() {
     expect(harness.incidents.all, isEmpty);
   });
 
+  testWidgets('S24 can send again at once after a failed send: the message does not cover the button', (tester) async {
+    final harness = _Harness();
+    final id = await harness.deliveredOrder();
+    harness.incidents.failNextReport = const NetworkException();
+    await harness.pump(tester, id);
+    await _fill(tester, type: 'quality', description: 'Món nguội');
+
+    await tester.tap(byId('s24.submit'));
+    await tester.pumpAndSettle();
+    expect(find.text(const NetworkException().message), findsOneWidget);
+
+    await tester.tap(byId('s24.submit'));
+    await tester.pumpAndSettle();
+    expect(byId('s24.report'), findsOneWidget);
+    expect(harness.incidents.all, hasLength(1));
+  });
+
   testWidgets('S24 shows the kiosk answer when the report was refunded or rejected', (tester) async {
     final harness = _Harness();
     final id = await harness.deliveredOrder();

@@ -35,6 +35,19 @@ class IncidentScreen extends StatelessWidget {
     final vm = context.watch<IncidentViewModel>();
     return Scaffold(
       appBar: AppTopBar(title: 'Báo sự cố', onBack: () => _back(context, vm)),
+      // In the bottom bar, not in the body: a message from the Scaffold then appears above the button
+      // instead of covering it.
+      bottomNavigationBar: vm.state is ViewData<Order> && vm.incident == null
+          ? ListenableBuilder(
+              listenable: vm.submit,
+              builder: (context, _) => BottomActionButton(
+                label: 'Gửi báo cáo',
+                testId: 's24.submit',
+                loading: vm.submit.running,
+                onPressed: vm.canSubmit && !vm.submit.running ? () => _submit(context, vm) : null,
+              ),
+            )
+          : null,
       body: switch (vm.state) {
         ViewLoading() => const LoadingView(message: 'Đang tải đơn hàng…'),
         ViewError(:final message) => TestId(
@@ -51,7 +64,7 @@ class IncidentScreen extends StatelessWidget {
         ),
         ViewData(:final data) =>
           vm.incident == null
-              ? _Form(vm: vm, order: data, onSubmit: () => _submit(context, vm))
+              ? _Form(vm: vm, order: data)
               : _SentReport(vm: vm, order: data, onBack: () => _back(context, vm)),
       },
     );
@@ -59,101 +72,85 @@ class IncidentScreen extends StatelessWidget {
 }
 
 class _Form extends StatelessWidget {
-  const _Form({required this.vm, required this.order, required this.onSubmit});
+  const _Form({required this.vm, required this.order});
 
   final IncidentViewModel vm;
   final Order order;
-  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final hint = vm.missingHint;
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+        AppSpacing.screenPadding,
+        AppSpacing.md,
+      ),
       children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.md,
-              AppSpacing.screenPadding,
-              AppSpacing.md,
+        TestId(
+          's24.header',
+          child: ProfileSection(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Đơn #${order.orderCode} · ${order.kioskName}',
+                    style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(orderItemsSummary(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
+                ],
+              ),
             ),
-            children: [
-              TestId(
-                's24.header',
-                child: ProfileSection(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Đơn #${order.orderCode} · ${order.kioskName}',
-                          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(orderItemsSummary(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.xs),
-                child: Semantics(
-                  header: true,
-                  child: Text('Bạn gặp vấn đề gì?', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                ),
-              ),
-              for (final type in IncidentViewModel.types)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                  child: SelectableCard(
-                    testId: 's24.type.${type.name}',
-                    selected: vm.type == type,
-                    semanticLabel: incidentTypeLabel(type),
-                    onTap: () => vm.selectType(type),
-                    child: Text(incidentTypeLabel(type), style: text.bodyLarge),
-                  ),
-                ),
-              const SizedBox(height: AppSpacing.sm),
-              TestId(
-                's24.description',
-                child: TextField(
-                  onChanged: vm.setDescription,
-                  minLines: 3,
-                  maxLines: 6,
-                  maxLength: IncidentViewModel.maxDescriptionLength,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Mô tả sự cố',
-                    hintText: 'Ví dụ: thiếu 1 ly trà đào trong đơn',
-                    alignLabelWithHint: true,
-                  ),
-                ),
-              ),
-              if (hint != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.xs),
-                  child: TestId(
-                    's24.hint',
-                    child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                  ),
-                ),
-            ],
           ),
         ),
-        ListenableBuilder(
-          listenable: vm.submit,
-          builder: (context, _) => BottomActionButton(
-            label: 'Gửi báo cáo',
-            testId: 's24.submit',
-            loading: vm.submit.running,
-            onPressed: vm.canSubmit && !vm.submit.running ? onSubmit : null,
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.xs),
+          child: Semantics(
+            header: true,
+            child: Text('Bạn gặp vấn đề gì?', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           ),
         ),
+        for (final type in IncidentViewModel.types)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectableCard(
+              testId: 's24.type.${type.name}',
+              selected: vm.type == type,
+              semanticLabel: incidentTypeLabel(type),
+              onTap: () => vm.selectType(type),
+              child: Text(incidentTypeLabel(type), style: text.bodyLarge),
+            ),
+          ),
+        const SizedBox(height: AppSpacing.sm),
+        TestId(
+          's24.description',
+          child: TextField(
+            onChanged: vm.setDescription,
+            minLines: 3,
+            maxLines: 6,
+            maxLength: IncidentViewModel.maxDescriptionLength,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Mô tả sự cố',
+              hintText: 'Ví dụ: thiếu 1 ly trà đào trong đơn',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ),
+        if (hint != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: TestId(
+              's24.hint',
+              child: Text(hint, style: text.bodyMedium?.copyWith(color: colors.muted)),
+            ),
+          ),
       ],
     );
   }
