@@ -27,6 +27,18 @@ void main() {
     expect(OrderStatus.values.map(orderStatusLabel), ['Đã nhận đơn', 'Đang làm', 'Sẵn sàng', 'Hoàn tất', 'Đã huỷ']);
   });
 
+  test('review tags and star ratings have a label; an unknown tag is shown as stored', () {
+    expect(['tasty', 'fast', 'hot', 'wellPacked'].map(reviewTagLabel), [
+      'Ngon',
+      'Ra món nhanh',
+      'Còn nóng',
+      'Đóng gói kỹ',
+    ]);
+    expect(reviewTagLabel('crispy'), 'crispy');
+    expect([1, 2, 3, 4, 5].map(ratingLabel), ['Rất tệ', 'Chưa tốt', 'Bình thường', 'Tốt', 'Tuyệt vời']);
+    expect(ratingLabel(0), 'Chạm vào sao để chấm điểm');
+  });
+
   test('every kind and status of incident has a label for the customer', () {
     expect(IncidentType.values.map(incidentTypeLabel), [
       'Sai món',
