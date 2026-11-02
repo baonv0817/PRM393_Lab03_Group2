@@ -2,6 +2,7 @@ import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/domain/order_pricing.dart';
+import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/paged.dart';
 import 'package:breakbite/utils/result.dart';
 
@@ -89,13 +90,21 @@ class FakeOrderRepository implements OrderRepository {
     String? pickupSlotId,
     String note = '',
   }) async {
+    if (items.isEmpty) return const Result.error(ValidationException('Giỏ hàng đang trống.'));
     final current = _find(order.id);
     if (current == null) return const Result.error(NotFoundException());
     if (current.status != OrderStatus.pending) {
       return const Result.error(ValidationException('Kiosk đã nhận đơn nên không sửa được nữa.'));
     }
     final voucher = voucherCode == null ? null : vouchers[voucherCode];
+    if (voucherCode != null && voucher == null) {
+      return const Result.error(NotFoundException(message: 'Mã giảm giá không tồn tại.'));
+    }
     final pricing = priceOrder(items, voucher: voucher, now: _clock);
+    if (voucher != null) {
+      final problem = voucher.problemFor(pricing.subtotalVnd, _clock);
+      if (problem != null) return Result.error(ValidationException(voucherProblemMessage(voucher, problem)));
+    }
     _replace(
       _copy(
         current,
