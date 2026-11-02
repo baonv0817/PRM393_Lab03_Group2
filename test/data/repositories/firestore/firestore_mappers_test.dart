@@ -150,6 +150,46 @@ void main() {
     expect(reportFromData('r2', {'uid': 'u1'}, now: now).createdAt, now);
   });
 
+  test('an incident reads the customer report and the kiosk answer; unknown values fall back safely', () {
+    final now = DateTime.utc(2026, 11, 2, 3);
+    final open = incidentFromData('o6', {
+      'orderId': 'o6',
+      'kioskId': 'q9-t2',
+      'uid': 'u1',
+      'customerName': 'Quân',
+      'type': 'missingItem',
+      'description': 'Thiếu 1 ly trà đào',
+      'status': 'open',
+      'createdAt': Timestamp.fromDate(created),
+    }, now: now);
+    expect(open.id, 'o6');
+    expect(open.type, IncidentType.missingItem);
+    expect(open.status, IncidentStatus.open);
+    expect(open.resolution, isNull);
+    expect(open.createdAt.isAtSameMomentAs(created), isTrue);
+
+    final refunded = incidentFromData('o6', {
+      'orderId': 'o6',
+      'type': 'wrongItem',
+      'status': 'resolved',
+      'resolution': 'refunded',
+      'refundVnd': 20000,
+      'handledBy': 'staff-1',
+      'resolvedAt': Timestamp.fromDate(created),
+    }, now: now);
+    expect(refunded.resolution, IncidentResolution.refunded);
+    expect(refunded.refundVnd, 20000);
+    expect(refunded.handledBy, 'staff-1');
+    expect(refunded.resolvedAt!.isAtSameMomentAs(created), isTrue);
+
+    final odd = incidentFromData('o7', {'type': 'hack', 'status': 'weird', 'resolution': 'gift'}, now: now);
+    expect(odd.orderId, 'o7');
+    expect(odd.type, IncidentType.other);
+    expect(odd.status, IncidentStatus.open);
+    expect(odd.resolution, isNull);
+    expect(odd.createdAt, now, reason: 'a report still being written has no server time yet');
+  });
+
   test('a user profile reads its optional fields; an unknown payment method is ignored', () {
     final profile = userProfileFromData('u1', {
       'displayName': 'Quân',
