@@ -8,7 +8,56 @@ import '../../dev/fake_dependencies.dart';
 
 Finder byId(String id) => find.bySemanticsIdentifier(id);
 
+Future<void> _type(WidgetTester tester, String id, String value) async {
+  await tester.enterText(find.descendant(of: byId(id), matching: find.byType(TextField)), value);
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  testWidgets('a staff member adds an item in K14 and changes its price in K15, and customers see both', (
+    tester,
+  ) async {
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(412, 2400);
+    addTearDown(tester.view.reset);
+    final deps = createFakeDependencies(role: UserRole.staff, signedIn: true);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Món')));
+    await tester.pumpAndSettle();
+    expect(find.text('4 món · 1 hết hàng'), findsOneWidget);
+
+    await tester.tap(byId('k08.add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Thêm món mới'), findsOneWidget);
+    await tester.tap(byId('k14.save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nhập tên món.'), findsOneWidget);
+    await _type(tester, 'k14.name', 'Bún bò Huế');
+    await _type(tester, 'k14.price', '45000');
+    await tester.tap(byId('k14.save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Đã thêm "Bún bò Huế" vào thực đơn.'), findsOneWidget);
+    expect(find.text('5 món · 1 hết hàng'), findsOneWidget);
+    expect(byId('k08.item.q9-t2-bun-bo-hue'), findsOneWidget);
+    final customerMenu = await deps.menu.watchMenu('q9-t2').first;
+    expect(customerMenu.map((i) => i.name), contains('Bún bò Huế'));
+
+    await tester.tap(byId('k08.item.q9-t2-bun-bo-hue.edit'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sửa món'), findsOneWidget);
+    await _type(tester, 'k15.price', '48000');
+    await tester.tap(byId('k15.save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Đã lưu thay đổi của "Bún bò Huế".'), findsOneWidget);
+    expect(find.text('48.000đ'), findsOneWidget);
+    final changed = (await deps.menu.getItem('q9-t2-bun-bo-hue')) as Ok<MenuItem>;
+    expect(changed.value.priceVnd, 48000);
+  });
+
   testWidgets('a staff member switches an item off in K08, and the customer menu has it sold out at once', (
     tester,
   ) async {
