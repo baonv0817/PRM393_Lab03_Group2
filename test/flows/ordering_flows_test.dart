@@ -163,7 +163,15 @@ void main() {
         expect(find.text('Huỷ đơn #A-204?'), findsOneWidget);
         await tester.tap(find.text('Huỷ đơn').last);
         await tester.pumpAndSettle();
-        expect(find.text('S10'), findsOneWidget);
+        expect(byId('s10.header'), findsOneWidget);
+        expect(find.text('#A-204'), findsOneWidget);
+        expect(find.text('Bạn đã huỷ đơn này.'), findsOneWidget);
+        expect(find.text('Bạn chưa trả tiền cho đơn này nên không có khoản nào cần hoàn.'), findsOneWidget);
+        expect(find.text('Combo Tacos Bò Phô Mai ×1'), findsOneWidget);
+
+        await tapId(tester, 's10.reorder');
+        expect(find.text('Đã thêm 1 món vào giỏ'), findsOneWidget);
+        expect((deps.cart as FakeCartRepository).current('dev-user').items, hasLength(1));
         await tester.tap(find.byTooltip('Đóng'));
         await tester.pumpAndSettle();
         expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);

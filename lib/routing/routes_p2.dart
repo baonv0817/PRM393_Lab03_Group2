@@ -1,6 +1,12 @@
+import 'package:breakbite/data/repositories/repositories.dart';
+import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
+import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 // P2: post-order screens S09–S12, S20, S23, S24, and the seller's menu management K08–K11, K14, K15.
 // A specific route (for example /orders/history) must come before a parameterized one (/orders/:id).
@@ -15,7 +21,21 @@ final GoRoute sellerShopRoute = placeholderRoute(AppRoutes.sellerShop, 'K10', 'Q
 final List<GoRoute> p2Routes = [
   placeholderRoute(AppRoutes.ordersHistory, 'S11', 'Lịch sử đơn', 'P2'),
   placeholderRoute(AppRoutes.orderEdit, 'S09', 'Sửa đơn', 'P2'),
-  placeholderRoute(AppRoutes.orderCancelled, 'S10', 'Đơn đã huỷ', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderCancelled,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => OrderCancelledViewModel(
+        orders: context.read<OrderRepository>(),
+        cart: context.read<CartRepository>(),
+        session: context.read<SessionRepository>(),
+        analytics: context.read<AnalyticsService>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+        orderId: state.pathParameters['id'] ?? '',
+      ),
+      child: const OrderCancelledScreen(),
+    ),
+  ),
   placeholderRoute(AppRoutes.orderDetail, 'S12', 'Chi tiết đơn', 'P2'),
   placeholderRoute(AppRoutes.orderPickup, 'S20', 'Nhận món bằng mã QR', 'P2'),
   placeholderRoute(AppRoutes.orderReview, 'S23', 'Đánh giá món', 'P2'),
