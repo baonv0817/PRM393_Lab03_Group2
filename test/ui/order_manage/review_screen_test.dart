@@ -119,8 +119,12 @@ void main() {
         expect(byId('s23.item.$item.comment'), findsOneWidget);
       }
       expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
-      expect(find.text('Ngon'), findsNWidgets(2));
-      expect(find.text('Chạm vào sao để chấm điểm ít nhất một món.'), findsOneWidget);
+      expect(find.text('Món ăn hôm nay thế nào?'), findsOneWidget);
+      expect(find.text('Điều bạn thích'), findsNWidgets(2));
+      for (final word in ['Tệ', 'Tạm', 'Ổn', 'Tuyệt']) {
+        expect(find.text(word), findsNWidgets(2), reason: word);
+      }
+      expect(find.text('Chọn số điểm cho ít nhất một món.'), findsOneWidget);
       expect(find.text('Gửi đánh giá'), findsOneWidget);
       expect(_submitEnabled(tester), isFalse);
       expect(tester.takeException(), isNull);
@@ -135,7 +139,7 @@ void main() {
     await harness.pump(tester, id);
 
     await _tap(tester, 's23.item.m1.star.4');
-    expect(find.text('Tốt'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Chấm .*: 4 trên 5')), findsOneWidget);
     expect(find.text('Gửi đánh giá (1 món)'), findsOneWidget);
     expect(_submitEnabled(tester), isTrue);
     await _tap(tester, 's23.item.m1.tag.tasty');
@@ -169,13 +173,13 @@ void main() {
 
     expect(byId('s23.item.m2.reviewed'), findsOneWidget);
     expect(byId('s23.item.m1.reviewed'), findsNothing);
-    expect(find.text('Tuyệt vời'), findsOneWidget);
+    expect(find.bySemanticsLabel('Chấm Trà đào: 5 trên 5'), findsOneWidget);
     expect(find.text('Rất ngon'), findsOneWidget);
     expect(find.text('Bạn chưa thay đổi gì so với đánh giá đã gửi.'), findsOneWidget);
     expect(_submitEnabled(tester), isFalse);
 
     await _tap(tester, 's23.item.m2.star.3');
-    expect(find.text('Bình thường'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Chấm .*: 3 trên 5')), findsOneWidget);
     expect(_submitEnabled(tester), isTrue);
     await tester.tap(byId('s23.submit'));
     await tester.pumpAndSettle();

@@ -110,6 +110,25 @@ void main() {
     });
   }
 
+  testWidgets('S11 shows what was spent this week, with the busiest day in the bars, and this month on the other tab', (
+    tester,
+  ) async {
+    await _pump(tester, PagedOrders(_orders()));
+
+    expect(find.text('Chi tiêu tuần này'), findsOneWidget);
+    expect(find.descendant(of: byId('s11.spend'), matching: find.text('39.000đ')), findsOneWidget);
+    for (var day = 0; day < 7; day++) {
+      expect(byId('s11.spend.bar.$day'), findsOneWidget);
+    }
+    expect(find.bySemanticsLabel('T3: 39.000đ'), findsOneWidget, reason: 'o1 was placed on Tuesday 3 November');
+    expect(find.bySemanticsLabel('T2: 0đ'), findsOneWidget);
+
+    await tester.tap(byId('s11.grouping.month'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chi tiêu tháng 11'), findsOneWidget);
+    expect(find.descendant(of: byId('s11.spend'), matching: find.text('39.000đ')), findsOneWidget);
+  });
+
   testWidgets('S11 switches to months and back', (tester) async {
     await _pump(tester, PagedOrders(_orders()));
 
@@ -118,12 +137,12 @@ void main() {
     expect(find.text('Tháng này (11/2026)'), findsOneWidget);
     expect(find.text('Tháng trước (10/2026)'), findsOneWidget);
     expect(find.text('Tháng 9/2026'), findsOneWidget);
-    expect(find.textContaining('Tuần'), findsNothing);
+    expect(find.textContaining('Tuần '), findsNothing);
 
     await tester.tap(byId('s11.grouping.week'));
     await tester.pumpAndSettle();
     expect(find.text('Tuần này (02/11 – 08/11)'), findsOneWidget);
-    expect(find.textContaining('Tháng'), findsNothing);
+    expect(find.textContaining('Tháng '), findsNothing);
   });
 
   testWidgets('S11 opens an order in its detail', (tester) async {

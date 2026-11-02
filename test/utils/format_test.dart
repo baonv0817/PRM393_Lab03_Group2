@@ -28,15 +28,10 @@ void main() {
   });
 
   test('review tags and star ratings have a label; an unknown tag is shown as stored', () {
-    expect(['tasty', 'fast', 'hot', 'wellPacked'].map(reviewTagLabel), [
-      'Ngon',
-      'Ra món nhanh',
-      'Còn nóng',
-      'Đóng gói kỹ',
-    ]);
+    expect(['tasty', 'fast', 'hot', 'wellPacked'].map(reviewTagLabel), ['Ngon', 'Nhanh', 'Nóng hổi', 'Đóng gói tốt']);
     expect(reviewTagLabel('crispy'), 'crispy');
-    expect([1, 2, 3, 4, 5].map(ratingLabel), ['Rất tệ', 'Chưa tốt', 'Bình thường', 'Tốt', 'Tuyệt vời']);
-    expect(ratingLabel(0), 'Chạm vào sao để chấm điểm');
+    expect([1, 2, 3, 4, 5].map(ratingLabel), ['Tệ', 'Tạm', 'Ổn', 'Ngon', 'Tuyệt']);
+    expect(ratingLabel(0), '');
   });
 
   test('categories and sold-out reasons have a label', () {

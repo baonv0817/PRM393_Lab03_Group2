@@ -66,20 +66,20 @@ String soldOutReasonLabel(SoldOutReason reason) => switch (reason) {
 /// The quick tags of a review (S23); an unknown tag is shown as it was stored.
 String reviewTagLabel(String tag) => switch (tag) {
   'tasty' => 'Ngon',
-  'fast' => 'Ra món nhanh',
-  'hot' => 'Còn nóng',
-  'wellPacked' => 'Đóng gói kỹ',
+  'fast' => 'Nhanh',
+  'hot' => 'Nóng hổi',
+  'wellPacked' => 'Đóng gói tốt',
   _ => tag,
 };
 
 /// What a star rating means, said under the stars (S23).
 String ratingLabel(int stars) => switch (stars) {
-  1 => 'Rất tệ',
-  2 => 'Chưa tốt',
-  3 => 'Bình thường',
-  4 => 'Tốt',
-  5 => 'Tuyệt vời',
-  _ => 'Chạm vào sao để chấm điểm',
+  1 => 'Tệ',
+  2 => 'Tạm',
+  3 => 'Ổn',
+  4 => 'Ngon',
+  5 => 'Tuyệt',
+  _ => '',
 };
 
 String voucherProblemMessage(Voucher voucher, VoucherProblem problem) => switch (problem) {
