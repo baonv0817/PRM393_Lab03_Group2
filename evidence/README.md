@@ -38,7 +38,7 @@ Taken from the app running on an **Android emulator** (Pixel 7, API 36) with fak
 
 | Folder | Content |
 |---|---|
-| `p2/<ID>.png` | The app screen at 540 × 1200. `S07.png`, `S07-dialog.png`, `S12-bottom.png` and `S23.png` (before choosing anything) show how some screens are reached or what is below the fold |
+| `p2/<ID>.png` | The app screen at 540 × 1200. `S07.png`, `S07-dialog.png`, `S12-bottom.png` and `S23-empty.png` (before choosing anything; `S23.png` has circle 4 and a tag chosen) show how some screens are reached or what is below the fold |
 | `figma/p2-<ID>.png` | Figma (Final UI v2, `PRM323-Lab2-Group2/assets/figma/final-ui-v2/`) on the left and the app on the right, for the slides. What still differs is in `docs/design-traceability.md` section 5 (D21 to D27) |
 
 ## Other criteria
