@@ -36,7 +36,7 @@ The Figma and the app UI are in Vietnamese, so each screen name is followed by i
 | S08 | Orders, history (Đơn hàng) | /orders | OrdersScreen | OrdersViewModel | Firestore orders (uid) | P1 | Done |
 | S08-EMPTY | No orders yet | (state of /orders) | EmptyView with "Xem thực đơn" | OrdersViewModel | — | P1 | Done |
 | S09 | Edit order | /orders/:id/edit | EditOrderScreen | EditOrderViewModel | Firestore orders/{id} | P2 | Not started |
-| S10 | Cancelled order | /orders/:id/cancelled | OrderCancelledScreen | OrderTrackingViewModel | Firestore orders/{id} | P2 | Not started |
+| S10 | Cancelled order | /orders/:id/cancelled | OrderCancelledScreen | OrderCancelledViewModel | Firestore orders/{id} (realtime), carts/{uid} (reorder) | P2 | Done |
 | S11 | History by week and month | /orders/history | HistoryScreen | HistoryViewModel | Firestore orders (uid) | P2 | Not started |
 | S12 | Order detail | /orders/:id/detail | OrderDetailScreen | OrderDetailViewModel | Firestore orders/{id} | P2 | Not started |
 | S13 | Favorite items | /favorites | FavoritesScreen | FavoritesViewModel | Firestore users/{uid}/favorites | P5 | Not started |
