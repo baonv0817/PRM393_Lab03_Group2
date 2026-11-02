@@ -99,6 +99,7 @@ void main() {
       expect(vm.isActive, isFalse);
       expect(vm.isCancelled, isFalse);
       expect(vm.canReportIncident, isTrue);
+      expect(vm.canReview, isTrue);
       expect(vm.timeline.map((r) => r.label), ['Đặt đơn', 'Kiosk nhận đơn', 'Món sẵn sàng', 'Nhận món']);
       expect(vm.timeline.first.value, formatDateTime(vm.order!.createdAt));
       expect(vm.lines.map((l) => (l.name, l.quantity, l.price, l.note)), [
@@ -125,6 +126,7 @@ void main() {
 
       expect(vm.isActive, isTrue);
       expect(vm.canReportIncident, isFalse);
+      expect(vm.canReview, isFalse);
       expect(vm.timeline.map((r) => r.label), ['Đặt đơn']);
       expect(vm.amounts.map((r) => r.id), ['subtotal', 'total']);
       expect(vm.noteLine, isNull);
