@@ -2,12 +2,15 @@ import 'dart:convert';
 
 import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_review_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_slot_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_user_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
+import 'package:breakbite/data/repositories/review_repository.dart';
 import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite/data/services/firebase/notification_inbox.dart';
 import 'package:breakbite/data/services/storage_service.dart';
@@ -515,5 +518,136 @@ void main() {
     expect(ok(await menu.getItem(id)).soldOut, isTrue);
     expect(err(await menu.setSoldOut('q9-t4-tra-dao', true)), isA<PermissionDeniedException>());
     expect(err(await menu.upsertItem(draft.copyWith(priceVnd: 0))), isA<ValidationException>());
+  });
+
+  testWidgets('staff: K10 writes the shop settings and removes the fields that are emptied, only at their own kiosk', (
+    tester,
+  ) async {
+    final until = DateTime.now().add(const Duration(minutes: 30));
+    ok(
+      await menu.updateKiosk(
+        'q9-t2',
+        KioskSettings(
+          open: true,
+          waitMinutes: 9,
+          pausedUntil: until,
+          maxOrdersPerSlot: 5,
+          notice: '  Hết sốt phô mai  ',
+          openTime: '06:30',
+          closeTime: '17:00',
+        ),
+      ),
+    );
+    var data = (await db.doc('kiosks/q9-t2').get()).data()!;
+    expect(data['waitMinutes'], 9);
+    expect(data['maxOrdersPerSlot'], 5);
+    expect(data['notice'], 'Hết sốt phô mai');
+    expect((data['openTime'], data['closeTime']), ('06:30', '17:00'));
+    expect(data['pausedUntil'], isA<Timestamp>());
+    expect(data['name'], 'Kiosk Q9 · Tầng 2', reason: 'the name is not staff\'s to change and is left alone');
+    final kiosk = (await menu.watchKiosks().first).firstWhere((k) => k.id == 'q9-t2');
+    expect(kiosk.acceptsOrders(DateTime.now()), isFalse, reason: 'paused for 30 minutes');
+
+    ok(await menu.updateKiosk('q9-t2', const KioskSettings(open: true, waitMinutes: 6)));
+    data = (await db.doc('kiosks/q9-t2').get()).data()!;
+    for (final field in ['pausedUntil', 'maxOrdersPerSlot', 'notice', 'openTime', 'closeTime']) {
+      expect(data.containsKey(field), isFalse, reason: '$field was emptied');
+    }
+    expect(data['waitMinutes'], 6);
+
+    expect(
+      err(await menu.updateKiosk('q9-t4', const KioskSettings(open: false, waitMinutes: 1))),
+      isA<PermissionDeniedException>(),
+    );
+    expect(
+      err(await menu.updateKiosk('q9-t2', const KioskSettings(open: true, waitMinutes: 121))),
+      isA<ValidationException>(),
+    );
+  });
+
+  testWidgets('staff: K11 counts the shift of their own kiosk on the server and cannot read another kiosk', (
+    tester,
+  ) async {
+    final since = DateTime.now().subtract(const Duration(days: 1));
+    final stats = ok(await orders.kioskStats('q9-t2', since: since));
+    expect(stats.deliveredCount, greaterThanOrEqualTo(1), reason: 'the cash order was delivered above');
+    expect(stats.revenueVnd, greaterThan(0));
+    expect(stats.cancelledCount, greaterThanOrEqualTo(1), reason: 'the other order was rejected above');
+    expect(stats.averagePrepSeconds, isNotNull);
+    expect(stats.averagePrepSeconds, greaterThanOrEqualTo(0));
+    expect(stats.ordersByHour.values.fold(0, (a, b) => a + b), greaterThanOrEqualTo(1));
+    expect(stats.chartTruncated, isFalse);
+    expect(stats.totalCount, greaterThanOrEqualTo(2));
+
+    final future = ok(await orders.kioskStats('q9-t2', since: DateTime.now().add(const Duration(days: 1))));
+    expect(future.totalCount, 0, reason: 'an order placed before the shift started is not counted');
+
+    expect(err(await orders.kioskStats('q9-t4', since: since)), isA<PermissionDeniedException>());
+  });
+
+  testWidgets('customer: S24 reports a problem once per delivered order, and S23 saves and changes a review', (
+    tester,
+  ) async {
+    final service = authAs('customer-1', 'Nguyễn Minh Quân');
+    ok(await service.signInWithGoogle());
+    final incidents = FirestoreIncidentRepository(db);
+    final reviews = FirestoreReviewRepository(db);
+    final delivered = (await orders.watchOrder(cashOrderId).firstWhere((o) => o != null))!;
+    expect(delivered.status, OrderStatus.delivered);
+
+    expect(
+      err(await incidents.report(order: delivered, type: IncidentType.missingItem, description: '   ')),
+      isA<ValidationException>(),
+    );
+    final incident = ok(
+      await incidents.report(
+        order: delivered,
+        type: IncidentType.missingItem,
+        description: 'Thiếu một ly trà',
+        customerName: 'Quân N.',
+      ),
+    );
+    expect(incident.orderId, cashOrderId);
+    expect(incident.status, IncidentStatus.open);
+    expect(
+      err(await incidents.report(order: delivered, type: IncidentType.wrongItem, description: 'Báo lần hai')),
+      isA<PermissionDeniedException>(),
+      reason: 'one report for each order',
+    );
+    final seen = await incidents.watchOfOrder(customerUid, cashOrderId).firstWhere((i) => i != null);
+    expect(seen!.description, 'Thiếu một ly trà');
+
+    final item = delivered.items.first;
+    final first = ok(
+      await reviews.save(
+        order: delivered,
+        item: item,
+        rating: 5,
+        tags: const ['tasty'],
+        authorName: 'Nguyễn Minh Quân',
+      ),
+    );
+    expect(first.rating, 5);
+    final data = (await db.doc('reviews/${cashOrderId}_${item.itemId}').get()).data()!;
+    expect(data['rating'], 5);
+    expect(data['dishId'], ReviewRepository.dishIdOf('q9-t2', item.itemId));
+    expect(data['authorName'], isNot('Nguyễn Minh Quân'), reason: 'only a shortened public name is stored');
+    ok(await reviews.save(order: delivered, item: item, rating: 4, comment: 'Hơi nguội', tags: const ['tasty', 'hot']));
+    final changed = await reviews.watchOfOrder(customerUid, cashOrderId).firstWhere((l) => l.single.rating == 4);
+    expect(changed.single.comment, 'Hơi nguội');
+    expect(changed.single.tags, ['tasty', 'hot']);
+
+    expect(err(await reviews.save(order: delivered, item: item, rating: 6)), isA<ValidationException>());
+    expect(
+      err(await reviews.save(order: delivered, item: item, rating: 3, tags: const ['unknown'])),
+      isA<ValidationException>(),
+    );
+    final notDelivered = (await orders.watchOrder(voucherOrderId).firstWhere((o) => o != null))!;
+    expect(notDelivered.status, isNot(OrderStatus.delivered));
+    expect(
+      err(await reviews.save(order: notDelivered, item: notDelivered.items.first, rating: 5)),
+      isA<PermissionDeniedException>(),
+    );
+    // The rules let a customer report any order of their own; S12 only offers the button once it was received.
   });
 }
