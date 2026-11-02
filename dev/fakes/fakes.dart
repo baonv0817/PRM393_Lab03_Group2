@@ -11,6 +11,7 @@ export 'fake_order_repository.dart';
 export 'fake_remote_config_service.dart';
 export 'fake_report_file_service.dart';
 export 'fake_report_repository.dart';
+export 'fake_review_repository.dart';
 export 'fake_slot_repository.dart';
 export 'fake_storage_service.dart';
 export 'fake_user_repository.dart';

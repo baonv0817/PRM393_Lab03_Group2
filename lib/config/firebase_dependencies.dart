@@ -7,6 +7,7 @@ import 'package:breakbite/data/repositories/firestore/firestore_incident_reposit
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_review_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_slot_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_user_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
@@ -57,5 +58,6 @@ Future<AppDependencies> createFirebaseDependencies() async {
     vouchers: FirestoreVoucherRepository(db),
     slots: FirestoreSlotRepository(db),
     incidents: FirestoreIncidentRepository(db),
+    reviews: FirestoreReviewRepository(db),
   );
 }

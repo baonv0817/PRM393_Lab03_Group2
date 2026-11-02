@@ -200,6 +200,26 @@ Report reportFromData(String id, Json data, {required DateTime now}) => Report(
   orderId: _stringOrNull(data['orderId']),
 );
 
+Review reviewFromData(String id, Json data, {required DateTime now}) => Review(
+  orderId: _string(data['orderId']),
+  itemId: _string(data['itemId']),
+  dishId: _string(data['dishId']),
+  kioskId: _string(data['kioskId']),
+  uid: _string(data['uid']),
+  authorName: _string(data['authorName']),
+  rating: _int(data['rating']).clamp(0, 5),
+  comment: _string(data['comment']),
+  tags: switch (data['tags']) {
+    final List<dynamic> list => [
+      for (final tag in list)
+        if (tag is String) tag,
+    ],
+    _ => const <String>[],
+  },
+  createdAt: readDateOr(data['createdAt'], now),
+  updatedAt: readDate(data['updatedAt']),
+);
+
 Incident incidentFromData(String id, Json data, {required DateTime now}) => Incident(
   orderId: _string(data['orderId'], id),
   kioskId: _string(data['kioskId']),
