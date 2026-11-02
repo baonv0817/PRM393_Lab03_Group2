@@ -18,4 +18,11 @@ abstract interface class ReportFileService {
     required List<Order> orders,
     required DateTime now,
   });
+
+  /// A receipt for the single order the customer is viewing (S12).
+  Future<Result<GeneratedFile>> orderReceipt({
+    required String customerName,
+    required Order order,
+    required DateTime now,
+  });
 }

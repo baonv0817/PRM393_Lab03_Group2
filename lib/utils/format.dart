@@ -50,6 +50,17 @@ String voucherBenefit(Voucher voucher) {
   return voucher.minOrderVnd > 0 ? '$amount cho đơn từ ${formatVnd(voucher.minOrderVnd)}' : amount;
 }
 
+/// Sum of the item lines, before any voucher.
+int orderItemsTotalVnd(Order order) => order.items.fold(0, (sum, item) => sum + item.lineTotalVnd);
+
+/// Where the money stands, in the customer's words (S12 and the PDF receipt).
+String orderPaymentLabel(Order order) {
+  final paid = order.paymentStatus == PaymentStatus.paid;
+  final cancelled = order.status == OrderStatus.cancelled;
+  if (paid) return cancelled ? 'Được hoàn tiền' : 'Đã thanh toán';
+  return cancelled ? 'Chưa thanh toán' : 'Trả tại quầy khi nhận';
+}
+
 String orderItemsSummary(Order order) =>
     '${order.items.map((e) => '${e.name} ×${e.quantity}').join(', ')} · ${formatVnd(order.totalVnd)}';
 

@@ -4,7 +4,9 @@ import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
+import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +38,28 @@ final List<GoRoute> p2Routes = [
       child: const OrderCancelledScreen(),
     ),
   ),
-  placeholderRoute(AppRoutes.orderDetail, 'S12', 'Chi tiết đơn', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderDetail,
+    builder: (context, state) {
+      final user = context.read<AuthViewModel>().user;
+      return ChangeNotifierProvider(
+        create: (_) => OrderDetailViewModel(
+          orders: context.read<OrderRepository>(),
+          cart: context.read<CartRepository>(),
+          session: context.read<SessionRepository>(),
+          storage: context.read<StorageService>(),
+          reportFiles: context.read<ReportFileService>(),
+          reports: context.read<ReportRepository>(),
+          analytics: context.read<AnalyticsService>(),
+          crash: context.read<CrashService>(),
+          uid: user?.uid ?? '',
+          customerName: user?.displayName ?? 'Khách',
+          orderId: state.pathParameters['id'] ?? '',
+        ),
+        child: const OrderDetailScreen(),
+      );
+    },
+  ),
   placeholderRoute(AppRoutes.orderPickup, 'S20', 'Nhận món bằng mã QR', 'P2'),
   placeholderRoute(AppRoutes.orderReview, 'S23', 'Đánh giá món', 'P2'),
   placeholderRoute(AppRoutes.orderIncident, 'S24', 'Báo sự cố', 'P2'),
