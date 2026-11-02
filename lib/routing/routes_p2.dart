@@ -4,11 +4,13 @@ import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/edit_order_view_model.dart';
+import 'package:breakbite/ui/order_manage/view_models/incident_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_cancelled_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_detail_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/order_history_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/pickup_view_model.dart';
 import 'package:breakbite/ui/order_manage/widgets/edit_order_screen.dart';
+import 'package:breakbite/ui/order_manage/widgets/incident_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_cancelled_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
@@ -99,7 +101,23 @@ final List<GoRoute> p2Routes = [
     ),
   ),
   placeholderRoute(AppRoutes.orderReview, 'S23', 'Đánh giá món', 'P2'),
-  placeholderRoute(AppRoutes.orderIncident, 'S24', 'Báo sự cố', 'P2'),
+  GoRoute(
+    path: AppRoutes.orderIncident,
+    builder: (context, state) {
+      final user = context.read<AuthViewModel>().user;
+      return ChangeNotifierProvider(
+        create: (_) => IncidentViewModel(
+          orders: context.read<OrderRepository>(),
+          incidents: context.read<IncidentRepository>(),
+          crash: context.read<CrashService>(),
+          uid: user?.uid ?? '',
+          customerName: user?.displayName ?? '',
+          orderId: state.pathParameters['id'] ?? '',
+        ),
+        child: const IncidentScreen(),
+      );
+    },
+  ),
   placeholderRoute(AppRoutes.sellerStats, 'K11', 'Thống kê ca', 'P2'),
   placeholderRoute(AppRoutes.sellerMenuNew, 'K14', 'Thêm món mới', 'P2'),
   placeholderRoute(AppRoutes.sellerMenuEdit, 'K15', 'Sửa món', 'P2'),
