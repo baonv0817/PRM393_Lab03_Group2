@@ -215,6 +215,15 @@ class _Body extends StatelessWidget {
                       style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     Text('Mã số: ${order.pickupCode}', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                    TestId(
+                      's07.qr.open',
+                      child: AppButton(
+                        label: 'Phóng to mã QR',
+                        icon: Icons.zoom_out_map,
+                        variant: AppButtonVariant.text,
+                        onPressed: () => context.push(AppRoutes.orderPickupOf(order.id)),
+                      ),
+                    ),
                   ],
                 ),
               ),

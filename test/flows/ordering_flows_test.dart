@@ -285,6 +285,31 @@ void main() {
     expect(byId('s08.tab.history'), findsOneWidget);
   });
 
+  testWidgets('S07 enlarges the pickup QR code in S20, and closing it returns to the order', (tester) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+    await tapId(tester, 's08.order.$id.open');
+
+    await tapId(tester, 's07.qr.open');
+    expect(byId('s20.qr'), findsOneWidget);
+    expect(find.text('Mã nhận món'), findsOneWidget);
+    expect(find.text('100 204'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Đóng'));
+    await tester.pumpAndSettle();
+    expect(byId('s20.qr'), findsNothing);
+    expect(find.text('Phóng to mã QR'), findsOneWidget);
+  });
+
   testWidgets('S07 opens S09, a changed quantity is saved, and S07 shows the new total', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;
