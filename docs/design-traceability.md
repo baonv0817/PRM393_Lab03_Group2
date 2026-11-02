@@ -82,9 +82,9 @@ K07 does not exist in the design.
 | K11 | Shift statistics | /seller/stats | ShiftStatsScreen | ShiftStatsViewModel | Firestore orders (aggregation) | P2 | Not started |
 | K12 | Reject order | (dialog) | RejectDialog | SellerOrderDetailViewModel | Firestore orders/{id} | P4 | Not started |
 | K13 | Incidents from customers | /seller/incidents | IncidentsScreen | IncidentsViewModel | Firestore incidents | P4 | Not started |
-| K14 | Add a new item | /seller/menu/new | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items | P2 | Not started |
-| K14-ERR | Item information missing | (state of the form) | FormErrorField | MenuItemFormViewModel | — | P2 | Not started |
-| K15 | Edit an item | /seller/menu/:id/edit | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items/{id} | P2 | Not started |
+| K14 | Add a new item | /seller/menu/new | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items (the id is `<kioskId>-<dishId>`, the dish id from the name). Name, kind, price, preparation time, description; opened from the "Thêm món" button of K08. A name already on the menu is refused. No photo (D21 to record if Figma has one) | P2 | Done |
+| K14-ERR | Item information missing | (state of the form) | The error text of each field (`TextField.errorText`) | MenuItemFormViewModel | — | P2 | Done |
+| K15 | Edit an item | /seller/menu/:id/edit | MenuItemFormScreen | MenuItemFormViewModel | Firestore menu_items/{id}; opened from the edit button of a row in K08. The same form with the item's values; the id and dish id stay, and the sold-out state is read again when saving so a switch flipped meanwhile is kept. An item of another kiosk is refused | P2 | Done |
 
 ## 3. Flows
 

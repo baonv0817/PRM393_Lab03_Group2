@@ -89,6 +89,12 @@ class SellerMenuViewModel extends ChangeNotifier with SafeChangeNotifier {
     }, onError: (Object error, StackTrace stack) => crash.recordNonFatal(error, stack, 'sellerMenu.watchKiosks'));
   }
 
+  /// The staff member works at a kiosk, so items can be added to it.
+  bool get hasKiosk => kioskId != null && kioskId!.isNotEmpty;
+
+  /// The "add" button is shown on a menu that has items; an empty menu offers it in its own message.
+  bool get canAdd => hasKiosk && _state is ViewData<List<MenuItem>>;
+
   String get kioskName => _kiosk?.name ?? '';
 
   int get availableCount => _items.where((i) => !i.soldOut).length;

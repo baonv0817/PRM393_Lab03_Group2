@@ -50,6 +50,7 @@ void main() {
       expect(vm.kioskName, 'Kiosk Q9 · Tầng 2');
       expect((vm.availableCount, vm.soldOutCount), (3, 1));
       expect(vm.summary, '4 món · 1 hết hàng');
+      expect((vm.hasKiosk, vm.canAdd), (true, true));
       expect(vm.groups.map((g) => g.label), ['Món ăn', 'Đồ uống']);
       expect(_names(vm.groups.first.items), [
         'Combo Tacos Bò Phô Mai',
@@ -211,6 +212,7 @@ void main() {
 
         expect(vm.state, isA<ViewEmpty<List<MenuItem>>>());
         expect((vm.state as ViewEmpty<List<MenuItem>>).message, SellerMenuViewModel.noKioskMessage);
+        expect((vm.hasKiosk, vm.canAdd), (false, false));
         vm.dispose();
       }
     });
@@ -221,6 +223,7 @@ void main() {
 
       expect(vm.state, isA<ViewEmpty<List<MenuItem>>>());
       expect((vm.state as ViewEmpty<List<MenuItem>>).message, SellerMenuViewModel.emptyMessage);
+      expect((vm.hasKiosk, vm.canAdd), (true, false), reason: 'an empty menu offers adding in its own message');
       vm.dispose();
     });
 

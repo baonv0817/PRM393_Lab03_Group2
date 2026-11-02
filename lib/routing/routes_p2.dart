@@ -17,7 +17,9 @@ import 'package:breakbite/ui/order_manage/widgets/order_detail_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/order_history_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/pickup_screen.dart';
 import 'package:breakbite/ui/order_manage/widgets/review_screen.dart';
+import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.dart';
 import 'package:breakbite/ui/seller_menu/view_models/seller_menu_view_model.dart';
+import 'package:breakbite/ui/seller_menu/widgets/menu_item_form_screen.dart';
 import 'package:breakbite/ui/seller_menu/widgets/seller_menu_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -149,6 +151,27 @@ final List<GoRoute> p2Routes = [
     },
   ),
   placeholderRoute(AppRoutes.sellerStats, 'K11', 'Thống kê ca', 'P2'),
-  placeholderRoute(AppRoutes.sellerMenuNew, 'K14', 'Thêm món mới', 'P2'),
-  placeholderRoute(AppRoutes.sellerMenuEdit, 'K15', 'Sửa món', 'P2'),
+  GoRoute(
+    path: AppRoutes.sellerMenuNew,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => MenuItemFormViewModel(
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        kioskId: context.read<AuthViewModel>().user?.kioskId,
+      ),
+      child: const MenuItemFormScreen(),
+    ),
+  ),
+  GoRoute(
+    path: AppRoutes.sellerMenuEdit,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => MenuItemFormViewModel(
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        kioskId: context.read<AuthViewModel>().user?.kioskId,
+        itemId: state.pathParameters['id'] ?? '',
+      ),
+      child: const MenuItemFormScreen(),
+    ),
+  ),
 ];

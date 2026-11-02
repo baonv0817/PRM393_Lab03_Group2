@@ -2,6 +2,7 @@ import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/utils/result.dart';
+import 'package:breakbite/utils/text.dart';
 
 import 'fake_voucher_repository.dart';
 import 'live_value.dart';
@@ -110,11 +111,43 @@ class FakeMenuRepository implements MenuRepository {
 
   @override
   Future<Result<String>> upsertItem(MenuItem item) async {
+    final dishId = item.dishId.isNotEmpty ? item.dishId : slugify(item.name);
+    final problem = _problem(item, dishId);
+    if (problem != null) return Result.error(ValidationException(problem));
     final list = [..._menu.value];
-    final i = list.indexWhere((e) => e.id == item.id);
-    i == -1 ? list.add(item) : list[i] = item;
+    final editing = item.id.isNotEmpty && list.any((e) => e.id == item.id);
+    final id = editing ? item.id : '${item.kioskId}-$dishId';
+    if (!editing && item.id.isNotEmpty && item.id != id) {
+      return const Result.error(ValidationException('Không thể đổi kiosk hoặc mã món của một món đã có.'));
+    }
+    final stored = MenuItem(
+      id: id,
+      name: item.name.trim(),
+      priceVnd: item.priceVnd,
+      category: item.category,
+      prepMinutes: item.prepMinutes,
+      dishId: dishId,
+      soldOut: item.soldOut,
+      kioskId: item.kioskId,
+      description: item.description.trim(),
+      imageUrl: item.imageUrl,
+      availableAgainAt: item.availableAgainAt,
+      soldOutReason: item.soldOutReason,
+    );
+    final at = list.indexWhere((e) => e.id == id);
+    at == -1 ? list.add(stored) : list[at] = stored;
     _menu.set(list);
-    return Result.ok(item.id);
+    return Result.ok(id);
+  }
+
+  /// The same checks as the Firestore repository.
+  String? _problem(MenuItem item, String dishId) {
+    if (item.kioskId.isEmpty) return 'Món phải thuộc một kiosk.';
+    if (item.name.trim().isEmpty) return 'Nhập tên món.';
+    if (dishId.isEmpty) return 'Tên món phải có chữ hoặc số.';
+    if (item.priceVnd <= 0) return 'Giá món phải lớn hơn 0.';
+    if (item.prepMinutes < 0) return 'Thời gian chuẩn bị không hợp lệ.';
+    return null;
   }
 
   @override

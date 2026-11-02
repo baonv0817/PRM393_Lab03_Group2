@@ -1,4 +1,5 @@
 import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
@@ -8,6 +9,7 @@ import 'package:breakbite/ui/seller_menu/view_models/seller_menu_view_model.dart
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 /// K08: the menu of the staff member's kiosk with a switch per item; K09 is the sheet that opens when an
@@ -49,6 +51,16 @@ class SellerMenuScreen extends StatelessWidget {
     final vm = context.watch<SellerMenuViewModel>();
     return Scaffold(
       appBar: const AppTopBar(title: 'Quản lý món'),
+      floatingActionButton: vm.canAdd
+          ? TestId(
+              'k08.add',
+              child: FloatingActionButton.extended(
+                onPressed: () => context.push(AppRoutes.sellerMenuNew),
+                icon: const Icon(Icons.add),
+                label: const Text('Thêm món'),
+              ),
+            )
+          : null,
       body: switch (vm.state) {
         ViewLoading() => const LoadingView(message: 'Đang tải thực đơn…'),
         ViewError(:final message) => TestId(
@@ -57,7 +69,12 @@ class SellerMenuScreen extends StatelessWidget {
         ),
         ViewEmpty(:final message) => TestId(
           'k08.empty',
-          child: EmptyView(message: message ?? SellerMenuViewModel.emptyMessage, icon: Icons.restaurant_menu),
+          child: EmptyView(
+            message: message ?? SellerMenuViewModel.emptyMessage,
+            icon: Icons.restaurant_menu,
+            actionLabel: vm.hasKiosk ? 'Thêm món đầu tiên' : null,
+            onAction: vm.hasKiosk ? () => context.push(AppRoutes.sellerMenuNew) : null,
+          ),
         ),
         ViewData() => _Body(
           vm: vm,
@@ -90,7 +107,7 @@ class _Body extends StatelessWidget {
             AppSpacing.screenPadding,
             AppSpacing.md,
             AppSpacing.screenPadding,
-            AppSpacing.lg,
+            AppSpacing.xl * 3,
           ),
           children: [
             TestId(
@@ -206,6 +223,14 @@ class _ItemRow extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              TestId(
+                '$id.edit',
+                child: AppIconButton(
+                  icon: Icons.edit_outlined,
+                  semanticLabel: 'Sửa ${item.name}',
+                  onPressed: () => context.push(AppRoutes.sellerMenuEditOf(item.id)),
                 ),
               ),
               TestId(
