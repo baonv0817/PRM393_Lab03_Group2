@@ -18,6 +18,9 @@ class FirestoreOrderRepository implements OrderRepository {
       _now = clock ?? DateTime.now;
 
   static const activeStatuses = [OrderStatus.pending, OrderStatus.preparing, OrderStatus.ready];
+
+  /// K11 draws its chart from this many of the newest orders; the figures above it are counted on the server.
+  static const statsChartLimit = 500;
   static const handledMessage = 'Đơn này vừa được xử lý ở nơi khác. Danh sách đã cập nhật lại.';
 
   final FirebaseFirestore _db;
@@ -226,6 +229,33 @@ class FirestoreOrderRepository implements OrderRepository {
       };
     }, releaseSlot: true);
   }
+
+  @override
+  Future<Result<KioskStats>> kioskStats(String kioskId, {required DateTime since}) => guard(() async {
+    final shift = _orders
+        .where('kioskId', isEqualTo: kioskId)
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since));
+    final results = await Future.wait([
+      shift
+          .where('status', isEqualTo: OrderStatus.delivered.name)
+          .aggregate(count(), sum('totalVnd'), average('prepSeconds'))
+          .get(),
+      shift.where('status', isEqualTo: OrderStatus.cancelled.name).count().get(),
+      shift.where('status', whereIn: _activeNames).count().get(),
+      shift.orderBy('createdAt', descending: true).limit(statsChartLimit).get(),
+    ]);
+    final delivered = results[0] as AggregateQuerySnapshot;
+    final recent = (results[3] as QuerySnapshot<Json>).docs;
+    return KioskStats(
+      deliveredCount: delivered.count ?? 0,
+      revenueVnd: delivered.getSum('totalVnd')?.round() ?? 0,
+      averagePrepSeconds: delivered.getAverage('prepSeconds'),
+      cancelledCount: (results[1] as AggregateQuerySnapshot).count ?? 0,
+      activeCount: (results[2] as AggregateQuerySnapshot).count ?? 0,
+      ordersByHour: KioskStats.hourlyCounts([for (final doc in recent) _fromDoc(doc)]),
+      chartTruncated: recent.length >= statsChartLimit,
+    );
+  });
 
   Stream<List<Order>> _watch(Query<Json> query) =>
       guardStream(query.snapshots().map((snapshot) => [for (final doc in snapshot.docs) _fromDoc(doc)]));

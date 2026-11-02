@@ -6,6 +6,7 @@ export 'cart.dart';
 export 'cart_item.dart';
 export 'incident.dart';
 export 'kiosk.dart';
+export 'kiosk_stats.dart';
 export 'menu_item.dart';
 export 'order.dart';
 export 'order_draft.dart';

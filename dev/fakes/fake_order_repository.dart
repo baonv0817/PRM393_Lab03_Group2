@@ -159,6 +159,11 @@ class FakeOrderRepository implements OrderRepository {
     return _move(order, from: _active, to: OrderStatus.cancelled, cancelledBy: CancelledBy.staff, cancelReason: reason);
   }
 
+  @override
+  Future<Result<KioskStats>> kioskStats(String kioskId, {required DateTime since}) async => Result.ok(
+    KioskStats.fromOrders(_orders.value.where((o) => o.kioskId == kioskId && !o.createdAt.isBefore(since))),
+  );
+
   Future<Result<void>> _move(
     Order order, {
     required List<OrderStatus> from,
@@ -184,6 +189,7 @@ class FakeOrderRepository implements OrderRepository {
         acceptedAt: to == OrderStatus.preparing ? now : null,
         readyBy: readyIn == null ? null : now.add(readyIn),
         readyAt: to == OrderStatus.ready ? now : null,
+        prepSeconds: to == OrderStatus.ready ? now.difference(current.acceptedAt ?? now).inSeconds : null,
         deliveredAt: to == OrderStatus.delivered ? now : null,
         cancelledAt: to == OrderStatus.cancelled ? now : null,
       ),
@@ -214,6 +220,7 @@ class FakeOrderRepository implements OrderRepository {
     DateTime? acceptedAt,
     DateTime? readyBy,
     DateTime? readyAt,
+    int? prepSeconds,
     DateTime? deliveredAt,
     DateTime? cancelledAt,
   }) => Order(
@@ -241,7 +248,7 @@ class FakeOrderRepository implements OrderRepository {
     acceptedAt: acceptedAt ?? o.acceptedAt,
     readyBy: readyBy ?? o.readyBy,
     readyAt: readyAt ?? o.readyAt,
-    prepSeconds: o.prepSeconds,
+    prepSeconds: prepSeconds ?? o.prepSeconds,
     deliveredAt: deliveredAt ?? o.deliveredAt,
     cancelledAt: cancelledAt ?? o.cancelledAt,
     updatedAt: o.updatedAt,

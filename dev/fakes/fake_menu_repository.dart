@@ -151,6 +151,33 @@ class FakeMenuRepository implements MenuRepository {
   }
 
   @override
+  Future<Result<void>> updateKiosk(String id, KioskSettings settings) async {
+    final problem = settings.problem;
+    if (problem != null) return Result.error(ValidationException(problem));
+    final current = _kiosks.value.where((k) => k.id == id).firstOrNull;
+    if (current == null) return const Result.error(NotFoundException(message: 'Không tìm thấy kiosk.'));
+    final notice = settings.notice?.trim() ?? '';
+    _kiosks.set([
+      for (final k in _kiosks.value)
+        k.id == id
+            ? Kiosk(
+                id: k.id,
+                name: k.name,
+                location: k.location,
+                open: settings.open,
+                waitMinutes: settings.waitMinutes,
+                pausedUntil: settings.pausedUntil,
+                maxOrdersPerSlot: settings.maxOrdersPerSlot,
+                notice: notice.isEmpty ? null : notice,
+                openTime: settings.openTime,
+                closeTime: settings.closeTime,
+              )
+            : k,
+    ]);
+    return const Result.ok(null);
+  }
+
+  @override
   Future<Result<void>> setSoldOut(String id, bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt}) async {
     if (!_menu.value.any((e) => e.id == id)) {
       return const Result.error(NotFoundException(message: 'Không tìm thấy món.'));

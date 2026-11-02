@@ -134,3 +134,13 @@ String paymentMethodHint(PaymentMethod method) => switch (method) {
   PaymentMethod.card => 'Trừ vào thẻ sinh viên',
   PaymentMethod.cash => 'Trả khi nhận món tại kiosk',
 };
+
+/// "3 phút 20 giây", "45 giây" or "—" when nothing was measured.
+String prepTimeLabel(double? seconds) {
+  if (seconds == null) return '—';
+  final total = seconds.round();
+  final minutes = total ~/ 60;
+  final rest = total % 60;
+  if (minutes == 0) return '$rest giây';
+  return rest == 0 ? '$minutes phút' : '$minutes phút $rest giây';
+}
