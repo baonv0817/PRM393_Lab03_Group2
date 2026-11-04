@@ -19,6 +19,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | Push notification | S19 |
 | Seller | K01, K02, K03, K04, K05, K06 |
 | Seller menu | K08, K09, K14, K15 |
+| F9 Sold-out item | S03, S22 |
 
 ## 2. Test cases
 
@@ -53,6 +54,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | TC-27 | Pause the kiosk and change the wait (K10) | Signed in with the staff role at Kiosk Q9 · Tầng 2; a second device or account signed in as a customer on the kiosk list | Open the "Quán" tab, tap "30 phút" next to "Tạm ngưng lâu hơn", then tap "Nhận đơn lại ngay"; tap + on the wait twice; switch "Đang nhận đơn" off and on | After the pause the status reads "Tạm ngưng · nhận đơn lại lúc hh:mm" and the customer's kiosk list shows it paused and refuses an order; the wait goes up by 2 minutes on both devices; with the switch off the status reads "Đang đóng cửa"; report each status line | Happy path | Not run |
 | TC-28 | Save the shop information (K10) | Signed in with the staff role at Kiosk Q9 · Tầng 2 | In the "Quán" tab type the notice "Hết sốt", opening time 25:00 and capacity 0, tap "Lưu thông tin"; then correct them to 06:30 and 8 and tap again | The first save shows "Nhập giờ dạng 06:30." and "Nhập số từ 1 đến 999, hoặc để trống." under the fields and nothing is saved; the second shows "Đã lưu thông tin quán." and the button disappears; report the messages | Error case | Not run |
 | TC-29 | Shift statistics (K11) | Signed in with the staff role at Kiosk Q9 · Tầng 2; 2 orders delivered, 1 rejected and 1 pending today | Open the "Quán" tab, tap "Thống kê ca hôm nay"; then deliver another order in the orders tab, go back to the statistics and tap the refresh button | "Đơn đã làm" and "Doanh thu" match the delivered orders, "Đơn huỷ" and "Đang xử lý: N đơn" match the others, the chart has a bar for the current hour; after the refresh the figures include the new order and the update time changes; report the figures | Happy path | Not run |
+| TC-30 | Sold-out item and its replacements (S03, S22) | Signed in, Kiosk Q9 · Tầng 2 selected, one food item sold out (TC-25), at least one other food item in stock | On the menu ("Thực đơn") tap the card with the "Tạm hết" label; then tap + on the first item under "Gợi ý thay thế còn hàng" and tap + again on its stepper | The screen "Món tạm hết" shows the sold-out item without a + button, a bar "Có lại lúc hh:mm" and only items in stock from the same kiosk; the card turns into a stepper showing 2 and the cart button shows 2; report the name of the first replacement and the number on the cart button | Happy path | Not run |
 
 The instructions above are summaries; the full versions are in `e2e_test/`. Everyone adds cases for the screens they own (if section 7 of the handout is not covered).
 
