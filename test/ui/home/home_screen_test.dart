@@ -16,6 +16,14 @@ class _FailingMenu extends FakeMenuRepository {
   Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
 }
 
+class _ClosedMenu extends FakeMenuRepository {
+  @override
+  Stream<List<Kiosk>> watchKiosks() => Stream.value(const [
+    Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: false, waitMinutes: 0, openTime: '10:30'),
+    Kiosk(id: 'q9-t4', name: 'Kiosk Q9 · Tầng 4', open: true, waitMinutes: 10),
+  ]);
+}
+
 typedef Harness = ({FakeCartRepository cart, FakeAnalyticsService analytics, InMemorySessionRepository session});
 
 Future<Harness> pumpHome(
@@ -26,6 +34,7 @@ Future<Harness> pumpHome(
   InMemorySessionRepository? session,
   bool settle = true,
   Size size = TestScreens.narrow,
+  DateTime Function()? clock,
 }) async {
   final cart = FakeCartRepository();
   final analytics = FakeAnalyticsService();
@@ -46,6 +55,7 @@ Future<Harness> pumpHome(
           analytics: analytics,
           crash: FakeCrashService(),
           uid: 'u1',
+          clock: clock,
         ),
       ),
     ],
@@ -252,6 +262,49 @@ void main() {
       expect(find.byType(ClipOval), findsOneWidget);
       await tester.pumpAndSettle();
       expect(find.byType(ClipOval), findsNothing);
+    });
+  });
+
+  group('S21 kiosk closed', () {
+    Future<void> pumpClosed(WidgetTester tester, {Size size = TestScreens.narrow}) => pumpHome(
+      tester,
+      menu: _ClosedMenu(),
+      session: InMemorySessionRepository(selectedKioskId: 'q9-t2'),
+      size: size,
+    );
+
+    testWidgets('says the kiosk is closed, when it opens, and offers another kiosk', (tester) async {
+      await pumpClosed(tester);
+      expect(find.text('Đóng · mở lại 10:30'), findsOneWidget);
+      expect(find.bySemanticsIdentifier('s21.closed'), findsOneWidget);
+      expect(find.text('Quán đang đóng cửa'), findsOneWidget);
+      expect(find.textContaining('Mở lại lúc 10:30. Bạn xem trước thực đơn được'), findsOneWidget);
+      expect(find.bySemanticsIdentifier('s21.otherKiosk'), findsOneWidget);
+      expect(find.text('Chọn kiosk khác'), findsOneWidget);
+    });
+
+    testWidgets('previews the menu without + buttons, and hides search, promo and the pre-order (D29)', (tester) async {
+      await pumpClosed(tester);
+      expect(find.text('Xem trước thực đơn'), findsOneWidget);
+      expect(find.text('Món nhanh · tối đa 5 phút'), findsNothing);
+      expect(find.bySemanticsIdentifier('s02.search'), findsNothing);
+      expect(find.text('Combo Giờ Vàng –15%'), findsNothing);
+      expect(find.text('Hẹn nhận khi mở lại'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.bySemanticsIdentifier('s21.item.m3'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Quán đóng'), findsWidgets);
+      expect(find.text('Mở lại lúc 10:30'), findsWidgets);
+      expect(find.byTooltip('Thêm Combo Tacos Bò Phô Mai vào giỏ'), findsNothing);
+      expect(find.bySemanticsIdentifier('s21.item.m1.add'), findsNothing);
+    });
+
+    testWidgets('lays out without overflow at 412 dp too', (tester) async {
+      await pumpClosed(tester, size: TestScreens.wide);
+      expect(tester.takeException(), isNull);
     });
   });
 }

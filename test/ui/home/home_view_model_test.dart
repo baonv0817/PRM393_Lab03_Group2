@@ -84,6 +84,7 @@ HomeViewModel make({
   FakeAnalyticsService? analytics,
   FakeCrashService? crash,
   InMemorySessionRepository? session,
+  DateTime Function()? clock,
 }) => HomeViewModel(
   menu: menu ?? FakeMenuRepository(),
   cart: cart ?? FakeCartRepository(),
@@ -93,7 +94,20 @@ HomeViewModel make({
   analytics: analytics ?? FakeAnalyticsService(),
   crash: crash ?? FakeCrashService(),
   uid: 'u1',
+  clock: clock,
 );
+
+/// The kiosk of the fake menu items (q9-t2) as the kiosk side sets it, for S21.
+class _KioskMenu extends FakeMenuRepository {
+  _KioskMenu(this.kiosk);
+
+  final Kiosk kiosk;
+
+  @override
+  Stream<List<Kiosk>> watchKiosks() => Stream.value([kiosk]);
+}
+
+final _now = DateTime(2026, 11, 4, 9);
 
 Future<void> settle() => Future<void>.delayed(Duration.zero);
 
@@ -435,6 +449,108 @@ void main() {
         ),
         isTrue,
       );
+      vm.dispose();
+    });
+  });
+
+  group('S21 kiosk closed', () {
+    test('an open kiosk keeps the normal Home', () async {
+      final vm = make(clock: () => _now);
+      await settle();
+      expect(vm.closed, isFalse);
+      expect(vm.reopenLabel, isNull);
+      vm.dispose();
+    });
+
+    test('a closed kiosk explains when it opens and previews every item in stock, not only quick ones', () async {
+      final vm = make(
+        menu: _KioskMenu(
+          const Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: false, waitMinutes: 0, openTime: '10:30'),
+        ),
+        clock: () => _now,
+      );
+      await settle();
+      expect(vm.closed, isTrue);
+      expect(vm.kioskStatus, 'Đóng · mở lại 10:30');
+      expect(vm.closedTitle, 'Quán đang đóng cửa');
+      expect(vm.reopenLabel, 'Mở lại lúc 10:30');
+      expect(vm.closedMessage, 'Mở lại lúc 10:30. Bạn xem trước thực đơn được, hoặc chọn kiosk khác để đặt món ngay.');
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3']);
+      vm.dispose();
+    });
+
+    test("a closed kiosk without opening hours still explains, and starts with the kiosk's notice", () async {
+      final vm = make(
+        menu: _KioskMenu(
+          const Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: false, waitMinutes: 0, notice: 'Nghỉ lễ'),
+        ),
+        clock: () => _now,
+      );
+      await settle();
+      expect(vm.kioskStatus, 'Đang đóng cửa');
+      expect(vm.reopenLabel, isNull);
+      expect(vm.closedMessage, 'Nghỉ lễ. Bạn xem trước thực đơn được, hoặc chọn kiosk khác để đặt món ngay.');
+      vm.dispose();
+    });
+
+    test('a paused kiosk says when it takes orders again; a pause that is over keeps Home normal', () async {
+      final paused = make(
+        menu: _KioskMenu(
+          Kiosk(
+            id: 'q9-t2',
+            name: 'Kiosk Q9 · Tầng 2',
+            open: true,
+            waitMinutes: 6,
+            pausedUntil: _now.add(const Duration(minutes: 15)),
+          ),
+        ),
+        clock: () => _now,
+      );
+      final over = make(
+        menu: _KioskMenu(
+          Kiosk(
+            id: 'q9-t2',
+            name: 'Kiosk Q9 · Tầng 2',
+            open: true,
+            waitMinutes: 6,
+            pausedUntil: _now.subtract(const Duration(minutes: 1)),
+          ),
+        ),
+        clock: () => _now,
+      );
+      await settle();
+      expect(paused.closed, isTrue);
+      expect(paused.closedTitle, 'Quán tạm ngưng nhận đơn');
+      expect(paused.kioskStatus, 'Tạm ngưng · nhận đơn lại lúc 09:15');
+      expect(paused.reopenLabel, 'Nhận đơn lại lúc 09:15');
+      expect(over.closed, isFalse);
+      expect(over.kioskStatus, 'Sẵn sàng · chờ 5–7 phút');
+      paused.dispose();
+      over.dispose();
+    });
+
+    test('when the pause ends Home comes back on its own', () async {
+      var now = _now;
+      final vm = make(
+        menu: _KioskMenu(
+          Kiosk(
+            id: 'q9-t2',
+            name: 'Kiosk Q9 · Tầng 2',
+            open: true,
+            waitMinutes: 6,
+            pausedUntil: _now.add(const Duration(milliseconds: 50)),
+          ),
+        ),
+        clock: () => now,
+      );
+      await settle();
+      expect(vm.closed, isTrue);
+      var notified = 0;
+      vm.addListener(() => notified++);
+      now = _now.add(const Duration(minutes: 1));
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(notified, greaterThan(0));
+      expect(vm.closed, isFalse);
       vm.dispose();
     });
   });
