@@ -41,6 +41,15 @@ Taken from the app running on an **Android emulator** (Pixel 7, API 36) with fak
 | `p2/<ID>.png` | The app screen at 540 × 1200. `S07.png`, `S07-dialog.png`, `S12-bottom.png` and `S23-empty.png` (before choosing anything; `S23.png` has circle 4 and a tag chosen) show how some screens are reached or what is below the fold |
 | `figma/p2-<ID>.png` | Figma (Final UI v2, `PRM323-Lab2-Group2/assets/figma/final-ui-v2/`) on the left and the app on the right, for the slides. What still differs is in `docs/design-traceability.md` section 5 (D21 to D27) |
 
+## Screens of P1 (S02–S08, S21, S22, S25, S29)
+
+Taken on 04/11/2026 from the **real build on an Android phone** (Android 16) signed in with Google, with the real Firebase data: `flutter run --dart-define-from-file=env/cloudinary.json`. They follow the flows F1 (TC-03), F2 (TC-04) and F3 (TC-05) and the closed kiosk (TC-31); phone screenshots of 1080 × 2400, scaled to 540 × 1200.
+
+| Folder | Content |
+|---|---|
+| `p1/<ID>.png` | The app screen at 540 × 1200. F1: `S02`, `S02-ADDED`, `S05`, `S06`, `S06-GATEWAY`, `S07`. F2: `S03`, `S04`, `S29` (BBSTUDENT chosen), `S05-VOUCHER` (applied, −10.000đ), `S05-VOUCHER-ERR` (below the 40.000đ minimum, checkout blocked). F3: `S06-ERR`, `S06-ERR-CASH` (cash chosen), `S07-CASH`, `S07-DIALOG`. Others: `S03-SOLDOUT` (a sold-out card on the menu), `S22` (opened from it), `S21` (Nhà văn hóa SV · Tầng 1, closed), `S25`, `S05-CLEAR` (the empty-cart dialog), `S05-EMPTY`, `S08` and `S08-HISTORY` |
+| `figma/p1-<ID>.png` | Figma (Final UI v2) on the left and the app on the right, for the 18 P1 screens that have a Figma frame. What still differs is in `docs/design-traceability.md` section 5 (D02, D06, D12 to D20, D28, D29) |
+
 ## Other criteria
 
 | Folder | Owner | Content |
