@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "652236973307-jo7c39eip67i95tp313qv6o6iiu70v0a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.edu.fpt.breakbite",
+            "certificate_hash": "22cf37681202f8da6328d9e57c33e7a06ae2d167"
+          }
+        },
+        {
           "client_id": "652236973307-sbsg07gjp3mcqbo1l93bn8c37rh5u4c5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
