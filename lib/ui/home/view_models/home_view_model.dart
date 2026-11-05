@@ -7,6 +7,7 @@ import 'package:breakbite/ui/cart/view_models/cart_controls.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/menu/view_models/kiosk_menu.dart';
 import 'package:breakbite/utils/command.dart';
+import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:breakbite/utils/safe_change_notifier.dart';
 import 'package:flutter/foundation.dart';
@@ -21,7 +22,8 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.analytics,
     required this.crash,
     required this.uid,
-  }) {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now {
     load();
     _configSub = remoteConfig.watchUpdates().listen(
       (_) => notifyListeners(),
@@ -37,15 +39,17 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   final AnalyticsService analytics;
   final CrashService crash;
   final String uid;
+  final DateTime Function() _clock;
 
   static const quickMaxMinutes = 5;
   static const quickEmptyMessage = 'Chưa có món nhanh lúc này';
+  static const previewEmptyMessage = 'Quán chưa có món để xem trước';
 
   late final addToCart = Command1<void, MenuItem>(_cart.add);
 
   late final reorderLast = Command0<int>(_reorderLast);
 
-  late final _menu = KioskMenu(menu: menu, session: session, crash: crash, reason: 'home', onChanged: notifyListeners);
+  late final _menu = KioskMenu(menu: menu, session: session, crash: crash, reason: 'home', onChanged: _menuChanged);
   late final _cart = CartControls(
     cart: cart,
     analytics: analytics,
@@ -56,21 +60,55 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   );
   StreamSubscription<List<Order>>? _ordersSub;
   late final StreamSubscription<Set<String>> _configSub;
+  Timer? _pauseEnd;
   Order? _lastOrder;
 
-  ViewState<List<MenuItem>> get state => _menu.stateOf((items) {
+  /// The quick items, or while the kiosk takes no orders (S21) a preview of its menu.
+  ViewState<List<MenuItem>> get state {
     final limit = remoteConfig.getInt(RemoteKeys.quickItemsLimit);
-    return items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList();
-  }, emptyMessage: quickEmptyMessage);
+    if (closed) {
+      return _menu.stateOf(
+        (items) => items.where((e) => !e.soldOut).take(limit).toList(),
+        emptyMessage: previewEmptyMessage,
+      );
+    }
+    return _menu.stateOf(
+      (items) => items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList(),
+      emptyMessage: quickEmptyMessage,
+    );
+  }
 
   bool get promoBannerEnabled => remoteConfig.getBool(RemoteKeys.promoBannerEnabled);
 
   Kiosk? get kiosk => _menu.kiosk;
 
+  /// S21: the kiosk is closed or paused, so the rules would reject an order.
+  bool get closed => kiosk?.acceptsOrders(_clock()) == false;
+
+  String get closedTitle => kiosk?.open == false ? 'Quán đang đóng cửa' : 'Quán tạm ngưng nhận đơn';
+
+  /// When it takes orders again: "Mở lại lúc 07:00", "Nhận đơn lại lúc 10:15", or null without opening hours.
+  String? get reopenLabel {
+    final k = kiosk;
+    if (k == null || !closed) return null;
+    if (!k.open) return k.openTime == null ? null : 'Mở lại lúc ${k.openTime}';
+    return 'Nhận đơn lại lúc ${formatTime(k.pausedUntil!)}';
+  }
+
+  String get closedMessage {
+    final notice = kiosk?.notice?.trim() ?? '';
+    final reopen = reopenLabel;
+    return [
+      if (notice.isNotEmpty) notice.endsWith('.') ? notice : '$notice.',
+      if (reopen != null) '$reopen.',
+      'Bạn xem trước thực đơn được, hoặc chọn kiosk khác để đặt món ngay.',
+    ].join(' ');
+  }
+
   String? get kioskStatus {
     final k = kiosk;
     if (k == null) return null;
-    if (!k.open) return 'Đang đóng cửa';
+    if (closed) return kioskStatusLabel(k, now: _clock());
     final low = k.waitMinutes > 1 ? k.waitMinutes - 1 : 1;
     return 'Sẵn sàng · chờ $low–${k.waitMinutes + 1} phút';
   }
@@ -101,6 +139,17 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   Future<Result<void>> changeQuantity(MenuItem item, int delta) => _cart.change(item, delta);
 
+  // A pause ends on its own, so wake up then to bring back the normal Home.
+  void _menuChanged() {
+    _pauseEnd?.cancel();
+    final until = kiosk?.pausedUntil;
+    if (kiosk?.open ?? false) {
+      final left = until?.difference(_clock()) ?? Duration.zero;
+      if (left > Duration.zero) _pauseEnd = Timer(left, notifyListeners);
+    }
+    notifyListeners();
+  }
+
   Future<Result<int>> _reorderLast() async {
     final order = _lastOrder;
     if (order == null) return const Result.ok(0);
@@ -115,6 +164,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     _cart.stop();
     unawaited(_ordersSub?.cancel());
     unawaited(_configSub.cancel());
+    _pauseEnd?.cancel();
     addToCart.dispose();
     reorderLast.dispose();
     super.dispose();

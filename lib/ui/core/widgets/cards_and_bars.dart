@@ -20,6 +20,8 @@ class FoodCard extends StatelessWidget {
     this.onDecrement,
     this.imageKey,
     this.testId,
+    this.kioskClosed = false,
+    this.reopenLabel,
   });
 
   final MenuItem item;
@@ -30,6 +32,12 @@ class FoodCard extends StatelessWidget {
   final VoidCallback? onDecrement;
   final Key? imageKey;
   final String? testId;
+
+  /// S21: the kiosk takes no orders, so the card shows "Quán đóng" instead of the + button.
+  final bool kioskClosed;
+
+  /// Shown under the name of a card whose kiosk is closed, e.g. "Mở lại lúc 10:30".
+  final String? reopenLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +52,17 @@ class FoodCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
         decoration: BoxDecoration(color: scheme.error, borderRadius: BorderRadius.circular(AppRadius.pill)),
         child: Text('Tạm hết', style: text.labelLarge?.copyWith(color: scheme.onError)),
+      );
+    } else if (kioskClosed) {
+      action = Container(
+        key: const ValueKey('kioskClosed'),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
+        decoration: BoxDecoration(
+          color: colors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: colors.border),
+        ),
+        child: Text('Quán đóng', style: text.labelLarge?.copyWith(color: colors.primaryText)),
       );
     } else if (quantity > 0) {
       action = QuantityStepper(
@@ -70,6 +89,7 @@ class FoodCard extends StatelessWidget {
       label:
           '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}'
           '${item.soldOut && item.availableAgainAt != null ? ', có lại lúc ${formatTime(item.availableAgainAt!)}' : ''}'
+          '${!item.soldOut && kioskClosed ? ', quán đóng${reopenLabel == null ? '' : ', ${reopenLabel!.toLowerCase()}'}' : ''}'
           '${quantity > 0 ? ', $quantity trong giỏ' : ''}',
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -100,6 +120,8 @@ class FoodCard extends StatelessWidget {
                           'Có lại lúc ${formatTime(item.availableAgainAt!)}',
                           style: text.bodyMedium?.copyWith(color: colors.muted),
                         )
+                      else if (kioskClosed && reopenLabel != null)
+                        Text(reopenLabel!, style: text.bodyMedium?.copyWith(color: colors.muted))
                       else
                         Row(
                           children: [

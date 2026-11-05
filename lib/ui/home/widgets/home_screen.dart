@@ -48,23 +48,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 children: [
                   _Header(vm: vm),
-                  const SizedBox(height: AppSpacing.sm),
-                  TestId(
-                    's02.search',
-                    child: AppSearchField(
-                      hint: 'Tìm Tacos, Mì trộn, Đồ uống...',
-                      onTap: () => context.push(AppRoutes.search),
-                    ),
-                  ),
-                  if (vm.promoBannerEnabled) ...[
+                  // S21: while the kiosk takes no orders, Home only explains why and previews the menu (D29).
+                  if (vm.closed) ...[
                     const SizedBox(height: AppSpacing.md),
-                    TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
+                    TestId(
+                      's21.closed',
+                      child: _ClosedCard(vm: vm, onOtherKiosk: () => context.push(AppRoutes.kiosks)),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    TestId(
+                      's02.search',
+                      child: AppSearchField(
+                        hint: 'Tìm Tacos, Mì trộn, Đồ uống...',
+                        onTap: () => context.push(AppRoutes.search),
+                      ),
+                    ),
+                    if (vm.promoBannerEnabled) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
+                    ],
                   ],
                   const SizedBox(height: AppSpacing.lg),
                   Semantics(
                     header: true,
                     child: Text(
-                      'Món nhanh · tối đa 5 phút',
+                      vm.closed ? 'Xem trước thực đơn' : 'Món nhanh · tối đa 5 phút',
                       style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
@@ -80,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onChange: (item, delta) => _flight.change(context, () => vm.changeQuantity(item, delta)),
                   ),
-                  if (vm.lastOrder case final order?) ...[
+                  if (vm.lastOrder case final order? when !vm.closed) ...[
                     const SizedBox(height: AppSpacing.xxs),
                     TestId(
                       's02.reorder',
@@ -123,6 +132,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final kiosk = vm.kiosk;
     final status = vm.kioskStatus;
@@ -165,7 +175,7 @@ class _Header extends StatelessWidget {
                                   width: 8,
                                   height: 8,
                                   decoration: BoxDecoration(
-                                    color: (kiosk?.open ?? false) ? colors.success : colors.muted,
+                                    color: vm.closed ? scheme.error : colors.success,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -173,7 +183,9 @@ class _Header extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     status,
-                                    style: text.bodyMedium?.copyWith(color: colors.muted),
+                                    style: vm.closed
+                                        ? text.bodyMedium?.copyWith(color: scheme.error, fontWeight: FontWeight.w700)
+                                        : text.bodyMedium?.copyWith(color: colors.muted),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -249,6 +261,51 @@ class _PromoBanner extends StatelessWidget {
   }
 }
 
+class _ClosedCard extends StatelessWidget {
+  const _ClosedCard({required this.vm, required this.onOtherKiosk});
+
+  final HomeViewModel vm;
+  final VoidCallback onOtherKiosk;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: scheme.error, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            liveRegion: true,
+            child: Row(
+              children: [
+                Icon(Icons.schedule, color: scheme.error, size: 28),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(vm.closedTitle, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(vm.closedMessage, style: text.bodyMedium),
+          const SizedBox(height: AppSpacing.md),
+          TestId(
+            's21.otherKiosk',
+            child: AppButton(label: 'Chọn kiosk khác', icon: Icons.storefront, onPressed: onOtherKiosk),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 const _stateArea = BoxConstraints(minHeight: 300);
 
 class _HomeSkeleton extends StatelessWidget {
@@ -311,7 +368,7 @@ class _QuickSection extends StatelessWidget {
       ViewLoading<List<MenuItem>>() => const SkeletonList(),
       ViewEmpty<List<MenuItem>>(:final message) => ConstrainedBox(
         constraints: _stateArea,
-        child: EmptyView(message: message ?? 'Chưa có món nhanh lúc này'),
+        child: EmptyView(message: message ?? HomeViewModel.quickEmptyMessage),
       ),
       ViewError<List<MenuItem>>(:final message) => ConstrainedBox(
         constraints: _stateArea,
@@ -325,12 +382,14 @@ class _QuickSection extends StatelessWidget {
               child: FoodCard(
                 item: item,
                 onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
-                onAdd: item.soldOut ? null : () => onAdd(item),
+                onAdd: item.soldOut || vm.closed ? null : () => onAdd(item),
                 quantity: vm.quantityOf(item.id),
                 onIncrement: vm.canIncrease(item.id) ? () => onChange(item, 1) : null,
                 onDecrement: () => onChange(item, -1),
                 imageKey: imageKeyOf(item.id),
-                testId: 's02.item.${item.id}',
+                testId: '${vm.closed ? 's21' : 's02'}.item.${item.id}',
+                kioskClosed: vm.closed,
+                reopenLabel: vm.reopenLabel,
               ),
             ),
         ],

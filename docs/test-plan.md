@@ -20,6 +20,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | Seller | K01, K02, K03, K04, K05, K06 |
 | Seller menu | K08, K09, K14, K15 |
 | F9 Sold-out item | S03, S22 |
+| Closed kiosk | S21, S27 |
 
 ## 2. Test cases
 
@@ -55,6 +56,7 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | TC-28 | Save the shop information (K10) | Signed in with the staff role at Kiosk Q9 · Tầng 2 | In the "Quán" tab type the notice "Hết sốt", opening time 25:00 and capacity 0, tap "Lưu thông tin"; then correct them to 06:30 and 8 and tap again | The first save shows "Nhập giờ dạng 06:30." and "Nhập số từ 1 đến 999, hoặc để trống." under the fields and nothing is saved; the second shows "Đã lưu thông tin quán." and the button disappears; report the messages | Error case | Not run |
 | TC-29 | Shift statistics (K11) | Signed in with the staff role at Kiosk Q9 · Tầng 2; 2 orders delivered, 1 rejected and 1 pending today | Open the "Quán" tab, tap "Thống kê ca hôm nay"; then deliver another order in the orders tab, go back to the statistics and tap the refresh button | "Đơn đã làm" and "Doanh thu" match the delivered orders, "Đơn huỷ" and "Đang xử lý: N đơn" match the others, the chart has a bar for the current hour; after the refresh the figures include the new order and the update time changes; report the figures | Happy path | Not run |
 | TC-30 | Sold-out item and its replacements (S03, S22) | Signed in, Kiosk Q9 · Tầng 2 selected, one food item sold out (TC-25), at least one other food item in stock | On the menu ("Thực đơn") tap the card with the "Tạm hết" label; then tap + on the first item under "Gợi ý thay thế còn hàng" and tap + again on its stepper | The screen "Món tạm hết" shows the sold-out item without a + button, a bar "Có lại lúc hh:mm" and only items in stock from the same kiosk; the card turns into a stepper showing 2 and the cart button shows 2; report the name of the first replacement and the number on the cart button | Happy path | Not run |
+| TC-31 | Home when the kiosk is closed (S21) | Signed in; the kiosk "Nhà văn hóa SV · Tầng 1" is closed (`open: false`, opens at 07:00, as in the seed) | On Home tap the kiosk name, choose "Nhà văn hóa SV · Tầng 1" and confirm; then tap "Chọn kiosk khác" on the card, choose "Kiosk Q9 · Tầng 2" and confirm | Home shows "Đóng · mở lại 07:00" in red, the card "Quán đang đóng cửa" with the kiosk's notice and "Mở lại lúc 07:00", and "Xem trước thực đơn" with cards labelled "Quán đóng" and no + button; after choosing Kiosk Q9 · Tầng 2 the normal Home comes back with search and "Món nhanh"; report the status line and the card title | Error path | Not run |
 
 The instructions above are summaries; the full versions are in `e2e_test/`. Everyone adds cases for the screens they own (if section 7 of the handout is not covered).
 

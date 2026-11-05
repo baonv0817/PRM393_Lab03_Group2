@@ -75,7 +75,14 @@ class FakeMenuRepository implements MenuRepository {
   final _kiosks = LiveValue<List<Kiosk>>(const [
     Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: true, waitMinutes: 6),
     Kiosk(id: 'q9-t4', name: 'Kiosk Q9 · Tầng 4', open: true, waitMinutes: 10),
-    Kiosk(id: 'nvh-t1', name: 'Nhà văn hóa SV · Tầng 1', open: false, waitMinutes: 0),
+    Kiosk(
+      id: 'nvh-t1',
+      name: 'Nhà văn hóa SV · Tầng 1',
+      open: false,
+      waitMinutes: 0,
+      openTime: '07:00',
+      notice: 'Kiosk tạm đóng, mời bạn chọn Kiosk Q9.',
+    ),
   ]);
 
   @override
