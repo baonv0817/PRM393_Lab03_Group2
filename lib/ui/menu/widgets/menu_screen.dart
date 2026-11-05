@@ -190,7 +190,9 @@ class _MenuList extends StatelessWidget {
           final item = data[index];
           return FoodCard(
             item: item,
-            onTap: () => context.push(AppRoutes.menuItemOf(item.id)),
+            // A sold-out card opens S22 (when it is back, what to order instead); a card in stock opens S04.
+            onTap: () =>
+                context.push(item.soldOut ? AppRoutes.menuAlternativesOf(item.id) : AppRoutes.menuItemOf(item.id)),
             onAdd: item.soldOut
                 ? null
                 : () => flight.add(

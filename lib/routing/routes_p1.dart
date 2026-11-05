@@ -1,6 +1,5 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
-import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/cart/view_models/cart_view_model.dart';
@@ -14,8 +13,10 @@ import 'package:breakbite/ui/checkout/widgets/checkout_screen.dart';
 import 'package:breakbite/ui/checkout/widgets/gateway_screen.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
 import 'package:breakbite/ui/home/widgets/home_screen.dart';
+import 'package:breakbite/ui/menu/view_models/alternatives_view_model.dart';
 import 'package:breakbite/ui/menu/view_models/item_detail_view_model.dart';
 import 'package:breakbite/ui/menu/view_models/menu_view_model.dart';
+import 'package:breakbite/ui/menu/widgets/alternatives_screen.dart';
 import 'package:breakbite/ui/menu/widgets/item_detail_screen.dart';
 import 'package:breakbite/ui/menu/widgets/menu_screen.dart';
 import 'package:breakbite/ui/onboarding/widgets/onboarding_screen.dart';
@@ -92,7 +93,20 @@ final List<GoRoute> p1Routes = [
       child: const ItemDetailScreen(),
     ),
   ),
-  placeholderRoute(AppRoutes.menuAlternatives, 'S22', 'Món hết, gợi ý thay thế', 'P1'),
+  GoRoute(
+    path: AppRoutes.menuAlternatives,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (_) => AlternativesViewModel(
+        menu: context.read<MenuRepository>(),
+        cart: context.read<CartRepository>(),
+        analytics: context.read<AnalyticsService>(),
+        crash: context.read<CrashService>(),
+        uid: context.read<AuthViewModel>().user?.uid ?? '',
+        itemId: state.pathParameters['id'] ?? '',
+      ),
+      child: const AlternativesScreen(),
+    ),
+  ),
   GoRoute(
     path: AppRoutes.cart,
     builder: (context, state) => ChangeNotifierProvider(
