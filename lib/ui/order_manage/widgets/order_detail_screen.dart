@@ -103,7 +103,7 @@ class _Body extends StatelessWidget {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final note = vm.noteLine;
-    final earlier = vm.receipts.where((r) => r.id != vm.lastReceipt?.id).toList();
+    final earlier = vm.earlierReceipts;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screenPadding,

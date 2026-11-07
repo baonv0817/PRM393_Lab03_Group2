@@ -136,6 +136,9 @@ class ShiftStatsViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   String get updatedLabel => _updatedAt == null ? '' : 'Cập nhật lúc ${formatTime(_updatedAt!)}';
 
+  /// The line under the figures: kiosk, shift start and last update, the empty parts left out.
+  String get shiftLine => [kioskName, shiftLabel, updatedLabel].where((e) => e.isNotEmpty).join(' · ');
+
   String get revenueLabel => formatVnd(stats.revenueVnd);
 
   String get averagePrepLabel => prepTimeLabel(stats.averagePrepSeconds);

@@ -202,7 +202,7 @@ class _SpendCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final days = vm.spendByWeekday;
-    final most = days.fold(0, (a, b) => b > a ? b : a);
+    final most = vm.mostSpentInADay;
     final peak = vm.peakWeekday;
     return TestId(
       's11.spend',

@@ -162,7 +162,7 @@ Status is what the code and the evidence show, not what was planned. "Done in co
 | T63 | P5 | Not started | 0% | — | Exploratory session report |
 | T70 | P4 | Partial | 10% | Review record template | Run an AI review on a PR, save the output in `evidence/` |
 | T71 | Everyone | Not started | 0% | — | At least 5 findings decided, 3 fix commits with `CR-xx` |
-| T72 | P1 | Not started | 0% | — | MVVM check across the repo |
+| T72 | P1 | Done | 100% | Every widget file read against the rules of `docs/architecture.md` section 3; 3 pieces of logic moved from `build()` into ViewModels (S11, S12, K11), 2 cases kept with a reason; the list is in section 3 | — |
 | T80–T83 | P4, P1 | Not started | 0% | — | Report, slides, video, Figma update and checklist |
 
 How to work in parallel: everyone edits their own route file (`lib/routing/routes_pX.dart`) to replace the placeholder screen with the real one; run `dev/main_dev.dart` (F5 "fake data") while Firebase is not connected. Fake data lives in `dev/`, outside `lib/`, so it is never part of the submitted build.

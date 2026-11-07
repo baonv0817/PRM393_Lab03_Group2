@@ -57,6 +57,7 @@ void main() {
       expect(vm.spendTotal, 60000);
       expect(vm.spendByWeekday, [50000, 0, 10000, 0, 0, 0, 0]);
       expect(vm.peakWeekday, 0);
+      expect(vm.mostSpentInADay, 50000);
       expect(OrderHistoryViewModel.weekdayLabels[vm.peakWeekday!], 'T2');
       vm.dispose();
     });
@@ -80,6 +81,7 @@ void main() {
       expect(vm.spendTotal, 0);
       expect(vm.spendByWeekday, List.filled(7, 0));
       expect(vm.peakWeekday, isNull);
+      expect(vm.mostSpentInADay, 0);
       vm.dispose();
     });
   });
