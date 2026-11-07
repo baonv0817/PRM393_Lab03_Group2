@@ -25,8 +25,8 @@ $env:ARTEMIS_PROFILE = "flash"     # "pro" only for the exploratory session
 uv run pytest -v
 ```
 
-Run every test ≥ 3 times (`uv run pytest --count` needs a plugin, or repeat with a for loop); record the results in the table in section 3 of `docs/test-plan.md` and keep the trace (trace ID) in `evidence/artemis/`.
+Run every test ≥ 3 times with `uv run python run_repeat.py -n 3` (add `-k tc03` to pick tests); it saves a JUnit report per run and the pass-rate table in `evidence/artemis/`. Record the results in the table in section 3 of `docs/test-plan.md` and keep the trace (trace ID) in `evidence/artemis/`.
 
 The prompts sent to the agent are written in Vietnamese on purpose, because the app's UI is in Vietnamese and the agent matches the text it sees on screen.
 
-Group files by feature: `test_auth.py`, `test_order.py`, `test_search.py`, `test_detail.py`, `test_export.py`, `test_profile.py`, `test_seller.py`.
+Files by feature: `test_auth.py` (TC-01, 02), `test_order.py` (TC-03, 04, 05, 17, 30, 31), `test_browse.py` (TC-06, 07, 08), `test_profile_firebase.py` (TC-09, 10, 14, 15, 16), `test_seller_push_analytics.py` (TC-11, 12, 13), `test_order_manage.py` (TC-18 to 24), `test_seller_menu_shop.py` (TC-25 to 29).
