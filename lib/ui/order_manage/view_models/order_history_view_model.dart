@@ -169,10 +169,12 @@ class OrderHistoryViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   /// Index into [weekdayLabels] of the day with the most spending, `null` when nothing was spent.
   int? get peakWeekday {
-    final days = spendByWeekday;
-    final most = days.fold(0, (a, b) => b > a ? b : a);
-    return most == 0 ? null : days.indexOf(most);
+    final most = mostSpentInADay;
+    return most == 0 ? null : spendByWeekday.indexOf(most);
   }
+
+  /// The highest bar of the chart (0 when nothing was spent); every bar is drawn relative to it.
+  int get mostSpentInADay => spendByWeekday.fold(0, (a, b) => b > a ? b : a);
 
   /// One order's row: when it was placed and how it ended.
   String title(Order order) => '#${order.orderCode} · ${formatDayMonth(order.createdAt)}';

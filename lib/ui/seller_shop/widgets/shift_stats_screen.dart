@@ -109,14 +109,7 @@ class _Body extends StatelessWidget {
             ),
             TestId(
               'k11.shift',
-              child: Text(
-                [
-                  if (vm.kioskName.isNotEmpty) vm.kioskName,
-                  vm.shiftLabel,
-                  vm.updatedLabel,
-                ].where((e) => e.isNotEmpty).join(' · '),
-                style: text.bodyMedium?.copyWith(color: colors.muted),
-              ),
+              child: Text(vm.shiftLine, style: text.bodyMedium?.copyWith(color: colors.muted)),
             ),
           ],
         ),

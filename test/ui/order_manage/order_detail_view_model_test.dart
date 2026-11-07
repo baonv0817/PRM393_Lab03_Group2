@@ -214,6 +214,7 @@ void main() {
         expect(report.uid, 'u1');
         expect(vm.lastReceipt, report);
         expect(vm.receipts.map((r) => r.id), [report.id]);
+        expect(vm.earlierReceipts, isEmpty);
         final event = setup.analytics.events.singleWhere((e) => e.name == 'export_report');
         expect(event.params, {'file_size_kb': report.sizeKb, 'source': 'order_detail'});
         vm.dispose();

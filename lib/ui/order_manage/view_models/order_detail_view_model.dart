@@ -99,6 +99,12 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   double get uploadProgress => _uploadProgress;
   Report? get lastReceipt => _lastReceipt;
 
+  /// The "Biên nhận đã xuất" list: the receipts exported before, without the one just uploaded.
+  List<Report> get earlierReceipts => [
+    for (final r in _receipts)
+      if (r.id != _lastReceipt?.id) r,
+  ];
+
   void load() {
     unawaited(_orderSub?.cancel());
     unawaited(_reportsSub?.cancel());

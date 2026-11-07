@@ -93,6 +93,20 @@ graph TD
 
 Rules 1, 3 (view models import only `package:flutter/foundation.dart`), 7 and the "no colour or text-style literals in feature screens" part of rule 6 are checked on every `flutter test` by `test/architecture_test.dart`.
 
+### MVVM check across the repo (T72, 07/11/2026)
+
+Rules 1, 3, 6 (literals) and 7 are enforced by `test/architecture_test.dart` and pass. The other rules were checked by reading every file under `lib/ui/*/widgets/` (searches for repository or service reads, `DateTime.now()`, `where`, `fold`, `reduce`, `sort` and `await` in widgets), on `main` plus the screens of PR #71.
+
+| # | Where | Rule | Finding | Decision |
+|---|---|---|---|---|
+| M1 | `order_manage/widgets/order_detail_screen.dart` (S12) | 2 | `build()` filtered the receipts to drop the one just uploaded | Fixed: `OrderDetailViewModel.earlierReceipts`, tested |
+| M2 | `order_manage/widgets/order_history_screen.dart` (S11) | 2 | `build()` computed the highest day of the chart with `fold` | Fixed: `OrderHistoryViewModel.mostSpentInADay`, also used by `peakWeekday`, tested |
+| M3 | `seller_shop/widgets/shift_stats_screen.dart` (K11) | 2 | `build()` filtered and joined the kiosk, shift and update labels | Fixed: `ShiftStatsViewModel.shiftLine`, tested |
+| M4 | `home/widgets/quick_reorder_sheet.dart` (S14, PR #71) | 4, 5 | `showQuickReorderSheet` reads the repositories and services from `context` to build its ViewModel | Kept: a bottom sheet is not a `GoRoute`, so this function plays the role of the route builder (rule 4 still holds: the ViewModel gets everything through its constructor and is tested with fakes). It only builds the ViewModel; nothing in the sheet calls a repository |
+| M5 | `await` in widgets (cart, K03, K13, K08, demo area, S12…) | 2 | Widgets await ViewModel commands | Kept: they only wait to show a dialog, snack bar or to navigate with the result; the work itself is in the ViewModel |
+
+No other violation was found: no widget imports an SDK, calls `DateTime.now()` or holds shared state with `setState`.
+
 ## 4. Sequence diagram: placing an order (F1)
 
 ```mermaid

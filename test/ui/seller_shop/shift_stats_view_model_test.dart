@@ -133,6 +133,8 @@ void main() {
         expect(orders.since, [DateTime(2026, 11, 2, 8)]);
         expect(vm.shiftStart, DateTime(2026, 11, 2, 8));
         expect(vm.shiftLabel, 'Từ 08:00 hôm nay');
+        expect(vm.shiftLine, contains('Từ 08:00 hôm nay'));
+        expect(vm.shiftLine.split(' · '), everyElement(isNotEmpty));
         vm.dispose();
       });
     });
