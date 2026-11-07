@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_favorite_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_notification_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_review_repository.dart';
@@ -649,5 +651,172 @@ void main() {
       isA<PermissionDeniedException>(),
     );
     // The rules let a customer report any order of their own; S12 only offers the button once it was received.
+  });
+
+  testWidgets('staff: K13 takes a report on, refunds it or rejects it with a reason; the customer sees the answer', (
+    tester,
+  ) async {
+    final customer = authAs('customer-1', 'Nguyễn Minh Quân');
+    ok(await customer.signInWithGoogle());
+    final incidents = FirestoreIncidentRepository(db);
+    final second = (await orders.watchOrder(voucherOrderId).firstWhere((o) => o != null))!;
+    ok(
+      await incidents.report(
+        order: second,
+        type: IncidentType.quality,
+        description: 'Món nguội',
+        customerName: 'Quân N.',
+      ),
+    );
+    final delivered = (await orders.watchOrder(cashOrderId).firstWhere((o) => o != null))!;
+
+    final service = authAs('staff-1', 'Cô Hạnh');
+    final staff = ok(await service.signInWithGoogle());
+    expect(staff.role, UserRole.staff);
+    final list = await incidents.watchKioskIncidents('q9-t2').firstWhere((l) => l.length >= 2);
+    expect(list.map((i) => i.orderId), containsAll([cashOrderId, voucherOrderId]));
+    expect(list.every((i) => i.status == IncidentStatus.open), isTrue);
+    expect(list.first.createdAt.isAfter(DateTime(2020)), isTrue);
+
+    final missing = list.firstWhere((i) => i.orderId == cashOrderId);
+    ok(await incidents.take(missing, staffUid: staff.uid));
+    final taken = await incidents
+        .watchKioskIncidents('q9-t2')
+        .firstWhere((l) => l.any((i) => i.orderId == cashOrderId && i.status == IncidentStatus.inProgress));
+    expect(taken.firstWhere((i) => i.orderId == cashOrderId).status, IncidentStatus.inProgress);
+    expect(
+      taken.indexWhere((i) => i.status == IncidentStatus.open),
+      lessThan(taken.indexWhere((i) => i.status == IncidentStatus.inProgress)),
+      reason: 'new reports come before the ones being handled',
+    );
+
+    expect(
+      err(await incidents.resolve(missing, resolution: IncidentResolution.refunded, staffUid: staff.uid, refundVnd: 0)),
+      isA<ValidationException>(),
+    );
+    expect(
+      err(
+        await incidents.resolve(
+          missing,
+          resolution: IncidentResolution.refunded,
+          staffUid: staff.uid,
+          refundVnd: delivered.totalVnd + 1000,
+        ),
+      ),
+      isA<PermissionDeniedException>(),
+      reason: 'the rules refuse a refund above what the customer paid',
+    );
+    expect(
+      err(await incidents.resolve(missing, resolution: IncidentResolution.rejected, staffUid: staff.uid, note: '  ')),
+      isA<ValidationException>(),
+    );
+    ok(
+      await incidents.resolve(
+        missing,
+        resolution: IncidentResolution.refunded,
+        staffUid: staff.uid,
+        refundVnd: delivered.totalVnd,
+      ),
+    );
+    final other = list.firstWhere((i) => i.orderId == voucherOrderId);
+    ok(
+      await incidents.resolve(
+        other,
+        resolution: IncidentResolution.rejected,
+        staffUid: staff.uid,
+        note: 'Đã kiểm tra, món vừa ra',
+      ),
+    );
+    final done = await incidents
+        .watchKioskIncidents('q9-t2')
+        .firstWhere((l) => l.where((i) => i.status == IncidentStatus.resolved).length >= 2);
+    final refunded = done.firstWhere((i) => i.orderId == cashOrderId);
+    expect(
+      (refunded.resolution, refunded.refundVnd, refunded.handledBy),
+      (IncidentResolution.refunded, delivered.totalVnd, staff.uid),
+    );
+    expect(refunded.resolvedAt, isNotNull);
+    expect(done.firstWhere((i) => i.orderId == voucherOrderId).resolutionNote, 'Đã kiểm tra, món vừa ra');
+    expect(
+      err(await incidents.take(refunded, staffUid: staff.uid)),
+      isA<PermissionDeniedException>(),
+      reason: 'an answered report is not taken on again',
+    );
+
+    // The customer reads the answer on S24.
+    ok(await customer.signInWithGoogle());
+    final seen = await incidents
+        .watchOfOrder(customerUid, cashOrderId)
+        .firstWhere((i) => i?.status == IncidentStatus.resolved);
+    expect((seen!.resolution, seen.refundVnd), (IncidentResolution.refunded, delivered.totalVnd));
+  });
+
+  testWidgets('customer: S13 favorites, S19 notifications and S18 switches pass the rules and stay per customer', (
+    tester,
+  ) async {
+    final service = authAs('customer-1', 'Nguyễn Minh Quân');
+    final me = ok(await service.signInWithGoogle());
+    final favorites = FirestoreFavoriteRepository(db);
+    final inbox = FirestoreNotificationRepository(db);
+    final tacos = ok(await menu.getItem('q9-t2-tacos-bo'));
+    final tea = ok(await menu.getItem('q9-t2-tra-dao'));
+
+    ok(await favorites.add(me.uid, tacos));
+    ok(await favorites.add(me.uid, tea));
+    final stored = await favorites.watch(me.uid).firstWhere((l) => l.length == 2);
+    expect(stored.map((f) => f.dishId).toSet(), {'tacos-bo', 'tra-dao'});
+    expect(stored.first.createdAt, isNotNull);
+    final tacosBefore = stored.firstWhere((f) => f.dishId == 'tacos-bo').createdAt;
+    ok(await favorites.add(me.uid, tacos));
+    final again = await favorites.watch(me.uid).first;
+    expect(
+      again.firstWhere((f) => f.dishId == 'tacos-bo').createdAt,
+      tacosBefore,
+      reason: 'a second heart changes nothing',
+    );
+    ok(await favorites.remove(me.uid, 'tra-dao'));
+    expect((await favorites.watch(me.uid).firstWhere((l) => l.length == 1)).single.dishId, 'tacos-bo');
+    ok(await favorites.remove(me.uid, 'not-there'));
+    expect(err(await favorites.add('', tacos)), isA<PermissionDeniedException>());
+    expect(
+      err(await favorites.add('someone-else', tacos)),
+      isA<PermissionDeniedException>(),
+      reason: 'another customer\'s favorites are not writable',
+    );
+
+    final ready = AppNotification(
+      id: AppNotification.idForOrder(cashOrderId, OrderStatus.ready),
+      title: 'Đơn đã sẵn sàng',
+      body: 'Nhận món',
+      receivedAt: DateTime.now(),
+      orderId: cashOrderId,
+    );
+    ok(await inbox.save(me.uid, ready));
+    ok(await inbox.save(me.uid, ready));
+    ok(
+      await inbox.save(
+        me.uid,
+        AppNotification(id: 'ann_1', title: 'Combo giờ vàng', body: '', receivedAt: DateTime.now()),
+      ),
+    );
+    // The inbox may hold notifications of earlier tests, so only the two of this test are looked at.
+    List<AppNotification> mine(List<AppNotification> l) => l.where((n) => n.id == ready.id || n.id == 'ann_1').toList();
+    final all = mine(await inbox.watch(me.uid).firstWhere((l) => mine(l).length == 2));
+    expect(all.every((n) => !n.read), isTrue);
+    expect(all.firstWhere((n) => n.id == ready.id).orderId, cashOrderId);
+    ok(await inbox.markRead(me.uid, ready.id));
+    final one = mine(await inbox.watch(me.uid).firstWhere((l) => mine(l).any((n) => n.read)));
+    expect(one.where((n) => n.read).map((n) => n.id), [ready.id]);
+    ok(await inbox.markAllRead(me.uid));
+    final allRead = await inbox.watch(me.uid).firstWhere((l) => l.every((n) => n.read));
+    expect(mine(allRead), hasLength(2));
+    ok(await inbox.markAllRead(me.uid));
+    expect(err(await inbox.save('someone-else', ready)), isA<PermissionDeniedException>());
+
+    expect(await inbox.watchPrefs(me.uid).first, NotificationPrefs.defaults);
+    const changed = NotificationPrefs(orderReady: false, breakReminder: true, promo: true, orderUpdates: true);
+    ok(await inbox.setPrefs(me.uid, changed));
+    expect(await inbox.watchPrefs(me.uid).firstWhere((p) => p == changed), changed);
+    expect((await db.doc('users/${me.uid}').get()).data()!['role'], 'user', reason: 'the other fields are left alone');
   });
 }

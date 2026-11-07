@@ -66,4 +66,44 @@ class FirestoreIncidentRepository implements IncidentRepository {
               : incidentFromData(snapshot.docs.first.id, snapshot.docs.first.data(), now: _clock()),
         ),
   );
+
+  @override
+  Stream<List<Incident>> watchKioskIncidents(String kioskId) => guardStream(
+    // No orderBy: it would need one more composite index, and the list is sorted here anyway.
+    _incidents
+        .where('kioskId', isEqualTo: kioskId)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              sortIncidentsForStaff([for (final d in snapshot.docs) incidentFromData(d.id, d.data(), now: _clock())]),
+        ),
+  );
+
+  @override
+  Future<Result<void>> take(Incident incident, {required String staffUid}) => guard(() async {
+    if (incident.status == IncidentStatus.resolved) throw const PermissionDeniedException();
+    await _incidents.doc(incident.orderId).update({'status': IncidentStatus.inProgress.name, ...Stamp.updated()});
+  });
+
+  @override
+  Future<Result<void>> resolve(
+    Incident incident, {
+    required IncidentResolution resolution,
+    required String staffUid,
+    int? refundVnd,
+    String? note,
+  }) => guard(() async {
+    final problem = incidentResolutionProblem(incident, resolution, refundVnd: refundVnd, note: note);
+    if (problem != null) throw ValidationException(problem);
+    if (incident.status == IncidentStatus.resolved) throw const PermissionDeniedException();
+    await _incidents.doc(incident.orderId).update({
+      'status': IncidentStatus.resolved.name,
+      'resolution': resolution.name,
+      if (resolution == IncidentResolution.refunded) 'refundVnd': refundVnd,
+      if ((note ?? '').trim().isNotEmpty) 'resolutionNote': note!.trim(),
+      'resolvedAt': FieldValue.serverTimestamp(),
+      'handledBy': staffUid,
+      ...Stamp.updated(),
+    });
+  });
 }

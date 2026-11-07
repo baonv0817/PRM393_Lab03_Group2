@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:breakbite/config/dependencies.dart';
 import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_favorite_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_menu_repository.dart';
+import 'package:breakbite/data/repositories/firestore/firestore_notification_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_order_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_report_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_review_repository.dart';
@@ -13,6 +15,7 @@ import 'package:breakbite/data/repositories/firestore/firestore_user_repository.
 import 'package:breakbite/data/repositories/firestore/firestore_voucher_repository.dart';
 import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/data/services/cloudinary/cloudinary_storage_service.dart';
+import 'package:breakbite/data/services/connectivity_plus_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_analytics_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_crash_service.dart';
@@ -45,6 +48,7 @@ Future<AppDependencies> createFirebaseDependencies() async {
     auth: FirebaseAuthService(auth: FirebaseAuth.instance, db: db),
     analytics: FirebaseAnalyticsService(FirebaseAnalytics.instance),
     crash: FirebaseCrashService(crashlytics),
+    connectivity: ConnectivityPlusService(),
     messaging: FirebaseMessagingService(messaging: FirebaseMessaging.instance, db: db),
     storage: CloudinaryStorageService(CloudinaryConfig.fromEnvironment()),
     remoteConfig: remoteConfig,
@@ -59,5 +63,7 @@ Future<AppDependencies> createFirebaseDependencies() async {
     slots: FirestoreSlotRepository(db),
     incidents: FirestoreIncidentRepository(db),
     reviews: FirestoreReviewRepository(db),
+    favorites: FirestoreFavoriteRepository(db),
+    notifications: FirestoreNotificationRepository(db),
   );
 }

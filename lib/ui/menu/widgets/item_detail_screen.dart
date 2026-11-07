@@ -18,7 +18,24 @@ class ItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<ItemDetailViewModel>();
     return Scaffold(
-      appBar: AppTopBar(title: 'Chi tiết món', onBack: () => context.pop()),
+      appBar: AppTopBar(
+        title: 'Chi tiết món',
+        onBack: () => context.pop(),
+        actions: [
+          if (vm.canFavorite)
+            TestId(
+              's04.favorite',
+              child: AppIconButton(
+                icon: vm.isFavorite ? Icons.favorite : Icons.favorite_border,
+                semanticLabel: vm.isFavorite ? 'Bỏ khỏi món yêu thích' : 'Thêm vào món yêu thích',
+                onPressed: () async {
+                  final result = await vm.toggleFavorite();
+                  if (context.mounted) showResultError(context, result);
+                },
+              ),
+            ),
+        ],
+      ),
       body: switch (vm.state) {
         ViewLoading<MenuItem>() => const LoadingView(),
         ViewEmpty<MenuItem>(:final message) => TestId(
