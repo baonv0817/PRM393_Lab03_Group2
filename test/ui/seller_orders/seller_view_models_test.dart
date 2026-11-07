@@ -31,19 +31,27 @@ SellerOrdersViewModel _orders(
   FakeOrderRepository orders, {
   String? kioskId = 'q9-t2',
   FakeIncidentRepository? incidents,
+  FakeAnalyticsService? analytics,
 }) => SellerOrdersViewModel(
   orders: orders,
   menu: FakeMenuRepository(),
   incidents: incidents ?? FakeIncidentRepository(),
   crash: FakeCrashService(),
+  analytics: analytics ?? FakeAnalyticsService(),
   kioskId: kioskId,
   clock: () => _now,
 );
 
-SellerOrderViewModel _one(FakeOrderRepository orders, String id, {String? kioskId = 'q9-t2'}) => SellerOrderViewModel(
+SellerOrderViewModel _one(
+  FakeOrderRepository orders,
+  String id, {
+  String? kioskId = 'q9-t2',
+  FakeAnalyticsService? analytics,
+}) => SellerOrderViewModel(
   orders: orders,
   menu: FakeMenuRepository(),
   crash: FakeCrashService(),
+  analytics: analytics ?? FakeAnalyticsService(),
   orderId: id,
   kioskId: kioskId,
   clock: () => _now,
@@ -115,13 +123,18 @@ void main() {
       final incidents = FakeIncidentRepository();
       final order = repo.all.single;
       await incidents.report(order: order, type: IncidentType.missingItem, description: 'Thiếu trà');
-      final vm = _orders(repo, incidents: incidents);
+      final analytics = FakeAnalyticsService();
+      final vm = _orders(repo, incidents: incidents, analytics: analytics);
       await pumpEventQueue();
 
       expect(vm.openIncidents, 1);
       expect(await vm.accept(vm.visible.single), isA<Ok<void>>());
       await pumpEventQueue();
       expect(repo.all.firstWhere((o) => o.id == id).status, OrderStatus.preparing);
+      final event = analytics.events.single;
+      expect(event.name, 'order_accepted');
+      expect(event.params?['order_id'], id);
+      expect(event.params?['wait_seconds'], isA<int>());
       expect(vm.countOf(SellerOrderTab.pending), 0);
       expect(vm.countOf(SellerOrderTab.preparing), 1);
     });
@@ -131,12 +144,14 @@ void main() {
       await placeTestOrder(repo, uid: 'u1');
       final stale = repo.all.single;
       await repo.accept(stale, readyIn: const Duration(minutes: 3));
-      final vm = _orders(repo);
+      final analytics = FakeAnalyticsService();
+      final vm = _orders(repo, analytics: analytics);
       await pumpEventQueue();
 
       final result = await vm.accept(stale);
       expect(result, isA<Err<void>>());
       expect(vm.busyOrderId, isNull);
+      expect(analytics.events, isEmpty);
     });
   });
 
@@ -151,7 +166,8 @@ void main() {
           CartItem(itemId: 'b', name: 'B', priceVnd: 2000),
         ],
       );
-      final vm = _one(repo, id);
+      final analytics = FakeAnalyticsService();
+      final vm = _one(repo, id, analytics: analytics);
       await pumpEventQueue();
 
       expect(vm.order?.status, OrderStatus.pending);
@@ -173,12 +189,15 @@ void main() {
       expect(await vm.deliver(), isA<Ok<void>>());
       await pumpEventQueue();
       expect(vm.order?.status, OrderStatus.delivered);
+      expect(analytics.events.map((e) => e.name), ['order_accepted', 'order_delivered']);
+      expect(analytics.events.last.params, {'order_id': id, 'paid_cash': false});
     });
 
     test('a cash order is collected at the handover (K06-CASH)', () async {
       final repo = FakeOrderRepository();
       final id = await placeTestOrder(repo, uid: 'u1', method: PaymentMethod.cash);
-      final vm = _one(repo, id);
+      final analytics = FakeAnalyticsService();
+      final vm = _one(repo, id, analytics: analytics);
       await pumpEventQueue();
       expect(vm.isCashToCollect, isTrue);
       await vm.accept();
@@ -188,6 +207,7 @@ void main() {
       await vm.deliver();
       await pumpEventQueue();
       expect(vm.isCashToCollect, isFalse);
+      expect(analytics.events.last.params?['paid_cash'], isTrue);
     });
 
     test('rejecting needs a reason, cancels the order and records who did it', () async {

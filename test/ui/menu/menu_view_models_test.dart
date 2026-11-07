@@ -156,6 +156,24 @@ void main() {
       vm.dispose();
     });
 
+    test('opening an item logs view_menu_item once, not again on a reload', () async {
+      final analytics = FakeAnalyticsService();
+      final vm = ItemDetailViewModel(
+        menu: FakeMenuRepository(),
+        cart: FakeCartRepository(),
+        analytics: analytics,
+        crash: FakeCrashService(),
+        uid: 'u1',
+        itemId: 'm1',
+      );
+      await pumpEventQueue();
+      await vm.load();
+      final views = analytics.events.where((e) => e.name == 'view_menu_item').toList();
+      expect(views, hasLength(1));
+      expect(views.single.params, {'item_id': 'm1', 'item_name': vm.item!.name, 'category': vm.item!.category.name});
+      vm.dispose();
+    });
+
     test('an unknown item is the empty state', () async {
       final vm = build('nope');
       await pumpEventQueue();

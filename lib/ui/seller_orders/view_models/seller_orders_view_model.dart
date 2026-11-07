@@ -31,6 +31,7 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.menu,
     required this.incidents,
     required this.crash,
+    required this.analytics,
     required this.kioskId,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now {
@@ -45,6 +46,7 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
   final MenuRepository menu;
   final IncidentRepository incidents;
   final CrashService crash;
+  final AnalyticsService analytics;
   final String? kioskId;
   final DateTime Function() _clock;
 
@@ -141,7 +143,12 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
         order,
         readyIn: readyInFor(order, now: now, kioskWaitMinutes: _kiosk?.waitMinutes),
       );
-      if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'sellerOrders.accept');
+      switch (result) {
+        case Ok():
+          logOrderAccepted(analytics, order, now);
+        case Err(:final error):
+          crash.recordNonFatal(error, error.stackTrace, 'sellerOrders.accept');
+      }
       return result;
     } finally {
       _busyOrderId = null;

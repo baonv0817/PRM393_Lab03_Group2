@@ -56,6 +56,7 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   List<Favorite> _hearts = const [];
   bool _togglingFavorite = false;
   ViewState<MenuItem> _state = const ViewLoading();
+  bool _viewLogged = false;
   int _quantity = 1;
   String _note = '';
 
@@ -130,6 +131,7 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     switch (result) {
       case Ok(:final value):
         _state = ViewData(value);
+        _logView(value);
       case Err(error: NotFoundException(:final message)):
         _state = ViewEmpty(message);
       case Err(:final error):
@@ -137,6 +139,19 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
         _state = ViewError(error.message);
     }
     notifyListeners();
+  }
+
+  /// `view_menu_item` once per opening of S04, not again on a retry or refresh.
+  void _logView(MenuItem item) {
+    if (_viewLogged) return;
+    _viewLogged = true;
+    unawaited(
+      analytics.logEvent(AnalyticsEvents.viewMenuItem, {
+        'item_id': item.id,
+        'item_name': item.name,
+        'category': item.category.name,
+      }),
+    );
   }
 
   void changeQuantity(int delta) {
