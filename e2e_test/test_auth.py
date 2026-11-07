@@ -2,13 +2,9 @@
 
 Mỗi test gửi MỘT chỉ dẫn nêu điểm bắt đầu, các bước và điều phải thấy; yêu cầu agent báo lại giá trị
 cụ thể bằng `expected_output` rồi so sánh, không chỉ kiểm `result.succeeded`.
-Bỏ dấu skip dưới đây khi app đã chạy được trên thiết bị.
+Bỏ qua khi chưa có máy chủ ARTEMIS hoặc `ARTEMIS_DEVICE_SERIAL` (fixture `artemis`).
 """
 import json
-
-import pytest
-
-pytestmark = pytest.mark.skip(reason="Chưa có app để chạy")
 
 
 def parsed(result) -> dict:

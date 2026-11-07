@@ -66,7 +66,7 @@ The instructions above are summaries; the full versions are in `e2e_test/`. Ever
 |---|---|---|---|---|
 | | | | | |
 
-Command to run the suite: `[fill in]`. The trace or screenshots of every run are kept in `evidence/artemis/`.
+Command to run the suite: `cd e2e_test; uv run python run_repeat.py -n 3` (runs every test 3 times and writes this table to `evidence/artemis/pass-rate.md`). The trace or screenshots of every run are kept in `evidence/artemis/`.
 
 ## 4. Exploratory session (Pro profile, 15 to 30 minutes)
 

@@ -158,7 +158,7 @@ Status is what the code and the evidence show, not what was planned. "Done in co
 | T53 | P5 | Partial | 50% | `MessagingService`: Android 13+ permission, token per user, messages saved to the inbox in all 3 states | S19 notification list, tapping a notification opens its screen, console test in each state |
 | T60 | P5 | Partial | 50% | 13 test cases written in `docs/test-plan.md` | Run them, record results |
 | T61 | Everyone | Partial | 10% | `TestId` labels on S01, S02, S15, S26 | Every other screen |
-| T62 | P5 | Partial | 10% | `e2e_test/test_auth.py` skeleton | At least 10 tests, 3 runs each, pass-rate table |
+| T62 | P5 | Partial | 50% | 31 ARTEMIS tests in `e2e_test/`, one per case TC-01 to TC-31, each asserting on the value the agent reports back (TC-13 also reads the `purchase` event from Logcat); `run_repeat.py` runs the suite N times and writes the pass-rate table | Run on a phone with the ARTEMIS server (T02), 3 runs each, fill in section 3 of `docs/test-plan.md`, analyse flaky tests |
 | T63 | P5 | Not started | 0% | — | Exploratory session report |
 | T70 | P4 | Partial | 10% | Review record template | Run an AI review on a PR, save the output in `evidence/` |
 | T71 | Everyone | Not started | 0% | — | At least 5 findings decided, 3 fix commits with `CR-xx` |
