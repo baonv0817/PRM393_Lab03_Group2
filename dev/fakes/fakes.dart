@@ -11,6 +11,7 @@ export 'fake_menu_repository.dart';
 export 'fake_messaging_service.dart';
 export 'fake_notification_repository.dart';
 export 'fake_order_repository.dart';
+export 'fake_reminder_service.dart';
 export 'fake_remote_config_service.dart';
 export 'fake_report_file_service.dart';
 export 'fake_report_repository.dart';

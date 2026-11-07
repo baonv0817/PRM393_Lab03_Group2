@@ -15,6 +15,7 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     crash: FakeCrashService(),
     connectivity: FakeConnectivityService(),
     messaging: FakeMessagingService(),
+    reminders: FakeReminderService(),
     storage: FakeStorageService(),
     remoteConfig: FakeRemoteConfigService(),
     reportFiles: FakeReportFileService(),

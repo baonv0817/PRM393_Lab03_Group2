@@ -10,6 +10,7 @@ class AppDependencies {
     required this.crash,
     required this.connectivity,
     required this.messaging,
+    required this.reminders,
     required this.storage,
     required this.remoteConfig,
     required this.reportFiles,
@@ -32,6 +33,7 @@ class AppDependencies {
   final CrashService crash;
   final ConnectivityService connectivity;
   final MessagingService messaging;
+  final ReminderService reminders;
   final StorageService storage;
   final RemoteConfigService remoteConfig;
   final ReportFileService reportFiles;
@@ -55,6 +57,7 @@ class AppDependencies {
     Provider<CrashService>.value(value: crash),
     Provider<ConnectivityService>.value(value: connectivity),
     Provider<MessagingService>.value(value: messaging),
+    Provider<ReminderService>.value(value: reminders),
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
     Provider<ReportFileService>.value(value: reportFiles),
