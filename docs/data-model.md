@@ -59,7 +59,7 @@ The id is the Firebase Auth uid. Created on the first Google sign-in (T30). Only
 | `kioskId` | string? | admin | Only staff have it; a staff member with no kiosk cannot handle anything |
 | `studentId` | string? | owner | Student ID (S16): 2 capital letters and 6 digits, for example `SE183398` |
 | `defaultPaymentMethod` | string? | owner | `momo`, `vnpay`, `card`, `cash` (S17) |
-| `notificationPrefs` | map? | owner | `{orderStatus: bool, promo: bool}` (S18) |
+| `notificationPrefs` | map? | owner | `{orderReady, breakReminder, promo, orderUpdates}`, all bool (S18, D33). A missing key means its default (all on except `promo`); new optional keys, no migration |
 | `fcmTokens` | list<string>? | owner | At most 5. Add this device's token after sign-in, remove it on sign-out |
 | `phone` | string? | owner | 10 digits starting with 0 (S16) |
 | `defaultKioskId` | string? | owner | Must be an existing kiosk (S16); the app selects it at every sign-in |

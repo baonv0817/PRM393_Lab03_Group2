@@ -13,6 +13,7 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     auth: FakeAuthService(role: role, signedIn: signedIn),
     analytics: FakeAnalyticsService(),
     crash: FakeCrashService(),
+    connectivity: FakeConnectivityService(),
     messaging: FakeMessagingService(),
     storage: FakeStorageService(),
     remoteConfig: FakeRemoteConfigService(),
@@ -27,5 +28,7 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     slots: FakeSlotRepository(),
     incidents: FakeIncidentRepository(),
     reviews: FakeReviewRepository(),
+    favorites: FakeFavoriteRepository(),
+    notifications: FakeNotificationRepository(),
   );
 }

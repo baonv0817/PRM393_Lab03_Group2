@@ -7,6 +7,7 @@ import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
 import 'package:breakbite/ui/core/widgets/widgets.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
+import 'package:breakbite/ui/home/widgets/quick_reorder_sheet.dart';
 import 'package:breakbite/utils/format.dart';
 import 'package:breakbite/utils/result.dart';
 import 'package:flutter/material.dart';
@@ -95,8 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       's02.reorder',
                       child: ListenableBuilder(
                         listenable: vm.reorderLast,
-                        builder: (context, _) =>
-                            _ReorderCard(order: order, onTap: vm.reorderLast.running ? null : () => _reorder(vm)),
+                        builder: (context, _) => _ReorderCard(
+                          order: order,
+                          onTap: vm.reorderLast.running ? null : () => _reorder(vm),
+                          onMore: () => showQuickReorderSheet(context),
+                        ),
                       ),
                     ),
                   ],
@@ -399,11 +403,14 @@ class _QuickSection extends StatelessWidget {
 }
 
 class _ReorderCard extends StatelessWidget {
-  const _ReorderCard({required this.order, required this.onTap});
+  const _ReorderCard({required this.order, required this.onTap, required this.onMore});
 
   final Order order;
 
   final VoidCallback? onTap;
+
+  /// Opens S14, the sheet to pick another recent order.
+  final VoidCallback onMore;
 
   String get _summary {
     final first = order.items.isEmpty ? '' : order.items.first.name;
@@ -415,41 +422,51 @@ class _ReorderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
-    return Semantics(
-      button: true,
-      label: 'Đặt lại đơn gần đây: $_summary',
-      excludeSemantics: true,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-              child: Row(
-                children: [
-                  Icon(Icons.refresh, color: colors.primaryText),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              button: true,
+              label: 'Đặt lại đơn gần đây: $_summary',
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: onTap,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 64),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                    child: Row(
                       children: [
-                        Text('Đặt lại đơn gần đây', style: text.labelLarge),
-                        Text(
-                          _summary,
-                          style: text.bodyMedium?.copyWith(color: colors.muted),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Icon(Icons.refresh, color: colors.primaryText),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Đặt lại đơn gần đây', style: text.labelLarge),
+                              Text(
+                                _summary,
+                                style: text.bodyMedium?.copyWith(color: colors.muted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          TestId(
+            's02.reorderMore',
+            child: AppIconButton(icon: Icons.history, semanticLabel: 'Chọn đơn khác để đặt lại', onPressed: onMore),
+          ),
+        ],
       ),
     );
   }

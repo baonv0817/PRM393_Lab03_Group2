@@ -8,6 +8,7 @@ class AppDependencies {
     required this.auth,
     required this.analytics,
     required this.crash,
+    required this.connectivity,
     required this.messaging,
     required this.storage,
     required this.remoteConfig,
@@ -22,11 +23,14 @@ class AppDependencies {
     required this.slots,
     required this.incidents,
     required this.reviews,
+    required this.favorites,
+    required this.notifications,
   });
 
   final AuthService auth;
   final AnalyticsService analytics;
   final CrashService crash;
+  final ConnectivityService connectivity;
   final MessagingService messaging;
   final StorageService storage;
   final RemoteConfigService remoteConfig;
@@ -42,11 +46,14 @@ class AppDependencies {
   final SlotRepository slots;
   final IncidentRepository incidents;
   final ReviewRepository reviews;
+  final FavoriteRepository favorites;
+  final NotificationRepository notifications;
 
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
     Provider<AnalyticsService>.value(value: analytics),
     Provider<CrashService>.value(value: crash),
+    Provider<ConnectivityService>.value(value: connectivity),
     Provider<MessagingService>.value(value: messaging),
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
@@ -61,5 +68,7 @@ class AppDependencies {
     Provider<SlotRepository>.value(value: slots),
     Provider<IncidentRepository>.value(value: incidents),
     Provider<ReviewRepository>.value(value: reviews),
+    Provider<FavoriteRepository>.value(value: favorites),
+    Provider<NotificationRepository>.value(value: notifications),
   ];
 }

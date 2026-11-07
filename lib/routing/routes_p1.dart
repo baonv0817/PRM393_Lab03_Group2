@@ -41,6 +41,7 @@ final GoRoute homeRoute = GoRoute(
         analytics: context.read<AnalyticsService>(),
         crash: context.read<CrashService>(),
         uid: uid,
+        notifications: context.read<NotificationRepository>(),
       ),
       child: const HomeScreen(),
     );
@@ -89,6 +90,7 @@ final List<GoRoute> p1Routes = [
         crash: context.read<CrashService>(),
         uid: context.read<AuthViewModel>().user?.uid ?? '',
         itemId: state.pathParameters['id'] ?? '',
+        favorites: context.read<FavoriteRepository>(),
       ),
       child: const ItemDetailScreen(),
     ),

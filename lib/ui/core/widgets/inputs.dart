@@ -38,13 +38,16 @@ class AppChip extends StatelessWidget {
 }
 
 class AppSearchField extends StatelessWidget {
-  const AppSearchField({super.key, required this.hint, this.onTap, this.controller, this.onChanged})
+  const AppSearchField({super.key, required this.hint, this.onTap, this.controller, this.onChanged, this.focusNode})
     : assert(onTap != null || controller != null);
 
   final String hint;
   final VoidCallback? onTap;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+
+  /// Lets the screen put the cursor in the field itself (S28 opens with the keyboard up).
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +64,7 @@ class AppSearchField extends StatelessWidget {
         label: 'Tìm kiếm. $hint',
         child: TextField(
           controller: controller,
+          focusNode: focusNode,
           onChanged: onChanged,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
