@@ -137,6 +137,18 @@ Without an Android emulator it runs in Chrome: start `chromedriver --port=4444` 
 firebase emulators:exec --only auth,firestore --project breakbite-1315b "flutter drive --driver=test_driver/integration_test.dart --target=integration_test/firebase_emulator_test.dart -d web-server --browser-name=chrome --headless"
 ```
 
+### Sending a test push (T53)
+
+Firebase console → Messaging → New campaign → Notifications → "Send test message", paste the FCM token (the app prints it in the debug log after sign-in; it is also in `users/{uid}.fcmTokens`). Under "Additional options → Custom data" add the key `orderId` with the id of one of your orders.
+
+| App state | What happens |
+|---|---|
+| Foreground | A banner shows the title and text; "Xem" opens the order (or S19 when there is no `orderId`) |
+| Background | The system shows the notification; tapping it opens the order |
+| Terminated | Same; the order opens right after the splash screen, once the sign-in state is known |
+
+In every state the message is also saved in S19. Staff accounts are not sent to customer screens.
+
 ## 5. ARTEMIS (E2E tests)
 
 See `e2e_test/README.md`. The server lives in `D:\src\artemis`, pinned to commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b`. It needs an API key for a multimodal model (Gemini, Claude, GPT-4o or Qwen-VL) in the ARTEMIS server's `.env`; **never commit the key**.
