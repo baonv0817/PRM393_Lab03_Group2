@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:breakbite/config/dependencies.dart';
 import 'package:breakbite/data/order_status_notifier.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/domain/models/models.dart';
+import 'package:breakbite/routing/push_router.dart';
 import 'package:breakbite/routing/router.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
@@ -58,6 +62,14 @@ class _RouterHostState extends State<_RouterHost> {
     notifications: context.read<NotificationRepository>(),
     crash: context.read<CrashService>(),
   );
+  late final PushRouter _push = PushRouter(
+    messaging: context.read<MessagingService>(),
+    crash: context.read<CrashService>(),
+    currentUser: () => _auth.user,
+    go: (route) => unawaited(_router.push(route)),
+    showBanner: _showBanner,
+  );
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
   String? _notifiedUid;
 
   @override
@@ -67,6 +79,23 @@ class _RouterHostState extends State<_RouterHost> {
     _notifier;
     _auth.addListener(_syncNotifier);
     _syncNotifier();
+    _auth.addListener(_push.onUserChanged);
+    _push.start();
+  }
+
+  /// A push received while the app is open (T53): its title and text, and "Xem" opens the related screen.
+  void _showBanner(AppNotification notification, void Function() open) {
+    final text = notification.body.isEmpty ? notification.title : '${notification.title}: ${notification.body}';
+    _messenger.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis),
+          persist: false,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(label: 'Xem', onPressed: open),
+        ),
+      );
   }
 
   /// The customer's order changes become notifications (S19) while a customer is signed in.
@@ -85,6 +114,8 @@ class _RouterHostState extends State<_RouterHost> {
   @override
   void dispose() {
     _auth.removeListener(_syncNotifier);
+    _auth.removeListener(_push.onUserChanged);
+    _push.stop();
     _notifier.stop();
     _router.dispose();
     super.dispose();
@@ -95,6 +126,7 @@ class _RouterHostState extends State<_RouterHost> {
     return MaterialApp.router(
       title: 'BreakBite',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _messenger,
       theme: AppTheme.light(),
       routerConfig: _router,
       // S30 covers the whole app while the phone is offline.
