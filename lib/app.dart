@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/data/break_reminder_scheduler.dart';
 import 'package:breakbite/data/order_status_notifier.dart';
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
@@ -70,6 +71,13 @@ class _RouterHostState extends State<_RouterHost> {
     showBanner: _showBanner,
   );
   final _messenger = GlobalKey<ScaffoldMessengerState>();
+  late final BreakReminderScheduler _reminders = BreakReminderScheduler(
+    notifications: context.read<NotificationRepository>(),
+    session: context.read<SessionRepository>(),
+    slots: context.read<SlotRepository>(),
+    reminders: context.read<ReminderService>(),
+    crash: context.read<CrashService>(),
+  );
   String? _notifiedUid;
 
   @override
@@ -77,6 +85,7 @@ class _RouterHostState extends State<_RouterHost> {
     super.initState();
     // Read the repositories now: a lazy field would read them for the first time in dispose, too late.
     _notifier;
+    _reminders;
     _auth.addListener(_syncNotifier);
     _syncNotifier();
     _auth.addListener(_push.onUserChanged);
@@ -106,8 +115,10 @@ class _RouterHostState extends State<_RouterHost> {
     _notifiedUid = uid;
     if (uid == null) {
       _notifier.stop();
+      _reminders.stop();
     } else {
       _notifier.start(uid);
+      _reminders.start(uid);
     }
   }
 
@@ -117,6 +128,7 @@ class _RouterHostState extends State<_RouterHost> {
     _auth.removeListener(_push.onUserChanged);
     _push.stop();
     _notifier.stop();
+    _reminders.stop();
     _router.dispose();
     super.dispose();
   }
