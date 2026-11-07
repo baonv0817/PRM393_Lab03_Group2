@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/domain/app_exception.dart';
@@ -18,10 +20,12 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.crash,
     required this.uid,
     required this.itemId,
+    this.favorites,
   }) {
     add = Command0(_add);
     _cart.start();
     load();
+    _watchFavorites();
   }
 
   static const maxNoteLength = 100;
@@ -34,6 +38,9 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   final String uid;
   final String itemId;
 
+  /// The hearts of S13. Without it the heart of S04 is not shown.
+  final FavoriteRepository? favorites;
+
   late final Command0<void> add;
 
   late final _cart = CartControls(
@@ -45,6 +52,9 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     onChanged: notifyListeners,
   );
 
+  StreamSubscription<List<Favorite>>? _favoritesSub;
+  List<Favorite> _hearts = const [];
+  bool _togglingFavorite = false;
   ViewState<MenuItem> _state = const ViewLoading();
   int _quantity = 1;
   String _note = '';
@@ -58,6 +68,41 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   bool get canIncrease => _quantity < _room;
   bool get canDecrease => _quantity > 1;
+
+  /// The heart of S04 is offered once the item has loaded and the hearts can be read.
+  bool get canFavorite => favorites != null && item != null;
+
+  /// Whether the dish of this item is one of the customer's favorites.
+  bool get isFavorite {
+    final i = item;
+    return i != null && _hearts.any((f) => f.matches(i));
+  }
+
+  void _watchFavorites() {
+    _favoritesSub = favorites?.watch(uid).listen(
+      (list) {
+        _hearts = list;
+        notifyListeners();
+      },
+      // The heart is an extra: a failure leaves it empty, it does not break the item.
+      onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'detail.watchFavorites'),
+    );
+  }
+
+  /// Hearts the dish, or takes the heart off. One write at a time; the heart follows the stored favorites.
+  Future<Result<void>> toggleFavorite() async {
+    final i = item;
+    final repository = favorites;
+    if (i == null || repository == null || _togglingFavorite) return const Result.ok(null);
+    _togglingFavorite = true;
+    try {
+      final result = isFavorite ? await repository.remove(uid, Favorite.dishIdOf(i)) : await repository.add(uid, i);
+      if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'detail.toggleFavorite');
+      return result;
+    } finally {
+      _togglingFavorite = false;
+    }
+  }
 
   String? get blocker {
     final i = item;
@@ -114,6 +159,7 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   @override
   void dispose() {
+    unawaited(_favoritesSub?.cancel());
     _cart.stop();
     add.dispose();
     super.dispose();

@@ -50,6 +50,42 @@ class FakeIncidentRepository implements IncidentRepository {
   Stream<Incident?> watchOfOrder(String uid, String orderId) =>
       _incidents.stream.map((list) => list.where((i) => i.uid == uid && i.orderId == orderId).firstOrNull);
 
+  @override
+  Stream<List<Incident>> watchKioskIncidents(String kioskId) =>
+      _incidents.stream.map((l) => sortIncidentsForStaff(l.where((i) => i.kioskId == kioskId).toList()));
+
+  @override
+  Future<Result<void>> take(Incident incident, {required String staffUid}) async {
+    final current = all.where((i) => i.orderId == incident.orderId).firstOrNull;
+    if (current == null) return const Result.error(NotFoundException());
+    if (current.status == IncidentStatus.resolved) return const Result.error(PermissionDeniedException());
+    handle(incident.orderId, status: IncidentStatus.inProgress);
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> resolve(
+    Incident incident, {
+    required IncidentResolution resolution,
+    required String staffUid,
+    int? refundVnd,
+    String? note,
+  }) async {
+    final problem = incidentResolutionProblem(incident, resolution, refundVnd: refundVnd, note: note);
+    if (problem != null) return Result.error(ValidationException(problem));
+    final current = all.where((i) => i.orderId == incident.orderId).firstOrNull;
+    if (current == null) return const Result.error(NotFoundException());
+    if (current.status == IncidentStatus.resolved) return const Result.error(PermissionDeniedException());
+    handle(
+      incident.orderId,
+      status: IncidentStatus.resolved,
+      resolution: resolution,
+      refundVnd: refundVnd,
+      resolutionNote: note?.trim(),
+    );
+    return const Result.ok(null);
+  }
+
   /// What kiosk staff do in K13, for tests: take the report on, refund it or reject it.
   void handle(
     String orderId, {

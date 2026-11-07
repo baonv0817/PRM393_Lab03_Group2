@@ -63,7 +63,7 @@ void main() {
   testWidgets('signed-in seller lands in the seller app with 4 tabs', (tester) async {
     await tester.pumpWidget(BreakBiteApp(dependencies: createFakeDependencies(role: UserRole.staff, signedIn: true)));
     await tester.pumpAndSettle();
-    expect(find.text('K02'), findsOneWidget);
+    expect(find.text('Đơn hôm nay'), findsOneWidget);
     expect(find.text('Quét mã'), findsOneWidget);
   });
 

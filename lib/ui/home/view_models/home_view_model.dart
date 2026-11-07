@@ -22,9 +22,11 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.analytics,
     required this.crash,
     required this.uid,
+    this.notifications,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now {
     load();
+    _watchUnread();
     _configSub = remoteConfig.watchUpdates().listen(
       (_) => notifyListeners(),
       onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchRemoteConfig'),
@@ -39,6 +41,9 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   final AnalyticsService analytics;
   final CrashService crash;
   final String uid;
+
+  /// The inbox behind the bell; without it the bell never shows a dot.
+  final NotificationRepository? notifications;
   final DateTime Function() _clock;
 
   static const quickMaxMinutes = 5;
@@ -59,6 +64,8 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     onChanged: notifyListeners,
   );
   StreamSubscription<List<Order>>? _ordersSub;
+  StreamSubscription<List<AppNotification>>? _unreadSub;
+  var _unread = 0;
   late final StreamSubscription<Set<String>> _configSub;
   Timer? _pauseEnd;
   Order? _lastOrder;
@@ -121,7 +128,20 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   bool blocksAdd(MenuItem item) => _cart.blocksAdd(item);
 
-  int get unreadNotifications => 0;
+  int get unreadNotifications => _unread;
+
+  void _watchUnread() {
+    _unreadSub = notifications?.watch(uid).listen(
+      (list) {
+        final count = list.where((n) => !n.read).length;
+        if (count == _unread) return;
+        _unread = count;
+        notifyListeners();
+      },
+      // The bell is an extra: a failure leaves it without a dot, it does not break Home.
+      onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, 'home.watchNotifications'),
+    );
+  }
 
   Order? get lastOrder => _lastOrder;
 
@@ -163,6 +183,7 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
     _menu.stop();
     _cart.stop();
     unawaited(_ordersSub?.cancel());
+    unawaited(_unreadSub?.cancel());
     unawaited(_configSub.cancel());
     _pauseEnd?.cancel();
     addToCart.dispose();
