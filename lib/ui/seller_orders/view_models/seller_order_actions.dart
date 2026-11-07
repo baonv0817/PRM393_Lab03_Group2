@@ -1,5 +1,25 @@
+import 'dart:async';
+
 import 'package:breakbite/data/repositories/order_repository.dart';
+import 'package:breakbite/data/services/analytics_events.dart';
+import 'package:breakbite/data/services/analytics_service.dart';
 import 'package:breakbite/domain/models/models.dart';
+
+/// `order_accepted` with how long the order waited in the queue, from K02 or K03.
+void logOrderAccepted(AnalyticsService analytics, Order order, DateTime now) {
+  final waited = now.difference(order.createdAt).inSeconds;
+  unawaited(
+    analytics.logEvent(AnalyticsEvents.orderAccepted, {'order_id': order.id, 'wait_seconds': waited < 0 ? 0 : waited}),
+  );
+}
+
+/// `order_delivered` from K06; `paid_cash` is true when the money was collected at the counter (K06-CASH).
+void logOrderDelivered(AnalyticsService analytics, Order order) => unawaited(
+  analytics.logEvent(AnalyticsEvents.orderDelivered, {
+    'order_id': order.id,
+    'paid_cash': order.paymentStatus == PaymentStatus.unpaid,
+  }),
+);
 
 /// How long the kitchen needs for [order]: until the pickup time the customer chose when that is far enough
 /// away, otherwise the kiosk's usual wait (at least 5 minutes). Never below [OrderRepository.minReadyIn].

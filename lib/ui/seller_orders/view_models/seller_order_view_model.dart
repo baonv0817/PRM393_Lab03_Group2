@@ -17,6 +17,7 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.orders,
     required this.menu,
     required this.crash,
+    required this.analytics,
     required this.orderId,
     required this.kioskId,
     DateTime Function()? clock,
@@ -30,6 +31,7 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
   final OrderRepository orders;
   final MenuRepository menu;
   final CrashService crash;
+  final AnalyticsService analytics;
   final String orderId;
   final String? kioskId;
   final DateTime Function() _clock;
@@ -103,11 +105,12 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
       o,
       readyIn: readyInFor(o, now: now, kioskWaitMinutes: _kioskWait),
     ),
+    onDone: (o) => logOrderAccepted(analytics, o, now),
   );
 
   Future<Result<void>> markReady() => _run('markReady', orders.markReady);
 
-  Future<Result<void>> deliver() => _run('deliver', orders.deliver);
+  Future<Result<void>> deliver() => _run('deliver', orders.deliver, onDone: (o) => logOrderDelivered(analytics, o));
 
   /// K12: [reason] is the text of `rejectReasonText`. The customer is refunded automatically (D04).
   Future<Result<void>> reject(String reason) {
@@ -117,7 +120,11 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     return _run('reject', (o) => orders.reject(o, reason: reason.trim()));
   }
 
-  Future<Result<void>> _run(String name, Future<Result<void>> Function(Order order) action) async {
+  Future<Result<void>> _run(
+    String name,
+    Future<Result<void>> Function(Order order) action, {
+    void Function(Order order)? onDone,
+  }) async {
     final current = order;
     if (current == null) return const Result.error(NotFoundException(message: notFoundMessage));
     if (_busy) return const Result.ok(null);
@@ -125,7 +132,12 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
     try {
       final result = await action(current);
-      if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'sellerOrder.$name');
+      switch (result) {
+        case Ok():
+          onDone?.call(current);
+        case Err(:final error):
+          crash.recordNonFatal(error, error.stackTrace, 'sellerOrder.$name');
+      }
       return result;
     } finally {
       _busy = false;
