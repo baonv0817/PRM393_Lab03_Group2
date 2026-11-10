@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:breakbite/config/firebase_setup.dart';
+import 'package:breakbite/data/firebase/firestore_helpers.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_favorite_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
@@ -827,7 +828,21 @@ void main() {
     ok(await inbox.markRead(me.uid, ready.id));
     final one = mine(await inbox.watch(me.uid).firstWhere((l) => mine(l).any((n) => n.read)));
     expect(one.where((n) => n.read).map((n) => n.id), [ready.id]);
+    // [CR-04] More unread notifications than one write batch can hold (500) are all marked.
+    for (var start = 0; start < 450; start += 200) {
+      final fill = db.batch();
+      for (var i = start; i < start + 200 && i < 450; i++) {
+        fill.set(db.doc('users/${me.uid}/notifications/bulk-$i'), {
+          'title': 'Thông báo $i',
+          'body': '',
+          'read': false,
+          ...Stamp.created(),
+        });
+      }
+      await fill.commit();
+    }
     ok(await inbox.markAllRead(me.uid));
+    expect((await db.collection('users/${me.uid}/notifications').where('read', isEqualTo: false).get()).docs, isEmpty);
     final allRead = await inbox.watch(me.uid).firstWhere((l) => l.every((n) => n.read));
     expect(mine(allRead), hasLength(2));
     ok(await inbox.markAllRead(me.uid));

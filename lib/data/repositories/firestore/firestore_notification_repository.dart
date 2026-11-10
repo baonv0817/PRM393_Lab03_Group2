@@ -13,6 +13,9 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 class FirestoreNotificationRepository implements NotificationRepository {
   FirestoreNotificationRepository(this._db, {DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
 
+  /// Firestore refuses a write batch of more than 500 writes; this leaves room to spare.
+  static const batchSize = 400;
+
   final FirebaseFirestore _db;
   final DateTime Function() _clock;
 
@@ -53,12 +56,14 @@ class FirestoreNotificationRepository implements NotificationRepository {
   Future<Result<void>> markAllRead(String uid) => guard(() async {
     if (uid.isEmpty) throw const PermissionDeniedException();
     final unread = await _inbox(uid).where('read', isEqualTo: false).get();
-    if (unread.docs.isEmpty) return;
-    final batch = _db.batch();
-    for (final doc in unread.docs) {
-      batch.update(doc.reference, {'read': true, ...Stamp.updated()});
+    // A write batch holds at most 500 writes, so a long list is marked in several batches.
+    for (var start = 0; start < unread.docs.length; start += batchSize) {
+      final batch = _db.batch();
+      for (final doc in unread.docs.skip(start).take(batchSize)) {
+        batch.update(doc.reference, {'read': true, ...Stamp.updated()});
+      }
+      await batch.commit();
     }
-    await batch.commit();
   });
 
   @override
