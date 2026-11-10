@@ -1,5 +1,6 @@
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/auth/widgets/sign_out_button.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
@@ -14,6 +15,8 @@ import 'package:provider/provider.dart';
 
 /// K10: the staff member's kiosk. Whether it takes orders, a pause and the wait apply as soon as they are
 /// tapped; the notice, hours and slot capacity are saved with the button at the bottom.
+const signOutMessage = 'Bạn sẽ không nhận được đơn mới trên máy này cho đến khi đăng nhập lại.';
+
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
 
@@ -48,7 +51,19 @@ class ShopScreen extends StatelessWidget {
     return ScaffoldMessenger(
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: const AppTopBar(title: 'Quán'),
+          appBar: AppTopBar(
+            title: 'Quán',
+            actions: [
+              TestId(
+                'k10.signOut',
+                child: AppIconButton(
+                  icon: Icons.logout,
+                  semanticLabel: 'Đăng xuất',
+                  onPressed: () => confirmSignOut(context, message: signOutMessage),
+                ),
+              ),
+            ],
+          ),
           // In the bottom bar, not in the body: a message from the Scaffold then appears above the button
           // instead of covering it.
           bottomNavigationBar: vm.state is ViewData<Kiosk> && vm.infoDirty
