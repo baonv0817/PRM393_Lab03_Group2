@@ -16,7 +16,7 @@ FONT_DIR = 'C:/Windows/Fonts'
 REPO = 'https://github.com/baonv0817/PRM393_Lab03_Group2'
 
 # Numbers that come from runs; update them when the runs are repeated.
-N_WIDGET_TESTS = 748
+N_WIDGET_TESTS = 749
 N_RULES_TESTS = 88
 N_INTEGRATION_TESTS = 15
 

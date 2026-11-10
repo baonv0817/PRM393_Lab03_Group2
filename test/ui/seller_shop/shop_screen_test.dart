@@ -1,6 +1,8 @@
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/core/theme/app_theme.dart';
 import 'package:breakbite/ui/seller_shop/view_models/shop_view_model.dart';
 import 'package:breakbite/ui/seller_shop/widgets/shop_screen.dart';
@@ -38,6 +40,7 @@ Future<void> _pump(
   String? kioskId = 'q9-t2',
   Size size = TestScreens.narrow,
   bool settle = true,
+  AuthViewModel? auth,
 }) async {
   // The width is the phone's; the height is tall because a ListView only builds what is on screen and
   // the test font is wider than Nunito, so the whole page would otherwise need scrolling.
@@ -67,7 +70,8 @@ Future<void> _pump(
     ],
   );
   addTearDown(router.dispose);
-  await tester.pumpWidget(MaterialApp.router(theme: AppTheme.light(), routerConfig: router));
+  final app = MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
+  await tester.pumpWidget(auth == null ? app : ChangeNotifierProvider<AuthViewModel>.value(value: auth, child: app));
   if (settle) await tester.pumpAndSettle();
 }
 
@@ -283,5 +287,34 @@ void main() {
     expect(close.top, greaterThan(open.bottom), reason: 'one under the other, so each label has the full width');
     expect(close.left, open.left);
     expect(open.width, greaterThan(tester.getSize(find.byType(Scaffold)).width / 2));
+  });
+
+  testWidgets('K10 signs the staff member out after a confirmation that says what it costs', (tester) async {
+    final service = FakeAuthService(signedIn: true);
+    final auth = AuthViewModel(
+      service,
+      FakeAnalyticsService(),
+      FakeCrashService(),
+      InMemorySessionRepository(),
+      FakeMessagingService(),
+    );
+    addTearDown(auth.dispose);
+    await tester.runAsync(pumpEventQueue);
+    await _pump(tester, FakeMenuRepository(), auth: auth);
+
+    await _tap(tester, 'k10.signOut');
+    await tester.pumpAndSettle();
+    expect(find.text('Đăng xuất?'), findsOneWidget);
+    expect(find.text(signOutMessage), findsOneWidget);
+
+    await tester.tap(find.text('Giữ lại'));
+    await tester.pumpAndSettle();
+    expect(auth.user, isNotNull, reason: 'keeping the session signs nobody out');
+
+    await _tap(tester, 'k10.signOut');
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(Dialog), matching: find.text('Đăng xuất')));
+    await tester.pumpAndSettle();
+    expect(auth.user, isNull);
   });
 }
