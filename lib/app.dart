@@ -67,7 +67,7 @@ class _RouterHostState extends State<_RouterHost> {
     messaging: context.read<MessagingService>(),
     crash: context.read<CrashService>(),
     currentUser: () => _auth.user,
-    go: (route) => unawaited(_router.push(route)),
+    go: (route) => unawaited(_pushWhenReady(route)),
     showBanner: _showBanner,
   );
   final _messenger = GlobalKey<ScaffoldMessengerState>();
@@ -90,6 +90,19 @@ class _RouterHostState extends State<_RouterHost> {
     _syncNotifier();
     _auth.addListener(_push.onUserChanged);
     _push.start();
+  }
+
+  /// Opens [route] on top of the current screen. A tap that started the app is known as soon as the sign-in
+  /// state is, while the router is still on the splash screen and is about to replace it with Home; a screen
+  /// pushed before that is dropped. So it waits until the router has left the splash screen (at most a few
+  /// seconds, so it can never wait forever).
+  Future<void> _pushWhenReady(String route) async {
+    for (var waited = 0; waited < 50; waited++) {
+      if (_router.routerDelegate.currentConfiguration.uri.path != AppRoutes.splash) break;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+    }
+    if (mounted) unawaited(_router.push(route));
   }
 
   /// A push received while the app is open (T53): its title and text, and "Xem" opens the related screen.

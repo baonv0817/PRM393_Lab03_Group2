@@ -50,6 +50,19 @@ Taken on 04/11/2026 from the **real build on an Android phone** (Android 16) sig
 | `p1/<ID>.png` | The app screen at 540 × 1200. F1: `S02`, `S02-ADDED`, `S05`, `S06`, `S06-GATEWAY`, `S07`. F2: `S03`, `S04`, `S29` (BBSTUDENT chosen), `S05-VOUCHER` (applied, −10.000đ), `S05-VOUCHER-ERR` (below the 40.000đ minimum, checkout blocked). F3: `S06-ERR`, `S06-ERR-CASH` (cash chosen), `S07-CASH`, `S07-DIALOG`. Others: `S03-SOLDOUT` (a sold-out card on the menu), `S22` (opened from it), `S21` (Nhà văn hóa SV · Tầng 1, closed), `S25`, `S05-CLEAR` (the empty-cart dialog), `S05-EMPTY`, `S08` and `S08-HISTORY` |
 | `figma/p1-<ID>.png` | Figma (Final UI v2) on the left and the app on the right, for the 18 P1 screens that have a Figma frame. What still differs is in `docs/design-traceability.md` section 5 (D02, D06, D12 to D20, D28, D29) |
 
+### FCM in the three states, `fcm/`
+
+Taken on 10/11/2026 from the real build on an Android emulator, with a test message sent from the Firebase console (Messaging, "Send test message") to the token of the emulator, with the custom data `orderId` of a delivered order. The account was a customer; the notification permission was granted from the Android 13 dialog.
+
+| File | What it shows |
+|---|---|
+| `1-permission.png` | The Android 13 permission dialog "Allow BreakBite to send you notifications?" |
+| `2-foreground.png` | App open: the message arrives as an in-app banner ("Đơn đã sẵn sàng: Mời bạn tới quầy nhận món") |
+| `3-background.png`, `3-background-tap-opens-order.png` | App in the background: the system notification in the shade, and the app after the tap, on the tracking screen of the order named in the message |
+| `4-terminated.png`, `4-terminated-after-fix.png` | App closed (process killed): the system notification in the shade |
+| `4-terminated-tap-before-fix.png`, `4-terminated-tap-after-fix.png` | The tap on a closed app. **Before the fix the app ended on Home** (the tracking screen opened for a moment and was replaced when the splash screen redirected); after the fix (`PushRouter` now waits until the router has left the splash screen) it stays on the order |
+| `5-inbox.png` | The message saved in the notification center (S19) |
+
 ### Real Firebase run of the seller screens (P2), `p2-real/`
 
 Taken on 10/11/2026 from the real build (`flutter run --dart-define-from-file=env/cloudinary.json`) on an Android emulator, signed in with a test Google account whose `users/{uid}` was set to `role: staff`, `kioskId: q9-t2` in the console, against project `breakbite-1315b`. They are **not** from a phone; the screens must be shown again on a physical device.

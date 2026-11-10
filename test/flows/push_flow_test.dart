@@ -51,4 +51,22 @@ void main() {
     expect(find.text('Thông báo'), findsWidgets);
     expect(find.byType(SnackBar), findsNothing);
   });
+
+  testWidgets('T53: a tap that started the app opens S07 and Home does not replace it when the sign-in arrives', (
+    tester,
+  ) async {
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(412, 915);
+    addTearDown(tester.view.reset);
+    final deps = createFakeDependencies(signedIn: true);
+    final id = await placeTestOrder(deps.orders as FakeOrderRepository, uid: 'dev-user');
+
+    // The notification that started the app is read before the sign-in state is known.
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    (deps.messaging as FakeMessagingService).emitOpened(_push(orderId: id));
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsIdentifier('s07.steps'), findsOneWidget);
+  });
 }
