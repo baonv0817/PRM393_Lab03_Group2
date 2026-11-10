@@ -828,6 +828,9 @@ void main() {
     ok(await inbox.markRead(me.uid, ready.id));
     final one = mine(await inbox.watch(me.uid).firstWhere((l) => mine(l).any((n) => n.read)));
     expect(one.where((n) => n.read).map((n) => n.id), [ready.id]);
+    ok(await inbox.markAllRead(me.uid));
+    final allRead = await inbox.watch(me.uid).firstWhere((l) => l.every((n) => n.read));
+    expect(mine(allRead), hasLength(2));
     // [CR-04] More unread notifications than one write batch can hold (500) are all marked.
     for (var start = 0; start < 450; start += 200) {
       final fill = db.batch();
@@ -843,8 +846,6 @@ void main() {
     }
     ok(await inbox.markAllRead(me.uid));
     expect((await db.collection('users/${me.uid}/notifications').where('read', isEqualTo: false).get()).docs, isEmpty);
-    final allRead = await inbox.watch(me.uid).firstWhere((l) => l.every((n) => n.read));
-    expect(mine(allRead), hasLength(2));
     ok(await inbox.markAllRead(me.uid));
     expect(err(await inbox.save('someone-else', ready)), isA<PermissionDeniedException>());
 

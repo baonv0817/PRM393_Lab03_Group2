@@ -57,7 +57,9 @@ Declare every AI tool (code generation, chat, review, slides) and its purpose:
 
 | Tool | Used for |
 |---|---|
-| `[fill in]` | `[fill in]` |
+| Claude Code (Claude Sonnet 5.5) | Writing and testing the code of P2 (S09–S12, S20, S23, S24, K08–K11, K14, K15, PDF export), the ARTEMIS cases of TC-18 to TC-29, the screenshots in `evidence/p2/` and the fixes of the code review |
+| Claude Code, skill `/code-review` | The AI code review: output in [`evidence/code-review/`](evidence/code-review/), decisions in [`docs/code-review.md`](docs/code-review.md) |
+| `[the other members add theirs]` | `[fill in]` |
 
 ## Deviations from the handout
 
