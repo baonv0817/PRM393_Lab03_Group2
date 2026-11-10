@@ -50,6 +50,20 @@ Taken on 04/11/2026 from the **real build on an Android phone** (Android 16) sig
 | `p1/<ID>.png` | The app screen at 540 × 1200. F1: `S02`, `S02-ADDED`, `S05`, `S06`, `S06-GATEWAY`, `S07`. F2: `S03`, `S04`, `S29` (BBSTUDENT chosen), `S05-VOUCHER` (applied, −10.000đ), `S05-VOUCHER-ERR` (below the 40.000đ minimum, checkout blocked). F3: `S06-ERR`, `S06-ERR-CASH` (cash chosen), `S07-CASH`, `S07-DIALOG`. Others: `S03-SOLDOUT` (a sold-out card on the menu), `S22` (opened from it), `S21` (Nhà văn hóa SV · Tầng 1, closed), `S25`, `S05-CLEAR` (the empty-cart dialog), `S05-EMPTY`, `S08` and `S08-HISTORY` |
 | `figma/p1-<ID>.png` | Figma (Final UI v2) on the left and the app on the right, for the 18 P1 screens that have a Figma frame. What still differs is in `docs/design-traceability.md` section 5 (D02, D06, D12 to D20, D28, D29) |
 
+### Real Firebase run of the seller screens (P2), `p2-real/`
+
+Taken on 10/11/2026 from the real build (`flutter run --dart-define-from-file=env/cloudinary.json`) on an Android emulator, signed in with a test Google account whose `users/{uid}` was set to `role: staff`, `kioskId: q9-t2` in the console, against project `breakbite-1315b`. They are **not** from a phone; the screens must be shown again on a physical device.
+
+| File | What it shows |
+|---|---|
+| `K08.png` | Menu management with the items read from Firestore |
+| `K09.png`, `K09-sold-out.png` | The sold-out sheet, then the item marked sold out with its reason and the time it is back (restored right after) |
+| `K10.png`, `K10-closed.png` | The shop screen, then the kiosk closed ("Đóng · mở lại 06:30"; reopened right after) |
+| `K11.png` | Shift statistics from the server-side aggregate queries (1 order, 18.000đ, 1 min 15 s) |
+| `K14.png`, `K14-ERR.png` | The add-item form and its field errors (nothing was saved) |
+
+What the real run found: K11 failed twice with `FAILED_PRECONDITION` until two composite indexes on `orders` existed (`kioskId, status, createdAt, prepSeconds, totalVnd` and `kioskId, status, createdAt`, both ascending). The Emulator does not ask for indexes. Both are now in `firebase/firestore.indexes.json`.
+
 ## Other criteria
 
 | Folder | Owner | Content |
