@@ -1,5 +1,6 @@
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/auth/widgets/sign_out_button.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
 import 'package:breakbite/ui/core/theme/app_dimens.dart';
 import 'package:breakbite/ui/core/view_state.dart';
@@ -343,6 +344,9 @@ class _BodyState extends State<_Body> {
                 ),
               ),
             ),
+            // K10 of the Figma has "Đăng xuất" at the bottom: without it a staff member could not leave the app.
+            const SizedBox(height: AppSpacing.lg),
+            const Center(child: SignOutButton(testId: 'k10.signOut')),
           ],
         ),
       ),

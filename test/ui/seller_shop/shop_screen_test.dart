@@ -1,6 +1,8 @@
+import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
+import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/core/theme/app_theme.dart';
 import 'package:breakbite/ui/seller_shop/view_models/shop_view_model.dart';
 import 'package:breakbite/ui/seller_shop/widgets/shop_screen.dart';
@@ -32,6 +34,9 @@ class _NeverLoads extends FakeMenuRepository {
   Stream<List<Kiosk>> watchKiosks() => const Stream.empty();
 }
 
+/// The sign-out button of K10 reads the account state.
+late AuthViewModel _auth;
+
 Future<void> _pump(
   WidgetTester tester,
   FakeMenuRepository menu, {
@@ -45,6 +50,14 @@ Future<void> _pump(
     ..devicePixelRatio = 1
     ..physicalSize = Size(size.width, 3200);
   addTearDown(tester.view.reset);
+  _auth = AuthViewModel(
+    FakeAuthService(role: UserRole.staff, signedIn: true),
+    FakeAnalyticsService(),
+    FakeCrashService(),
+    InMemorySessionRepository(),
+    FakeMessagingService(),
+  );
+  addTearDown(_auth.dispose);
   final router = GoRouter(
     initialLocation: AppRoutes.sellerShop,
     routes: [
@@ -67,7 +80,12 @@ Future<void> _pump(
     ],
   );
   addTearDown(router.dispose);
-  await tester.pumpWidget(MaterialApp.router(theme: AppTheme.light(), routerConfig: router));
+  await tester.pumpWidget(
+    ChangeNotifierProvider<AuthViewModel>.value(
+      value: _auth,
+      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+    ),
+  );
   if (settle) await tester.pumpAndSettle();
 }
 
@@ -249,6 +267,22 @@ void main() {
     await _tap(tester, 'k10.stats');
 
     expect(find.text('K11'), findsOneWidget);
+  });
+
+  testWidgets('K10 has "Đăng xuất": a staff member asks, confirms and is signed out', (tester) async {
+    await _pump(tester, FakeMenuRepository());
+    await tester.pump();
+    expect(_auth.user, isNotNull);
+
+    await tester.ensureVisible(byId('k10.signOut'));
+    await tester.pumpAndSettle();
+    await tester.tap(byId('k10.signOut'));
+    await tester.pumpAndSettle();
+    expect(find.text('Đăng xuất?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Đăng xuất'));
+    await tester.pumpAndSettle();
+    expect(_auth.user, isNull);
   });
 
   testWidgets('K10 shows a loading state, an error with retry, and a message for an account without a kiosk', (

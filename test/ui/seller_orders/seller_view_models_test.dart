@@ -40,10 +40,16 @@ SellerOrdersViewModel _orders(
   clock: () => _now,
 );
 
-SellerOrderViewModel _one(FakeOrderRepository orders, String id, {String? kioskId = 'q9-t2'}) => SellerOrderViewModel(
+SellerOrderViewModel _one(
+  FakeOrderRepository orders,
+  String id, {
+  String? kioskId = 'q9-t2',
+  FakeAnalyticsService? analytics,
+}) => SellerOrderViewModel(
   orders: orders,
   menu: FakeMenuRepository(),
   crash: FakeCrashService(),
+  analytics: analytics,
   orderId: id,
   kioskId: kioskId,
   clock: () => _now,
@@ -188,6 +194,71 @@ void main() {
       await vm.deliver();
       await pumpEventQueue();
       expect(vm.isCashToCollect, isFalse);
+    });
+
+    test('logs order_accepted once with the wait, and order_delivered with whether it was cash', () async {
+      final repo = FakeOrderRepository();
+      final analytics = FakeAnalyticsService();
+      final id = await placeTestOrder(repo, uid: 'u1', method: PaymentMethod.cash);
+      final vm = _one(repo, id, analytics: analytics);
+      await pumpEventQueue();
+
+      await vm.accept();
+      await pumpEventQueue();
+      expect(analytics.events.map((e) => e.name), ['order_accepted']);
+      final waited = analytics.events.single.params!;
+      expect(waited['order_id'], id);
+      expect(waited['wait_seconds'], isA<int>());
+      expect((waited['wait_seconds']! as int) >= 0, isTrue);
+
+      // A step that is refused logs nothing: the order is already preparing.
+      await vm.accept();
+      expect(analytics.events, hasLength(1));
+
+      await vm.markReady();
+      await pumpEventQueue();
+      expect(analytics.events, hasLength(1), reason: 'markReady has no event');
+      await vm.deliver();
+      await pumpEventQueue();
+      expect(analytics.events.last.name, 'order_delivered');
+      expect(analytics.events.last.params, {'order_id': id, 'paid_cash': true});
+    });
+
+    test('a paid-online order is delivered with paid_cash false, and a failed step logs nothing', () async {
+      final repo = FakeOrderRepository();
+      final analytics = FakeAnalyticsService();
+      final id = await placeTestOrder(repo, uid: 'u1');
+      final vm = _one(repo, id, analytics: analytics);
+      await pumpEventQueue();
+      await vm.deliver(); // still pending: refused
+      expect(analytics.events, isEmpty);
+      await vm.accept();
+      await pumpEventQueue();
+      await vm.markReady();
+      await pumpEventQueue();
+      await vm.deliver();
+      await pumpEventQueue();
+      expect(analytics.events.last.params!['paid_cash'], isFalse);
+    });
+
+    test('accepting from the list (K02) logs order_accepted too', () async {
+      final repo = FakeOrderRepository();
+      final analytics = FakeAnalyticsService();
+      final id = await placeTestOrder(repo, uid: 'u1');
+      final vm = SellerOrdersViewModel(
+        orders: repo,
+        menu: FakeMenuRepository(),
+        incidents: FakeIncidentRepository(),
+        crash: FakeCrashService(),
+        analytics: analytics,
+        kioskId: 'q9-t2',
+        clock: () => _now,
+      );
+      await pumpEventQueue();
+      await vm.accept(repo.all.firstWhere((o) => o.id == id));
+      await pumpEventQueue();
+      expect(analytics.events.map((e) => e.name), ['order_accepted']);
+      vm.dispose();
     });
 
     test('rejecting needs a reason, cancels the order and records who did it', () async {

@@ -1,5 +1,6 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/seller_orders/view_models/seller_incidents_view_model.dart';
@@ -19,44 +20,53 @@ import 'package:provider/provider.dart';
 
 // P4: the seller's order handling K01–K06, K12 (reject dialog, no route), K13.
 
-String? _kioskOf(BuildContext context) => context.read<AuthViewModel>().user?.kioskId;
-
-Widget _order(BuildContext context, GoRouterState state, Widget screen) => ChangeNotifierProvider(
-  create: (_) => SellerOrderViewModel(
-    orders: context.read<OrderRepository>(),
-    menu: context.read<MenuRepository>(),
-    crash: context.read<CrashService>(),
-    orderId: state.pathParameters['id'] ?? '',
-    kioskId: _kioskOf(context),
+Widget _order(BuildContext context, GoRouterState state, Widget screen) => forKiosk(
+  (context, kioskId) => ChangeNotifierProvider(
+    key: ValueKey(kioskId),
+    create: (_) => SellerOrderViewModel(
+      orders: context.read<OrderRepository>(),
+      menu: context.read<MenuRepository>(),
+      crash: context.read<CrashService>(),
+      analytics: context.read<AnalyticsService>(),
+      orderId: state.pathParameters['id'] ?? '',
+      kioskId: kioskId,
+    ),
+    child: screen,
   ),
-  child: screen,
 );
 
 /// Seller tab root: K02 Order list.
 final GoRoute sellerOrdersRoute = GoRoute(
   path: AppRoutes.sellerOrders,
-  builder: (context, state) => ChangeNotifierProvider(
-    create: (_) => SellerOrdersViewModel(
-      orders: context.read<OrderRepository>(),
-      menu: context.read<MenuRepository>(),
-      incidents: context.read<IncidentRepository>(),
-      crash: context.read<CrashService>(),
-      kioskId: _kioskOf(context),
+  builder: (context, state) => forKiosk(
+    (context, kioskId) => ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (_) => SellerOrdersViewModel(
+        orders: context.read<OrderRepository>(),
+        menu: context.read<MenuRepository>(),
+        incidents: context.read<IncidentRepository>(),
+        crash: context.read<CrashService>(),
+        analytics: context.read<AnalyticsService>(),
+        kioskId: kioskId,
+      ),
+      child: const SellerOrdersScreen(),
     ),
-    child: const SellerOrdersScreen(),
   ),
 );
 
 /// Seller tab root: K05 Scan the pickup code.
 final GoRoute sellerScanRoute = GoRoute(
   path: AppRoutes.sellerScan,
-  builder: (context, state) => ChangeNotifierProvider(
-    create: (_) => SellerScanViewModel(
-      orders: context.read<OrderRepository>(),
-      crash: context.read<CrashService>(),
-      kioskId: _kioskOf(context),
+  builder: (context, state) => forKiosk(
+    (context, kioskId) => ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (_) => SellerScanViewModel(
+        orders: context.read<OrderRepository>(),
+        crash: context.read<CrashService>(),
+        kioskId: kioskId,
+      ),
+      child: const SellerScanScreen(),
     ),
-    child: const SellerScanScreen(),
   ),
 );
 
@@ -68,15 +78,18 @@ final List<GoRoute> p4Routes = [
   GoRoute(path: AppRoutes.sellerOrderDeliver, builder: (c, s) => _order(c, s, const SellerDeliverScreen())),
   GoRoute(
     path: AppRoutes.sellerIncidents,
-    builder: (context, state) => ChangeNotifierProvider(
-      create: (_) => SellerIncidentsViewModel(
-        incidents: context.read<IncidentRepository>(),
-        orders: context.read<OrderRepository>(),
-        crash: context.read<CrashService>(),
-        kioskId: _kioskOf(context),
-        staffUid: context.read<AuthViewModel>().user?.uid ?? '',
+    builder: (context, state) => forKiosk(
+      (context, kioskId) => ChangeNotifierProvider(
+        key: ValueKey(kioskId),
+        create: (_) => SellerIncidentsViewModel(
+          incidents: context.read<IncidentRepository>(),
+          orders: context.read<OrderRepository>(),
+          crash: context.read<CrashService>(),
+          kioskId: kioskId,
+          staffUid: context.read<AuthViewModel>().user?.uid ?? '',
+        ),
+        child: const SellerIncidentsScreen(),
       ),
-      child: const SellerIncidentsScreen(),
     ),
   ),
 ];

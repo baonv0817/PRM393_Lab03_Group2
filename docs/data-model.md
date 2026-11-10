@@ -276,7 +276,7 @@ Every composite index is in `firebase/firestore.indexes.json`. Firestore creates
 | K02 Order queue | `orders` where `kioskId == mine` and `status in [pending, preparing, ready]` orderBy `createdAt desc` | (kioskId, status, createdAt desc) |
 | K05 Scan code | `orders` where `kioskId == mine` and `pickupCode == c` and `status == 'ready'` | (kioskId, pickupCode, status) |
 | K08 Menu management | like S03, without filtering `soldOut` | (kioskId, name) |
-| K11 Shift statistics | `orders` where `kioskId == mine` and `createdAt >= startOfShift`: `count()`, `sum('totalVnd')`, `average('prepSeconds')`; the hourly chart reads that shift's orders (a few hundred at most) | (kioskId, createdAt desc) |
+| K11 Shift statistics | `orders` where `kioskId == mine` and `createdAt >= startOfShift`: `count()`, `sum('totalVnd')`, `average('prepSeconds')`; the hourly chart reads that shift's orders (a few hundred at most) | (kioskId, createdAt desc); for the aggregation with `status == 'delivered'`: (kioskId, status, createdAt, prepSeconds, totalVnd), all ascending. The Emulator does not ask for it, the real Firestore does: without it the screen fails with `FAILED_PRECONDITION` |
 | K13 Customer incidents | `incidents` where `kioskId == mine` and `status == s` orderBy `createdAt desc`, *paged* | (kioskId, status, createdAt desc) |
 
 **Long lists are paged** with a cursor (`Paged<T>`, 20 per page, at most 50): the queries marked *paged* add `limit` and `startAfterDocument`; see `CONTRIBUTING.md` section 7.

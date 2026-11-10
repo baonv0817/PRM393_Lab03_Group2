@@ -34,6 +34,24 @@ Future<void> start(WidgetTester tester, AppDependencies deps) async {
 Order _find(AppDependencies deps, String id) => (deps.orders as FakeOrderRepository).all.firstWhere((o) => o.id == id);
 
 void main() {
+  testWidgets('K02: a kiosk assigned while the app is open shows its orders without restarting the app', (
+    tester,
+  ) async {
+    final deps = await openAsStaff(tester);
+    final auth = deps.auth as FakeAuthService;
+    auth.setKiosk(null);
+    final id = await placeTestOrder(deps.orders as FakeOrderRepository, uid: 'u1');
+    await start(tester, deps);
+
+    expect(find.textContaining('chưa được gán kiosk'), findsOneWidget);
+    expect(byId('k02.order.$id'), findsNothing);
+
+    auth.setKiosk('q9-t2');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('chưa được gán kiosk'), findsNothing);
+    expect(byId('k02.order.$id'), findsOneWidget);
+  });
+
   testWidgets('K02 → K03 → K04 → K02 → K06: a staff member takes an order, makes it and hands it over', (tester) async {
     final deps = await openAsStaff(tester);
     final orders = deps.orders as FakeOrderRepository;
@@ -164,6 +182,45 @@ void main() {
     expect(find.text('Đã thu tiền và giao món.'), findsOneWidget);
     expect(_find(deps, id).status, OrderStatus.delivered);
     expect(_find(deps, id).paymentStatus, PaymentStatus.paid);
+  });
+
+  testWidgets('K05 with a camera: a QR code opens the order, a wrong one shows K05-ERR, a repeat is not retried', (
+    tester,
+  ) async {
+    final deps = await openAsStaff(tester);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'u1');
+    await orders.accept(_find(deps, id), readyIn: const Duration(minutes: 3));
+    await orders.markReady(_find(deps, id));
+    final qr = 'bb:$id:${_find(deps, id).pickupCode}';
+
+    late ValueChanged<String> seen;
+    await tester.pumpWidget(
+      BreakBiteApp(
+        dependencies: deps,
+        qrCamera: (context, onCode) {
+          seen = onCode;
+          return const ColoredBox(color: Colors.black);
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Quét mã')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Hướng camera vào mã QR'), findsOneWidget);
+
+    seen('bb:no-such-order:000000');
+    await tester.pumpAndSettle();
+    expect(byId('k05.error'), findsOneWidget);
+    // The camera keeps seeing the same code: it is not tried again at once.
+    seen('bb:no-such-order:000000');
+    await tester.pumpAndSettle();
+    expect(find.text('Mã không hợp lệ hoặc đã hết hạn'), findsOneWidget);
+
+    seen(qr);
+    await tester.pumpAndSettle();
+    expect(find.text('Xác nhận đã giao món'), findsWidgets, reason: 'K06 opened for the order');
+    expect(byId('k06.confirm'), findsOneWidget);
   });
 
   testWidgets('K02 bell → K13: a customer report is taken on and refunded, and the customer sees the answer', (

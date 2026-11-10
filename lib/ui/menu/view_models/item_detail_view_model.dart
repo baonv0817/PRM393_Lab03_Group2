@@ -55,6 +55,7 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   StreamSubscription<List<Favorite>>? _favoritesSub;
   List<Favorite> _hearts = const [];
   bool _togglingFavorite = false;
+  bool _viewLogged = false;
   ViewState<MenuItem> _state = const ViewLoading();
   int _quantity = 1;
   String _note = '';
@@ -130,6 +131,17 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     switch (result) {
       case Ok(:final value):
         _state = ViewData(value);
+        // Once per opening of S04: a retry or a refresh of the same item is not another view.
+        if (!_viewLogged) {
+          _viewLogged = true;
+          unawaited(
+            analytics.logEvent(AnalyticsEvents.viewMenuItem, {
+              'item_id': value.id,
+              'item_name': value.name,
+              'category': value.category.name,
+            }),
+          );
+        }
       case Err(error: NotFoundException(:final message)):
         _state = ViewEmpty(message);
       case Err(:final error):

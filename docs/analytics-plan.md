@@ -15,7 +15,7 @@ Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 | `purchase` | Order placed successfully | `transaction_id` (string), `value_vnd` (int), `payment_method` (string) | Is the goal of ≤ 8 taps and < 35 seconds met? | S06-GATEWAY → S07 |
 | `payment_failed` | Payment declined, expired or left at the gateway | `payment_method` (string), `reason` (string: declined, expired, cancelled) | Which method fails most, and how many switch to cash? | S06-ERR |
 | `export_report` | A file is generated and uploaded | `file_size_kb` (int), `source` (string: firebase_demo, order_detail), `order_id` (string, only for a single-order receipt) | Which orders get a receipt exported? | Demo area, S12 |
-| `order_accepted` | Seller accepts an order | `order_id` (string), `wait_seconds` (int) | How fast does the counter accept orders? | K03 |
+| `order_accepted` | Seller accepts an order | `order_id` (string), `wait_seconds` (int) | How fast does the counter accept orders? | K02, K03 |
 | `order_delivered` | Seller hands over the order | `order_id` (string), `paid_cash` (bool) | How many orders are paid in cash? | K06 |
 
 User property: `setUserId(uid)` after sign-in; never put an email or name in a user property.

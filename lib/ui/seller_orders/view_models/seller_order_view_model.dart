@@ -19,6 +19,7 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.crash,
     required this.orderId,
     required this.kioskId,
+    this.analytics,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now {
     load();
@@ -30,6 +31,7 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
   final OrderRepository orders;
   final MenuRepository menu;
   final CrashService crash;
+  final AnalyticsService? analytics;
   final String orderId;
   final String? kioskId;
   final DateTime Function() _clock;
@@ -97,17 +99,24 @@ class SellerOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
         );
   }
 
-  Future<Result<void>> accept() => _run(
-    'accept',
-    (o) => orders.accept(
+  Future<Result<void>> accept() => _run('accept', (o) async {
+    final result = await orders.accept(
       o,
       readyIn: readyInFor(o, now: now, kioskWaitMinutes: _kioskWait),
-    ),
-  );
+    );
+    if (result is Ok<void>) {
+      unawaited(analytics?.logEvent(AnalyticsEvents.orderAccepted, orderAcceptedParams(o, now)));
+    }
+    return result;
+  });
 
   Future<Result<void>> markReady() => _run('markReady', orders.markReady);
 
-  Future<Result<void>> deliver() => _run('deliver', orders.deliver);
+  Future<Result<void>> deliver() => _run('deliver', (o) async {
+    final result = await orders.deliver(o);
+    if (result is Ok<void>) unawaited(analytics?.logEvent(AnalyticsEvents.orderDelivered, orderDeliveredParams(o)));
+    return result;
+  });
 
   /// K12: [reason] is the text of `rejectReasonText`. The customer is refunded automatically (D04).
   Future<Result<void>> reject(String reason) {

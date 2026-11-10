@@ -1,5 +1,6 @@
 import 'package:breakbite/data/repositories/repositories.dart';
 import 'package:breakbite/data/services/services.dart';
+import 'package:breakbite/routing/route_helpers.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/auth/view_models/auth_view_model.dart';
 import 'package:breakbite/ui/order_manage/view_models/edit_order_view_model.dart';
@@ -24,6 +25,7 @@ import 'package:breakbite/ui/seller_shop/view_models/shift_stats_view_model.dart
 import 'package:breakbite/ui/seller_shop/view_models/shop_view_model.dart';
 import 'package:breakbite/ui/seller_shop/widgets/shift_stats_screen.dart';
 import 'package:breakbite/ui/seller_shop/widgets/shop_screen.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -33,26 +35,29 @@ import 'package:provider/provider.dart';
 /// Seller tab root: K08 Menu management.
 final GoRoute sellerMenuRoute = GoRoute(
   path: AppRoutes.sellerMenu,
-  builder: (context, state) => ChangeNotifierProvider(
-    create: (_) => SellerMenuViewModel(
-      menu: context.read<MenuRepository>(),
-      crash: context.read<CrashService>(),
-      kioskId: context.read<AuthViewModel>().user?.kioskId,
+  builder: (context, state) => forKiosk(
+    (context, kioskId) => ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (_) => SellerMenuViewModel(
+        menu: context.read<MenuRepository>(),
+        crash: context.read<CrashService>(),
+        kioskId: kioskId,
+      ),
+      child: const SellerMenuScreen(),
     ),
-    child: const SellerMenuScreen(),
   ),
 );
 
 /// Seller tab root: K10 Shop.
 final GoRoute sellerShopRoute = GoRoute(
   path: AppRoutes.sellerShop,
-  builder: (context, state) => ChangeNotifierProvider(
-    create: (_) => ShopViewModel(
-      menu: context.read<MenuRepository>(),
-      crash: context.read<CrashService>(),
-      kioskId: context.read<AuthViewModel>().user?.kioskId,
+  builder: (context, state) => forKiosk(
+    (context, kioskId) => ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (_) =>
+          ShopViewModel(menu: context.read<MenuRepository>(), crash: context.read<CrashService>(), kioskId: kioskId),
+      child: const ShopScreen(),
     ),
-    child: const ShopScreen(),
   ),
 );
 
@@ -165,37 +170,46 @@ final List<GoRoute> p2Routes = [
   ),
   GoRoute(
     path: AppRoutes.sellerStats,
-    builder: (context, state) => ChangeNotifierProvider(
-      create: (_) => ShiftStatsViewModel(
-        orders: context.read<OrderRepository>(),
-        menu: context.read<MenuRepository>(),
-        crash: context.read<CrashService>(),
-        kioskId: context.read<AuthViewModel>().user?.kioskId,
+    builder: (context, state) => forKiosk(
+      (context, kioskId) => ChangeNotifierProvider(
+        key: ValueKey(kioskId),
+        create: (_) => ShiftStatsViewModel(
+          orders: context.read<OrderRepository>(),
+          menu: context.read<MenuRepository>(),
+          crash: context.read<CrashService>(),
+          kioskId: kioskId,
+        ),
+        child: const ShiftStatsScreen(),
       ),
-      child: const ShiftStatsScreen(),
     ),
   ),
   GoRoute(
     path: AppRoutes.sellerMenuNew,
-    builder: (context, state) => ChangeNotifierProvider(
-      create: (_) => MenuItemFormViewModel(
-        menu: context.read<MenuRepository>(),
-        crash: context.read<CrashService>(),
-        kioskId: context.read<AuthViewModel>().user?.kioskId,
+    builder: (context, state) => forKiosk(
+      (context, kioskId) => ChangeNotifierProvider(
+        key: ValueKey(kioskId),
+        create: (_) => MenuItemFormViewModel(
+          menu: context.read<MenuRepository>(),
+          crash: context.read<CrashService>(),
+          kioskId: kioskId,
+        ),
+        child: const MenuItemFormScreen(),
       ),
-      child: const MenuItemFormScreen(),
     ),
   ),
   GoRoute(
     path: AppRoutes.sellerMenuEdit,
-    builder: (context, state) => ChangeNotifierProvider(
-      create: (_) => MenuItemFormViewModel(
-        menu: context.read<MenuRepository>(),
-        crash: context.read<CrashService>(),
-        kioskId: context.read<AuthViewModel>().user?.kioskId,
-        itemId: state.pathParameters['id'] ?? '',
+    builder: (context, state) => forKiosk(
+      (context, kioskId) => ChangeNotifierProvider(
+        key: ValueKey(kioskId),
+        create: (_) => MenuItemFormViewModel(
+          menu: context.read<MenuRepository>(),
+          crash: context.read<CrashService>(),
+          kioskId: kioskId,
+          itemId: state.pathParameters['id'] ?? '',
+        ),
+        child: const MenuItemFormScreen(),
       ),
-      child: const MenuItemFormScreen(),
     ),
   ),
 ];

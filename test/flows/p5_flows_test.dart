@@ -90,6 +90,40 @@ void main() {
     expect(inbox.firstWhere((n) => n.id.endsWith('_preparing')).read, isFalse);
   });
 
+  test('destinationOfNotification: ready → pickup code, other order → tracking, no order → the list', () {
+    AppNotification note(String id, {String? orderId}) =>
+        AppNotification(id: id, title: 't', body: 'b', receivedAt: DateTime(2026), orderId: orderId);
+    expect(destinationOfNotification(note('o1_ready', orderId: 'o1')), '/orders/o1/pickup');
+    expect(destinationOfNotification(note('o1_preparing', orderId: 'o1')), '/orders/o1');
+    expect(destinationOfNotification(note('ann_1')), '/notifications');
+    expect(destinationOfNotification(note('x', orderId: '')), '/notifications');
+  });
+
+  testWidgets('a push tapped in the system tray opens the order it is about, or the notification list', (tester) async {
+    final deps = await openSignedIn(tester);
+    final messaging = deps.messaging as FakeMessagingService;
+    final id = await placeTestOrder(deps.orders as FakeOrderRepository, uid: 'dev-user');
+    await tester.pumpAndSettle();
+
+    messaging.emitOpened(
+      AppNotification(
+        id: AppNotification.idForOrder(id, OrderStatus.ready),
+        title: 'Đơn đã sẵn sàng',
+        body: 'Nhận món',
+        receivedAt: DateTime.now(),
+        orderId: id,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(byId('s20.card'), findsOneWidget, reason: 'a ready order opens its pickup code');
+
+    messaging.emitOpened(
+      AppNotification(id: 'ann_1', title: 'Combo giờ vàng', body: 'Giảm 15%', receivedAt: DateTime.now()),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Thông báo'), findsWidgets, reason: 'an announcement opens S19');
+  });
+
   testWidgets('S19 "Đọc hết" marks every notification read and the button goes away', (tester) async {
     final deps = await openSignedIn(tester);
     final inbox = deps.notifications as FakeNotificationRepository;

@@ -14,6 +14,18 @@ Duration readyInFor(Order order, {required DateTime now, int? kioskWaitMinutes})
   return usual > fallback ? usual : fallback;
 }
 
+/// Parameters of the `order_accepted` event (analytics plan): how long the order waited for the counter.
+Map<String, Object> orderAcceptedParams(Order order, DateTime now) {
+  final waited = now.difference(order.createdAt).inSeconds;
+  return {'order_id': order.id, 'wait_seconds': waited < 0 ? 0 : waited};
+}
+
+/// Parameters of the `order_delivered` event: whether the customer chose to pay at the counter.
+Map<String, Object> orderDeliveredParams(Order order) => {
+  'order_id': order.id,
+  'paid_cash': order.paymentMethod == PaymentMethod.cash,
+};
+
 /// The reasons K12 offers when staff turn an order down.
 enum RejectReason {
   soldOut('Hết món'),

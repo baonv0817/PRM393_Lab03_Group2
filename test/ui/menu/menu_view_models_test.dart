@@ -88,14 +88,34 @@ void main() {
   });
 
   group('ItemDetailViewModel', () {
-    ItemDetailViewModel build(String id, {FakeCartRepository? cart}) => ItemDetailViewModel(
-      menu: FakeMenuRepository(),
-      cart: cart ?? FakeCartRepository(),
-      analytics: FakeAnalyticsService(),
-      crash: FakeCrashService(),
-      uid: 'u1',
-      itemId: id,
-    );
+    ItemDetailViewModel build(String id, {FakeCartRepository? cart, FakeAnalyticsService? analytics}) =>
+        ItemDetailViewModel(
+          menu: FakeMenuRepository(),
+          cart: cart ?? FakeCartRepository(),
+          analytics: analytics ?? FakeAnalyticsService(),
+          crash: FakeCrashService(),
+          uid: 'u1',
+          itemId: id,
+        );
+
+    test('logs view_menu_item once when the item has loaded, and nothing for an item that is not found', () async {
+      final analytics = FakeAnalyticsService();
+      final vm = build('m1', analytics: analytics);
+      await pumpEventQueue();
+      expect(analytics.events.map((e) => e.name), ['view_menu_item']);
+      final params = analytics.events.single.params!;
+      expect(params['item_id'], 'm1');
+      expect(params['item_name'], isNotEmpty);
+      expect(params['category'], isIn(['food', 'drink', 'other']));
+
+      await vm.load(); // a retry of the same screen is not another view
+      expect(analytics.events, hasLength(1));
+
+      final missing = FakeAnalyticsService();
+      build('does-not-exist', analytics: missing);
+      await pumpEventQueue();
+      expect(missing.events, isEmpty);
+    });
 
     test('adds the chosen quantity with the kitchen note, and the label shows the line total', () async {
       final cart = FakeCartRepository();
