@@ -61,6 +61,19 @@ Taken on 10/11/2026 from the real build (`flutter run --dart-define-from-file=en
 | `K10.png`, `K10-closed.png` | The shop screen, then the kiosk closed ("Đóng · mở lại 06:30"; reopened right after) |
 | `K11.png` | Shift statistics from the server-side aggregate queries (1 order, 18.000đ, 1 min 15 s) |
 | `K14.png`, `K14-ERR.png` | The add-item form and its field errors (nothing was saved) |
+| `S07.png`, `S20.png` | The order just placed with cash (tracking, pickup code) and the enlarged QR with the code and the line that says the kiosk has not taken the order |
+| `S09.png` | Edit order: one coffee raised to two, the new total 36.000đ recalculated (saved) |
+| `S10.png` | The cancelled order: "Bạn chưa trả tiền cho đơn này nên không có khoản nào cần hoàn" |
+| `S11.png` | Full history grouped by week with the spend card |
+| `S12.png`, `S12-delivered.png`, `S12-receipt.png` | Order detail of a cancelled and of a delivered order (four steps of the timeline), and the receipt exported as a PDF and uploaded to Cloudinary (9 KB, `breakbite/reports/{uid}/…pdf`) |
+| `S23-empty.png`, `S23.png` | The review form, then the saved review (4 points, tag "Ngon", "Đã đánh giá") |
+| `S24.png`, `S24-sent.png` | The incident form (five kinds) and the report sent ("Đã gửi, chờ kiosk xem") |
+
+The customer screens were run with the same account switched to `role: user` in the console. Two cash orders were placed: one was edited and cancelled (S09, S10, S11, S12), the other was accepted, prepared and handed over from the seller screens with the typed pickup code, then reviewed and reported from the customer side (S12, S23, S24). The test orders and the test report stay in the project (the rules do not allow deleting them).
+
+### Real Firebase run of the seller order screens (P4), `p4-real/`
+
+Same date, same build, with the account switched to `role: staff`. `K02-new-order.png` shows the order the customer had just placed, in "Mới (1)"; `K02-in-progress.png` the "Đang làm" tab; `K04.png` the countdown and the checklist; `K05-camera-denied.png` the message when the camera permission is refused and the typed code is offered; `K05-valid-code.png` the confirmation of a valid code with the cash to collect. These are the screens of P4; they are kept here as the proof that the order really travels from the customer app to the seller app.
 
 What the real run found: K11 failed twice with `FAILED_PRECONDITION` until two composite indexes on `orders` existed (`kioskId, status, createdAt, prepSeconds, totalVnd` and `kioskId, status, createdAt`, both ascending). The Emulator does not ask for indexes. Both are now in `firebase/firestore.indexes.json`.
 
