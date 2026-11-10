@@ -70,6 +70,14 @@ Command to run the suite: `cd e2e_test; uv run python run_repeat.py -n 3` (runs 
 
 ## 4. Exploratory session (Pro profile, 15 to 30 minutes)
 
-| Time | Bug or problem found | Severity | Handled |
+**Session of 10/11/2026, about 10 minutes, by P2 with Claude Code, on an Android emulator (Pixel 7, API 36) with the fake-data build** (`flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=DEV_SEED=true`, once as `DEV_ROLE=user` and once as `DEV_ROLE=staff`), driven with `adb` taps and screenshots. This is **not** the ARTEMIS Pro-profile session the handout asks for; P5 repeats it with ARTEMIS on a phone and the real Firebase. Charter: text at 200 % (Home, Menu, Orders, Profile, and the seller tabs), many fast taps, odd search input, the receipt export.
+
+| Time (device clock) | Bug or problem found | Severity | Handled |
 |---|---|---|---|
-| | | | |
+| 12:52 | Text at 200 %: the Orders tab "Đang xử lý (2)" fades out at the closing bracket (S08, P1) | Low | Open |
+| 12:52 | Text at 200 %: the kiosk status line is cut with "…" on Home ("Sẵn sàng · chờ 5–7 ph…") and on the Menu ("Mở · ch…"), so the wait time cannot be read | Low | Open |
+| 12:54 | The search's empty state says "xem các món bán chạy" but offers only three search suggestions | Low | Open |
+| 12:54 | Orders: the badge "Đã nhận đơn" (placed) sits above the line "Chờ kiosk nhận đơn" (not accepted yet), and the history says "Đã nhận" for a picked-up order; the three read as contradictory | Low (wording from Figma) | Open, to decide with P1 |
+| 12:58 | K10 at 200 %: the labels "Giờ mở cửa" and "Giờ đóng cửa" are cut ("Giờ mở c…") in two half-width fields | Low | Fixed: the two fields stack when the text is 1.5 times larger or more; widget test added |
+
+What was tried and showed no problem: 14 fast taps on "+" give a quantity of 14 and the cart total 546.000đ (14 × 39.000đ); two quick taps on "Xuất biên nhận PDF" produce one receipt in the list; a search for "tacos%20%26%2…" says nothing was found and shows the term; the seller Orders, Menu and Shop tabs at 200 % show no overflow in a debug build. Not tried: airplane mode (the fake build does not use the network), rotation, a real push notification.

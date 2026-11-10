@@ -284,49 +284,43 @@ class _BodyState extends State<_Body> {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TestId(
-                    'k10.openTime',
-                    child: TextField(
-                      controller: _openTime,
-                      onChanged: vm.setOpenTime,
-                      keyboardType: TextInputType.datetime,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
-                        LengthLimitingTextInputFormatter(5),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'Giờ mở cửa',
-                        hintText: '06:30',
-                        errorText: showErrors ? vm.openTimeError : null,
-                      ),
-                    ),
+            _TimeFields(
+              // The two labels do not fit side by side once the text is about 1.5 times larger.
+              stacked: MediaQuery.textScalerOf(context).scale(16) >= 24,
+              open: TestId(
+                'k10.openTime',
+                child: TextField(
+                  controller: _openTime,
+                  onChanged: vm.setOpenTime,
+                  keyboardType: TextInputType.datetime,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
+                    LengthLimitingTextInputFormatter(5),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Giờ mở cửa',
+                    hintText: '06:30',
+                    errorText: showErrors ? vm.openTimeError : null,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: TestId(
-                    'k10.closeTime',
-                    child: TextField(
-                      controller: _closeTime,
-                      onChanged: vm.setCloseTime,
-                      keyboardType: TextInputType.datetime,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
-                        LengthLimitingTextInputFormatter(5),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'Giờ đóng cửa',
-                        hintText: '17:00',
-                        errorText: showErrors ? vm.closeTimeError : null,
-                      ),
-                    ),
+              ),
+              close: TestId(
+                'k10.closeTime',
+                child: TextField(
+                  controller: _closeTime,
+                  onChanged: vm.setCloseTime,
+                  keyboardType: TextInputType.datetime,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
+                    LengthLimitingTextInputFormatter(5),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Giờ đóng cửa',
+                    hintText: '17:00',
+                    errorText: showErrors ? vm.closeTimeError : null,
                   ),
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             TestId(
@@ -346,6 +340,36 @@ class _BodyState extends State<_Body> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Opening and closing time: side by side, one under the other when the text is large.
+class _TimeFields extends StatelessWidget {
+  const _TimeFields({required this.stacked, required this.open, required this.close});
+
+  final bool stacked;
+  final Widget open;
+  final Widget close;
+
+  @override
+  Widget build(BuildContext context) {
+    if (stacked) {
+      return Column(
+        children: [
+          open,
+          const SizedBox(height: AppSpacing.sm),
+          close,
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: open),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: close),
+      ],
     );
   }
 }
