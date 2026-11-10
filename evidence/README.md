@@ -50,6 +50,10 @@ Taken on 04/11/2026 from the **real build on an Android phone** (Android 16) sig
 | `p1/<ID>.png` | The app screen at 540 × 1200. F1: `S02`, `S02-ADDED`, `S05`, `S06`, `S06-GATEWAY`, `S07`. F2: `S03`, `S04`, `S29` (BBSTUDENT chosen), `S05-VOUCHER` (applied, −10.000đ), `S05-VOUCHER-ERR` (below the 40.000đ minimum, checkout blocked). F3: `S06-ERR`, `S06-ERR-CASH` (cash chosen), `S07-CASH`, `S07-DIALOG`. Others: `S03-SOLDOUT` (a sold-out card on the menu), `S22` (opened from it), `S21` (Nhà văn hóa SV · Tầng 1, closed), `S25`, `S05-CLEAR` (the empty-cart dialog), `S05-EMPTY`, `S08` and `S08-HISTORY` |
 | `figma/p1-<ID>.png` | Figma (Final UI v2) on the left and the app on the right, for the 18 P1 screens that have a Figma frame. What still differs is in `docs/design-traceability.md` section 5 (D02, D06, D12 to D20, D28, D29) |
 
+### Analytics DebugView, `analytics/`
+
+`debugview-top-events.png` lists all twelve events of `docs/analytics-plan.md` with their counts (login, logout, search, view_menu_item, add_to_cart, reorder, begin_checkout, purchase, payment_failed, export_report, order_accepted, order_delivered) for the debug device `sdk_gphone64_x86_64`, with the `user_id` property; `debugview-timeline.png` is the timeline of the same run. How the events were triggered is in section "Evidence" of the plan.
+
 ### FCM in the three states, `fcm/`
 
 Taken on 10/11/2026 from the real build on an Android emulator, with a test message sent from the Firebase console (Messaging, "Send test message") to the token of the emulator, with the custom data `orderId` of a delivered order. The account was a customer; the notification permission was granted from the Android 13 dialog.
