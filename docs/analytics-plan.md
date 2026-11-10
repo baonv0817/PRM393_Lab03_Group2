@@ -26,4 +26,17 @@ Every event needs a DebugView screenshot (Analytics debug mode on) saved in `evi
 
 | Event | DebugView screenshot |
 |---|---|
-| | |
+| `login` | `evidence/analytics/debugview-top-events.png` (row "login" of TOP EVENTS) |
+| `logout` | `evidence/analytics/debugview-top-events.png` (row "logout" of TOP EVENTS) |
+| `search` | `evidence/analytics/debugview-top-events.png` (row "search" of TOP EVENTS) |
+| `view_menu_item` | `evidence/analytics/debugview-top-events.png` (row "view_menu_item" of TOP EVENTS) |
+| `add_to_cart` | `evidence/analytics/debugview-top-events.png` (row "add_to_cart" of TOP EVENTS) |
+| `begin_checkout` | `evidence/analytics/debugview-top-events.png` (row "begin_checkout" of TOP EVENTS) |
+| `purchase` | `evidence/analytics/debugview-top-events.png` (row "purchase" of TOP EVENTS) |
+| `payment_failed` | `evidence/analytics/debugview-top-events.png` (row "payment_failed" of TOP EVENTS) |
+| `reorder` (logged in code, not in the plan table above) | `evidence/analytics/debugview-top-events.png` (row "reorder" of TOP EVENTS) |
+| `export_report` | `evidence/analytics/debugview-top-events.png` (row "export_report" of TOP EVENTS) |
+| `order_accepted` | `evidence/analytics/debugview-top-events.png` (row "order_accepted" of TOP EVENTS) |
+| `order_delivered` | `evidence/analytics/debugview-top-events.png` (row "order_delivered" of TOP EVENTS) |
+
+How it was taken (10/11/2026): real build on an Android emulator, debug mode turned on with `adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite`, then every event was triggered by hand: sign-out and sign-in of a customer account, a search, an item opened and added to the cart, a MoMo payment refused at the simulated gateway (`payment_failed`), a cash order (`purchase`), a reorder from the history, the receipt exported, then a second account with the staff role signed in to accept and hand over the order (`order_accepted`, `order_delivered`). `debugview-top-events.png` shows the whole page zoomed out: the list of TOP EVENTS with one row per name and its count, the `user_id` user property, and the debug device. `debugview-timeline.png` shows the timeline of the same run with `order_delivered`. The list also has `notification_open` (logged by the SDK when a notification is tapped), `screen_view` and `user_engagement` (automatic events).
