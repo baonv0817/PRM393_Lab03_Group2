@@ -267,4 +267,21 @@ void main() {
     expect(find.text(ShopViewModel.noKioskMessage), findsOneWidget);
     expect(byId('k10.open'), findsNothing);
   });
+
+  testWidgets('[exploratory] the opening and closing time share a row, and stack at twice the text size', (
+    tester,
+  ) async {
+    await _pump(tester, FakeMenuRepository());
+    expect(tester.getTopLeft(field('k10.openTime')).dy, tester.getTopLeft(field('k10.closeTime')).dy);
+
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    await tester.pumpAndSettle();
+
+    final open = tester.getRect(field('k10.openTime'));
+    final close = tester.getRect(field('k10.closeTime'));
+    expect(close.top, greaterThan(open.bottom), reason: 'one under the other, so each label has the full width');
+    expect(close.left, open.left);
+    expect(open.width, greaterThan(tester.getSize(find.byType(Scaffold)).width / 2));
+  });
 }
