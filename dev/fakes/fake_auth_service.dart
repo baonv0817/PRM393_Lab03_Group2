@@ -18,6 +18,13 @@ class FakeAuthService implements AuthService {
     kioskId: role == UserRole.user ? null : 'q9-t2',
   );
 
+  /// For tests: the profile changes while the app is open, as when an admin assigns a kiosk to a staff member.
+  void setKiosk(String? kioskId) {
+    final current = _user.value;
+    if (current == null) return;
+    _user.set(AppUser(uid: current.uid, displayName: current.displayName, role: current.role, kioskId: kioskId));
+  }
+
   @override
   Stream<AppUser?> authStateChanges() => _user.stream;
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:breakbite/data/repositories/local/in_memory_session_repository.dart';
 import 'package:breakbite/domain/app_exception.dart';
 import 'package:breakbite/domain/models/models.dart';
@@ -40,7 +42,30 @@ AuthViewModel make({
   messaging ?? FakeMessagingService(),
 );
 
+class _HangingMessaging extends FakeMessagingService {
+  @override
+  Future<void> detachUser(String uid) => Completer<void>().future; // never answers
+}
+
 void main() {
+  testWidgets('sign-out is not held up for ever by a push service that never answers', (tester) async {
+    final vm = make(auth: FakeAuthService(signedIn: true), messaging: _HangingMessaging());
+    await tester.pump();
+    expect(vm.user, isNotNull);
+
+    Result<void>? result;
+    unawaited(vm.signOut.execute().then((r) => result = r));
+    await tester.pump();
+    expect(result, isNull, reason: 'it waits a little for the push service');
+    expect(vm.signOut.running, isTrue);
+
+    await tester.pump(const Duration(seconds: 5));
+    expect(result?.isOk, isTrue, reason: 'then it signs out anyway');
+    expect(vm.user, isNull);
+    expect(vm.signOut.running, isFalse);
+    vm.dispose();
+  });
+
   test('successful sign-in sets the user, logs the login event and the user id', () async {
     final analytics = FakeAnalyticsService();
     final crash = FakeCrashService();

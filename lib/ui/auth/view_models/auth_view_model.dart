@@ -91,8 +91,10 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   Future<Result<void>> _signOut() async {
     final uid = _user?.uid;
-    await _analytics.logEvent(AnalyticsEvents.logout);
-    if (uid != null) await _messaging.detachUser(uid);
+    // Housekeeping first, each with a time limit: a slow or unreachable service (analytics, the push token
+    // in Firestore) must never keep the person signed in with a button stuck on "Đang đăng xuất…".
+    await _bestEffort(_analytics.logEvent(AnalyticsEvents.logout));
+    if (uid != null) await _bestEffort(_messaging.detachUser(uid));
     final result = await _auth.signOut();
     switch (result) {
       case Ok():
@@ -103,6 +105,18 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
         notifyListeners();
     }
     return result;
+  }
+
+  /// How long sign-out waits for a service that is only housekeeping.
+  static const _housekeepingLimit = Duration(seconds: 4);
+
+  /// Waits for [work] at most [_housekeepingLimit] and never throws: a failure here is recorded, not shown.
+  Future<void> _bestEffort(Future<void> work) async {
+    try {
+      await work.timeout(_housekeepingLimit);
+    } catch (error, stack) {
+      _crash.recordNonFatal(error, stack, 'auth.signOut.housekeeping');
+    }
   }
 
   Future<void> _onUserChanged(AppUser? previous, AppUser? user) async {
