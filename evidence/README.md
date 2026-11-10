@@ -52,7 +52,7 @@ Taken on 04/11/2026 from the **real build on an Android phone** (Android 16) sig
 
 ### Analytics DebugView, `analytics/`
 
-`debugview-top-events.png` lists all twelve events of `docs/analytics-plan.md` with their counts (login, logout, search, view_menu_item, add_to_cart, reorder, begin_checkout, purchase, payment_failed, export_report, order_accepted, order_delivered) for the debug device `sdk_gphone64_x86_64`, with the `user_id` property; `debugview-timeline.png` is the timeline of the same run. How the events were triggered is in section "Evidence" of the plan.
+`debugview-top-events.png` lists the eleven events of `docs/analytics-plan.md` with their counts (login, logout, search, view_menu_item, add_to_cart, begin_checkout, purchase, payment_failed, export_report, order_accepted, order_delivered) and `reorder`, which the app logs but the plan table does not list yet for the debug device `sdk_gphone64_x86_64`, with the `user_id` property; `debugview-timeline.png` is the timeline of the same run. How the events were triggered is in section "Evidence" of the plan.
 
 ### FCM in the three states, `fcm/`
 

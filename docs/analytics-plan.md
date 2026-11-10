@@ -34,7 +34,7 @@ Every event needs a DebugView screenshot (Analytics debug mode on) saved in `evi
 | `begin_checkout` | `evidence/analytics/debugview-top-events.png` (row "begin_checkout" of TOP EVENTS) |
 | `purchase` | `evidence/analytics/debugview-top-events.png` (row "purchase" of TOP EVENTS) |
 | `payment_failed` | `evidence/analytics/debugview-top-events.png` (row "payment_failed" of TOP EVENTS) |
-| `reorder` | `evidence/analytics/debugview-top-events.png` (row "reorder" of TOP EVENTS) |
+| `reorder` (logged in code, not in the plan table above) | `evidence/analytics/debugview-top-events.png` (row "reorder" of TOP EVENTS) |
 | `export_report` | `evidence/analytics/debugview-top-events.png` (row "export_report" of TOP EVENTS) |
 | `order_accepted` | `evidence/analytics/debugview-top-events.png` (row "order_accepted" of TOP EVENTS) |
 | `order_delivered` | `evidence/analytics/debugview-top-events.png` (row "order_delivered" of TOP EVENTS) |
