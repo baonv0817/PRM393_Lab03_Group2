@@ -34,6 +34,24 @@ Future<void> start(WidgetTester tester, AppDependencies deps) async {
 Order _find(AppDependencies deps, String id) => (deps.orders as FakeOrderRepository).all.firstWhere((o) => o.id == id);
 
 void main() {
+  testWidgets('K02: a kiosk assigned while the app is open shows its orders without restarting the app', (
+    tester,
+  ) async {
+    final deps = await openAsStaff(tester);
+    final auth = deps.auth as FakeAuthService;
+    auth.setKiosk(null);
+    final id = await placeTestOrder(deps.orders as FakeOrderRepository, uid: 'u1');
+    await start(tester, deps);
+
+    expect(find.textContaining('chưa được gán kiosk'), findsOneWidget);
+    expect(byId('k02.order.$id'), findsNothing);
+
+    auth.setKiosk('q9-t2');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('chưa được gán kiosk'), findsNothing);
+    expect(byId('k02.order.$id'), findsOneWidget);
+  });
+
   testWidgets('K02 → K03 → K04 → K02 → K06: a staff member takes an order, makes it and hands it over', (tester) async {
     final deps = await openAsStaff(tester);
     final orders = deps.orders as FakeOrderRepository;

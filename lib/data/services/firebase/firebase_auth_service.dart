@@ -66,14 +66,20 @@ class FirebaseAuthService implements AuthService {
   Future<Result<void>> signOut() => guard(() async {
     final uid = _auth.currentUser?.uid;
     if (uid != null) _profiles.remove(uid)?.ignore();
-    if (_googleIdToken == null) {
-      try {
-        await _ensureGoogle();
-        await _google.signOut();
-      } catch (_) {}
-    }
+    // Firebase first: it is what ends the session. Google's own sign-out only forgets the account choice;
+    // on a device whose credential service does not answer it can hang, so it runs on its own with a limit.
     await _auth.signOut();
+    if (_googleIdToken == null) unawaited(_signOutGoogle());
   });
+
+  Future<void> _signOutGoogle() async {
+    try {
+      await _ensureGoogle();
+      await _google.signOut().timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // Best effort: the Firebase session is already gone.
+    }
+  }
 
   AppUser _toAppUser(User user, Json? data) =>
       appUserFromData(user.uid, data, fallbackName: _displayNameOf(user), email: user.email, photoUrl: user.photoURL);
