@@ -175,6 +175,29 @@ void main() {
       vm.dispose();
     });
 
+    test(
+      '[CR-05] "older orders" skips a page made only of orders in progress and shows the next finished ones',
+      () async {
+        final repo = PagedOrders([
+          _thisWeek,
+          _thisWeekCancelled,
+          _order('act2', DateTime(2026, 11, 1, 9), status: OrderStatus.pending),
+          _order('act3', DateTime(2026, 10, 31, 9), status: OrderStatus.preparing),
+          _lastWeekThursday,
+        ]);
+        final vm = _vm(repo, pageSize: 2);
+        await pumpEventQueue();
+        expect(_ids(vm.groups.expand((g) => g.orders)), ['o1', 'o2']);
+
+        final result = await vm.loadMore.execute();
+
+        expect(result, isA<Ok<void>>());
+        expect(_ids(vm.groups.expand((g) => g.orders)), ['o1', 'o2', 'o3']);
+        expect(vm.hasMore, isFalse);
+        vm.dispose();
+      },
+    );
+
     test('a first page made only of orders in progress keeps loading until a finished order shows up', () async {
       final repo = PagedOrders([
         _active,

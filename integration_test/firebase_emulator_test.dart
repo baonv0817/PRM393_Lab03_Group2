@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:breakbite/config/firebase_setup.dart';
+import 'package:breakbite/data/firebase/firestore_helpers.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_cart_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_favorite_repository.dart';
 import 'package:breakbite/data/repositories/firestore/firestore_incident_repository.dart';
@@ -512,6 +513,9 @@ void main() {
       ),
     );
     expect(ok(await menu.getItem(id)).priceVnd, 18000);
+    // [CR-02] A second "new" item with the same name is refused and does not overwrite the first.
+    expect(err(await menu.upsertItem(draft)), isA<ValidationException>());
+    expect(ok(await menu.getItem(id)).priceVnd, 18000);
     final data = (await db.doc('menu_items/$id').get()).data()!;
     expect(data['searchName'], 'banh flan caramel');
     expect(data['createdAt'], isA<Timestamp>());
@@ -742,6 +746,23 @@ void main() {
       isA<PermissionDeniedException>(),
       reason: 'an answered report is not taken on again',
     );
+    // [CR-03] `missing` is the copy another staff member held before the answer: the check reads the document.
+    expect(
+      err(
+        await incidents.resolve(
+          missing,
+          resolution: IncidentResolution.rejected,
+          staffUid: staff.uid,
+          note: 'Trả lời lần hai',
+        ),
+      ),
+      isA<PermissionDeniedException>(),
+      reason: 'a stale copy cannot answer a report twice',
+    );
+    expect(
+      (await incidents.watchKioskIncidents('q9-t2').first).firstWhere((i) => i.orderId == cashOrderId).resolution,
+      IncidentResolution.refunded,
+    );
 
     // The customer reads the answer on S24.
     ok(await customer.signInWithGoogle());
@@ -810,6 +831,21 @@ void main() {
     ok(await inbox.markAllRead(me.uid));
     final allRead = await inbox.watch(me.uid).firstWhere((l) => l.every((n) => n.read));
     expect(mine(allRead), hasLength(2));
+    // [CR-04] More unread notifications than one write batch can hold (500) are all marked.
+    for (var start = 0; start < 450; start += 200) {
+      final fill = db.batch();
+      for (var i = start; i < start + 200 && i < 450; i++) {
+        fill.set(db.doc('users/${me.uid}/notifications/bulk-$i'), {
+          'title': 'Thông báo $i',
+          'body': '',
+          'read': false,
+          ...Stamp.created(),
+        });
+      }
+      await fill.commit();
+    }
+    ok(await inbox.markAllRead(me.uid));
+    expect((await db.collection('users/${me.uid}/notifications').where('read', isEqualTo: false).get()).docs, isEmpty);
     ok(await inbox.markAllRead(me.uid));
     expect(err(await inbox.save('someone-else', ready)), isA<PermissionDeniedException>());
 

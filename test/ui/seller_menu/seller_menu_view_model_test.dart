@@ -181,6 +181,10 @@ void main() {
       expect(await optionsAt(DateTime(2026, 11, 2, 10, 20)), ['11:00', '11:30']);
       expect(await optionsAt(DateTime(2026, 11, 2, 10, 45)), ['11:00', '11:30']);
       expect(await optionsAt(DateTime(2026, 11, 2, 23, 50)), ['0:30', '1:00']);
+      // [CR-06] Seconds count: 10:15:20 + 15 minutes is 10:30:20, so 10:30 would be 20 seconds too early.
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 15, 20)), ['11:00', '11:30']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 45, 30)), ['11:30', '12:00']);
+      expect(await optionsAt(DateTime(2026, 11, 2, 10, 15)), ['10:30', '11:00']);
     });
 
     test('while an item is being saved its switch is busy, and a second change is ignored', () async {
