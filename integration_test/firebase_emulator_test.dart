@@ -745,6 +745,23 @@ void main() {
       isA<PermissionDeniedException>(),
       reason: 'an answered report is not taken on again',
     );
+    // [CR-03] `missing` is the copy another staff member held before the answer: the check reads the document.
+    expect(
+      err(
+        await incidents.resolve(
+          missing,
+          resolution: IncidentResolution.rejected,
+          staffUid: staff.uid,
+          note: 'Trả lời lần hai',
+        ),
+      ),
+      isA<PermissionDeniedException>(),
+      reason: 'a stale copy cannot answer a report twice',
+    );
+    expect(
+      (await incidents.watchKioskIncidents('q9-t2').first).firstWhere((i) => i.orderId == cashOrderId).resolution,
+      IncidentResolution.refunded,
+    );
 
     // The customer reads the answer on S24.
     ok(await customer.signInWithGoogle());

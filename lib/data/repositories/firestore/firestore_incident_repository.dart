@@ -80,10 +80,21 @@ class FirestoreIncidentRepository implements IncidentRepository {
   );
 
   @override
-  Future<Result<void>> take(Incident incident, {required String staffUid}) => guard(() async {
-    if (incident.status == IncidentStatus.resolved) throw const PermissionDeniedException();
-    await _incidents.doc(incident.orderId).update({'status': IncidentStatus.inProgress.name, ...Stamp.updated()});
-  });
+  Future<Result<void>> take(Incident incident, {required String staffUid}) {
+    final ref = _incidents.doc(incident.orderId);
+    return runGuardedTransaction<void>(_db, (tx) async {
+      await _expectNotResolved(tx, ref);
+      tx.update(ref, {'status': IncidentStatus.inProgress.name, ...Stamp.updated()});
+    });
+  }
+
+  /// Reads the document inside the transaction: the incident the screen holds may be older than what another
+  /// staff member has just done, and a resolved report must not be taken again or answered twice.
+  Future<void> _expectNotResolved(Transaction tx, DocumentReference<Json> ref) async {
+    final snapshot = await tx.get(ref);
+    if (!snapshot.exists) throw const NotFoundException(message: 'Không tìm thấy báo cáo sự cố.');
+    if (snapshot.data()?['status'] == IncidentStatus.resolved.name) throw const PermissionDeniedException();
+  }
 
   @override
   Future<Result<void>> resolve(
@@ -92,18 +103,21 @@ class FirestoreIncidentRepository implements IncidentRepository {
     required String staffUid,
     int? refundVnd,
     String? note,
-  }) => guard(() async {
+  }) {
     final problem = incidentResolutionProblem(incident, resolution, refundVnd: refundVnd, note: note);
-    if (problem != null) throw ValidationException(problem);
-    if (incident.status == IncidentStatus.resolved) throw const PermissionDeniedException();
-    await _incidents.doc(incident.orderId).update({
-      'status': IncidentStatus.resolved.name,
-      'resolution': resolution.name,
-      if (resolution == IncidentResolution.refunded) 'refundVnd': refundVnd,
-      if ((note ?? '').trim().isNotEmpty) 'resolutionNote': note!.trim(),
-      'resolvedAt': FieldValue.serverTimestamp(),
-      'handledBy': staffUid,
-      ...Stamp.updated(),
+    if (problem != null) return Future.value(Result.error(ValidationException(problem)));
+    final ref = _incidents.doc(incident.orderId);
+    return runGuardedTransaction<void>(_db, (tx) async {
+      await _expectNotResolved(tx, ref);
+      tx.update(ref, {
+        'status': IncidentStatus.resolved.name,
+        'resolution': resolution.name,
+        if (resolution == IncidentResolution.refunded) 'refundVnd': refundVnd,
+        if ((note ?? '').trim().isNotEmpty) 'resolutionNote': note!.trim(),
+        'resolvedAt': FieldValue.serverTimestamp(),
+        'handledBy': staffUid,
+        ...Stamp.updated(),
+      });
     });
-  });
+  }
 }
