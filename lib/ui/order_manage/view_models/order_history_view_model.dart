@@ -100,18 +100,25 @@ class OrderHistoryViewModel extends ChangeNotifier with SafeChangeNotifier {
     final current = _state.dataOrNull;
     if (cursor == null || current == null) return const Result.ok(null);
     final generation = _generation;
-    final result = await orders.fetchMyOrders(uid, limit: pageSize, after: cursor);
-    if (generation != _generation) return const Result.ok(null);
-    switch (result) {
-      case Ok(:final value):
-        _state = ViewData([...current, ...value.items.where(_isFinished)]);
-        _next = value.next;
-        notifyListeners();
-        return const Result.ok(null);
-      case Err(:final error):
-        crash.recordNonFatal(error, error.stackTrace, 'orderHistory.loadMore');
-        return Result.error(error);
-    }
+    // Like load(): a page of orders still in progress adds nothing, so the next page is read until one does.
+    final added = <Order>[];
+    PageCursor? next = cursor;
+    do {
+      final result = await orders.fetchMyOrders(uid, limit: pageSize, after: next);
+      if (generation != _generation) return const Result.ok(null);
+      switch (result) {
+        case Ok(:final value):
+          added.addAll(value.items.where(_isFinished));
+          next = value.next;
+        case Err(:final error):
+          crash.recordNonFatal(error, error.stackTrace, 'orderHistory.loadMore');
+          return Result.error(error);
+      }
+    } while (added.isEmpty && next != null);
+    _state = ViewData([...current, ...added]);
+    _next = next;
+    notifyListeners();
+    return const Result.ok(null);
   }
 
   /// The loaded orders in groups, newest group first.
