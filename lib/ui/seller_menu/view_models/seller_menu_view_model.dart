@@ -40,8 +40,11 @@ class SellerMenuViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// after it. The third choice, "Hết ngày", has no time.
   List<DateTime> get backOptions {
     final earliest = now.add(const Duration(minutes: 15));
-    final hour = DateTime(earliest.year, earliest.month, earliest.day, earliest.hour);
-    final first = hour.add(Duration(minutes: earliest.minute == 0 ? 0 : (earliest.minute <= 30 ? 30 : 60)));
+    // The first half hour that is not before [earliest], seconds included.
+    var first = DateTime(earliest.year, earliest.month, earliest.day, earliest.hour);
+    while (first.isBefore(earliest)) {
+      first = first.add(const Duration(minutes: 30));
+    }
     return [first, first.add(const Duration(minutes: 30))];
   }
 
