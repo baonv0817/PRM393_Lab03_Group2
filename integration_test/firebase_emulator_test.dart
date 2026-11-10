@@ -512,6 +512,9 @@ void main() {
       ),
     );
     expect(ok(await menu.getItem(id)).priceVnd, 18000);
+    // [CR-02] A second "new" item with the same name is refused and does not overwrite the first.
+    expect(err(await menu.upsertItem(draft)), isA<ValidationException>());
+    expect(ok(await menu.getItem(id)).priceVnd, 18000);
     final data = (await db.doc('menu_items/$id').get()).data()!;
     expect(data['searchName'], 'banh flan caramel');
     expect(data['createdAt'], isA<Timestamp>());

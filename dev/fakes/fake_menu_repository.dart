@@ -142,6 +142,7 @@ class FakeMenuRepository implements MenuRepository {
       soldOutReason: item.soldOutReason,
     );
     final at = list.indexWhere((e) => e.id == id);
+    if (at != -1 && item.id.isEmpty) return const Result.error(ValidationException('Món này đã có trong thực đơn.'));
     at == -1 ? list.add(stored) : list[at] = stored;
     _menu.set(list);
     return Result.ok(id);

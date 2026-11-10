@@ -91,6 +91,8 @@ class FirestoreMenuRepository implements MenuRepository {
     return runGuardedTransaction(_db, (tx) async {
       final current = await tx.get(ref);
       if (current.exists) {
+        // A new item (no id yet) must not replace the one another staff member just created.
+        if (item.id.isEmpty) throw const ValidationException('Món này đã có trong thực đơn.');
         tx.update(ref, {...data, ...Stamp.updated()});
       } else {
         tx.set(ref, {...data, ...Stamp.created()});
