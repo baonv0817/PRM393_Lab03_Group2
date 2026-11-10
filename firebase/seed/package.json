@@ -6,6 +6,7 @@
     "seed:emulator": "firebase emulators:exec --config ../../firebase.json --only firestore --project demo-breakbite \"node seed.mjs --verify\"",
     "seed": "node seed.mjs",
     "set-role": "node set-role.mjs",
+    "send-push": "node send-push.mjs",
     "test:migrate": "firebase emulators:exec --config ../../firebase.json --only firestore --project demo-breakbite \"node --test migrate.test.mjs\"",
     "backup": "node backup.mjs",
     "migrate": "node migrate.mjs",
