@@ -40,7 +40,9 @@ async def test_tc03_quick_order(artemis):
 
 async def test_tc04_wrong_voucher(artemis):
     result = await artemis.run(
-        "BreakBite đang đăng nhập, giỏ có đúng 1 món. Mở giỏ hàng, chạm ô voucher. Gõ BB20 và chạm \"Áp dụng\"; "
+        "BreakBite đang đăng nhập. Nếu giỏ đang trống, chạm nút + của món đầu tiên ở Trang chủ một lần để giỏ có "
+        "đúng 1 món. Mở giỏ hàng, chạm ô voucher. Chạm vào ô nhập có chữ gợi ý "
+        "\"Nhập mã giảm giá\", GÕ BB20 vào ô đó (kiểm tra ô đã hiện BB20), rồi mới chạm \"Áp dụng\"; "
         "ghi trạng thái của BB20 trong danh sách và thông báo dưới ô nhập. Quay lại, thêm một món thứ hai vào giỏ, "
         "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Ghi thông báo giỏ hàng hiện ra, "
         'xem nút thanh toán có bấm được không và ghi tổng tiền trước và sau khi chọn "Bỏ mã".',

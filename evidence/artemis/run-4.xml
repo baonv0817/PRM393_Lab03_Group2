@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="559.764" timestamp="2026-11-11T08:00:36.725738+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_browse" name="test_tc06_search_no_results" time="97.093" /><testcase classname="test_browse" name="test_tc07_main_tabs" time="71.627" /><testcase classname="test_browse" name="test_tc08_item_and_order_detail" time="81.782" /><testcase classname="test_order" name="test_tc17_home_stepper" time="99.991" /><testcase classname="test_profile_firebase" name="test_tc09_export_and_upload" time="75.646" /><testcase classname="test_profile_firebase" name="test_tc10_remote_config_quick_items" time="73.021"><failure message="assert 4 == 5&#10; +  where 4 = int(4)&#10; +  and   5 = expected_quick_items()">artemis = &lt;conftest.Artemis object at 0x000001F58A179130&gt;
+
+    async def test_tc10_remote_config_quick_items(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập, đang ở Trang chủ. Tìm mục món nhanh dưới 5 phút ("Món nhanh") và đếm số món '
+            "trong mục đó (cuộn ngang nếu cần).",
+            expected_output='JSON: {"quick_item_count": số món trong mục Món nhanh}',
+        )
+        assert result.succeeded, result.error or result.status
+&gt;       assert int(parsed(result)["quick_item_count"]) == expected_quick_items()
+E       assert 4 == 5
+E        +  where 4 = int(4)
+E        +  and   5 = expected_quick_items()
+
+test_profile_firebase.py:50: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc16_default_payment_method" time="60.440" /></testsuite></testsuites>

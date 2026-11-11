@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="7" time="2627.866" timestamp="2026-11-11T00:36:44.946790+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_browse" name="test_tc06_search_no_results" time="385.450" /><testcase classname="test_browse" name="test_tc07_main_tabs" time="123.334" /><testcase classname="test_browse" name="test_tc08_item_and_order_detail" time="150.466" /><testcase classname="test_order" name="test_tc17_home_stepper" time="1721.103"><failure message="AssertionError: cancelled&#10;assert False&#10; +  where False = TaskResult(task_id='5619dfa5-c3ab-4cb5-88a8-f780a08ffc39', status='cancelled', goal='BreakBite đang đăng nhập, giỏ trố...rên biểu tượng giỏ sau cùng hoặc 0}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x00000128304288A0&gt;
+
+    async def test_tc17_home_stepper(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, giỏ trống, đang ở Trang chủ. Chạm + của món đầu tiên, rồi chạm + trên bộ đếm "
+            "của món đó hai lần. Ghi số trên bộ đếm và số trên biểu tượng giỏ. Sau đó chạm − ba lần. Ghi xem nút + "
+            "đơn có hiện lại không và giỏ còn số không.",
+            expected_output=(
+                'JSON: {"stepper_count": số trên bộ đếm, "cart_badge": số trên biểu tượng giỏ, '
+                '"plus_button_back": true hoặc false, "cart_badge_after": số trên biểu tượng giỏ sau cùng hoặc 0}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: cancelled
+E       assert False
+E        +  where False = TaskResult(task_id='5619dfa5-c3ab-4cb5-88a8-f780a08ffc39', status='cancelled', goal='BreakBite đang đăng nhập, giỏ trố...rên biểu tượng giỏ sau cùng hoặc 0}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded
+
+test_order.py:88: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc09_export_and_upload" time="46.270"><failure message="AssertionError: cancelled&#10;assert False&#10; +  where False = TaskResult(task_id='1899ea66-5e24-4466-8add-305515dd54fa', status='cancelled', goal='BreakBite đang đăng nhập và có ít...sted_in_my_files&quot;: true hoặc false}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x00000128304296E0&gt;
+
+    async def test_tc09_export_and_upload(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập và có ít nhất một đơn. Mở tab Cá nhân, chạm "Khu demo Firebase", chạm '
+            '"Xuất và tải lên". Quan sát thanh tiến trình, đợi link tải về hiện ra, rồi xem mục "Tệp của tôi".',
+            expected_output=(
+                'JSON: {"progress_seen": true hoặc false, "url": link hiện ra, "size_kb": dung lượng tệp bằng KB, '
+                '"listed_in_my_files": true hoặc false}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: cancelled
+E       assert False
+E        +  where False = TaskResult(task_id='1899ea66-5e24-4466-8add-305515dd54fa', status='cancelled', goal='BreakBite đang đăng nhập và có ít...sted_in_my_files": true hoặc false}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded
+
+test_profile_firebase.py:35: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc10_remote_config_quick_items" time="82.317" /><testcase classname="test_profile_firebase" name="test_tc16_default_payment_method" time="117.919"><failure message="AssertionError: assert ('Tiền mặt' in 'Lưu mặc định')">artemis = &lt;conftest.Artemis object at 0x000001283008A250&gt;
+
+    async def test_tc16_default_payment_method(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập. Mở tab Cá nhân, chạm "Phương thức thanh toán", chọn tiền mặt, chạm '
+            '"Lưu mặc định". Ghi thông báo. Thoát ra rồi mở lại màn này và ghi phương thức đang được chọn.',
+            expected_output='JSON: {"message": thông báo sau khi lưu, "selected_after_reopen": phương thức đang chọn}',
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+&gt;       assert "Tiền mặt" in data["message"] and "mặc định" in data["message"]
+E       AssertionError: assert ('Tiền mặt' in 'Lưu mặc định')
+
+test_profile_firebase.py:91: AssertionError</failure></testcase></testsuite></testsuites>
