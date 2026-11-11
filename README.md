@@ -7,7 +7,7 @@ A pre-order, pick-up-at-the-counter food app for students who study on campus, b
 - **Topic:** BreakBite, Campus District 9
 - **Team:** `[fill in names and student IDs]`
 - **Data source:** Cloud Firestore (user and shop data)
-- **Demo video:** `[fill in link]`
+- **Demo video:** [BreakBite_demo.mp4 on Google Drive](https://drive.google.com/file/d/1gvb2ZAtyTcqP_V0hP5ttBreNs34HZVws/view?usp=sharing) (8 min 47 s, Vietnamese narration by an AI voice, recorded on an Android emulator against the real Firebase project)
 
 ## Deliverables map
 
