@@ -52,7 +52,8 @@ async def test_tc10_remote_config_quick_items(artemis):
 
 async def test_tc14_change_kiosk_empties_cart(artemis):
     result = await artemis.run(
-        'BreakBite đang đăng nhập, giỏ có 1 món của "Kiosk Q9 · Tầng 2", đang ở Trang chủ. Chạm tên kiosk, chọn '
+        'BreakBite đang đăng nhập, đang ở Trang chủ của "Kiosk Q9 · Tầng 2". Nếu giỏ đang trống, chạm nút + của món '
+        "đầu tiên một lần để giỏ có 1 món (biểu tượng giỏ hiện số 1). Chạm tên kiosk, chọn "
         '"Kiosk Q9 · Tầng 4", chạm "Chọn kiosk này". Ghi nội dung hộp thoại cảnh báo, xác nhận, rồi ghi tên kiosk '
         "ở Trang chủ và số trên biểu tượng giỏ.",
         expected_output=(
@@ -70,23 +71,26 @@ async def test_tc14_change_kiosk_empties_cart(artemis):
 async def test_tc15_student_profile_validation(artemis):
     result = await artemis.run(
         'BreakBite đang đăng nhập. Mở tab Cá nhân, chạm "Hồ sơ sinh viên". Gõ "SE12" vào ô mã số sinh viên và '
-        'chạm "Lưu hồ sơ"; ghi thông báo dưới ô. Sau đó sửa thành "SE183398" và chạm "Lưu hồ sơ" lần nữa; ghi '
-        "thông báo hiện ra.",
-        expected_output='JSON: {"error_message": thông báo lần đầu, "saved_message": thông báo lần hai}',
+        'chạm "Lưu hồ sơ"; ghi thông báo lỗi dưới ô. Sau đó sửa thành "SE183398" và chạm "Lưu hồ sơ" lần nữa. '
+        "Thông báo xác nhận tự biến mất sau vài giây nên KHÔNG cần ghi nó; thay vào đó thoát ra, mở lại "
+        'màn "Hồ sơ sinh viên" và ghi giá trị đang có trong ô MSSV.',
+        expected_output='JSON: {"error_message": thông báo lỗi lần đầu, "student_id_after_reopen": MSSV đang có trong ô}',
     )
     assert result.succeeded, result.error or result.status
     data = parsed(result)
     assert data["error_message"].strip()
-    assert "Đã lưu hồ sơ" in data["saved_message"]
+    # The "Đã lưu hồ sơ." snackbar disappears before the agent can read it, so the saved value is asserted.
+    assert data["student_id_after_reopen"].strip() == "SE183398"
 
 
 async def test_tc16_default_payment_method(artemis):
     result = await artemis.run(
         'BreakBite đang đăng nhập. Mở tab Cá nhân, chạm "Phương thức thanh toán", chọn tiền mặt, chạm '
-        '"Lưu mặc định". Ghi thông báo. Thoát ra rồi mở lại màn này và ghi phương thức đang được chọn.',
-        expected_output='JSON: {"message": thông báo sau khi lưu, "selected_after_reopen": phương thức đang chọn}',
+        '"Lưu mặc định". Thông báo xác nhận tự biến mất sau vài giây nên KHÔNG cần ghi nó. Thoát ra rồi mở lại '
+        "màn này và ghi phương thức đang được chọn (thẻ có dấu chọn).",
+        expected_output='JSON: {"selected_after_reopen": phương thức đang chọn}',
     )
     assert result.succeeded, result.error or result.status
     data = parsed(result)
-    assert "Tiền mặt" in data["message"] and "mặc định" in data["message"]
+    # The "Đã đặt … làm mặc định." snackbar disappears before the agent can read it; the saved choice is asserted.
     assert "tiền mặt" in data["selected_after_reopen"].lower()

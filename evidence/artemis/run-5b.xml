@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="145.096" timestamp="2026-11-11T08:20:27.308612+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_profile_firebase" name="test_tc14_change_kiosk_empties_cart" time="144.959"><failure message="assert 1 == 0&#10; +  where 1 = int((1))">artemis = &lt;conftest.Artemis object at 0x000001F8BEF2D2B0&gt;
+
+    async def test_tc14_change_kiosk_empties_cart(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập, đang ở Trang chủ của "Kiosk Q9 · Tầng 2". Nếu giỏ đang trống, chạm nút + của món '
+            "đầu tiên một lần để giỏ có 1 món (biểu tượng giỏ hiện số 1). Chạm tên kiosk, chọn "
+            '"Kiosk Q9 · Tầng 4", chạm "Chọn kiosk này". Ghi nội dung hộp thoại cảnh báo, xác nhận, rồi ghi tên kiosk '
+            "ở Trang chủ và số trên biểu tượng giỏ.",
+            expected_output=(
+                'JSON: {"warning": nội dung hộp thoại, "kiosk": tên kiosk sau khi đổi, '
+                '"cart_count": số trên biểu tượng giỏ hoặc 0}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert "giỏ" in data["warning"].lower()
+        assert "Tầng 4" in data["kiosk"]
+&gt;       assert int(data["cart_count"] or 0) == 0
+E       assert 1 == 0
+E        +  where 1 = int((1))
+
+test_profile_firebase.py:68: AssertionError</failure></testcase></testsuite></testsuites>
