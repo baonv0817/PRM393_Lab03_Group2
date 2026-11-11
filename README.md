@@ -58,6 +58,9 @@ Declare every AI tool (code generation, chat, review, slides) and its purpose:
 | Tool | Used for |
 |---|---|
 | Claude Code (Claude Sonnet 5.5) | Writing and testing the code of P2 (S09–S12, S20, S23, S24, K08–K11, K14, K15, PDF export), the ARTEMIS cases of TC-18 to TC-29, the screenshots in `evidence/p2/` and the fixes of the code review |
+| Google ARTEMIS with Gemini 3.5 Flash Lite | The UI test agent: [`e2e_test/`](e2e_test/), results in [`docs/test-plan.md`](docs/test-plan.md) |
+| Claude Code, pptxgenjs | The slides: `scripts/build_slides.js` builds `slides/Lab03_SE193905_slides.pptx` from the repository's own evidence |
+| Microsoft Edge TTS (vi-VN-HoaiMyNeural) | The narration of the demo video |
 | Claude Code, skill `/code-review` | The AI code review: output in [`evidence/code-review/`](evidence/code-review/), decisions in [`docs/code-review.md`](docs/code-review.md) |
 | `[the other members add theirs]` | `[fill in]` |
 
@@ -65,7 +68,7 @@ Declare every AI tool (code generation, chat, review, slides) and its purpose:
 
 | Handout requirement | What we do | Why | Approval |
 |---|---|---|---|
-| Cloud Storage for Firebase | Files are stored on Cloudinary through the same `StorageService` interface | Cloud Storage now needs the Blaze plan (payment card); the team stays on the free Spark plan | Requested from the lecturer (T11), `[date]` |
+| Cloud Storage for Firebase | Files are stored on Cloudinary through the same `StorageService` interface | Cloud Storage now needs the Blaze plan (payment card); the team stays on the free Spark plan | The lecturer confirmed in writing that Cloudinary or S3 is acceptable |
 
 ## Security
 
