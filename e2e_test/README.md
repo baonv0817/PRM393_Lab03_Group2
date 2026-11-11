@@ -22,10 +22,13 @@ cd e2e_test
 uv sync
 $env:ARTEMIS_DEVICE_SERIAL = "<serial number from adb devices>"
 $env:ARTEMIS_PROFILE = "flash"     # "pro" only for the exploratory session
+$env:ARTEMIS_TRACES_DIR = "C:/src/artemis/traces"   # the traces folder of your ARTEMIS server
 uv run pytest -v
 ```
 
-Run every test ≥ 3 times with `uv run python run_repeat.py -n 3` (add `-k tc03` to pick tests); it saves a JUnit report per run and the pass-rate table in `evidence/artemis/`. Record the results in the table in section 3 of `docs/test-plan.md` and keep the trace (trace ID) in `evidence/artemis/`.
+The pinned ARTEMIS version returns no structured output (`result.output` is empty), so `conftest.py` reads the agent's final JSON report from `<ARTEMIS_TRACES_DIR>/<session id>/stdout.log`; without `ARTEMIS_TRACES_DIR` the tests that compare values fail. The server and the tests must be on the same machine.
+
+Run every test ≥ 3 times with `uv run python run_repeat.py -n 3` (add `-k tc03` to pick tests); it saves a JUnit report per run (it overwrites `run-1…`, so for extra runs use `uv run pytest -k "tc06" --junitxml=../evidence/artemis/run-N.xml` with a new N) and the pass-rate table in `evidence/artemis/`. Record the results in the table in section 3 of `docs/test-plan.md` and keep the trace (trace ID) in `evidence/artemis/`.
 
 The prompts sent to the agent are written in Vietnamese on purpose, because the app's UI is in Vietnamese and the agent matches the text it sees on screen.
 

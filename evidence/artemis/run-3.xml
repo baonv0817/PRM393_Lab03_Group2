@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="717.164" timestamp="2026-11-11T07:43:06.763026+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc04_wrong_voucher" time="269.126"><failure message="AssertionError: assert ('BB20' in 'Nhập mã giảm giá trước khi áp dụng.')">artemis = &lt;conftest.Artemis object at 0x000001B3976516A0&gt;
+
+    async def test_tc04_wrong_voucher(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập. Nếu giỏ đang trống, chạm nút + của món đầu tiên ở Trang chủ một lần để giỏ có "
+            "đúng 1 món. Mở giỏ hàng, chạm ô voucher. Chạm vào ô nhập có chữ gợi ý "
+            "\"Nhập mã giảm giá\", GÕ BB20 vào ô đó (kiểm tra ô đã hiện BB20), rồi mới chạm \"Áp dụng\"; "
+            "ghi trạng thái của BB20 trong danh sách và thông báo dưới ô nhập. Quay lại, thêm một món thứ hai vào giỏ, "
+            "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Ghi thông báo giỏ hàng hiện ra, "
+            'xem nút thanh toán có bấm được không và ghi tổng tiền trước và sau khi chọn "Bỏ mã".',
+            expected_output=(
+                'JSON: {"bb20_label": chữ cạnh BB20 trong danh sách, "bb20_message": thông báo dưới ô nhập, '
+                '"cart_message": thông báo giỏ hàng sau khi xoá món, "checkout_enabled": true hoặc false}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert "hết hạn" in data["bb20_label"].lower()
+&gt;       assert "BB20" in data["bb20_message"] and "hết hạn" in data["bb20_message"].lower()
+E       AssertionError: assert ('BB20' in 'Nhập mã giảm giá trước khi áp dụng.')
+
+test_order.py:57: AssertionError</failure></testcase><testcase classname="test_order" name="test_tc17_home_stepper" time="90.007"><failure message="assert 1 == 3&#10; +  where 1 = int(1)">artemis = &lt;conftest.Artemis object at 0x000001B397A28CD0&gt;
+
+    async def test_tc17_home_stepper(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, giỏ trống, đang ở Trang chủ. Chạm + của món đầu tiên, rồi chạm + trên bộ đếm "
+            "của món đó hai lần. Ghi số trên bộ đếm và số trên biểu tượng giỏ. Sau đó chạm − ba lần. Ghi xem nút + "
+            "đơn có hiện lại không và giỏ còn số không.",
+            expected_output=(
+                'JSON: {"stepper_count": số trên bộ đếm, "cart_badge": số trên biểu tượng giỏ, '
+                '"plus_button_back": true hoặc false, "cart_badge_after": số trên biểu tượng giỏ sau cùng hoặc 0}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+&gt;       assert int(data["stepper_count"]) == 3
+E       assert 1 == 3
+E        +  where 1 = int(1)
+
+test_order.py:92: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc09_export_and_upload" time="87.494" /><testcase classname="test_profile_firebase" name="test_tc14_change_kiosk_empties_cart" time="70.612" /><testcase classname="test_profile_firebase" name="test_tc15_student_profile_validation" time="145.272"><failure message="AssertionError: assert ''&#10; +  where '' = &lt;built-in method strip of str object at 0x00007FF83B5A16C0&gt;()&#10; +    where &lt;built-in method strip of str object at 0x00007FF83B5A16C0&gt; = ''.strip">artemis = &lt;conftest.Artemis object at 0x000001B397A196E0&gt;
+
+    async def test_tc15_student_profile_validation(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập. Mở tab Cá nhân, chạm "Hồ sơ sinh viên". Gõ "SE12" vào ô mã số sinh viên và '
+            'chạm "Lưu hồ sơ"; ghi thông báo lỗi dưới ô. Sau đó sửa thành "SE183398" và chạm "Lưu hồ sơ" lần nữa. '
+            "Thông báo xác nhận tự biến mất sau vài giây nên KHÔNG cần ghi nó; thay vào đó thoát ra, mở lại "
+            'màn "Hồ sơ sinh viên" và ghi giá trị đang có trong ô MSSV.',
+            expected_output='JSON: {"error_message": thông báo lỗi lần đầu, "student_id_after_reopen": MSSV đang có trong ô}',
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+&gt;       assert data["error_message"].strip()
+E       AssertionError: assert ''
+E        +  where '' = &lt;built-in method strip of str object at 0x00007FF83B5A16C0&gt;()
+E        +    where &lt;built-in method strip of str object at 0x00007FF83B5A16C0&gt; = ''.strip
+
+test_profile_firebase.py:81: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc16_default_payment_method" time="54.377" /></testsuite></testsuites>

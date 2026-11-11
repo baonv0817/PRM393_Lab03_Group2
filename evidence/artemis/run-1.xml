@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="10" time="1210.185" timestamp="2026-11-10T23:55:52.167753+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_browse" name="test_tc06_search_no_results" time="152.542" /><testcase classname="test_browse" name="test_tc07_main_tabs" time="64.662" /><testcase classname="test_browse" name="test_tc08_item_and_order_detail" time="67.058" /><testcase classname="test_order" name="test_tc04_wrong_voucher" time="230.732"><failure message="AssertionError: assert ('BB20' in 'Nhập mã giảm giá trước khi áp dụng.')">artemis = &lt;conftest.Artemis object at 0x00000197147BC770&gt;
+
+    async def test_tc04_wrong_voucher(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, giỏ có đúng 1 món. Mở giỏ hàng, chạm ô voucher. Gõ BB20 và chạm \"Áp dụng\"; "
+            "ghi trạng thái của BB20 trong danh sách và thông báo dưới ô nhập. Quay lại, thêm một món thứ hai vào giỏ, "
+            "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Ghi thông báo giỏ hàng hiện ra, "
+            'xem nút thanh toán có bấm được không và ghi tổng tiền trước và sau khi chọn "Bỏ mã".',
+            expected_output=(
+                'JSON: {"bb20_label": chữ cạnh BB20 trong danh sách, "bb20_message": thông báo dưới ô nhập, '
+                '"cart_message": thông báo giỏ hàng sau khi xoá món, "checkout_enabled": true hoặc false}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert "hết hạn" in data["bb20_label"].lower()
+&gt;       assert "BB20" in data["bb20_message"] and "hết hạn" in data["bb20_message"].lower()
+E       AssertionError: assert ('BB20' in 'Nhập mã giảm giá trước khi áp dụng.')
+
+test_order.py:55: AssertionError</failure></testcase><testcase classname="test_order" name="test_tc17_home_stepper" time="58.401" /><testcase classname="test_profile_firebase" name="test_tc09_export_and_upload" time="159.109" /><testcase classname="test_profile_firebase" name="test_tc10_remote_config_quick_items" time="53.764" /><testcase classname="test_profile_firebase" name="test_tc14_change_kiosk_empties_cart" time="117.922"><failure message="AttributeError: 'NoneType' object has no attribute 'lower'">artemis = &lt;conftest.Artemis object at 0x0000019714765D00&gt;
+
+    async def test_tc14_change_kiosk_empties_cart(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập, giỏ có 1 món của "Kiosk Q9 · Tầng 2", đang ở Trang chủ. Chạm tên kiosk, chọn '
+            '"Kiosk Q9 · Tầng 4", chạm "Chọn kiosk này". Ghi nội dung hộp thoại cảnh báo, xác nhận, rồi ghi tên kiosk '
+            "ở Trang chủ và số trên biểu tượng giỏ.",
+            expected_output=(
+                'JSON: {"warning": nội dung hộp thoại, "kiosk": tên kiosk sau khi đổi, '
+                '"cart_count": số trên biểu tượng giỏ hoặc 0}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+&gt;       assert "giỏ" in data["warning"].lower()
+                        ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'lower'
+
+test_profile_firebase.py:65: AttributeError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc15_student_profile_validation" time="248.272"><failure message="AssertionError: assert 'Đã lưu hồ sơ' in ''">artemis = &lt;conftest.Artemis object at 0x0000019714B2D450&gt;
+
+    async def test_tc15_student_profile_validation(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập. Mở tab Cá nhân, chạm "Hồ sơ sinh viên". Gõ "SE12" vào ô mã số sinh viên và '
+            'chạm "Lưu hồ sơ"; ghi thông báo dưới ô. Sau đó sửa thành "SE183398" và chạm "Lưu hồ sơ" lần nữa; ghi '
+            "thông báo hiện ra.",
+            expected_output='JSON: {"error_message": thông báo lần đầu, "saved_message": thông báo lần hai}',
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert data["error_message"].strip()
+&gt;       assert "Đã lưu hồ sơ" in data["saved_message"]
+E       AssertionError: assert 'Đã lưu hồ sơ' in ''
+
+test_profile_firebase.py:80: AssertionError</failure></testcase><testcase classname="test_profile_firebase" name="test_tc16_default_payment_method" time="57.437" /></testsuite></testsuites>
