@@ -32,11 +32,13 @@ SellerOrdersViewModel _orders(
   String? kioskId = 'q9-t2',
   FakeIncidentRepository? incidents,
   FakeAnalyticsService? analytics,
+  FakeOrderAlertService? alerts,
 }) => SellerOrdersViewModel(
   orders: orders,
   menu: FakeMenuRepository(),
   incidents: incidents ?? FakeIncidentRepository(),
   crash: FakeCrashService(),
+  alerts: alerts ?? FakeOrderAlertService(),
   analytics: analytics ?? FakeAnalyticsService(),
   kioskId: kioskId,
   clock: () => _now,
@@ -92,6 +94,43 @@ void main() {
   });
 
   group('SellerOrdersViewModel (K02)', () {
+    test('an order that arrives while the list is open rings once; the ones already there do not', () async {
+      final repo = FakeOrderRepository();
+      await placeTestOrder(repo, uid: 'u1');
+      final alerts = FakeOrderAlertService();
+      final vm = _orders(repo, alerts: alerts);
+      await pumpEventQueue();
+      expect(alerts.alerts, isEmpty, reason: 'the order already waiting is not news');
+
+      final id = await placeTestOrder(repo, uid: 'u2');
+      await pumpEventQueue();
+      expect(alerts.alerts, hasLength(1));
+      expect(alerts.alerts.single.count, 1);
+      expect(alerts.alerts.single.orderCode, repo.all.firstWhere((o) => o.id == id).orderCode);
+
+      await pumpEventQueue();
+      expect(alerts.alerts, hasLength(1), reason: 'no new snapshot, no new ring');
+      vm.dispose();
+    });
+
+    test('accepting or turning an order down does not ring, and two orders at once ring with their number', () async {
+      final repo = FakeOrderRepository();
+      final first = await placeTestOrder(repo, uid: 'u1');
+      final alerts = FakeOrderAlertService();
+      final vm = _orders(repo, alerts: alerts);
+      await pumpEventQueue();
+
+      await repo.accept(repo.all.firstWhere((o) => o.id == first), readyIn: const Duration(minutes: 3));
+      await pumpEventQueue();
+      expect(alerts.alerts, isEmpty);
+
+      await placeTestOrder(repo, uid: 'u2');
+      await placeTestOrder(repo, uid: 'u3');
+      await pumpEventQueue();
+      expect(alerts.alerts.fold<int>(0, (sum, a) => sum + a.count), 2, reason: 'each new order is counted once');
+      vm.dispose();
+    });
+
     test('shows the orders of the kiosk in three tabs with counts, oldest first', () async {
       final repo = FakeOrderRepository();
       final a = await placeTestOrder(repo, uid: 'u1');

@@ -287,6 +287,75 @@ void main() {
     expect(unknown, isA<NotFoundException>());
   });
 
+  testWidgets('customer: a kiosk that is on but outside its opening hours refuses the order and says the hours', (
+    tester,
+  ) async {
+    String hhmm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    final stamp = DateTime.now().toUtc();
+    final stamps = {'createdAt': stamp, 'updatedAt': stamp};
+    final from = DateTime.now().add(const Duration(hours: 2));
+    final to = DateTime.now().add(const Duration(hours: 3));
+    // Two to three hours from now, on a 24 hour clock: never around now, midnight or not.
+    await adminWrite('kiosks/q9-t4', {
+      'name': 'Kiosk Q9 · Tầng 4',
+      'open': true,
+      'waitMinutes': 10,
+      'openTime': hhmm(from),
+      'closeTime': hhmm(to),
+      ...stamps,
+    });
+    try {
+      final refused = err(
+        await orders.placeOrder(
+          OrderDraft(
+            uid: customerUid,
+            customerName: 'Quân N.',
+            kioskId: 'q9-t4',
+            kioskName: 'Kiosk Q9 · Tầng 4',
+            items: const [CartItem(itemId: 'q9-t4-tra-dao', name: 'Trà', priceVnd: 20000)],
+            paymentMethod: PaymentMethod.cash,
+          ),
+        ),
+      );
+      expect(refused, isA<ValidationException>());
+      expect(refused.message, contains('ngoài giờ mở cửa'));
+      expect(refused.message, contains(hhmm(from)));
+    } finally {
+      await adminWrite('kiosks/q9-t4', {'name': 'Kiosk Q9 · Tầng 4', 'open': true, 'waitMinutes': 10, ...stamps});
+    }
+  });
+
+  testWidgets('customer: an item sold out until a time that has passed is on sale again, one still to come is not', (
+    tester,
+  ) async {
+    final stamp = DateTime.now().toUtc();
+    Future<void> seedItem(String dish, DateTime backAt) => adminWrite('menu_items/q9-t2-$dish', {
+      'kioskId': 'q9-t2',
+      'dishId': dish,
+      'name': 'Món $dish',
+      'searchName': 'mon $dish',
+      'description': '',
+      'priceVnd': 20000,
+      'category': 'food',
+      'prepMinutes': 3,
+      'soldOut': true,
+      'soldOutReason': 'outOfIngredients',
+      'availableAgainAt': backAt,
+      'createdAt': stamp,
+      'updatedAt': stamp,
+    });
+    await seedItem('het-gio-truoc', DateTime.now().subtract(const Duration(hours: 1)).toUtc());
+    await seedItem('het-gio-sau', DateTime.now().add(const Duration(hours: 1)).toUtc());
+
+    expect(ok(await menu.getItem('q9-t2-het-gio-truoc')).soldOut, isFalse);
+    expect(ok(await menu.getItem('q9-t2-het-gio-sau')).soldOut, isTrue);
+    final listed = await menu.watchMenu('q9-t2').firstWhere((l) => l.any((i) => i.id == 'q9-t2-het-gio-truoc'));
+    expect(listed.firstWhere((i) => i.id == 'q9-t2-het-gio-truoc').soldOut, isFalse);
+    expect(listed.firstWhere((i) => i.id == 'q9-t2-het-gio-sau').soldOut, isTrue);
+    final stored = (await db.doc('menu_items/q9-t2-het-gio-truoc').get()).data()!;
+    expect(stored['soldOut'], isTrue, reason: 'the stored document is not changed by reading it');
+  });
+
   testWidgets('customer: a pending order can be edited, moved to another slot and cancelled', (tester) async {
     final order = (await orders.watchOrder(voucherOrderId).first)!;
     ok(
@@ -524,6 +593,37 @@ void main() {
     expect(ok(await menu.getItem(id)).soldOut, isTrue);
     expect(err(await menu.setSoldOut('q9-t4-tra-dao', true)), isA<PermissionDeniedException>());
     expect(err(await menu.upsertItem(draft.copyWith(priceVnd: 0))), isA<ValidationException>());
+  });
+
+  testWidgets('staff: the photo link of an item is saved, replaced and removed (K14, K15); a customer reads it', (
+    tester,
+  ) async {
+    const link = 'https://res.cloudinary.com/demo/image/upload/breakbite/menu/q9-t2/flan.jpg';
+    MenuItem item(String? imageUrl, {String id = '', String dishId = ''}) => MenuItem(
+      id: id,
+      name: 'Bánh Flan Ảnh',
+      priceVnd: 15000,
+      category: ItemCategory.other,
+      prepMinutes: 1,
+      kioskId: 'q9-t2',
+      dishId: dishId,
+      imageUrl: imageUrl,
+    );
+
+    final id = ok(await menu.upsertItem(item(link)));
+    expect((await db.doc('menu_items/$id').get()).data()!['imageUrl'], link);
+
+    const other = '$link?v=2';
+    ok(await menu.upsertItem(item(other, id: id, dishId: ok(await menu.getItem(id)).dishId)));
+    expect(ok(await menu.getItem(id)).imageUrl, other);
+
+    ok(await menu.upsertItem(item(null, id: id, dishId: ok(await menu.getItem(id)).dishId)));
+    expect(
+      (await db.doc('menu_items/$id').get()).data()!.containsKey('imageUrl'),
+      isFalse,
+      reason: 'the field is removed',
+    );
+    expect(ok(await menu.getItem(id)).imageUrl, isNull);
   });
 
   testWidgets('staff: K10 writes the shop settings and removes the fields that are emptied, only at their own kiosk', (

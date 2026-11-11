@@ -14,8 +14,18 @@ import 'package:flutter/foundation.dart';
 
 /// K14 (add an item) and K15 (edit one): the same form. The field errors show once the staff member has
 /// tried to save (K14-ERR); nothing is written until every field is valid.
+///
+/// The photo of the item: staff pick one (gallery or camera) and it is shown at once; it goes to Cloudinary
+/// when the item is saved, and the link is stored in the item (`imageUrl`), which is what customers see.
 class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
-  MenuItemFormViewModel({required this.menu, required this.crash, required this.kioskId, this.itemId}) {
+  MenuItemFormViewModel({
+    required this.menu,
+    required this.storage,
+    required this.photos,
+    required this.crash,
+    required this.kioskId,
+    this.itemId,
+  }) {
     save = Command0(_save);
     load();
   }
@@ -35,6 +45,8 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   static const categories = ItemCategory.values;
 
   final MenuRepository menu;
+  final StorageService storage;
+  final PhotoPickerService photos;
   final CrashService crash;
 
   /// The kiosk of the staff member; a new item belongs to it.
@@ -60,6 +72,14 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   bool? _inStockChoice;
   bool _attempted = false;
   String? _takenSlug;
+
+  PickedPhoto? _picked;
+  bool _photoRemoved = false;
+  bool _picking = false;
+  double? _uploadProgress;
+
+  /// The photo already on Cloudinary for [_picked], so a save that failed later does not upload it again.
+  ({PickedPhoto photo, String url})? _uploaded;
 
   /// `ViewData(null)` is a new item; `ViewData(item)` is the item being edited.
   ViewState<MenuItem?> get state => _state;
@@ -110,6 +130,57 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   /// The preparation time for the stepper; the default while the field holds something that is not a number.
   int get prepMinutesValue => (_prepValue ?? defaultPrepMinutes).clamp(0, maxPrepMinutes);
+
+  /// The photo chosen in this form, not saved yet; shown in place of the item's own photo.
+  Uint8List? get pickedPhoto => _picked?.bytes;
+
+  /// The link of the item's photo as it is saved, or `null` when it has none, or it was removed here, or a new
+  /// one was chosen (then [pickedPhoto] is what to show).
+  String? get photoUrl => _photoRemoved || _picked != null ? null : _loaded?.imageUrl;
+
+  bool get hasPhoto => pickedPhoto != null || (photoUrl != null && photoUrl!.isNotEmpty);
+
+  /// A photo is being opened, or the item and its photo are being saved: the photo buttons wait.
+  bool get photoBusy => _picking || _uploadProgress != null;
+
+  /// 0 to 1 while the photo goes to Cloudinary, `null` otherwise.
+  double? get uploadProgress => _uploadProgress;
+
+  /// Opens the gallery or the camera. Backing out changes nothing. A refused permission or a device that cannot
+  /// do it comes back as an error to show.
+  Future<Result<void>> pickPhoto(PhotoSource source) async {
+    if (photoBusy) return const Result.ok(null);
+    _picking = true;
+    notifyListeners();
+    try {
+      final result = await photos.pick(source);
+      switch (result) {
+        case Ok(:final value):
+          if (value != null) {
+            _picked = value;
+            _photoRemoved = false;
+          }
+          return const Result.ok(null);
+        case Err(:final error):
+          if (error is! PermissionDeniedException) {
+            crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.pickPhoto');
+          }
+          return Result.error(error);
+      }
+    } finally {
+      _picking = false;
+      notifyListeners();
+    }
+  }
+
+  /// Takes the photo off the item (the logo shows instead). Nothing is deleted from Cloudinary.
+  void removePhoto() {
+    if (photoBusy || !hasPhoto) return;
+    _picked = null;
+    _uploaded = null;
+    _photoRemoved = true;
+    notifyListeners();
+  }
 
   void setInStock(bool value) {
     if (value == inStock) return;
@@ -194,7 +265,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         saved.prepMinutes != _prepValue ||
         saved.description != _description.trim() ||
         saved.category != _category ||
-        inStock == saved.soldOut;
+        inStock == saved.soldOut ||
+        _picked != null ||
+        (_photoRemoved && (saved.imageUrl ?? '').isNotEmpty);
   }
 
   bool get canSave => hasChanges;
@@ -206,6 +279,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     final kiosk = kioskId!;
     final name = _name.trim();
     final description = _description.trim();
+    final photo = await _uploadPhoto(kiosk);
+    if (photo case Err(:final error)) return Result.error(error);
+    final newUrl = photo.valueOrNull;
     final MenuItem item;
     if (isNew) {
       final slug = slugify(name);
@@ -228,6 +304,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         prepMinutes: _prepValue!,
         kioskId: kiosk,
         description: description,
+        imageUrl: newUrl,
       ).withSoldOut(!inStock);
     } else {
       // Start from the item as it is now, so a sold-out switch flipped meanwhile in K08 is not undone by this
@@ -245,7 +322,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         soldOut: base.soldOut,
         kioskId: base.kioskId,
         description: description,
-        imageUrl: base.imageUrl,
+        imageUrl: _photoRemoved ? null : (newUrl ?? base.imageUrl),
         availableAgainAt: base.availableAgainAt,
         soldOutReason: base.soldOutReason,
       );
@@ -254,6 +331,40 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     final result = await menu.upsertItem(item);
     if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.save');
     return result;
+  }
+
+  /// Sends the chosen photo to Cloudinary (`menu/<kioskId>/`) and returns its link; `Ok(null)` when no new photo
+  /// was chosen. A failure stops the save before anything is written.
+  Future<Result<String?>> _uploadPhoto(String kiosk) async {
+    final photo = _picked;
+    if (photo == null) return const Result.ok(null);
+    final done = _uploaded;
+    if (done != null && identical(done.photo, photo)) return Result.ok(done.url);
+    _uploadProgress = 0;
+    notifyListeners();
+    try {
+      final result = await storage.upload(
+        folder: UploadFolder.menu,
+        ownerId: kiosk,
+        fileName: photo.fileName,
+        bytes: photo.bytes,
+        onProgress: (value) {
+          _uploadProgress = value;
+          notifyListeners();
+        },
+      );
+      switch (result) {
+        case Ok(:final value):
+          _uploaded = (photo: photo, url: value.url);
+          return Result.ok(value.url);
+        case Err(:final error):
+          crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.uploadPhoto');
+          return Result.error(error);
+      }
+    } finally {
+      _uploadProgress = null;
+      notifyListeners();
+    }
   }
 
   @override

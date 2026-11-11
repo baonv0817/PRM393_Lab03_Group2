@@ -92,13 +92,17 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// S21: the kiosk is closed or paused, so the rules would reject an order.
   bool get closed => kiosk?.acceptsOrders(_clock()) == false;
 
-  String get closedTitle => kiosk?.open == false ? 'Quán đang đóng cửa' : 'Quán tạm ngưng nhận đơn';
+  String get closedTitle {
+    final k = kiosk;
+    final shut = k != null && (!k.open || !k.isWithinHours(_clock()));
+    return shut ? 'Quán đang đóng cửa' : 'Quán tạm ngưng nhận đơn';
+  }
 
   /// When it takes orders again: "Mở lại lúc 07:00", "Nhận đơn lại lúc 10:15", or null without opening hours.
   String? get reopenLabel {
     final k = kiosk;
     if (k == null || !closed) return null;
-    if (!k.open) return k.openTime == null ? null : 'Mở lại lúc ${k.openTime}';
+    if (!k.open || !k.isWithinHours(_clock())) return k.openTime == null ? null : 'Mở lại lúc ${k.openTime}';
     return 'Nhận đơn lại lúc ${formatTime(k.pausedUntil!)}';
   }
 

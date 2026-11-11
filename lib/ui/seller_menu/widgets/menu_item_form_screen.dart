@@ -1,3 +1,4 @@
+import 'package:breakbite/data/services/services.dart';
 import 'package:breakbite/domain/models/models.dart';
 import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/core/theme/app_colors.dart';
@@ -13,7 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// K14 (add an item) and K15 (edit one): name, kind, price, preparation time and description. The errors
+/// K14 (add an item) and K15 (edit one): photo, name, kind, price, preparation time and description. The errors
 /// under the fields are K14-ERR.
 class MenuItemFormScreen extends StatelessWidget {
   const MenuItemFormScreen({super.key});
@@ -112,6 +113,8 @@ class _FormState extends State<_Form> {
             AppSpacing.md,
           ),
           children: [
+            _PhotoBox(vm: vm, prefix: p),
+            const SizedBox(height: AppSpacing.md),
             TestId(
               '$p.name',
               child: TextField(
@@ -221,6 +224,125 @@ class _FormState extends State<_Form> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The photo of the item: a picture (or a place for one), "Thư viện" and "Chụp ảnh" to choose it, and "Xoá ảnh"
+/// to take it off. It is sent to Cloudinary when the item is saved; customers then see it on the menu.
+class _PhotoBox extends StatelessWidget {
+  const _PhotoBox({required this.vm, required this.prefix});
+
+  final MenuItemFormViewModel vm;
+  final String prefix;
+
+  Future<void> _pick(BuildContext context, PhotoSource source) async {
+    final result = await vm.pickPhoto(source);
+    if (!context.mounted) return;
+    if (result case Err(:final error)) showAppMessage(context, error.message);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final text = Theme.of(context).textTheme;
+    final busy = vm.photoBusy;
+    final progress = vm.uploadProgress;
+    final picked = vm.pickedPhoto;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text('Ảnh món', style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TestId(
+          '$prefix.photo',
+          child: Semantics(
+            label: vm.hasPhoto ? 'Ảnh món đã chọn' : 'Chưa có ảnh món',
+            image: true,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ColoredBox(
+                  color: colors.surfaceVariant,
+                  child: picked != null
+                      ? Image.memory(picked, fit: BoxFit.cover)
+                      : vm.photoUrl != null && vm.photoUrl!.isNotEmpty
+                      ? LayoutBuilder(
+                          builder: (context, box) =>
+                              MenuItemImage(imageUrl: vm.photoUrl, size: box.maxWidth, height: box.maxHeight),
+                        )
+                      : Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_a_photo_outlined, size: 40, color: colors.muted),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text('Thêm ảnh món (tuỳ chọn)', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (progress != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          TestId(
+            '$prefix.photo.progress',
+            child: Semantics(
+              label: 'Đang tải ảnh lên',
+              value: '${(progress * 100).round()}%',
+              child: LinearProgressIndicator(value: progress),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          children: [
+            Expanded(
+              child: TestId(
+                '$prefix.photo.gallery',
+                child: AppButton(
+                  label: 'Thư viện',
+                  icon: Icons.photo_library_outlined,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: busy ? null : () => _pick(context, PhotoSource.gallery),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: TestId(
+                '$prefix.photo.camera',
+                child: AppButton(
+                  label: 'Chụp ảnh',
+                  icon: Icons.photo_camera_outlined,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: busy ? null : () => _pick(context, PhotoSource.camera),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (vm.hasPhoto)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TestId(
+              '$prefix.photo.remove',
+              child: TextButton.icon(
+                onPressed: busy ? null : vm.removePhoto,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Xoá ảnh'),
+                style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

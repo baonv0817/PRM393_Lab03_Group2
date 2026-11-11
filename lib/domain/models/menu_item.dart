@@ -49,6 +49,25 @@ class MenuItem {
     soldOutReason: (soldOut ?? this.soldOut) ? soldOutReason : null,
   );
 
+  /// The item as it stands at [now]: a sold-out item whose "có lại lúc" time has passed is on sale again, so
+  /// customers can order it without staff flipping the switch. The stored document is not changed.
+  MenuItem availableAt(DateTime now) {
+    final back = availableAgainAt;
+    if (!soldOut || back == null || back.isAfter(now)) return this;
+    return withSoldOut(false);
+  }
+
+  /// When the earliest sold-out item of [items] is due back after [now], or `null` when none has a time.
+  static DateTime? nextReturn(Iterable<MenuItem> items, DateTime now) {
+    DateTime? next;
+    for (final item in items) {
+      final back = item.availableAgainAt;
+      if (!item.soldOut || back == null || !back.isAfter(now)) continue;
+      if (next == null || back.isBefore(next)) next = back;
+    }
+    return next;
+  }
+
   /// The item as it is after staff set it sold out (K09) or available again: the reason and the expected
   /// time are replaced, not kept, and both are dropped when the item is available.
   MenuItem withSoldOut(bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt}) => MenuItem(

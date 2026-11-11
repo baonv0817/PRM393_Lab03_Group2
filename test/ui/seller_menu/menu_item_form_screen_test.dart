@@ -57,7 +57,13 @@ Future<void> _pump(
       GoRoute(
         path: AppRoutes.sellerMenuNew,
         builder: (context, state) => ChangeNotifierProvider(
-          create: (_) => MenuItemFormViewModel(menu: menu, crash: FakeCrashService(), kioskId: kioskId),
+          create: (_) => MenuItemFormViewModel(
+            menu: menu,
+            storage: FakeStorageService(),
+            photos: FakePhotoPickerService(),
+            crash: FakeCrashService(),
+            kioskId: kioskId,
+          ),
           child: const MenuItemFormScreen(),
         ),
       ),
@@ -66,6 +72,8 @@ Future<void> _pump(
         builder: (context, state) => ChangeNotifierProvider(
           create: (_) => MenuItemFormViewModel(
             menu: menu,
+            storage: FakeStorageService(),
+            photos: FakePhotoPickerService(),
             crash: FakeCrashService(),
             kioskId: kioskId,
             itemId: state.pathParameters['id'],
@@ -150,6 +158,29 @@ void main() {
     await _type(tester, 'k14.name', 'Bún bò Huế');
     expect(find.text('Nhập tên món.'), findsNothing);
     expect(find.text('Nhập giá món.'), findsOneWidget);
+  });
+
+  testWidgets('K14 the photo box: empty, a photo is chosen and shown, it can be taken off again', (tester) async {
+    await _pump(tester, FakeMenuRepository());
+    expect(find.text('Thêm ảnh món (tuỳ chọn)'), findsOneWidget);
+    expect(byId('k14.photo.gallery'), findsOneWidget);
+    expect(byId('k14.photo.camera'), findsOneWidget);
+    expect(byId('k14.photo.remove'), findsNothing, reason: 'nothing to take off yet');
+
+    await _tap(tester, 'k14.photo.gallery');
+    expect(find.byType(Image), findsWidgets);
+    expect(find.text('Thêm ảnh món (tuỳ chọn)'), findsNothing);
+    expect(byId('k14.photo.remove'), findsOneWidget);
+
+    await _tap(tester, 'k14.photo.remove');
+    expect(find.text('Thêm ảnh món (tuỳ chọn)'), findsOneWidget);
+    expect(byId('k14.photo.remove'), findsNothing);
+  });
+
+  testWidgets('K15 opens with the photo the item has and offers to take it off', (tester) async {
+    await _pump(tester, FakeMenuRepository(), itemId: 'm1');
+    expect(find.text('Thêm ảnh món (tuỳ chọn)'), findsNothing);
+    expect(byId('k15.photo.remove'), findsOneWidget);
   });
 
   testWidgets('K14 the price takes digits only', (tester) async {

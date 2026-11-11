@@ -190,6 +190,8 @@ final List<GoRoute> p2Routes = [
         key: ValueKey(kioskId),
         create: (_) => MenuItemFormViewModel(
           menu: context.read<MenuRepository>(),
+          storage: context.read<StorageService>(),
+          photos: context.read<PhotoPickerService>(),
           crash: context.read<CrashService>(),
           kioskId: kioskId,
         ),
@@ -204,6 +206,8 @@ final List<GoRoute> p2Routes = [
         key: ValueKey(kioskId),
         create: (_) => MenuItemFormViewModel(
           menu: context.read<MenuRepository>(),
+          storage: context.read<StorageService>(),
+          photos: context.read<PhotoPickerService>(),
           crash: context.read<CrashService>(),
           kioskId: kioskId,
           itemId: state.pathParameters['id'] ?? '',

@@ -10,6 +10,8 @@ class AppDependencies {
     required this.crash,
     required this.connectivity,
     required this.messaging,
+    required this.orderAlerts,
+    required this.photoPicker,
     required this.reminders,
     required this.storage,
     required this.remoteConfig,
@@ -33,6 +35,8 @@ class AppDependencies {
   final CrashService crash;
   final ConnectivityService connectivity;
   final MessagingService messaging;
+  final OrderAlertService orderAlerts;
+  final PhotoPickerService photoPicker;
   final ReminderService reminders;
   final StorageService storage;
   final RemoteConfigService remoteConfig;
@@ -57,6 +61,8 @@ class AppDependencies {
     Provider<CrashService>.value(value: crash),
     Provider<ConnectivityService>.value(value: connectivity),
     Provider<MessagingService>.value(value: messaging),
+    Provider<OrderAlertService>.value(value: orderAlerts),
+    Provider<PhotoPickerService>.value(value: photoPicker),
     Provider<ReminderService>.value(value: reminders),
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
