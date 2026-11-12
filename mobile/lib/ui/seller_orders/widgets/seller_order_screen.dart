@@ -17,13 +17,18 @@ import 'package:provider/provider.dart';
 Future<void> rejectFlow(BuildContext context, SellerOrderViewModel vm) async {
   final order = vm.order;
   if (order == null) return;
-  final reason = await showRejectOrderDialog(context, orderCode: order.orderCode.isEmpty ? order.id : order.orderCode);
+  final paid = order.paymentStatus == PaymentStatus.paid;
+  final reason = await showRejectOrderDialog(
+    context,
+    orderCode: order.orderCode.isEmpty ? order.id : order.orderCode,
+    paid: paid,
+  );
   if (reason == null || !context.mounted) return;
   final result = await vm.reject(reason);
   if (!context.mounted) return;
   switch (result) {
     case Ok():
-      showAppMessage(context, 'Đã từ chối đơn. Khách được hoàn tiền tự động.');
+      showAppMessage(context, paid ? 'Đã từ chối đơn. Khách được hoàn tiền tự động.' : 'Đã từ chối đơn.');
       context.go(AppRoutes.sellerOrders);
     case Err(:final error):
       showAppMessage(context, error.message);

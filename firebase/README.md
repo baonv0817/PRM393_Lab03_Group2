@@ -18,6 +18,19 @@ Remote Config parameters and where they are used:
 
 Deploy: `firebase deploy --only firestore:rules,firestore:indexes,remoteconfig` (needs the Firebase CLI and a login). Add `storage` once Storage is enabled (needs the Blaze plan).
 
+Web admin on Hosting (https://breakbite-1315b.web.app). The Firebase CLI only serves a folder inside `firebase/`, and Flutter's shader compiler cannot write to a relative `--output` path, so build first and copy:
+
+```powershell
+cd web
+flutter build web --release
+Remove-Item -Recurse -Force ..irebase\web-build -ErrorAction SilentlyContinue
+Copy-Item -Recurse build\web ..irebase\web-build
+cd ..irebase
+firebase deploy --only hosting --project breakbite-1315b
+```
+
+`firebase/web-build/` is gitignored.
+
 ## Rules tests (Emulator)
 
 `firebase/tests/rules.test.mjs` has an allowed case and a denied case for every role (user, staff, admin) and every collection, plus the Storage rules (folder owner, PDF, image, ≤ 5 MB, staff by kiosk).

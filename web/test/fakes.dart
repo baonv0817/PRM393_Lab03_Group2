@@ -8,6 +8,7 @@ import 'package:breakbite_core/data/repositories/menu_repository.dart';
 import 'package:breakbite_core/data/repositories/order_repository.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
+import 'package:breakbite_core/data/services/connectivity_service.dart';
 import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
@@ -80,8 +81,13 @@ class FakeOrderRepository implements OrderRepository {
   Result<KioskStats> stats = const Result.ok(KioskStats.empty);
   DateTime? statsSince;
 
+  final watchedKiosks = <String>[];
+
   @override
-  Stream<List<Order>> watchKioskQueue(String kioskId) => queue.stream;
+  Stream<List<Order>> watchKioskQueue(String kioskId) {
+    watchedKiosks.add(kioskId);
+    return queue.stream;
+  }
 
   @override
   Future<Result<void>> accept(Order order, {required Duration readyIn}) async {
@@ -162,8 +168,15 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
     return const Result.ok('n1');
   }
 
+  /// The next setStatus fails with this (then it is cleared).
+  AppException? failStatus;
+
   @override
   Future<Result<void>> setStatus(String id, AnnouncementStatus status) async {
+    if (failStatus case final error?) {
+      failStatus = null;
+      return Result.error(error);
+    }
     statuses.add((id, status));
     return const Result.ok(null);
   }
@@ -229,4 +242,22 @@ class FakeRemoteConfig implements RemoteConfigService {
 
   @override
   DateTime? get lastFetchedAt => null;
+}
+
+class FakeConnectivity implements ConnectivityService {
+  FakeConnectivity({this.online = true});
+
+  bool online;
+  final _changes = StreamController<bool>.broadcast();
+
+  void set(bool value) {
+    online = value;
+    _changes.add(value);
+  }
+
+  @override
+  Stream<bool> watchOnline() => _changes.stream;
+
+  @override
+  Future<bool> check() async => online;
 }

@@ -103,9 +103,10 @@ class OrderStatusNotifier {
       OrderStatus.delivered => (title: 'Đơn #$code đã hoàn tất', body: 'Bạn đã nhận món. Chúc ngon miệng!'),
       OrderStatus.cancelled when order.cancelledBy == CancelledBy.staff => (
         title: 'Đơn #$code bị từ chối',
-        body: order.cancelReason == null || order.cancelReason!.isEmpty
-            ? 'Kiosk không nhận được đơn này. Bạn được hoàn tiền.'
-            : 'Lý do: ${order.cancelReason}. Bạn được hoàn tiền.',
+        // A cash order was never paid, so there is nothing to refund (found in the cross-role runs, 12/11/2026).
+        body:
+            '${order.cancelReason == null || order.cancelReason!.isEmpty ? 'Kiosk không nhận được đơn này.' : 'Lý do: ${order.cancelReason}.'}'
+            '${order.paymentStatus == PaymentStatus.paid ? ' Bạn được hoàn tiền.' : ' Đơn trả tại quầy nên bạn không mất tiền.'}',
       ),
       _ => null,
     };

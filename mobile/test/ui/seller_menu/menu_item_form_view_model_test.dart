@@ -273,6 +273,25 @@ void main() {
       vm.dispose();
     });
 
+    test('CR-F06: a taken name is refused before the photo is uploaded, so no image is left on Cloudinary', () async {
+      final menu = FakeMenuRepository();
+      final first = _vm(menu);
+      await pumpEventQueue();
+      _fill(first);
+      await first.save.execute();
+
+      final storage = FakeStorageService();
+      final vm = _vm(menu, storage: storage);
+      await pumpEventQueue();
+      _fill(vm, name: 'bún bò huế');
+      expect((await vm.pickPhoto(PhotoSource.gallery)).isOk, isTrue);
+      final result = await vm.save.execute();
+      expect((result! as Err<String>).error.message, 'Món này đã có trong thực đơn.');
+      expect(storage.uploads, isEmpty);
+      first.dispose();
+      vm.dispose();
+    });
+
     test('an item that is already on the menu is refused, and the name field says so until it changes', () async {
       final menu = FakeMenuRepository();
       final first = _vm(menu);

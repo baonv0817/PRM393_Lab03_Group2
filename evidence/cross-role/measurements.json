@@ -1,0 +1,71 @@
+{
+ "method": "phone screen recorded with adb screenrecord --bugreport (device time stamped on every frame; a frame is only written when the screen changes); web click time = browser Date.now() around the click; emulator clock minus host clock measured with 15-20 adb date round trips (min RTT ~0.05 s): +0.472 to +0.474 s",
+ "kiosk": "Kiosk Q9 · Tầng 2 (closing time set to 23:59 in K10 for the runs)",
+ "customer": "annguyen310002 on emulator BB_Pixel7, app built from main 0765464^ (debug, App Check)",
+ "web": "https://breakbite-1315b.web.app, admin annguyen382310, Playwright Chromium 1440x900",
+ "run1": {
+  "order": "QLOTIR",
+  "placed": "23:50",
+  "web_action": "approve, 10 min",
+  "click_host_ms": [
+   1794502308595,
+   1794502308727
+  ],
+  "click_device": "23:51:49.133",
+  "phone_change": "23:51:50.353",
+  "phone_shows": "Đang làm · Dự kiến sẵn sàng 00:01 (còn 9 phút)",
+  "delay_s": 1.22
+ },
+ "run2": {
+  "order": "25RPEH",
+  "placed": "23:54",
+  "web_action": "reject, Quầy sắp đóng cửa",
+  "click_host_ms": [
+   1794502520375,
+   1794502520447
+  ],
+  "click_device": "23:55:20.885",
+  "phone_change": "23:55:21.976",
+  "phone_shows": "Đã huỷ · Đơn đã huỷ: Quầy sắp đóng cửa",
+  "delay_s": 1.09
+ },
+ "run3": {
+  "order": "S7SWIR",
+  "placed": "23:56",
+  "web_action": "approve, 15 min",
+  "click_host_ms": [
+   1794502665832,
+   1794502665905
+  ],
+  "click_device": "23:57:46.341",
+  "phone_change": "23:57:47.481",
+  "phone_shows": "Đang làm · Dự kiến sẵn sàng 00:12 (còn 14 phút)",
+  "delay_s": 1.14
+ },
+ "announcement": {
+  "title": "Kiosk Q9 · Tầng 2 mở tới 23:59 hôm nay",
+  "audience": "all kiosks",
+  "click_host_ms": [
+   1794502782950,
+   1794502782993
+  ],
+  "click_device": "23:59:43.443",
+  "phone_change": "23:59:44.577",
+  "phone_shows": "S19 top card 'Thông báo từ BreakBite'",
+  "delay_s": 1.13
+ },
+ "inbox_after_runs": "S19 shows: #S7SWIR đang được làm (23:57), #25RPEH bị từ chối · Lý do: Quầy sắp đóng cửa (23:55), #QLOTIR đang được làm (23:51) -> evidence/cross-role/inbox-after-3-runs.png",
+ "web_order_appears": "QLOTIR appeared in the web review queue right after it was placed (11 chờ duyệt)",
+ "announcement_archive": {
+  "click_host_ms": [
+   1794503851562,
+   1794503851662
+  ],
+  "offset_s": -1.024,
+  "click_device": "00:17:30.587",
+  "phone_change": "00:17:31.402",
+  "phone_shows": "the announcement card is gone from S19",
+  "delay_s": 0.81,
+  "note": "the emulator clock had moved by about 1.5 s since the order runs (offset +0.473 -> -1.024), measured one minute after the click"
+ }
+}

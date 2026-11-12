@@ -26,6 +26,44 @@ void main() {
       expect(session.rejection, isNull);
     });
 
+    test('offline: the session says so live, and "Thử lại" asks the browser again', () async {
+      final connectivity = FakeConnectivity();
+      final session = AdminSession(auth: FakeAuthService(), menu: FakeMenuRepository(), connectivity: connectivity);
+      expect(session.online, isTrue);
+      var notified = 0;
+      session.addListener(() => notified++);
+      connectivity.set(false);
+      await settle();
+      expect(session.online, isFalse);
+      expect(AdminSession.offlineMessage, contains('Mất kết nối mạng'));
+      connectivity.online = true;
+      await session.checkConnection();
+      expect(session.online, isTrue);
+      expect(notified, 2);
+    });
+
+    test('CR-F04: an admin sees "loading" until the kiosks arrive, and an error with a retry if they fail', () async {
+      final auth = FakeAuthService(nextUser: admin);
+      final menu = FakeMenuRepository();
+      final session = AdminSession(auth: auth, menu: menu);
+      auth.emit(admin);
+      await settle();
+      expect(session.kioskId, isNull);
+      expect(session.kiosksLoaded, isFalse, reason: 'loading, not "there are no kiosks"');
+      expect(session.kiosksError, isNull);
+
+      menu.kiosks.addError(const PermissionDeniedException());
+      await settle();
+      expect(session.kiosksError, isNotNull);
+
+      session.retryKiosks();
+      expect(session.kiosksError, isNull);
+      menu.kiosks.add(const [Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: true, waitMinutes: 5)]);
+      await settle();
+      expect(session.kiosksLoaded, isTrue);
+      expect(session.kioskId, 'q9-t2');
+    });
+
     test('a signed-in staff member logs admin_sign_in with the role; a rejected customer logs nothing', () async {
       final analytics = FakeAnalytics();
       final session = AdminSession(auth: FakeAuthService(), menu: FakeMenuRepository(), analytics: analytics);

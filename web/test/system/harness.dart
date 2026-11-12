@@ -1,5 +1,5 @@
 import 'package:breakbite_admin/app.dart';
-import 'package:breakbite_admin/config/dependencies.dart';
+import 'package:breakbite_admin/config/admin_providers.dart';
 import 'package:breakbite_admin/routing/system_pages.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +62,7 @@ Future<SystemDeps> pumpSystemApp(WidgetTester tester, {AppUser as = systemAdmin}
     announcements: web.FakeAnnouncementRepository(),
     analytics: web.FakeAnalytics(),
     remoteConfig: web.FakeRemoteConfig(),
+    connectivity: web.FakeConnectivity(),
     system: deps.repositories,
   );
   await tester.pumpWidget(MultiProvider(providers: providers, child: const AdminApp()));

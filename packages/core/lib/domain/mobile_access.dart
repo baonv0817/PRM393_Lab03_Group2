@@ -10,7 +10,7 @@ const webAdminUrl = 'https://breakbite-1315b.web.app';
 String? mobileAccessProblem(AppUser user) => switch (user.role) {
   UserRole.user || UserRole.staff => null,
   UserRole.admin =>
-    'Tài khoản ${(user.email ?? '').isNotEmpty ? user.email! : user.displayName} là tài khoản quản trị viên. '
+    'Tài khoản ${user.label} là tài khoản quản trị viên. '
         'Quản trị viên làm việc trên trang web quản trị $webAdminUrl; ứng dụng này dành cho khách hàng và nhân viên '
         'kiosk.',
 };

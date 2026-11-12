@@ -21,14 +21,20 @@ class MenuManagementScreen extends StatelessWidget {
   const MenuManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) => MenuManagementViewModel(
-      menu: context.read<MenuRepository>(),
-      kioskId: context.read<AdminSession>().kioskId!,
-      analytics: context.read<AnalyticsService>(),
-    ),
-    child: const _MenuManagementView(),
-  );
+  Widget build(BuildContext context) {
+    // The admin's kiosk picker changes the kiosk while this screen stays open: a new kiosk gets a new view model
+    // (the key), so the screen never keeps listening to the previous kiosk.
+    final kioskId = context.select<AdminSession, String?>((s) => s.kioskId)!;
+    return ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (context) => MenuManagementViewModel(
+        menu: context.read<MenuRepository>(),
+        kioskId: kioskId,
+        analytics: context.read<AnalyticsService>(),
+      ),
+      child: const _MenuManagementView(),
+    );
+  }
 }
 
 class _MenuManagementView extends StatefulWidget {
