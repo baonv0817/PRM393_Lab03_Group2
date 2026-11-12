@@ -15,7 +15,8 @@ class MenuItemSuggestion {
     this.description = '',
   });
 
-  /// The same limits as the K14 form, so a suggestion never puts something in a field that the form refuses.
+  /// The limits of the K14 form (MenuItemFormViewModel uses these constants), so a suggestion never puts something
+  /// in a field that the form refuses.
   static const maxNameLength = 60;
   static const maxDescriptionLength = 200;
   static const maxPriceVnd = 1000000;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.dart';
 import 'package:breakbite_core/data/services/services.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
@@ -214,5 +216,41 @@ void main() {
         },
       );
     }
+  });
+
+  group('CR-F01: staff keep typing while Gemini answers', () {
+    test('what staff typed while waiting is kept, and Save waits for the answer', () async {
+      final form = _Form();
+      await form.pickPhoto();
+      form.ai.gate = Completer<void>();
+      final pending = form.vm.suggest.execute();
+      await pumpEventQueue();
+      expect(form.vm.suggest.running, isTrue);
+      form.vm
+        ..setName('Bánh mì của quầy')
+        ..setPrice('30000');
+      expect(form.vm.canSave, isFalse, reason: 'the answer would rewrite the form after the item is saved');
+      final early = await form.vm.save.execute();
+      expect(early?.errorOrNull?.message, MenuItemFormViewModel.waitForAiMessage);
+
+      form.ai.gate!.complete();
+      await pending;
+      expect(form.vm.name, 'Bánh mì của quầy', reason: 'typed while waiting, so the answer leaves it alone');
+      expect(form.vm.price, '30000');
+      expect(form.vm.isAiSuggested(AiField.name), isFalse);
+      expect(form.vm.isAiSuggested(AiField.price), isFalse);
+      expect(form.vm.description, FakeMenuAiService.banhMi.description, reason: 'untouched fields are filled');
+      expect(form.vm.isAiSuggested(AiField.description), isTrue);
+      expect(form.vm.canSave, isTrue);
+    });
+
+    test('a field changed before asking again is filled by the new answer', () async {
+      final form = _Form();
+      await form.pickPhoto();
+      form.vm.setName('Tên cũ');
+      await form.vm.suggest.execute();
+      expect(form.vm.name, FakeMenuAiService.banhMi.name);
+      expect(form.vm.isAiSuggested(AiField.name), isTrue);
+    });
   });
 }
