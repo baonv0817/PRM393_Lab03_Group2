@@ -129,10 +129,14 @@ class AnnouncementInboxRepository implements NotificationRepository {
 
   @override
   Future<Result<void>> markAllRead(String uid) async {
-    for (final n in (_shown[uid] ?? const <String, AppNotification>{}).values) {
-      if (n.read) continue;
-      final stored = await _store(uid, n.id);
-      if (stored case Err()) return stored;
+    // The missing inbox documents are written side by side, not one after another (CR-F07).
+    final unread = [
+      for (final n in (_shown[uid] ?? const <String, AppNotification>{}).values)
+        if (!n.read) n.id,
+    ];
+    final stored = await Future.wait([for (final id in unread) _store(uid, id)]);
+    for (final result in stored) {
+      if (result case Err()) return result;
     }
     return _notifications.markAllRead(uid);
   }
