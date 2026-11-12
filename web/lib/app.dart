@@ -1,6 +1,6 @@
 import 'package:breakbite_admin/routing/router.dart';
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
-import 'package:breakbite_core/ui/core/theme/app_theme.dart';
+import 'package:breakbite_core/ui/core/theme/admin_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +25,7 @@ class _AdminAppState extends State<AdminApp> {
   Widget build(BuildContext context) => MaterialApp.router(
     title: 'BreakBite · Quản trị',
     debugShowCheckedModeBanner: false,
-    theme: AppTheme.light(),
+    theme: AdminTheme.light(),
     routerConfig: _router,
   );
 }

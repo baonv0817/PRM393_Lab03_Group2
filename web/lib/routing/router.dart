@@ -1,3 +1,4 @@
+import 'package:breakbite_admin/routing/system_pages.dart';
 import 'package:breakbite_admin/ui/announcements/widgets/announcements_screen.dart';
 import 'package:breakbite_admin/ui/auth/widgets/sign_in_screen.dart';
 import 'package:breakbite_admin/ui/dashboard/widgets/dashboard_screen.dart';
@@ -17,8 +18,11 @@ abstract final class AdminRoutes {
   static const dashboard = '/dashboard';
   static const announcements = '/announcements';
 
-  /// The rail, in order.
+  /// The rail, in order: what staff and admins both use.
   static const tabs = [review, menu, dashboard, announcements];
+
+  /// The rail of an admin: the kiosk pages, then the system administration pages that only an admin gets.
+  static List<String> tabsFor({required bool admin}) => [...tabs, if (admin) ...SystemRoutes.tabs];
 }
 
 /// Signed-out visitors only reach the sign-in screen; a signed-in staff member or admin never sees it.
@@ -30,6 +34,8 @@ GoRouter buildRouter(AdminSession session) => GoRouter(
     if (!session.ready) return at == AdminRoutes.loading ? null : AdminRoutes.loading;
     if (!session.signedIn) return at == AdminRoutes.signIn ? null : AdminRoutes.signIn;
     if (at == AdminRoutes.signIn || at == AdminRoutes.loading) return AdminRoutes.review;
+    // The system pages are for admins; staff land on the first kiosk page.
+    if (at.startsWith(SystemRoutes.prefix) && !session.isAdmin) return AdminRoutes.review;
     return null;
   },
   routes: [
@@ -57,6 +63,7 @@ GoRouter buildRouter(AdminSession session) => GoRouter(
           path: AdminRoutes.announcements,
           pageBuilder: (_, _) => const NoTransitionPage(child: AnnouncementsScreen()),
         ),
+        ...systemPages,
       ],
     ),
   ],

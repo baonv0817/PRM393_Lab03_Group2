@@ -88,8 +88,82 @@ void main() {
     await tester.tap(find.bySemanticsIdentifier('s26.google'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Không có kết nối mạng'), findsOneWidget);
-    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    final button = tester.widget<OutlinedButton>(
+      find.descendant(of: find.bySemanticsIdentifier('s26.google'), matching: find.byType(OutlinedButton)),
+    );
     expect(button.onPressed, isNotNull);
     expect(tester.takeException(), isNull);
+  });
+
+  group('email and password', () {
+    Finder field(String id) => find.descendant(of: find.bySemanticsIdentifier(id), matching: find.byType(TextField));
+
+    testWidgets('shows the email form next to the Google button', (tester) async {
+      await pumpSignIn(tester, FakeAuthService());
+      expect(find.bySemanticsIdentifier('s26.email'), findsOneWidget);
+      expect(find.bySemanticsIdentifier('s26.password'), findsOneWidget);
+      expect(find.bySemanticsIdentifier('s26.name'), findsNothing, reason: 'the name is only asked when registering');
+      expect(find.bySemanticsIdentifier('s26.google'), findsOneWidget);
+    });
+
+    testWidgets('an empty or wrong form shows the problems and sends nothing', (tester) async {
+      final vm = await pumpSignIn(tester, FakeAuthService());
+      await tester.tap(find.bySemanticsIdentifier('s26.submit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nhập email.'), findsOneWidget);
+      expect(find.text('Nhập mật khẩu.'), findsOneWidget);
+      expect(vm.user, isNull);
+    });
+
+    testWidgets('registers an account with a name, then the same email cannot register again', (tester) async {
+      final auth = FakeAuthService();
+      final vm = await pumpSignIn(tester, auth);
+      await tester.tap(find.bySemanticsIdentifier('s26.mode'));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier('s26.name'), findsOneWidget);
+
+      await tester.enterText(field('s26.name'), 'Minh Quân');
+      await tester.enterText(field('s26.email'), 'quan@fpt.edu.vn');
+      await tester.enterText(field('s26.password'), 'abc');
+      await tester.tap(find.bySemanticsIdentifier('s26.submit'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('ít nhất 8'), findsWidgets);
+      expect(vm.user, isNull);
+
+      await tester.enterText(field('s26.password'), 'breakbite1');
+      await tester.tap(find.bySemanticsIdentifier('s26.submit'));
+      await tester.pumpAndSettle();
+      expect(vm.user?.displayName, 'Minh Quân');
+      expect(vm.user?.email, 'quan@fpt.edu.vn');
+
+      await auth.signOut();
+      final again = await vm.register.execute((name: 'Khác', email: 'QUAN@fpt.edu.vn', password: 'breakbite1'));
+      expect(again, isA<Err<AppUser>>());
+      expect(vm.message, contains('đã có tài khoản'));
+    });
+
+    testWidgets('signs in with the right password and says "email hoặc mật khẩu không đúng" for a wrong one', (
+      tester,
+    ) async {
+      final auth = FakeAuthService();
+      await auth.registerWithEmail(name: 'Linh', email: 'linh@fpt.edu.vn', password: 'breakbite1');
+      await auth.signOut();
+      final vm = await pumpSignIn(tester, auth);
+      await tester.pump();
+
+      await tester.enterText(field('s26.email'), 'linh@fpt.edu.vn');
+      await tester.enterText(field('s26.password'), 'saimatkhau1');
+      await tester.tap(find.bySemanticsIdentifier('s26.submit'));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier('s26.error'), findsOneWidget);
+      expect(find.textContaining('không đúng'), findsOneWidget);
+      expect(vm.user, isNull);
+
+      await tester.enterText(field('s26.password'), 'breakbite1');
+      await tester.tap(find.bySemanticsIdentifier('s26.submit'));
+      await tester.pumpAndSettle();
+      expect(vm.user?.displayName, 'Linh');
+      expect(vm.message, isNull);
+    });
   });
 }

@@ -223,6 +223,12 @@ Written by admins from the web admin; customers read only `published` ones in th
 
 Rules (`validAnnouncement`): only admins create and update; the keys are exactly these fields plus the timestamps, `title` 1–120 characters, `body` 1–1000, `status` one of the three values, `createdBy` is the author on create and never changes, nobody deletes. Status transitions: `draft → published`, `published → archived` (web W05). Screens: web W05 (all, admins), mobile S19 (published, `kioskId` absent or the customer's kiosk; index `status ASC, publishedAt DESC`). Model `Announcement`, repository `AnnouncementRepository` in `packages/core`.
 
+### 3.11 `audit_logs/{id}` (system administration pages of the web admin)
+
+One line per change made on the system administration pages, written in the **same batch or transaction** as the change, so a change never exists without its line. Only admins read; nobody edits or deletes. Fields: `actorUid` (must be the signed-in admin), `actorName`, `action` (`user.access`, `kiosk.save`, `slots.create`, `voucher.save`), `target` (a path such as `users/<uid>`), `summary` (a sentence), `createdAt`, `updatedAt`.
+
+The rules for `users` let an admin change only `role` and `kioskId`: the role must be `user`, `staff` or `admin`, staff need a kiosk that exists, and an admin cannot change their own role or kiosk. The orders list of the system pages needs the index `orders (status ASC, createdAt DESC)`.
+
 ## 4. Order lifecycle
 
 ```mermaid

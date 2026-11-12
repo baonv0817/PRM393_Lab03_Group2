@@ -25,6 +25,8 @@ void main() {
     await tester.tap(find.text('Bỏ qua'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.bySemanticsIdentifier('s26.google'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsIdentifier('s26.google'));
     await tester.pumpAndSettle();
     expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);

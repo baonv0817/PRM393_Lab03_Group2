@@ -1,4 +1,5 @@
 import 'package:breakbite_admin/routing/router.dart';
+import 'package:breakbite_admin/routing/system_pages.dart';
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -24,10 +25,23 @@ class AdminShell extends StatelessWidget {
     (icon: Icons.campaign_outlined, selected: Icons.campaign, label: 'Thông báo'),
   ];
 
+  /// What only an admin sees, in the order of [SystemRoutes.tabs].
+  static const _system = [
+    (icon: Icons.people_outline, selected: Icons.people, label: 'Người dùng'),
+    (icon: Icons.storefront_outlined, selected: Icons.storefront, label: 'Kiosk'),
+    (icon: Icons.schedule_outlined, selected: Icons.schedule, label: 'Khung giờ'),
+    (icon: Icons.local_offer_outlined, selected: Icons.local_offer, label: 'Voucher'),
+    (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Mọi đơn hàng'),
+    (icon: Icons.report_problem_outlined, selected: Icons.report_problem, label: 'Sự cố'),
+    (icon: Icons.bar_chart_outlined, selected: Icons.bar_chart, label: 'Thống kê hệ thống'),
+    (icon: Icons.history, selected: Icons.history, label: 'Nhật ký'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AdminSession>();
-    final index = AdminRoutes.tabs.indexOf(location);
+    final tabs = AdminRoutes.tabsFor(admin: session.isAdmin);
+    final index = tabs.indexOf(location);
     final extended = MediaQuery.sizeOf(context).width >= 1200;
     return Scaffold(
       body: Row(
@@ -35,14 +49,14 @@ class AdminShell extends StatelessWidget {
           NavigationRail(
             extended: extended,
             selectedIndex: index < 0 ? 0 : index,
-            onDestinationSelected: (i) => context.go(AdminRoutes.tabs[i]),
+            onDestinationSelected: (i) => context.go(tabs[i]),
             labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Semantics(label: 'BreakBite quản trị', child: const BreakBiteLogo(size: 48)),
             ),
             destinations: [
-              for (final d in _destinations)
+              for (final d in [..._destinations, if (session.isAdmin) ..._system])
                 NavigationRailDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: Text(d.label)),
             ],
           ),
@@ -57,7 +71,7 @@ class AdminShell extends StatelessWidget {
                           liveRegion: true,
                           child: ErrorView(message: AdminSession.offlineMessage, onRetry: session.checkConnection),
                         )
-                      : session.kioskId == null
+                      : session.kioskId == null && !location.startsWith(SystemRoutes.prefix)
                       ? _NoKiosk(session: session)
                       : child,
                 ),

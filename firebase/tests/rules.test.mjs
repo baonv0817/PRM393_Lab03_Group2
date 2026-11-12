@@ -139,6 +139,15 @@ describe('users', () => {
     await assertSucceeds(updateDoc(doc(as('a1'), 'users/u2'), { role: 'staff', kioskId: 'k2', ...touched() }));
     await assertFails(updateDoc(doc(as('s1'), 'users/u2'), { role: 'admin', ...touched() }));
   });
+  test('an admin: a known role only, staff need a kiosk that exists, and nobody changes their own role', async () => {
+    await assertSucceeds(updateDoc(doc(as('a1'), 'users/u2'), { role: 'staff', kioskId: 'k3', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/u1'), { role: 'owner', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/u1'), { role: 'staff', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/u1'), { role: 'staff', kioskId: 'nope', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/u1'), { role: 'user', kioskId: 'k1', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/a1'), { role: 'user', ...touched() }));
+    await assertFails(updateDoc(doc(as('a1'), 'users/u1'), { displayName: 'Đổi tên hộ', ...touched() }));
+  });
   test('favorites are keyed by dishId and notifications are owner-only', async () => {
     await assertSucceeds(setDoc(doc(as('u1'), 'users/u1/favorites/tacos'), { dishId: 'tacos', name: 'Combo Tacos', ...created() }));
     await assertFails(setDoc(doc(as('u1'), 'users/u1/favorites/tacos2'), { dishId: 'tacos', name: 'Combo Tacos', ...created() }));
@@ -558,6 +567,29 @@ describe('announcements (final assignment)', () => {
     await assertSucceeds(getDoc(doc(as('u1'), 'announcements/a1')));
     await assertFails(getDoc(doc(as('u1'), 'announcements/d1')));
     await assertFails(setDoc(doc(as('u1'), 'announcements/x'), { title: 'Spam', status: 'published', createdBy: 'u1', ...created() }));
+  });
+});
+
+describe('audit_logs (admin website)', () => {
+  const line = (over) => ({
+    actorUid: 'a1', actorName: 'Admin', action: 'kiosk.save', target: 'kiosks/k1', summary: 'Sửa kiosk', ...created(), ...over,
+  });
+  test('an admin writes a line under their own uid and reads the log; nobody edits or deletes', async () => {
+    await assertSucceeds(setDoc(doc(as('a1'), 'audit_logs/l1'), line()));
+    await assertSucceeds(getDoc(doc(as('a1'), 'audit_logs/l1')));
+    await assertFails(updateDoc(doc(as('a1'), 'audit_logs/l1'), { summary: 'Đã sửa', ...touched() }));
+    await assertFails(deleteDoc(doc(as('a1'), 'audit_logs/l1')));
+  });
+  test('a line in the name of another user, with extra fields or a device time: denied', async () => {
+    await assertFails(setDoc(doc(as('a1'), 'audit_logs/l2'), line({ actorUid: 'u1' })));
+    await assertFails(setDoc(doc(as('a1'), 'audit_logs/l3'), line({ extra: 1 })));
+    await assertFails(setDoc(doc(as('a1'), 'audit_logs/l4'), line({ createdAt: Timestamp.now(), updatedAt: Timestamp.now() })));
+  });
+  test('users and staff neither read nor write the log', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'audit_logs/l5'), line()));
+    await assertFails(getDoc(doc(as('u1'), 'audit_logs/l5')));
+    await assertFails(getDoc(doc(as('s1'), 'audit_logs/l5')));
+    await assertFails(setDoc(doc(as('s1'), 'audit_logs/l6'), line({ actorUid: 's1' })));
   });
 });
 

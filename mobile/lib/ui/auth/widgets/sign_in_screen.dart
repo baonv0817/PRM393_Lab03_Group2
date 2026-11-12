@@ -37,10 +37,10 @@ class SignInScreen extends StatelessWidget {
                         child: Icon(Icons.person, size: 40, color: colors.primaryText, semanticLabel: 'Tài khoản'),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      Text('Đăng nhập bằng Google', style: text.headlineSmall, textAlign: TextAlign.center),
+                      Text('Đăng nhập để đặt món', style: text.headlineSmall, textAlign: TextAlign.center),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        'Dùng tài khoản Google để đặt món, theo dõi đơn và giữ món yêu thích trên mọi máy.',
+                        'Dùng email hoặc tài khoản Google để đặt món, theo dõi đơn và giữ món yêu thích trên mọi máy.',
                         style: text.bodyMedium?.copyWith(color: colors.muted),
                         textAlign: TextAlign.center,
                       ),
@@ -74,22 +74,47 @@ class SignInScreen extends StatelessWidget {
                           ),
                         ),
                       ],
+                      const SizedBox(height: AppSpacing.lg),
+                      ListenableBuilder(
+                        listenable: Listenable.merge([auth.signInWithEmail, auth.register]),
+                        builder: (context, _) => EmailAuthForm(
+                          idPrefix: 's26',
+                          running: auth.signInWithEmail.running || auth.register.running,
+                          onSignIn: (email, password) =>
+                              auth.signInWithEmail.execute((email: email, password: password)),
+                          onRegister: (name, email, password) =>
+                              auth.register.execute((name: name, email: email, password: password)),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                            child: Text('hoặc', style: text.bodySmall?.copyWith(color: colors.muted)),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ListenableBuilder(
+                          listenable: auth.signIn,
+                          builder: (context, _) => TestId(
+                            's26.google',
+                            child: AppButton(
+                              label: auth.signIn.running ? 'Đang đăng nhập…' : 'Đăng nhập bằng Google',
+                              icon: Icons.login,
+                              variant: AppButtonVariant.secondary,
+                              loading: auth.signIn.running,
+                              onPressed: auth.signIn.execute,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: ListenableBuilder(
-                  listenable: auth.signIn,
-                  builder: (context, _) => TestId(
-                    's26.google',
-                    child: AppButton(
-                      label: auth.signIn.running ? 'Đang đăng nhập…' : 'Đăng nhập bằng Google',
-                      icon: Icons.login,
-                      loading: auth.signIn.running,
-                      onPressed: auth.signIn.execute,
-                    ),
                   ),
                 ),
               ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:breakbite_core/data/repositories/repositories.dart';
 import 'package:breakbite_core/data/services/services.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
+import 'package:breakbite_core/domain/credentials.dart';
 import 'package:breakbite_core/domain/mobile_access.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/utils/command.dart';
@@ -53,6 +54,12 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   late final signIn = Command0<AppUser>(_signIn);
 
+  /// Signs in with an email and a password.
+  late final signInWithEmail = Command1<AppUser, ({String email, String password})>(_signInWithEmail);
+
+  /// Creates an account with an email and a password, and signs it in.
+  late final register = Command1<AppUser, ({String name, String email, String password})>(_register);
+
   late final signOut = Command0<void>(_signOut);
 
   AppUser? _user;
@@ -97,6 +104,48 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
       case Err(:final error):
         _message = error.message;
         _crash.recordNonFatal(error, error.stackTrace, 'auth.signInWithGoogle');
+    }
+    notifyListeners();
+    return result;
+  }
+
+  Future<Result<AppUser>> _signInWithEmail(({String email, String password}) form) async {
+    final problem = Credentials.signInProblem(form.email, form.password);
+    if (problem != null) return _failed(ValidationException(problem));
+    _message = null;
+    notifyListeners();
+    final result = await _auth.signInWithEmail(form.email, form.password);
+    return _afterEmail(result, 'email', 'auth.signInWithEmail');
+  }
+
+  Future<Result<AppUser>> _register(({String name, String email, String password}) form) async {
+    final problem = Credentials.registerProblem(form.name, form.email, form.password);
+    if (problem != null) return _failed(ValidationException(problem));
+    _message = null;
+    notifyListeners();
+    final result = await _auth.registerWithEmail(name: form.name, email: form.email, password: form.password);
+    return _afterEmail(result, 'email_signup', 'auth.registerWithEmail');
+  }
+
+  Result<AppUser> _failed(AppException error) {
+    _message = error.message;
+    notifyListeners();
+    return Result.error(error);
+  }
+
+  Future<Result<AppUser>> _afterEmail(Result<AppUser> result, String method, String where) async {
+    switch (result) {
+      case Ok(:final value) when mobileAccessProblem(value) != null:
+        final problem = mobileAccessProblem(value)!;
+        _message = problem;
+        notifyListeners();
+        return Result.error(PermissionDeniedException(message: problem));
+      case Ok():
+        await _analytics.logEvent(AnalyticsEvents.login, {'method': method});
+      case Err(:final error):
+        _message = error.message;
+        // A wrong password or a taken email is the person's to fix, not a fault to report.
+        if (error is! ValidationException) _crash.recordNonFatal(error, error.stackTrace, where);
     }
     notifyListeners();
     return result;
@@ -155,6 +204,8 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
     unawaited(_sub.cancel());
     unawaited(_kioskSub.cancel());
     signIn.dispose();
+    signInWithEmail.dispose();
+    register.dispose();
     signOut.dispose();
     super.dispose();
   }
