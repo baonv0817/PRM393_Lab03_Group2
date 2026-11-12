@@ -16,11 +16,16 @@ class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) =>
-        DashboardViewModel(orders: context.read<OrderRepository>(), kioskId: context.read<AdminSession>().kioskId!),
-    child: const _DashboardView(),
-  );
+  Widget build(BuildContext context) {
+    // The admin's kiosk picker changes the kiosk while this screen stays open: a new kiosk gets a new view model
+    // (the key), so the screen never keeps listening to the previous kiosk.
+    final kioskId = context.select<AdminSession, String?>((s) => s.kioskId)!;
+    return ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (context) => DashboardViewModel(orders: context.read<OrderRepository>(), kioskId: kioskId),
+      child: const _DashboardView(),
+    );
+  }
 }
 
 class _DashboardView extends StatelessWidget {
