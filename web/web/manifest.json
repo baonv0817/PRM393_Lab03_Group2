@@ -1,12 +1,12 @@
 {
-    "name": "breakbite_admin",
-    "short_name": "breakbite_admin",
+    "name": "BreakBite · Quản trị",
+    "short_name": "BreakBite Admin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "BreakBite web admin for kiosk staff and admins",
-    "orientation": "portrait-primary",
+    "background_color": "#FAF8F5",
+    "theme_color": "#F69D39",
+    "description": "BreakBite · Quản trị cho nhân viên kiosk và quản trị viên",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
