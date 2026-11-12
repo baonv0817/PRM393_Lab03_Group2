@@ -1,6 +1,7 @@
 library;
 
 export 'fake_analytics_service.dart';
+export 'fake_announcement_repository.dart';
 export 'fake_auth_service.dart';
 export 'fake_cart_repository.dart';
 export 'fake_connectivity_service.dart';

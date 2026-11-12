@@ -104,6 +104,9 @@ class _Header extends StatelessWidget {
 
 typedef _Open = Future<void> Function(BuildContext, NotificationCenterViewModel, AppNotification, String);
 
+/// The line above an announcement from the web admin (W05), so it is not mistaken for news about an order.
+const announcementLabel = 'Thông báo từ BreakBite';
+
 /// A notification id like `A-204_ready` as the part of a test id (an underscore is not allowed there).
 String _key(AppNotification n) => n.id.replaceAll('_', '-');
 
@@ -145,6 +148,20 @@ class _Card extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (n.isAnnouncement)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+                      child: Row(
+                        children: [
+                          Icon(Icons.campaign_outlined, size: 18, color: scheme.primary),
+                          const SizedBox(width: AppSpacing.xxs),
+                          Text(
+                            announcementLabel,
+                            style: text.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

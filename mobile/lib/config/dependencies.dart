@@ -29,6 +29,7 @@ class AppDependencies {
     required this.reviews,
     required this.favorites,
     required this.notifications,
+    required this.announcements,
   });
 
   final AuthService auth;
@@ -55,7 +56,11 @@ class AppDependencies {
   final IncidentRepository incidents;
   final ReviewRepository reviews;
   final FavoriteRepository favorites;
+
+  /// The customer's own inbox documents. Screens get it through [providers], wrapped so that the web admin's
+  /// published [announcements] appear in it too (S19, docs/gap-review.md).
   final NotificationRepository notifications;
+  final AnnouncementRepository announcements;
 
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
@@ -81,6 +86,13 @@ class AppDependencies {
     Provider<IncidentRepository>.value(value: incidents),
     Provider<ReviewRepository>.value(value: reviews),
     Provider<FavoriteRepository>.value(value: favorites),
-    Provider<NotificationRepository>.value(value: notifications),
+    Provider<AnnouncementRepository>.value(value: announcements),
+    Provider<NotificationRepository>.value(
+      value: AnnouncementInboxRepository(
+        notifications: notifications,
+        announcements: announcements,
+        selectedKioskId: session.watchSelectedKioskId,
+      ),
+    ),
   ];
 }

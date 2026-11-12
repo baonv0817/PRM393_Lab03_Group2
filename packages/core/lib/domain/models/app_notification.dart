@@ -23,5 +23,13 @@ class AppNotification {
 
   static String idForOrder(String orderId, OrderStatus status) => '${orderId}_${status.name}';
 
-  static String idForAnnouncement(String announcementId) => 'ann_$announcementId';
+  static const _announcementPrefix = 'ann_';
+
+  static String idForAnnouncement(String announcementId) => '$_announcementPrefix$announcementId';
+
+  /// Whether [id] was made by [idForAnnouncement].
+  static bool isAnnouncementId(String id) => id.startsWith(_announcementPrefix);
+
+  /// A message from the web admin (W05) rather than about one of the customer's orders.
+  bool get isAnnouncement => isAnnouncementId(id);
 }
