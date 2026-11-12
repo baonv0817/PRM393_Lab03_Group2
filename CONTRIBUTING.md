@@ -1,5 +1,7 @@
 # How we work in this repo
 
+> **Repository layout (final assignment).** The Flutter mobile app is in `mobile/`, the web admin in `web/`, and the code both share (models, Firestore repositories, Firebase services, the Lab 2 theme, widgets, logo and font) in `packages/core/` (`package:breakbite_core`). Run every `flutter` and `dart` command **inside `mobile/` or `web/`**; paths such as `lib/`, `dev/`, `test/` below are relative to `mobile/`. The Firebase CLI config is `firebase/firebase.json`: run `firebase` commands inside `firebase/`, or pass `--config ../firebase/firebase.json` from `mobile/`.
+
 Read this once before writing code. Assignments: [`ASSIGNMENTS.md`](ASSIGNMENTS.md). Environment setup: [`docs/setup.md`](docs/setup.md).
 
 ## 1. Run the app

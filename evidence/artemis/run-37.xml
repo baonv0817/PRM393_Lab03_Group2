@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="107.609" timestamp="2026-11-12T13:53:37.497993+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_seller_push_analytics" name="test_tc12_seller_accepts_and_delivers" time="107.559" /></testsuite></testsuites>

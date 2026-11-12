@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="135.591" timestamp="2026-11-12T13:16:21.808787+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc05_payment_declined_then_cash_then_cancel" time="135.491" /></testsuite></testsuites>

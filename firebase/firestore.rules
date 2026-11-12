@@ -121,7 +121,8 @@ service cloud.firestore {
           && d.soldOut is bool
           && (d.get('optionGroups', null) == null || (d.optionGroups is list && d.optionGroups.size() <= 5))
           && (d.get('soldOutReason', null) == null || d.soldOutReason in ['outOfIngredients', 'machineBroken', 'other'])
-          && optional(d, 'availableAgainAt', 'timestamp');
+          && optional(d, 'availableAgainAt', 'timestamp')
+          && optional(d, 'archived', 'bool');
     }
     match /menu_items/{id} {
       allow read: if signedIn();
@@ -322,12 +323,25 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Final assignment: the web admin's announcement form (W05) writes here; the mobile inbox (S19) reads
+    // published ones in real time. Only admins write; nobody deletes (archive instead).
+    function validAnnouncement(d) {
+      return d.keys().hasOnly(['title', 'body', 'kioskId', 'status', 'createdBy', 'publishedAt', 'createdAt', 'updatedAt'])
+          && d.title is string && d.title.size() >= 1 && d.title.size() <= 120
+          && d.body is string && d.body.size() >= 1 && d.body.size() <= 1000
+          && d.status in ['draft', 'published', 'archived']
+          && optional(d, 'kioskId', 'string')
+          && optional(d, 'publishedAt', 'timestamp');
+    }
     match /announcements/{id} {
       allow read: if signedIn() && (resource.data.status == 'published' || isAdmin());
-      allow create: if isAdmin() && request.resource.data.status in ['draft', 'published', 'archived']
+      allow create: if isAdmin()
+                    && validAnnouncement(request.resource.data)
                     && request.resource.data.createdBy == request.auth.uid
                     && stampedOnCreate();
-      allow update: if isAdmin() && request.resource.data.status in ['draft', 'published', 'archived']
+      allow update: if isAdmin()
+                    && validAnnouncement(request.resource.data)
+                    && !changedKeys().hasAny(['createdBy'])
                     && stampedOnUpdate();
       allow delete: if false;
     }

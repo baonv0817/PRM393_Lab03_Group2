@@ -5,14 +5,14 @@ on:
     types: [opened, synchronize, reopened, edited]
     paths:
       - 'firebase/**'
-      - 'lib/domain/models/**'
+      - 'packages/core/lib/domain/models/**'
       - 'docs/data-model.md'
       - '.github/workflows/firebase-checks.yml'
   push:
     branches: [main]
     paths:
       - 'firebase/**'
-      - 'lib/domain/models/**'
+      - 'packages/core/lib/domain/models/**'
       - 'docs/data-model.md'
       - '.github/workflows/firebase-checks.yml'
 
@@ -34,7 +34,7 @@ jobs:
         run: |
           changed=$(git diff --name-only "origin/$BASE_REF...HEAD")
           echo "$changed"
-          schema=$(echo "$changed" | grep -E '^(lib/domain/models/|firebase/firestore\.rules$|firebase/firestore\.indexes\.json$|docs/data-model\.md$)' || true)
+          schema=$(echo "$changed" | grep -E '^(packages/core/lib/domain/models/|firebase/firestore\.rules$|firebase/firestore\.indexes\.json$|docs/data-model\.md$)' || true)
           migration=$(echo "$changed" | grep -E '^firebase/seed/migrations/' || true)
           if [ -z "$schema" ]; then
             echo "No data structure files changed."

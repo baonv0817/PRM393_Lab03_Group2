@@ -1,0 +1,23 @@
+diff --git a/artemis/drivers/android/adb_driver.py b/artemis/drivers/android/adb_driver.py
+index 360aa48..f6b7209 100644
+--- a/artemis/drivers/android/adb_driver.py
++++ b/artemis/drivers/android/adb_driver.py
+@@ -325,6 +325,18 @@ class AndroidAdbDriver(BaseDeviceDriver):
+             # Normalize literal escaped newlines from LLM / tool call serialization
+             norm_text = text.replace(r"\r\n", "\n").replace(r"\n", "\n").replace(r"\r", "\n")
+ 
++            # LOCAL PATCH (PRM393 Lab 3, see e2e_test/README.md): ASCII goes straight through `adb input text`,
++            # as input_ime.py already does. Flutter text fields ignore KEYCODE_PASTE, so Tier 1 below reported
++            # success while the field stayed empty (TC-04 typed "BB20" into nothing, 0/3).
++            # 0. Tier 0: ASCII fast path
++            if norm_text.isascii():
++                for i, line in enumerate(norm_text.split("\n")):
++                    if i > 0:
++                        await asyncio.to_thread(self.device.shell, "input keyevent 66")
++                    if line:
++                        await asyncio.to_thread(self.device.shell, f"input text {_escape_for_adb_text(line)}")
++                return True
++
+             # 1. Tier 1: Try clipboard injection + KEYCODE_PASTE (Zero IME interference, preserves multiline, works for all charsets)
+             if self._ui_adb_client:
+                 try:

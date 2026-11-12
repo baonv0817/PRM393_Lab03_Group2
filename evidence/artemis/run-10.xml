@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="109.850" timestamp="2026-11-12T11:56:02.360975+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc03_quick_order" time="109.708"><failure message="AssertionError: assert None&#10; +  where None = &lt;function fullmatch at 0x000002760E9DC220&gt;('\\d{6}', '#H0ZMB1')&#10; +    where &lt;function fullmatch at 0x000002760E9DC220&gt; = re.fullmatch&#10; +    and   '#H0ZMB1' = &lt;function sub at 0x000002760E9DC360&gt;('\\s', '', '#H0ZMB1')&#10; +      where &lt;function sub at 0x000002760E9DC360&gt; = re.sub&#10; +      and   '#H0ZMB1' = str('#H0ZMB1')">artemis = &lt;conftest.Artemis object at 0x0000027611E14C20&gt;
+
+    async def test_tc03_quick_order(artemis):
+        """F1 và sự kiện Analytics `purchase` (trước là TC-13). Cần bật debug Analytics trên máy:
+        adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite
+        """
+        if not shutil.which("adb"):
+            pytest.skip("Không có adb trong PATH")
+        adb("logcat", "-c")
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, giỏ hàng trống, đang ở Trang chủ. Chạm nút + của món đầu tiên, rồi chạm nút "
+            '"Giỏ hàng" ở góc dưới bên phải. Chạm tiếp tục để thanh toán, giữ phương thức MoMo, chạm "Xác nhận", '
+            "rồi xác nhận thanh toán ở màn cổng thanh toán. Đợi màn Theo dõi đơn hiện ra.",
+            expected_output=(
+                'JSON: {"tracking_screen_visible": true hoặc false, "pickup_code": mã nhận món đang hiện, '
+                '"total": tổng tiền đang hiện}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert data["tracking_screen_visible"] is True
+&gt;       assert re.fullmatch(r"\d{6}", re.sub(r"\s", "", str(data["pickup_code"])))
+E       AssertionError: assert None
+E        +  where None = &lt;function fullmatch at 0x000002760E9DC220&gt;('\\d{6}', '#H0ZMB1')
+E        +    where &lt;function fullmatch at 0x000002760E9DC220&gt; = re.fullmatch
+E        +    and   '#H0ZMB1' = &lt;function sub at 0x000002760E9DC360&gt;('\\s', '', '#H0ZMB1')
+E        +      where &lt;function sub at 0x000002760E9DC360&gt; = re.sub
+E        +      and   '#H0ZMB1' = str('#H0ZMB1')
+
+test_order.py:55: AssertionError</failure></testcase></testsuite></testsuites>

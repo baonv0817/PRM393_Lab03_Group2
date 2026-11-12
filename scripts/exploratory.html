@@ -1,17 +1,14 @@
-<h3>Exploratory session</h3>
-<p>10/11/2026, about 10 minutes, by P2 with Claude Code on an Android emulator with fake data, driven with <code>adb</code>; <b>not</b> the ARTEMIS Pro-profile session of the handout (P5 repeats it on a phone). Charter: text at 200 %, fast taps, odd search input, the receipt export. Five problems, all low severity (<a href="https://github.com/baonv0817/PRM393_Lab03_Group2/blob/main/docs/test-plan.md">docs/test-plan.md</a> section 4):</p>
-<table><tr><th>Found</th><th>Handled</th></tr>
-<tr><td>Orders tab label "Đang xử lý (2)" fades at the bracket at 200 % text (S08)</td><td>Open</td></tr>
-<tr><td>Kiosk status line cut with "…" on Home and Menu at 200 % text, the wait time is lost</td><td>Open</td></tr>
-<tr><td>Empty search says "xem các món bán chạy" but offers only search suggestions</td><td>Open</td></tr>
-<tr><td>Badge "Đã nhận đơn" above "Chờ kiosk nhận đơn", and "Đã nhận" for a picked-up order, read as contradictory</td><td>Open, wording from Figma</td></tr>
-<tr><td>K10 time-field labels cut ("Giờ mở c…") at 200 % text</td><td>Fixed: fields stack at ≥ 1.5× text, widget test added</td></tr></table>
-<p>No problem found: 14 fast taps on "+" (quantity 14, total 546.000đ correct), two quick taps on the receipt export (one receipt), the seller tabs at 200 % text (no overflow).</p>
+<h3>Exploratory session (ARTEMIS Pro profile)</h3>
+<p>12/11/2026, <b>15.8 minutes</b>, ARTEMIS <b>Pro</b> profile on the emulator with the real Firebase project and the fixed build, started by <code>e2e_test/exploratory.py</code>: two unscripted charters back to back. Charter 1 (6.0 min, 20 steps): menu and categories, item options and a kitchen note full of special characters, cart and vouchers, search, switching kiosk and back, the system Back key. Charter 2 (9.7 min, 37 steps): orders (active, history, detail, enlarged QR, receipt export), profile (student profile with a wrong then a right phone number, default payment method, Firebase demo area, notification settings). Evidence: <code>evidence/artemis/exploratory-2026-11-12.json</code> (every step and the agent's notes) and the two screen recordings (<a href="https://github.com/baonv0817/PRM393_Lab03_Group2/blob/main/docs/test-plan.md">docs/test-plan.md</a> section 4.1). The agent left its "Issues" note empty, so the issues were read from its step log and each was repeated by hand:</p>
+<table><tr><th>Found</th><th>Severity</th><th>Handled</th></tr>
+<tr><td>Order detail (S12) offers "Xuất biên nhận PDF" for a cancelled, unpaid order (#4DZ25H); the receipt is generated (9 KB) and listed under "Tệp của tôi", although the order was never paid</td><td>Medium</td><td>Open, to decide with P2 (hide the button or print "ĐÃ HUỶ")</td></tr></table>
+<p>Not problems once checked by hand: a spinner on notification settings (it loads in under a second), a "Xem giỏ" tap the agent aimed at the keyboard area (the keyboard closes and the action is reachable), a phone number the agent's typing did not reach. Seen working: validation messages, the kiosk-switch warning, vouchers, the enlarged QR, order history, the default payment method, the Remote Config fetch, export and upload.</p>
+<p>An earlier manual session (10/11, emulator with fake data, text at 200 %, fast taps) found five low-severity layout and wording problems; the K10 one is fixed (test plan section 4.2).</p>
 <!--SLIDE-->
 <ul>
-<li>10/11/2026, ~10 minutes, emulator with fake data, text at 200 %, fast taps, odd search, receipt export.</li>
-<li><b>5 low-severity problems:</b> clipped tab label and status line, a misleading empty-search text, contradictory order wording, K10 labels cut.</li>
-<li><b>1 fixed</b> (K10 stacks the time fields, test added); 4 open with an owner.</li>
-<li>31 ARTEMIS cases written, <b>0 run</b>; P5 repeats this session with ARTEMIS on a phone.</li>
+<li>12/11/2026, <b>15.8 minutes, ARTEMIS Pro profile</b>, emulator with the real Firebase: two unscripted charters (menu, cart, vouchers, search, kiosk switch; orders, receipts, profile, Firebase demo area).</li>
+<li><b>1 medium problem:</b> a receipt PDF can be exported for a cancelled, unpaid order. Open, owner P2.</li>
+<li>3 suspected problems checked by hand and dismissed (agent timing or typing).</li>
+<li>Earlier manual session (10/11): 5 low layout and wording problems, 1 fixed.</li>
 </ul>
 <p class="cap">Details: docs/test-plan.md section 4.</p>

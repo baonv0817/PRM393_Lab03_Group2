@@ -1,5 +1,7 @@
 """TC-03, TC-04, TC-05, TC-17, TC-30, TC-31 (docs/test-plan.md): luồng đặt món của P1 (F1, F2, F3, S21, S22).
 
+TC-03 còn kiểm sự kiện Analytics `purchase` trong Logcat (trước là TC-13), nên cần bật debug Analytics trên máy.
+
 Mỗi test gửi MỘT chỉ dẫn nêu điểm bắt đầu, các bước và điều phải thấy; agent phải báo lại giá trị cụ thể
 bằng `expected_output` để test so sánh, không chỉ kiểm `result.succeeded`.
 
@@ -7,7 +9,19 @@ bằng `expected_output` để test so sánh, không chỉ kiểm `result.succee
 Test chỉ chạy khi có máy chủ ARTEMIS và `ARTEMIS_DEVICE_SERIAL`; nếu không, fixture `artemis` bỏ qua test.
 """
 import json
+import os
 import re
+import shutil
+import subprocess
+
+import pytest
+
+
+def adb(*args: str) -> str:
+    serial = os.environ["ARTEMIS_DEVICE_SERIAL"]
+    return subprocess.run(
+        ["adb", "-s", serial, *args], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True
+    ).stdout
 
 
 def parsed(result) -> dict:
@@ -22,46 +36,64 @@ def vnd(text) -> int:
 
 
 async def test_tc03_quick_order(artemis):
+    """F1 và sự kiện Analytics `purchase` (trước là TC-13). Cần bật debug Analytics trên máy:
+    adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite
+    """
+    if not shutil.which("adb"):
+        pytest.skip("Không có adb trong PATH")
+    adb("logcat", "-c")
     result = await artemis.run(
-        "BreakBite đang đăng nhập, giỏ hàng trống, đang ở Trang chủ. Chạm nút + của món đầu tiên, rồi chạm nút "
-        '"Giỏ hàng" ở góc dưới bên phải. Chạm tiếp tục để thanh toán, giữ phương thức MoMo, chạm "Xác nhận", '
-        "rồi xác nhận thanh toán ở màn cổng thanh toán. Đợi màn Theo dõi đơn hiện ra.",
+        "BreakBite đang đăng nhập, giỏ hàng trống, đang ở Trang chủ. Chạm nút + của món đầu tiên ĐÚNG MỘT LẦN "
+        "(sau khi chạm, nút + đổi thành bộ đếm hiện số 1; không chạm thêm). Chạm nút giỏ hàng tròn ở góc dưới "
+        'bên phải. Chạm tiếp tục để thanh toán, giữ phương thức MoMo, chạm "Xác nhận", rồi xác nhận thanh toán ở '
+        'màn cổng thanh toán. Đợi màn "Theo dõi đơn" hiện ra. Trên màn đó: số lớn bắt đầu bằng # ở đầu màn là mã '
+        'đơn; cuộn xuống tới mã QR, dòng "Mã số: …" ngay dưới mã QR là mã nhận món gồm 6 chữ số.',
         expected_output=(
-            'JSON: {"tracking_screen_visible": true hoặc false, "pickup_code": mã nhận món đang hiện, '
-            '"total": tổng tiền đang hiện}'
+            'JSON: {"tracking_screen_visible": true hoặc false, "order_code": mã đơn bắt đầu bằng #, '
+            '"pickup_code": 6 chữ số ở dòng "Mã số", "total": tổng tiền đang hiện}'
         ),
     )
     assert result.succeeded, result.error or result.status
     data = parsed(result)
     assert data["tracking_screen_visible"] is True
+    assert str(data["order_code"]).strip().startswith("#")
     assert re.fullmatch(r"\d{6}", re.sub(r"\s", "", str(data["pickup_code"])))
     assert vnd(data["total"]) > 0
+    log = adb("logcat", "-d", "-s", "FA", "FA-SVC")
+    purchase = [line for line in log.splitlines() if "purchase" in line]
+    assert purchase, "Không thấy sự kiện purchase trong Logcat (đã bật debug.firebase.analytics.app chưa?)"
+    assert any("transaction_id" in line for line in purchase)
 
 
 async def test_tc04_wrong_voucher(artemis):
     result = await artemis.run(
         "BreakBite đang đăng nhập. Nếu giỏ đang trống, chạm nút + của món đầu tiên ở Trang chủ một lần để giỏ có "
         "đúng 1 món. Mở giỏ hàng, chạm ô voucher. Chạm vào ô nhập có chữ gợi ý "
-        "\"Nhập mã giảm giá\", GÕ BB20 vào ô đó (kiểm tra ô đã hiện BB20), rồi mới chạm \"Áp dụng\"; "
-        "ghi trạng thái của BB20 trong danh sách và thông báo dưới ô nhập. Quay lại, thêm một món thứ hai vào giỏ, "
-        "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Ghi thông báo giỏ hàng hiện ra, "
-        'xem nút thanh toán có bấm được không và ghi tổng tiền trước và sau khi chọn "Bỏ mã".',
+        "\"Nhập mã giảm giá\", GÕ BB20 vào ô đó (kiểm tra ô đã hiện BB20), rồi mới chạm \"Áp dụng\". Đợi 2 giây, rồi "
+        "đọc HAI chỗ: dòng chữ đỏ hiện ngay dưới khung ô nhập mã (thông báo lỗi của ô nhập), và chữ trạng thái cạnh "
+        "BB20 trong danh sách \"Mã của bạn\". Quay lại, thêm một món thứ hai vào giỏ, "
+        "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Giỏ lúc này có HAI dòng chữ đỏ: một "
+        'dòng ngay dưới dòng mã giảm giá BBSTUDENT (cạnh nút "Bỏ mã") và một dòng phía trên nút thanh toán; ghi '
+        "nguyên văn từng dòng và xem nút thanh toán có bấm được không.",
         expected_output=(
             'JSON: {"bb20_label": chữ cạnh BB20 trong danh sách, "bb20_message": thông báo dưới ô nhập, '
-            '"cart_message": thông báo giỏ hàng sau khi xoá món, "checkout_enabled": true hoặc false}'
+            '"voucher_message": dòng chữ đỏ dưới dòng mã BBSTUDENT trong giỏ, '
+            '"blocker_message": dòng chữ đỏ phía trên nút thanh toán, "checkout_enabled": true hoặc false}'
         ),
     )
     assert result.succeeded, result.error or result.status
     data = parsed(result)
     assert "hết hạn" in data["bb20_label"].lower()
     assert "BB20" in data["bb20_message"] and "hết hạn" in data["bb20_message"].lower()
-    assert "40.000" in data["cart_message"] and "BBSTUDENT" in data["cart_message"]
+    assert "40.000" in data["voucher_message"] and "BBSTUDENT" in data["voucher_message"]
+    assert "bỏ mã" in data["blocker_message"].lower()
     assert data["checkout_enabled"] is False
 
 
 async def test_tc05_payment_declined_then_cash_then_cancel(artemis):
     result = await artemis.run(
-        "BreakBite đang đăng nhập, giỏ có 1 món. Mở giỏ, tiếp tục thanh toán, chạm \"Xác nhận\". Ở màn cổng "
+        "BreakBite đang đăng nhập, đang ở Trang chủ. Nếu giỏ đang trống, chạm nút + của món đầu tiên đúng một lần "
+        "để giỏ có 1 món. Mở giỏ, tiếp tục thanh toán, chạm \"Xác nhận\". Ở màn cổng "
         'thanh toán chạm "Từ chối". Ghi xem giỏ còn món không. Chọn "Tiền mặt tại Kiosk" và đặt lại. Ở màn đơn '
         'hàng chạm "Huỷ đơn" và xác nhận. Ghi mã đơn và câu hiện trên màn "Đơn đã huỷ".',
         expected_output=(

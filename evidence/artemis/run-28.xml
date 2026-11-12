@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="44.760" timestamp="2026-11-12T13:35:14.898474+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_profile_firebase" name="test_tc10_remote_config_quick_items" time="44.419"><failure message="assert 4 == 5&#10; +  where 4 = int(4)&#10; +  and   5 = expected_quick_items()">artemis = &lt;conftest.Artemis object at 0x000001DBF8294AD0&gt;
+
+    async def test_tc10_remote_config_quick_items(artemis):
+        result = await artemis.run(
+            'BreakBite đang đăng nhập, đang ở Trang chủ. Tìm mục có tiêu đề "Món nhanh · tối đa 5 phút". Các món của mục '
+            "này xếp DỌC, mỗi món một thẻ có nút +. Cuộn XUỐNG từng chút và đếm từng thẻ cho tới khi gặp mục kế tiếp "
+            '("Đặt lại đơn gần đây") hoặc hết trang; không đếm thẻ của mục khác và không đếm một thẻ hai lần.',
+            expected_output='JSON: {"quick_item_count": số món trong mục Món nhanh}',
+        )
+        assert result.succeeded, result.error or result.status
+&gt;       assert int(parsed(result)["quick_item_count"]) == expected_quick_items()
+E       assert 4 == 5
+E        +  where 4 = int(4)
+E        +  and   5 = expected_quick_items()
+
+test_profile_firebase.py:51: AssertionError</failure></testcase></testsuite></testsuites>
