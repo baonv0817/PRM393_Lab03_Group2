@@ -103,7 +103,10 @@ class AppButton extends StatelessWidget {
       ),
     };
 
+    // container: its own node, so the button is not merged into the card or panel around it (the web admin
+    // showed a whole sign-in card as one button to screen readers and test agents).
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: semanticLabel ?? label,

@@ -1,5 +1,6 @@
 library;
 
+export 'announcement_repository.dart';
 export 'cart_repository.dart';
 export 'favorite_repository.dart';
 export 'incident_repository.dart';

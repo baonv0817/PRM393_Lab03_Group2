@@ -1,5 +1,6 @@
 library;
 
+export 'announcement.dart';
 export 'app_notification.dart';
 export 'app_user.dart';
 export 'cart.dart';

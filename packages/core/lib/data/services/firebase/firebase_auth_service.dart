@@ -15,13 +15,23 @@ import 'package:google_sign_in/google_sign_in.dart';
 typedef GoogleIdTokenSource = Future<String?> Function();
 
 class FirebaseAuthService implements AuthService {
-  FirebaseAuthService({required this._auth, required this._db, GoogleSignIn? google, this._googleIdToken})
-    : _google = google ?? GoogleSignIn.instance;
+  FirebaseAuthService({
+    required this._auth,
+    required this._db,
+    GoogleSignIn? google,
+    this._googleIdToken,
+    this._webPopup = false,
+  }) : _google = google ?? GoogleSignIn.instance;
+
+  /// The web admin signs in with Firebase's Google pop-up; the mobile app uses the google_sign_in account picker.
+  FirebaseAuthService.web({required FirebaseAuth auth, required FirebaseFirestore db})
+    : this(auth: auth, db: db, webPopup: true);
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
   final GoogleSignIn _google;
   final GoogleIdTokenSource? _googleIdToken;
+  final bool _webPopup;
   final _profiles = <String, Future<void>>{};
   Future<void>? _googleReady;
 
@@ -45,11 +55,9 @@ class FirebaseAuthService implements AuthService {
 
   @override
   Future<Result<AppUser>> signInWithGoogle() => guard(() async {
-    final idToken = await (_googleIdToken ?? _idTokenFromGoogle)();
-    if (idToken == null || idToken.isEmpty) {
-      throw const ServiceException(message: 'Google không trả về thông tin đăng nhập. Thử lại sau.');
-    }
-    final credential = await _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
+    final credential = _webPopup
+        ? await _auth.signInWithPopup(GoogleAuthProvider()..setCustomParameters({'prompt': 'select_account'}))
+        : await _signInWithIdToken();
     final user = credential.user;
     if (user == null) throw const ServiceException(message: 'Không đăng nhập được. Thử lại sau.');
     try {
@@ -69,7 +77,7 @@ class FirebaseAuthService implements AuthService {
     // Firebase first: it is what ends the session. Google's own sign-out only forgets the account choice;
     // on a device whose credential service does not answer it can hang, so it runs on its own with a limit.
     await _auth.signOut();
-    if (_googleIdToken == null) unawaited(_signOutGoogle());
+    if (_googleIdToken == null && !_webPopup) unawaited(_signOutGoogle());
   });
 
   Future<void> _signOutGoogle() async {
@@ -90,6 +98,14 @@ class FirebaseAuthService implements AuthService {
     final email = user.email;
     if (email != null && email.contains('@')) return email.split('@').first;
     return 'Khách';
+  }
+
+  Future<UserCredential> _signInWithIdToken() async {
+    final idToken = await (_googleIdToken ?? _idTokenFromGoogle)();
+    if (idToken == null || idToken.isEmpty) {
+      throw const ServiceException(message: 'Google không trả về thông tin đăng nhập. Thử lại sau.');
+    }
+    return _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
   }
 
   Future<void> _ensureGoogle() => _googleReady ??= _google.initialize();
