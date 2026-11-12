@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="137.394" timestamp="2026-11-12T13:46:50.229224+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc04_wrong_voucher" time="137.341" /></testsuite></testsuites>

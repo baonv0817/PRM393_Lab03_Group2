@@ -27,13 +27,17 @@ class CheckoutScreen extends StatelessWidget {
       await context.push(AppRoutes.checkoutGateway, extra: vm);
       return;
     }
+    // Read the router before awaiting: once the order exists the app must open it even if this
+    // screen's context was rebuilt or unmounted meanwhile (ARTEMIS TC-05: the order was created and
+    // the cart emptied, but the screen stayed on "Thanh toán chưa thành công").
+    final router = GoRouter.of(context);
     final result = await vm.place.execute();
-    if (!context.mounted || result == null) return;
+    if (result == null) return;
     switch (result) {
       case Ok(:final value):
-        context.go(AppRoutes.orderOf(value));
+        router.go(AppRoutes.orderOf(value));
       case Err(:final error):
-        showAppMessage(context, error.message);
+        if (context.mounted) showAppMessage(context, error.message);
     }
   }
 

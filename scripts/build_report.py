@@ -209,18 +209,18 @@ All 11 are logged in code and covered by ViewModel tests. DebugView (debug mode 
 
 <h2>7. ARTEMIS test plan, results and exploratory session</h2>
 <p>{link('docs/test-plan.md')} has 31 test cases (TC-01 to TC-31) covering sign-in and sign-out, F1–F3, search, export and upload, push, the seller flow, the seller menu, a sold-out item and a closed kiosk, with
-happy paths, error paths and native interactions (airplane mode, notification). {link('e2e_test/')} has one pytest function per case; each sends one instruction and <b>asserts on the value the agent reports back</b>, not only on
-<code>succeeded</code>; <code>run_repeat.py</code> runs the suite N times and writes the pass-rate table. P2's cases are TC-18 to TC-29 (<code>test_order_manage.py</code>, <code>test_seller_menu_shop.py</code>).</p>
-<p><b>Results.</b> Ten of the 31 cases were run (TC-04, 06, 07, 08, 09, 10, 14, 15, 16, 17), each at least 3 times, on an Android emulator (Pixel 7) against the real Firebase project, with the flash profile (Gemini 3.5 Flash Lite). The JUnit file of every run is in <code>evidence/artemis/run-*.xml</code>; the table with notes is section 3 of the test plan. The other 21 cases are "Not run": the free model quota was limited, and most of them need two devices, the staff role, airplane mode or the notification shade.</p>
-<table><tr><th>Case</th><th>Runs</th><th>Pass</th><th>Reason for failures</th></tr>
-<tr><td>TC-06 search with no result, TC-07 main tabs, TC-08 item and order detail, TC-09 export and upload</td><td>3 each</td><td>3/3</td><td>Stable</td></tr>
-<tr><td>TC-10 Remote Config quick items</td><td>3</td><td>2/3</td><td>The agent counted 4 of 5 items in a list that needs scrolling</td></tr>
-<tr><td>TC-17 quantity stepper</td><td>3</td><td>2/3</td><td>The agent tapped the stepper once instead of twice</td></tr>
-<tr><td>TC-16 default payment method</td><td>4</td><td>3/4</td><td>The first failure was a check on a snackbar; the test now reads the saved choice</td></tr>
-<tr><td>TC-14 change kiosk empties the cart</td><td>3</td><td>1/3</td><td>The agent misread the screen; by hand the warning shows and the cart is emptied</td></tr>
-<tr><td>TC-15 student profile</td><td>3</td><td>1/3</td><td>The agent did not read the saved value; by hand it saves and persists</td></tr>
-<tr><td>TC-04 wrong voucher</td><td>3</td><td>0/3</td><td>The agent does not type BB20 into the field; by hand the app shows "Mã BB20 đã hết hạn."</td></tr></table>
-<p><b>Analysis.</b> The failures come from the agent typing into a field, reading a short-lived snackbar or counting a scrolling list. Repeated by hand, the app behaved correctly; the screenshots for TC-10 and TC-14 are in <code>evidence/artemis/manual/</code>. The fixes were made in the tests: clearer instructions (TC-04, 14), reading the saved value after reopening the screen instead of a snackbar (TC-15, 16), and a harness change. The pinned ARTEMIS version returns no structured output, so <code>e2e_test/conftest.py</code> reads the agent's final JSON report from the server trace.</p>
+happy paths, error paths and native interactions (the Google account chooser, a notification). {link('e2e_test/')} has one pytest function per case; each sends one instruction and <b>asserts on the value the agent reports back</b>, not only on
+<code>succeeded</code>; <code>run_repeat.py</code> runs a case N times, restarts the app before each run and never overwrites an earlier run. P2's cases are TC-18 to TC-29 (<code>test_order_manage.py</code>, <code>test_seller_menu_shop.py</code>).</p>
+<p><b>Results.</b> The graded suite is the 11 cases that cover every item of section 7 of the handout: TC-01 sign-in through the native Google account chooser, TC-02 sign-out, every Lab 2 flow end to end with its error branch (TC-03 F1, TC-04 F2, TC-05 F3, TC-12 seller), TC-06 search with no result (error path), TC-07 every tab, TC-08 each kind of detail screen, TC-09 export and upload and TC-10 a Remote Config value on screen; TC-03 also checks that its Analytics <code>purchase</code> event was logged (Logcat). Each ran at least 3 times on an Android emulator (Pixel 7, API 36) against the real Firebase project with the Flash profile (Gemini 3.5 Flash Lite): runs 1 to 5 on 11/11, runs 6 to 39 on 12/11. Every run is a JUnit file in <code>evidence/artemis/run-*.xml</code>, and section 3 of the test plan gives the trace id of each. TC-11 and TC-18 to TC-31 are written but kept as a backlog (not run); TC-14 to TC-17 were extra cases in the first session.</p>
+<table><tr><th>Case</th><th>Runs</th><th>Pass</th><th>Earlier failures and their fix</th></tr>
+<tr><td>TC-01 sign-in (native), TC-02 sign-out, TC-12 seller accepts and delivers</td><td>3 each</td><td>3/3</td><td>None</td></tr>
+<tr><td>TC-06 search with no result, TC-07 main tabs, TC-08 item and order detail, TC-09 export and upload</td><td>3 each</td><td>3/3</td><td>None (11/11)</td></tr>
+<tr><td>TC-03 F1 quick order + Analytics</td><td>3</td><td>3/3</td><td>0/3 before: the agent reported the order code as the pickup code (instruction now names both)</td></tr>
+<tr><td>TC-04 F2 wrong voucher</td><td>3</td><td>3/3</td><td>0/3, 0/3, 2/3 before: ARTEMIS typing (local patch), the cart's two red lines, a missed error line (instructions rewritten); one run hit the daily model quota</td></tr>
+<tr><td>TC-05 F3 payment error</td><td>4</td><td>3/4</td><td><b>App bug found and fixed</b> (below); the one failure on the fixed build was an ANR while the host also ran <code>flutter test</code></td></tr>
+<tr><td>TC-10 Remote Config quick items</td><td>3</td><td>3/3</td><td>2/3 twice before: "scroll down" made the agent swipe the wrong way (instruction now says swipe up and list the names)</td></tr>
+<tr><td>Extra, 11/11: TC-16 default payment, TC-17 stepper, TC-14 change kiosk, TC-15 student profile</td><td>3 to 4</td><td>3/4, 2/3, 1/3, 1/3</td><td>Agent misreads; by hand the app was right (test plan 3.2)</td></tr></table>
+<p><b>Analysis.</b> Each failure was traced to its cause in the agent's trace. The tool: this ARTEMIS version types by pasting, which Flutter fields ignore, so BB20 never reached the field; a 12-line local patch sends ASCII with <code>adb input text</code> ({link('e2e_test/artemis-ascii-input.patch')}). Ambiguous instructions (TC-03, 04, 10): rewritten. Timing: one ANR under host load. And one <b>app bug</b>: after MoMo was declined and cash was chosen, the order was created and the cart emptied, but the screen stayed on "Thanh toán chưa thành công" in 3 of 4 attempts. <code>CheckoutScreen</code> navigated with its own <code>context</code> after awaiting <code>placeOrder</code>; it and <code>GatewayScreen</code> now read the router before the await, every passing run on the fixed build opened the order, and <code>flutter test</code> still passes. The runs also showed two low usability problems (an active order card that cannot be tapped; "Mã nhận tại …" printed above the order code), recorded in section 3.3 of the test plan. The pinned ARTEMIS returns no structured output, so <code>e2e_test/conftest.py</code> reads the agent's final JSON report from the server trace.</p>
 <p>Other checks that were run: {N_WIDGET_TESTS} unit, ViewModel, widget and full-app flow tests (<code>flutter test</code>, no device), {N_RULES_TESTS} Firestore rules tests (<code>firebase/tests</code>) and {N_INTEGRATION_TESTS} integration tests of the real Firebase code against the Auth and Firestore emulators (<code>integration_test/firebase_emulator_test.dart</code>). <code>flutter analyze</code> has no issue.</p>
 EXPLORATORY_PLACEHOLDER
 
@@ -247,7 +247,8 @@ EXPLORATORY_PLACEHOLDER
 <li><b>Stale data on screen.</b> Two staff members can hold different copies of the same document; the fixes read the document again inside a transaction.</li>
 <li><b>Evidence needs accounts.</b> Real-Firebase screenshots need a staff role (set with <code>set-role.mjs</code>) and the SHA-1 key of every machine. The screens were first captured with fake data and then repeated on the real Firebase.</li>
 <li><b>The real Firebase found what the emulator hid.</b> The seller shift screen (K11) failed because its composite indexes were missing (16 indexes are now in <code>firestore.indexes.json</code>), and a push tapped on a closed app ended on Home (fixed in <code>lib/app.dart</code>).</li>
-<li><b>An AI test agent is a flaky tester.</b> On a free model quota ARTEMIS used 40 to 50 model requests per test. It mistyped, miscounted and missed snackbars that vanish in seconds. Each failure was repeated by hand to decide whether the app or the agent was wrong.</li>
+<li><b>An AI test agent is a flaky tester.</b> ARTEMIS used 20 to 50 model requests per test, so the free daily quota (500 requests) ran out after about 25 sessions. It mistyped, miscounted and missed snackbars that vanish in seconds. Each failure was repeated by hand or read in the trace to decide whether the app, the tool or the instruction was wrong.</li>
+<li><b>The test device can be the problem.</b> Google sign-in on the emulator failed with "Account reauth failed" until its automatic Private DNS was turned off.</li>
 </ul>
 
 <h2>10. Lessons learned</h2>
@@ -256,19 +257,19 @@ EXPLORATORY_PLACEHOLDER
 <li>Put logic in ViewModels from the start: moving it out of <code>build()</code> afterwards (T72) was three small changes only because the architecture test already blocked the worst cases.</li>
 <li>Test against the real rules early. The emulator test caught assumptions that the fakes could not (for example that a customer may report an order that is not delivered yet: the rules allow it, the UI does not offer it).</li>
 <li>An AI review is a list of questions, not of facts: four of ten findings were rejected after reading the code and the rules, and one claim in an accepted-looking finding was wrong.</li>
-<li>Judge a failing agent test by repeating the step by hand, and write into the test what the agent can read reliably (a saved value, not a snackbar that disappears).</li>
+<li>Judge a failing agent test by reading its trace and repeating the step by hand, and write into the test what the agent can read reliably (a saved value, not a snackbar that disappears). Of the failures on 12/11, three came from our own instructions, one from the tool, and one was a real app bug that manual testing had missed.</li>
 </ul>
 
 <h2>11. Remaining work</h2>
 <table><tr><th>Item</th><th>Note</th></tr>
-<tr><td>ARTEMIS Pro-profile exploratory session on a phone (15 to 30 minutes)</td><td>The session in section 7 was done by hand on an emulator</td></tr>
+<tr><td>Open problems found by ARTEMIS: a receipt can be exported for a cancelled order (medium); an active order card cannot be tapped; "Mã nhận tại …" above the order code (low)</td><td>Test plan sections 3.3 and 4.1; to decide with P1 and P2</td></tr>
 <tr><td>Figma updated for the deviations D01 to D33</td><td>Listed as "Not yet" in the traceability table</td></tr>
 <tr><td>Known limitation CR-01: order prices are not checked against the menu on the server</td><td>Needs a rules change on the ordering path</td></tr></table>
 
 <h2>12. AI tools used</h2>
 <table><tr><th>Tool</th><th>Purpose</th></tr>
-<tr><td>Claude Code (Claude Sonnet 5.5)</td><td>Writing and testing the code of P2, the ARTEMIS cases TC-18 to TC-29, the evidence screenshots, the ARTEMIS runs and their analysis, the review fixes, this report (<code>scripts/build_report.py</code>) and the slides (<code>scripts/build_slides.js</code>, pptxgenjs)</td></tr>
-<tr><td>Google ARTEMIS with Gemini 3.5 Flash Lite</td><td>The UI test agent of section 7</td></tr>
+<tr><td>Claude Code (Claude Sonnet 5.5, Claude Opus 5.5)</td><td>Writing and testing the code of P2, the ARTEMIS cases TC-18 to TC-29, the evidence screenshots, the ARTEMIS runs and their analysis, the checkout fix, the review fixes, this report (<code>scripts/build_report.py</code>) and the slides (<code>scripts/build_slides.js</code>, pptxgenjs)</td></tr>
+<tr><td>Google ARTEMIS (Flash and Pro profiles) with Gemini 3.5 Flash Lite</td><td>The UI test agent and the exploratory session of section 7</td></tr>
 <tr><td>Microsoft Edge TTS (vi-VN-HoaiMyNeural)</td><td>The narration of the demo video</td></tr>
 <tr><td>Claude Code, skill <code>/code-review</code></td><td>The AI code review of section 8</td></tr>
 <tr><td>Other members</td><td>To be added by each member in the README and in {link('docs/code-review.md')}</td></tr></table>

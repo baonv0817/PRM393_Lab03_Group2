@@ -42,12 +42,18 @@ async def test_tc09_export_and_upload(artemis):
 
 async def test_tc10_remote_config_quick_items(artemis):
     result = await artemis.run(
-        'BreakBite đang đăng nhập, đang ở Trang chủ. Tìm mục món nhanh dưới 5 phút ("Món nhanh") và đếm số món '
-        "trong mục đó (cuộn ngang nếu cần).",
-        expected_output='JSON: {"quick_item_count": số món trong mục Món nhanh}',
+        'BreakBite đang đăng nhập, đang ở Trang chủ. Tìm mục có tiêu đề "Món nhanh · tối đa 5 phút". Các món của mục '
+        "này xếp DỌC, mỗi món một thẻ có nút +, và món cuối thường nằm dưới mép màn hình. Để xem các món phía dưới, "
+        "VUỐT TỪ DƯỚI LÊN (đặt ngón tay gần đáy màn hình rồi kéo lên trên), từng đoạn ngắn, cho tới khi thấy mục kế "
+        'tiếp ("Đặt lại đơn gần đây") hoặc hết trang. Ghi tên từng món của mục theo thứ tự, mỗi món một lần, không '
+        "ghi món của mục khác.",
+        expected_output='JSON: {"quick_items": [tên các món trong mục Món nhanh], "quick_item_count": số món}',
     )
     assert result.succeeded, result.error or result.status
-    assert int(parsed(result)["quick_item_count"]) == expected_quick_items()
+    data = parsed(result)
+    names = data.get("quick_items") or []
+    assert len(set(names)) == len(names), f"một món bị ghi hai lần: {names}"
+    assert int(data["quick_item_count"]) == len(names) == expected_quick_items()
 
 
 async def test_tc14_change_kiosk_empties_cart(artemis):

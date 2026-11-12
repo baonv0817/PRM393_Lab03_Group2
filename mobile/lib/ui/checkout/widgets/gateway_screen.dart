@@ -56,15 +56,16 @@ class _GatewayScreenState extends State<GatewayScreen> {
   }
 
   Future<void> _pay() async {
+    final router = GoRouter.of(context);
     final result = await _vm.place.execute();
-    if (!mounted || result == null) return;
+    if (result == null) return;
     switch (result) {
       case Ok(:final value):
         _finished = true;
         _ticker?.cancel();
-        context.go(AppRoutes.orderOf(value));
+        router.go(AppRoutes.orderOf(value));
       case Err(:final error):
-        showAppMessage(context, error.message);
+        if (mounted) showAppMessage(context, error.message);
     }
   }
 
