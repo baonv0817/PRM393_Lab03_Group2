@@ -7,10 +7,8 @@ String? webAdminAccessProblem(AppUser user) => switch (user.role) {
   UserRole.admin => null,
   UserRole.staff when (user.kioskId ?? '').isNotEmpty => null,
   UserRole.staff =>
-    'Tài khoản nhân viên ${_who(user)} chưa được gán kiosk. Nhờ quản trị viên gán kiosk rồi đăng nhập lại.',
+    'Tài khoản nhân viên ${user.label} chưa được gán kiosk. Nhờ quản trị viên gán kiosk rồi đăng nhập lại.',
   UserRole.user =>
-    'Tài khoản ${_who(user)} là tài khoản khách hàng. Trang quản trị chỉ dành cho nhân viên kiosk và quản trị viên; '
+    'Tài khoản ${user.label} là tài khoản khách hàng. Trang quản trị chỉ dành cho nhân viên kiosk và quản trị viên; '
         'khách hàng đặt món trên ứng dụng BreakBite.',
 };
-
-String _who(AppUser user) => (user.email ?? '').isNotEmpty ? user.email! : user.displayName;

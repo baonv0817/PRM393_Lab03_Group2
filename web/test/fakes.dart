@@ -152,8 +152,15 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
     return const Result.ok('n1');
   }
 
+  /// The next setStatus fails with this (then it is cleared).
+  AppException? failStatus;
+
   @override
   Future<Result<void>> setStatus(String id, AnnouncementStatus status) async {
+    if (failStatus case final error?) {
+      failStatus = null;
+      return Result.error(error);
+    }
     statuses.add((id, status));
     return const Result.ok(null);
   }

@@ -58,7 +58,7 @@ class AdminShell extends StatelessWidget {
                           child: ErrorView(message: AdminSession.offlineMessage, onRetry: session.checkConnection),
                         )
                       : session.kioskId == null
-                      ? const EmptyView(message: 'Chưa có kiosk nào. Thêm kiosk trong Firestore rồi tải lại trang.')
+                      ? _NoKiosk(session: session)
                       : child,
                 ),
               ],
@@ -67,6 +67,22 @@ class AdminShell extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// No kiosk to work on yet: still loading, the list failed, or there really is none (CR-F04).
+class _NoKiosk extends StatelessWidget {
+  const _NoKiosk({required this.session});
+
+  final AdminSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    if (session.kiosksError case final message?) {
+      return ErrorView(message: message, onRetry: session.retryKiosks);
+    }
+    if (!session.kiosksLoaded) return const LoadingView(message: 'Đang tải danh sách kiosk…');
+    return const EmptyView(message: 'Chưa có kiosk nào. Thêm kiosk trong Firestore rồi tải lại trang.');
   }
 }
 

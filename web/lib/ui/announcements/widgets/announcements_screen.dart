@@ -90,9 +90,25 @@ class _AnnouncementTile extends StatelessWidget {
     AnnouncementStatus.archived: 'Đã lưu trữ',
   };
 
+  /// Publishes or archives [item] and says how it went; a failure no longer passes silently (CR-F02).
+  Future<void> _change(BuildContext context, AnnouncementsViewModel vm, AnnouncementStatus status) async {
+    final result = await vm.setStatus.execute((item, status));
+    if (!context.mounted || result == null) return;
+    final message = switch (result) {
+      Ok() =>
+        status == AnnouncementStatus.published
+            ? 'Đã đăng. Khách thấy ngay trong hộp thư.'
+            : 'Đã lưu trữ. Khách không còn thấy thông báo này.',
+      Err(:final error) => error.message,
+    };
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message), behavior: SnackBarBehavior.floating, width: 480));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final vm = context.read<AnnouncementsViewModel>();
+    final vm = context.watch<AnnouncementsViewModel>();
+    final busy = vm.setStatus.running;
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
     final scope = item.kioskId == null
@@ -124,12 +140,12 @@ class _AnnouncementTile extends StatelessWidget {
                 ),
                 if (vm.canWrite && item.status == AnnouncementStatus.draft)
                   TextButton(
-                    onPressed: () => vm.setStatus.execute((item, AnnouncementStatus.published)),
+                    onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.published),
                     child: const Text('Đăng'),
                   ),
                 if (vm.canWrite && item.status == AnnouncementStatus.published)
                   TextButton(
-                    onPressed: () => vm.setStatus.execute((item, AnnouncementStatus.archived)),
+                    onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.archived),
                     child: const Text('Lưu trữ'),
                   ),
               ],

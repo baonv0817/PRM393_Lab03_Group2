@@ -44,6 +44,8 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   AppUser? _user;
   String? _rejection;
   List<Kiosk> _kiosks = const [];
+  bool _kiosksLoaded = false;
+  String? _kiosksError;
   String? _pickedKioskId;
 
   /// False until Firebase says whether someone is signed in; the router waits on it.
@@ -76,6 +78,22 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
 
   /// Every kiosk, for the admin's picker.
   List<Kiosk> get kiosks => _kiosks;
+
+  /// False until the kiosk list has arrived once: an admin has no kiosk to work on before that, which is
+  /// "loading", not "there are no kiosks" (CR-F04).
+  bool get kiosksLoaded => _kiosksLoaded;
+
+  /// Why the kiosk list could not be read, shown with "Thử lại" instead of a misleading empty state.
+  String? get kiosksError => _kiosksError;
+
+  static const kiosksErrorMessage = 'Không tải được danh sách kiosk. Kiểm tra mạng rồi thử lại.';
+
+  void retryKiosks() {
+    _stopKiosks();
+    _kiosksError = null;
+    notifyListeners();
+    if (_user != null) _watchKiosks();
+  }
 
   /// The kiosk every screen works on: the staff member's own, or the admin's choice (the first kiosk by default).
   String? get kioskId => isAdmin ? (_pickedKioskId ?? _kiosks.firstOrNull?.id) : _user?.kioskId;
@@ -136,16 +154,25 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   }
 
   void _watchKiosks() {
-    _kioskSub ??= _menu.watchKiosks().listen((kiosks) {
-      _kiosks = kiosks;
-      notifyListeners();
-    }, onError: (Object _) {});
+    _kioskSub ??= _menu.watchKiosks().listen(
+      (kiosks) {
+        _kiosks = kiosks;
+        _kiosksLoaded = true;
+        _kiosksError = null;
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _kiosksError = error is AppException ? error.message : kiosksErrorMessage;
+        notifyListeners();
+      },
+    );
   }
 
   void _stopKiosks() {
     _kioskSub?.cancel();
     _kioskSub = null;
     _kiosks = const [];
+    _kiosksLoaded = false;
     _pickedKioskId = null;
   }
 
