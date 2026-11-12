@@ -1,0 +1,44 @@
+name: breakbite_core
+description: "BreakBite shared package: domain models, Firestore repositories, the Firebase services both clients use, and the Lab 2 design system (tokens, theme, widgets, logo, Nunito)."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.4
+  flutter: '>=3.47.5'
+
+dependencies:
+  barcode: ^2.2.9
+  cloud_firestore: ^7.1.0
+  firebase_analytics: ^13.0.1
+  firebase_auth: ^7.0.1
+  firebase_core: ^5.1.0
+  firebase_remote_config: ^7.0.1
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.3.2
+  google_sign_in: ^7.2.0
+  http: ^1.6.0
+  intl: ^0.20.3
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  # Load them with `package: corePackage` (lib/ui/core/widgets/brand.dart); the font family is
+  # `packages/breakbite_core/Nunito` (AppTheme.fontFamily).
+  assets:
+    - assets/brand/breakbite_logo.svg
+    - assets/brand/breakbite_logo_soft.svg
+    # Sample menu photos (Unsplash, sources in assets/images/menu/CREDITS.md); real seller photos come from Cloudinary.
+    - assets/images/menu/
+    # The PDF export reads the font file itself.
+    - assets/fonts/Nunito.ttf
+
+  # Nunito (SIL OFL, see assets/fonts/OFL.txt): a variable font, one file for every weight.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf

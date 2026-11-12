@@ -1,5 +1,7 @@
 # Environment setup (Windows)
 
+> **Repository layout (final assignment).** The Flutter mobile app is in `mobile/`, the web admin in `web/`, and the code both share (models, Firestore repositories, Firebase services, the Lab 2 theme, widgets, logo and font) in `packages/core/` (`package:breakbite_core`). Run every `flutter` and `dart` command **inside `mobile/` or `web/`**; paths such as `lib/`, `dev/`, `test/` below are relative to `mobile/`. The Firebase CLI config is `firebase/firebase.json`: run `firebase` commands inside `firebase/`, or pass `--config ../firebase/firebase.json` from `mobile/`.
+
 The steps below were run on the machine that built the skeleton on 28/10/2026. Each member repeats them on their own machine; section 1 is only needed if you hit the Java error.
 
 ## 1. Fix the Java error "Unable to establish loopback connection"
@@ -116,7 +118,7 @@ To try flows, rules and ARTEMIS runs without touching the real project:
 
 ```powershell
 # terminal 1: start Auth and Firestore emulators (data is lost when they stop)
-firebase emulators:start --only auth,firestore --project breakbite-1315b
+firebase emulators:start --config firebase/firebase.json --only auth,firestore --project breakbite-1315b
 
 # terminal 2: load the sample menu, kiosks, vouchers and slots into them
 cd firebase/seed
@@ -128,13 +130,13 @@ Then press F5 with **"BreakBite (Firebase Emulator)"**, or run `flutter run --da
 **Integration test against the real rules.** `integration_test/firebase_emulator_test.dart` runs the real Firebase code (sign-in and `users/{uid}`, menu, cart, placing, editing and cancelling an order, the staff steps, menu editing, the notification inbox, the staff side of customer reports (K13), favorites, notifications and the S18 switches) against the Auth and Firestore emulators with `firebase/firestore.rules`, and checks the rules refuse what they must (a customer accepting an order, staff of another kiosk). On an Android emulator:
 
 ```powershell
-firebase emulators:exec --only auth,firestore --project breakbite-1315b "flutter test integration_test/firebase_emulator_test.dart --dart-define=USE_FIREBASE_EMULATOR=true"
+firebase emulators:exec --config ../firebase/firebase.json --only auth,firestore --project breakbite-1315b "flutter test integration_test/firebase_emulator_test.dart --dart-define=USE_FIREBASE_EMULATOR=true"
 ```
 
 Without an Android emulator it runs in Chrome: start `chromedriver --port=4444` (same major version as Chrome, from Chrome for Testing), then
 
 ```powershell
-firebase emulators:exec --only auth,firestore --project breakbite-1315b "flutter drive --driver=test_driver/integration_test.dart --target=integration_test/firebase_emulator_test.dart -d web-server --browser-name=chrome --headless"
+firebase emulators:exec --config ../firebase/firebase.json --only auth,firestore --project breakbite-1315b "flutter drive --driver=test_driver/integration_test.dart --target=integration_test/firebase_emulator_test.dart -d web-server --browser-name=chrome --headless"
 ```
 
 ### Sending a test push (T53)

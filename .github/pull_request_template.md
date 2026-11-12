@@ -8,7 +8,7 @@ Issue: Closes #  <!-- or Refs # when this PR is only part of the task -->
 -
 
 ## Checked
-- [ ] `flutter analyze`, `dart format --set-exit-if-changed lib dev test` and `flutter test` are clean
+- [ ] In each Flutter package I changed (`mobile/`, `web/`, `packages/core/`): `flutter analyze`, `dart format --set-exit-if-changed .` and `flutter test` are clean
 - [ ] Ran on an Android device or emulator
 - [ ] Loading, empty and error states are all there (for screens that load data)
 - [ ] No SDK calls directly in widgets; logic lives in a ViewModel or service

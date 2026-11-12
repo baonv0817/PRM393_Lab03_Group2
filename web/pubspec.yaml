@@ -1,0 +1,28 @@
+name: breakbite_admin
+description: "BreakBite web admin (Flutter Web on Firebase Hosting) for kiosk staff and admins: review queue, menu management, dashboard and announcements."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  breakbite_core:
+    path: ../packages/core
+  cloud_firestore: ^7.1.0
+  firebase_auth: ^7.0.1
+  firebase_core: ^5.1.0
+  flutter:
+    sdk: flutter
+  go_router: ^18.1.1
+  intl: ^0.20.3
+  provider: ^6.1.5+1
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  # The logo, the menu photos and the Nunito font come from breakbite_core (packages/core/assets).
