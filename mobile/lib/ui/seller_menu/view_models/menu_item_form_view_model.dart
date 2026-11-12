@@ -56,6 +56,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   static const noKioskMessage = 'Tài khoản này chưa được gán kiosk nên chưa thêm hay sửa món được.';
   static const notFoundMessage = 'Không tìm thấy món này.';
+  static const waitForAiMessage = 'Đợi AI gợi ý xong rồi lưu món.';
   static const notYoursMessage = 'Món này không thuộc kiosk của bạn.';
   static const invalidMessage = 'Kiểm tra lại các ô báo lỗi.';
 
@@ -88,6 +89,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   /// The fields that still hold what the AI proposed (staff have not changed them).
   final _aiFields = <AiField>{};
+
+  /// Fields staff changed while Gemini was still answering (CR-F01): the answer must not overwrite them.
+  final _editedWhileSuggesting = <AiField>{};
 
   /// How many fields the last suggestion filled; `0` when the AI was not used.
   int _aiFilledCount = 0;
@@ -237,6 +241,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
       return const Result.error(ValidationException('Chọn hoặc chụp ảnh món trước để AI gợi ý.'));
     }
     final model = remoteConfig.getString(RemoteKeys.aiModel);
+    _editedWhileSuggesting.clear();
     unawaited(analytics.logEvent(AnalyticsEvents.aiRequest, {'feature': aiFeature, 'model': model}));
     final result = await ai.suggestFromPhoto(
       photo.bytes,
@@ -263,27 +268,40 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     return result;
   }
 
+  /// Fills the form from [suggestion]. A field staff typed into while waiting keeps what they typed (CR-F01).
   void _apply(MenuItemSuggestion suggestion) {
     _aiFields.clear();
-    _name = suggestion.name.length > maxNameLength ? suggestion.name.substring(0, maxNameLength) : suggestion.name;
-    _aiFields.add(AiField.name);
-    _category = suggestion.category;
-    _aiFields.add(AiField.category);
-    if (suggestion.priceVnd case final price?) {
+    bool take(AiField field) => !_editedWhileSuggesting.contains(field);
+    if (take(AiField.name)) {
+      _name = suggestion.name.length > maxNameLength ? suggestion.name.substring(0, maxNameLength) : suggestion.name;
+      _aiFields.add(AiField.name);
+    }
+    if (take(AiField.category)) {
+      _category = suggestion.category;
+      _aiFields.add(AiField.category);
+    }
+    if (suggestion.priceVnd case final price? when take(AiField.price)) {
       _price = '$price';
       _aiFields.add(AiField.price);
     }
-    if (suggestion.prepMinutes case final minutes?) {
+    if (suggestion.prepMinutes case final minutes? when take(AiField.prep)) {
       _prep = '${minutes.clamp(0, maxPrepMinutes)}';
       _aiFields.add(AiField.prep);
     }
-    if (suggestion.description.isNotEmpty) {
+    if (suggestion.description.isNotEmpty && take(AiField.description)) {
       final text = suggestion.description;
       _description = text.length > maxDescriptionLength ? text.substring(0, maxDescriptionLength) : text;
       _aiFields.add(AiField.description);
     }
+    _editedWhileSuggesting.clear();
     _aiFilledCount = _aiFields.length;
     notifyListeners();
+  }
+
+  /// Staff changed [field] by hand: it loses its AI label, and an answer still on its way leaves it alone.
+  void _edited(AiField field) {
+    _aiFields.remove(field);
+    if (suggest.running) _editedWhileSuggesting.add(field);
   }
 
   /// Takes the photo off the item (the logo shows instead). Nothing is deleted from Cloudinary.
@@ -305,38 +323,38 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// The − and + of the preparation time, one minute at a time between 0 and [maxPrepMinutes].
   void changePrepMinutes(int delta) {
     _prep = '${(prepMinutesValue + delta).clamp(0, maxPrepMinutes)}';
-    _aiFields.remove(AiField.prep);
+    _edited(AiField.prep);
     notifyListeners();
   }
 
   void setName(String value) {
     _name = value.length > maxNameLength ? value.substring(0, maxNameLength) : value;
-    _aiFields.remove(AiField.name);
+    _edited(AiField.name);
     notifyListeners();
   }
 
   void setPrice(String value) {
     _price = value;
-    _aiFields.remove(AiField.price);
+    _edited(AiField.price);
     notifyListeners();
   }
 
   void setPrepMinutes(String value) {
     _prep = value;
-    _aiFields.remove(AiField.prep);
+    _edited(AiField.prep);
     notifyListeners();
   }
 
   void setDescription(String value) {
     _description = value.length > maxDescriptionLength ? value.substring(0, maxDescriptionLength) : value;
-    _aiFields.remove(AiField.description);
+    _edited(AiField.description);
     notifyListeners();
   }
 
   void setCategory(ItemCategory value) {
     if (value == _category) return;
     _category = value;
-    _aiFields.remove(AiField.category);
+    _edited(AiField.category);
     notifyListeners();
   }
 
@@ -390,9 +408,11 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         (_photoRemoved && (saved.imageUrl ?? '').isNotEmpty);
   }
 
-  bool get canSave => hasChanges;
+  /// Not while Gemini is still answering: the answer would change the form after the item was saved (CR-F01).
+  bool get canSave => hasChanges && !suggest.running;
 
   Future<Result<String>> _save() async {
+    if (suggest.running) return const Result.error(ValidationException(waitForAiMessage));
     _attempted = true;
     notifyListeners();
     if (!isValid) return const Result.error(ValidationException(invalidMessage));

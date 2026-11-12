@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:breakbite_core/data/services/services.dart';
@@ -18,6 +19,9 @@ class FakeMenuAiService implements MenuAiService {
   Result<MenuItemSuggestion> next = const Result.ok(banhMi);
   final calls = <({Uint8List photo, String model, String prompt})>[];
 
+  /// When set, the answer waits for it: a test can act while Gemini is still "thinking".
+  Completer<void>? gate;
+
   @override
   Future<Result<MenuItemSuggestion>> suggestFromPhoto(
     Uint8List photo, {
@@ -25,6 +29,7 @@ class FakeMenuAiService implements MenuAiService {
     required String prompt,
   }) async {
     calls.add((photo: photo, model: model, prompt: prompt));
+    await gate?.future;
     return next;
   }
 }
