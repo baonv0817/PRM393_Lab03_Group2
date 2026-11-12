@@ -8,6 +8,7 @@ import 'package:breakbite_core/data/repositories/menu_repository.dart';
 import 'package:breakbite_core/data/repositories/order_repository.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
+import 'package:breakbite_core/data/services/connectivity_service.dart';
 import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
@@ -213,4 +214,22 @@ class FakeRemoteConfig implements RemoteConfigService {
 
   @override
   DateTime? get lastFetchedAt => null;
+}
+
+class FakeConnectivity implements ConnectivityService {
+  FakeConnectivity({this.online = true});
+
+  bool online;
+  final _changes = StreamController<bool>.broadcast();
+
+  void set(bool value) {
+    online = value;
+    _changes.add(value);
+  }
+
+  @override
+  Stream<bool> watchOnline() => _changes.stream;
+
+  @override
+  Future<bool> check() async => online;
 }

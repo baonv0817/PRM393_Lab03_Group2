@@ -52,7 +52,12 @@ class AdminShell extends StatelessWidget {
               children: [
                 const _TopBar(),
                 Expanded(
-                  child: session.kioskId == null
+                  child: !session.online
+                      ? Semantics(
+                          liveRegion: true,
+                          child: ErrorView(message: AdminSession.offlineMessage, onRetry: session.checkConnection),
+                        )
+                      : session.kioskId == null
                       ? const EmptyView(message: 'Chưa có kiosk nào. Thêm kiosk trong Firestore rồi tải lại trang.')
                       : KeyedSubtree(key: ValueKey(session.kioskId), child: child),
                 ),

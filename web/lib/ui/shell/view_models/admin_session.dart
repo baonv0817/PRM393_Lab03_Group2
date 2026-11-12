@@ -4,6 +4,7 @@ import 'package:breakbite_core/data/repositories/menu_repository.dart';
 import 'package:breakbite_core/data/services/analytics_events.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
+import 'package:breakbite_core/data/services/connectivity_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/app_user.dart';
 import 'package:breakbite_core/domain/models/kiosk.dart';
@@ -17,20 +18,29 @@ import 'package:flutter/foundation.dart';
 /// admin picks one from the top bar. A customer account is signed out at once with [rejection] as the reason
 /// (W01, "reject non-staff accounts").
 class AdminSession extends ChangeNotifier with SafeChangeNotifier {
-  AdminSession({required this._auth, required this._menu, this._analytics}) {
+  AdminSession({required this._auth, required this._menu, this._analytics, this._connectivity}) {
     signIn = Command0(_signIn);
     _authSub = _auth.authStateChanges().listen(_onUser, onError: _onAuthError);
+    _onlineSub = _connectivity?.watchOnline().listen(_setOnline, onError: (Object _) {});
   }
+
+  /// What every screen shows instead of its content while the browser has no network.
+  static const offlineMessage =
+      'Mất kết nối mạng. Dữ liệu trên trang có thể đã cũ và thao tác sẽ không được gửi. Kiểm tra Wi-Fi; trang tự tải '
+      'lại khi có mạng.';
 
   final AuthService _auth;
   final MenuRepository _menu;
   final AnalyticsService? _analytics;
+  final ConnectivityService? _connectivity;
   StreamSubscription<AppUser?>? _authSub;
+  StreamSubscription<bool>? _onlineSub;
   StreamSubscription<List<Kiosk>>? _kioskSub;
 
   late final Command0<AppUser> signIn;
 
   bool _ready = false;
+  bool _online = true;
   AppUser? _user;
   String? _rejection;
   List<Kiosk> _kiosks = const [];
@@ -42,6 +52,23 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   /// The signed-in staff member or admin; `null` when signed out or rejected.
   AppUser? get user => _user;
   bool get signedIn => _user != null;
+
+  /// False while the browser is offline; the shell then shows [offlineMessage] instead of a screen whose Firestore
+  /// data could only come from an empty or old cache.
+  bool get online => _online;
+
+  /// "Thử lại" on the offline state: asks the browser again.
+  Future<void> checkConnection() async {
+    final connectivity = _connectivity;
+    if (connectivity != null) _setOnline(await connectivity.check());
+  }
+
+  void _setOnline(bool value) {
+    if (value == _online) return;
+    _online = value;
+    notifyListeners();
+  }
+
   bool get isAdmin => _user?.role == UserRole.admin;
 
   /// Why the last account was turned away, shown on the sign-in screen until the next attempt.
@@ -126,6 +153,7 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   void dispose() {
     _authSub?.cancel();
     _kioskSub?.cancel();
+    _onlineSub?.cancel();
     signIn.dispose();
     super.dispose();
   }
