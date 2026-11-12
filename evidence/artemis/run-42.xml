@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="418.258" timestamp="2026-11-12T21:47:25.723666+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_ai_feature" name="test_tc40_ai_fills_the_new_item_from_a_dish_photo" time="218.239"><failure message="AssertionError: failed&#10;assert False&#10; +  where False = TaskResult(task_id='874842c9-d614-4c99-b5cb-664ec3f3c3bb', status='failed', goal='BreakBite đang đăng nhập bằng tài kh...label_under_name&quot;: true hoặc false}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x000001CCB1F84D70&gt;
+
+    async def test_tc40_ai_fills_the_new_item_from_a_dish_photo(artemis):
+        result = await artemis.run(
+            OPEN_K14 + 'ảnh "banh-mi.jpg". Chạm nút "Điền bằng AI" và chờ đến khi khung "Gợi ý từ AI" hiện ra (có thể mất '
+            "vài giây). Ghi lại chữ trong ô Tên món, số trong ô Giá, danh mục đang được chọn, và có dòng chữ "
+            '"Gợi ý từ AI" dưới ô Tên món hay không. ' + CLOSE_WITHOUT_SAVING,
+            expected_output=(
+                'JSON: {"name": chữ trong ô Tên món, "price": chữ trong ô Giá, "category": danh mục đang chọn, '
+                '"ai_label_under_name": true hoặc false}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: failed
+E       assert False
+E        +  where False = TaskResult(task_id='874842c9-d614-4c99-b5cb-664ec3f3c3bb', status='failed', goal='BreakBite đang đăng nhập bằng tài kh...label_under_name": true hoặc false}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded
+
+test_ai_feature.py:40: AssertionError</failure></testcase><testcase classname="test_ai_feature" name="test_tc41_ai_refuses_a_photo_that_is_not_food" time="199.851"><failure message="AssertionError: failed&#10;assert False&#10; +  where False = TaskResult(task_id='6714e5d1-e97c-45f1-9c7e-404c8281b086', status='failed', goal='BreakBite đang đăng nhập bằng tài kh...e&quot;: chữ trong ô Tên món sau khi gõ}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x000001CCB1FC0F50&gt;
+
+    async def test_tc41_ai_refuses_a_photo_that_is_not_food(artemis):
+        result = await artemis.run(
+            OPEN_K14 + 'ảnh "breakbite_logo.png" (logo, không phải món ăn). Chạm nút "Điền bằng AI" và chờ đến khi một '
+            'dòng chữ màu đỏ hiện ngay dưới nút "Điền bằng AI" (có thể mất vài giây). Ghi lại nguyên văn dòng chữ đó, và '
+            'ô Tên món có còn trống không. Sau đó gõ tên "Món thử" vào ô Tên món và ghi lại chữ trong ô. '
+            + CLOSE_WITHOUT_SAVING,
+            expected_output=(
+                'JSON: {"message": nguyên văn dòng chữ đỏ dưới nút, "name_empty_after_ai": true hoặc false, '
+                '"typed_name": chữ trong ô Tên món sau khi gõ}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: failed
+E       assert False
+E        +  where False = TaskResult(task_id='6714e5d1-e97c-45f1-9c7e-404c8281b086', status='failed', goal='BreakBite đang đăng nhập bằng tài kh...e": chữ trong ô Tên món sau khi gõ}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded
+
+test_ai_feature.py:60: AssertionError</failure></testcase></testsuite></testsuites>

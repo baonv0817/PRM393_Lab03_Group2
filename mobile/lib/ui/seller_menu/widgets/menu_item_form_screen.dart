@@ -16,8 +16,14 @@ import 'package:provider/provider.dart';
 
 /// K14 (add an item) and K15 (edit one): photo, name, kind, price, preparation time and description. The errors
 /// under the fields are K14-ERR.
+///
+/// K14 also has "Điền bằng AI" (docs/ai-feature.md): every field the AI filled is labelled [aiLabel] until staff
+/// change it, and a notice asks them to check the suggestion before saving.
 class MenuItemFormScreen extends StatelessWidget {
   const MenuItemFormScreen({super.key});
+
+  /// The label of a field that still holds the AI's suggestion.
+  static const aiLabel = 'Gợi ý từ AI';
 
   void _back(BuildContext context) => context.canPop() ? context.pop() : context.go(AppRoutes.sellerMenu);
 
@@ -95,12 +101,25 @@ class _FormState extends State<_Form> {
     super.dispose();
   }
 
+  /// Asks the AI, then shows what it filled in the text fields (the view model already holds the values). A failure
+  /// is not a passing message: it stays under the button (`vm.aiError`) until another photo is chosen.
+  Future<void> _suggest() async {
+    final vm = widget.vm;
+    final result = await vm.suggest.execute();
+    if (!mounted || result is! Ok<MenuItemSuggestion>) return;
+    _name.text = vm.name;
+    _price.text = vm.price;
+    _description.text = vm.description;
+    showAppMessage(context, 'AI đã điền gợi ý. Kiểm tra và sửa trước khi lưu.');
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = widget.vm;
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final p = vm.isNew ? 'k14' : 'k15';
+    String? aiHelper(AiField field) => vm.isAiSuggested(field) ? MenuItemFormScreen.aiLabel : null;
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -113,8 +132,12 @@ class _FormState extends State<_Form> {
             AppSpacing.md,
           ),
           children: [
-            _PhotoBox(vm: vm, prefix: p),
+            _PhotoBox(vm: vm, prefix: p, onSuggest: _suggest),
             const SizedBox(height: AppSpacing.md),
+            if (vm.hasAiSuggestion) ...[
+              TestId('$p.ai.notice', child: const _AiNotice()),
+              const SizedBox(height: AppSpacing.md),
+            ],
             TestId(
               '$p.name',
               child: TextField(
@@ -122,7 +145,12 @@ class _FormState extends State<_Form> {
                 onChanged: vm.setName,
                 maxLength: MenuItemFormViewModel.maxNameLength,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(labelText: 'Tên món', hintText: 'Nhập tên món', errorText: vm.nameError),
+                decoration: InputDecoration(
+                  labelText: 'Tên món',
+                  hintText: 'Nhập tên món',
+                  errorText: vm.nameError,
+                  helperText: aiHelper(AiField.name),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -145,6 +173,7 @@ class _FormState extends State<_Form> {
                   ),
               ],
             ),
+            if (vm.isAiSuggested(AiField.category)) const _AiHint(),
             const SizedBox(height: AppSpacing.md),
             TestId(
               '$p.price',
@@ -153,7 +182,12 @@ class _FormState extends State<_Form> {
                 onChanged: vm.setPrice,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(8)],
-                decoration: InputDecoration(labelText: 'Giá (đ)', hintText: 'Nhập giá', errorText: vm.priceError),
+                decoration: InputDecoration(
+                  labelText: 'Giá (đ)',
+                  hintText: 'Nhập giá',
+                  errorText: vm.priceError,
+                  helperText: aiHelper(AiField.price),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -183,6 +217,7 @@ class _FormState extends State<_Form> {
                 ),
               ),
             ),
+            if (vm.isAiSuggested(AiField.prep)) const _AiHint(),
             const SizedBox(height: AppSpacing.md),
             ProfileSection(
               child: Padding(
@@ -214,10 +249,11 @@ class _FormState extends State<_Form> {
                 maxLines: 4,
                 maxLength: MenuItemFormViewModel.maxDescriptionLength,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Mô tả (không bắt buộc)',
                   hintText: 'Thành phần, độ cay, kích cỡ…',
                   alignLabelWithHint: true,
+                  helperText: aiHelper(AiField.description),
                 ),
               ),
             ),
@@ -231,10 +267,11 @@ class _FormState extends State<_Form> {
 /// The photo of the item: a picture (or a place for one), "Thư viện" and "Chụp ảnh" to choose it, and "Xoá ảnh"
 /// to take it off. It is sent to Cloudinary when the item is saved; customers then see it on the menu.
 class _PhotoBox extends StatelessWidget {
-  const _PhotoBox({required this.vm, required this.prefix});
+  const _PhotoBox({required this.vm, required this.prefix, required this.onSuggest});
 
   final MenuItemFormViewModel vm;
   final String prefix;
+  final VoidCallback onSuggest;
 
   Future<void> _pick(BuildContext context, PhotoSource source) async {
     final result = await vm.pickPhoto(source);
@@ -329,6 +366,36 @@ class _PhotoBox extends StatelessWidget {
             ),
           ],
         ),
+        if (vm.aiAvailable) ...[
+          const SizedBox(height: AppSpacing.xs),
+          TestId(
+            '$prefix.ai.suggest',
+            child: AppButton(
+              label: vm.suggest.running ? 'AI đang đọc ảnh…' : 'Điền bằng AI',
+              icon: Icons.auto_awesome,
+              loading: vm.suggest.running,
+              semanticLabel: 'Điền bằng AI từ ảnh món',
+              onPressed: vm.canSuggest ? onSuggest : null,
+            ),
+          ),
+          if (vm.aiError case final message?) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            TestId(
+              '$prefix.ai.error',
+              child: Semantics(
+                liveRegion: true,
+                child: Text(message, style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error)),
+              ),
+            ),
+          ],
+          if (vm.pickedPhoto == null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              'Chọn hoặc chụp ảnh món để AI gợi ý tên, giá và mô tả. Chỉ chụp món, không chụp người.',
+              style: text.bodyMedium?.copyWith(color: colors.muted),
+            ),
+          ],
+        ],
         if (vm.hasPhoto)
           Align(
             alignment: Alignment.centerLeft,
@@ -343,6 +410,70 @@ class _PhotoBox extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Says that some fields hold what the AI proposed and must be checked; it goes away once staff changed them all.
+class _AiNotice extends StatelessWidget {
+  const _AiNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final text = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      label: '${MenuItemFormScreen.aiLabel}. Kiểm tra và sửa các ô trước khi lưu.',
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.selected,
+          border: Border.all(color: colors.selectedBorder),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${MenuItemFormScreen.aiLabel}. ',
+                        style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const TextSpan(text: 'AI có thể sai: kiểm tra và sửa các ô có nhãn này trước khi lưu.'),
+                    ],
+                  ),
+                  style: text.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Gợi ý từ AI" under a choice that is not a text field (the kind and the preparation time).
+class _AiHint extends StatelessWidget {
+  const _AiHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xxs),
+      child: Text(
+        MenuItemFormScreen.aiLabel,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colors.muted),
+      ),
     );
   }
 }

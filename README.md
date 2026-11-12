@@ -43,7 +43,7 @@ Run the E2E tests: see `e2e_test/README.md`.
 |---|---|
 | Flutter (stable) | 3.47.5 |
 | Dart | 3.13.4 |
-| Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1, firebase_remote_config 7.0.1, google_sign_in 7.2.0 (see `pubspec.yaml`) |
+| Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1, firebase_remote_config 7.0.1, firebase_ai 5.1.0, firebase_app_check 0.5.1, google_sign_in 7.2.0 (see `pubspec.yaml`) |
 | provider, go_router, flutter_svg | 6.1.5+1, 18.1.1, 2.3.2 |
 | Google ARTEMIS | commit `351ca8422f7b5b54e80a9c1ce03a222e02415b6b` (main, 2026-10-01) |
 | Python, uv | Python 3.12, uv 0.13.6 |
@@ -62,6 +62,8 @@ Declare every AI tool (code generation, chat, review, slides) and its purpose:
 | Claude Code, pptxgenjs | The slides: `scripts/build_slides.js` builds `slides/Lab03_SE193905_slides.pptx` from the repository's own evidence |
 | Microsoft Edge TTS (vi-VN-HoaiMyNeural) | The narration of the demo video |
 | Claude Code, skill `/code-review` | The AI code review: output in [`evidence/code-review/`](evidence/code-review/), decisions in [`docs/code-review.md`](docs/code-review.md) |
+| Claude Code (Claude Opus 5.5) | The final-assignment AI feature (#96): Gemini filling K14, App Check, the Remote Config keys, its tests, ARTEMIS TC-40 and TC-41, and [`docs/ai-feature.md`](docs/ai-feature.md) |
+| Gemini `gemini-3.5-flash-lite` through Firebase AI Logic | Inside the app: suggests the name, kind, price, time and description of a new item from its photo (K14), labelled and editable ([`docs/ai-feature.md`](docs/ai-feature.md)) |
 | `[the other members add theirs]` | `[fill in]` |
 
 ## Deviations from the handout
@@ -72,4 +74,4 @@ Declare every AI tool (code generation, chat, review, slides) and its purpose:
 
 ## Security
 
-Never commit service-account keys, API keys or keystores. Keys and test accounts go in environment variables. `android/app/google-services.json` may be committed.
+Never commit service-account keys, API keys or keystores. Keys and test accounts go in environment variables. `android/app/google-services.json` may be committed. The App Check debug token goes in `mobile/env/app_check.json`, which is gitignored (`mobile/env/app_check.example.json` shows the format).

@@ -2,6 +2,7 @@ import 'package:breakbite/routing/routes.dart';
 import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.dart';
 import 'package:breakbite/ui/seller_menu/widgets/menu_item_form_screen.dart';
 import 'package:breakbite_core/data/repositories/repositories.dart';
+import 'package:breakbite_core/data/services/services.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_theme.dart';
@@ -44,7 +45,15 @@ Future<void> _pump(
   String? kioskId = 'q9-t2',
   Size size = TestScreens.narrow,
   bool settle = true,
+  FakeRemoteConfigService? remoteConfig,
+  FakeMenuAiService? ai,
+  FakeAnalyticsService? analytics,
+  FakePhotoPickerService? photos,
 }) async {
+  final config = remoteConfig ?? FakeRemoteConfigService();
+  final menuAi = ai ?? FakeMenuAiService();
+  final events = analytics ?? FakeAnalyticsService();
+  final picker = photos ?? FakePhotoPickerService();
   // The width is the phone's; the height is tall because a ListView only builds what is on screen and
   // the test font is wider than Nunito, so the whole page would otherwise need scrolling.
   tester.view
@@ -60,8 +69,11 @@ Future<void> _pump(
           create: (_) => MenuItemFormViewModel(
             menu: menu,
             storage: FakeStorageService(),
-            photos: FakePhotoPickerService(),
+            photos: picker,
             crash: FakeCrashService(),
+            ai: menuAi,
+            remoteConfig: config,
+            analytics: events,
             kioskId: kioskId,
           ),
           child: const MenuItemFormScreen(),
@@ -73,8 +85,11 @@ Future<void> _pump(
           create: (_) => MenuItemFormViewModel(
             menu: menu,
             storage: FakeStorageService(),
-            photos: FakePhotoPickerService(),
+            photos: picker,
             crash: FakeCrashService(),
+            ai: menuAi,
+            remoteConfig: config,
+            analytics: events,
             kioskId: kioskId,
             itemId: state.pathParameters['id'],
           ),
@@ -400,5 +415,44 @@ void main() {
     await tester.tap(find.byTooltip('Quay lại'));
     await tester.pumpAndSettle();
     expect(find.text('K08'), findsOneWidget);
+  });
+
+  group('K14 AI (docs/ai-feature.md)', () {
+    testWidgets('no "Điền bằng AI" while Remote Config has the feature off (the default)', (tester) async {
+      await _pump(tester, FakeMenuRepository());
+      expect(byId('k14.ai.suggest'), findsNothing);
+    });
+
+    testWidgets('on: the button waits for a photo, then fills the fields and labels them "Gợi ý từ AI"', (
+      tester,
+    ) async {
+      final config = FakeRemoteConfigService()..publish(RemoteKeys.aiEnabled, true);
+      await _pump(tester, FakeMenuRepository(), remoteConfig: config);
+      expect(byId('k14.ai.suggest'), findsOneWidget);
+      expect(find.textContaining('Chỉ chụp món, không chụp người'), findsOneWidget);
+      await _tap(tester, 'k14.ai.suggest');
+      expect(byId('k14.ai.notice'), findsNothing, reason: 'disabled without a photo');
+
+      await _tap(tester, 'k14.photo.gallery');
+      await _tap(tester, 'k14.ai.suggest');
+
+      expect(tester.widget<TextField>(field('k14.name')).controller!.text, 'Bánh mì thịt nướng');
+      expect(tester.widget<TextField>(field('k14.price')).controller!.text, '25000');
+      expect(byId('k14.ai.notice'), findsOneWidget);
+      expect(find.text(MenuItemFormScreen.aiLabel), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a failure shows why and leaves the form as it was', (tester) async {
+      final config = FakeRemoteConfigService()..publish(RemoteKeys.aiEnabled, true);
+      final ai = FakeMenuAiService()..next = Result.error(AiException(AiFailure.quota));
+      await _pump(tester, FakeMenuRepository(), remoteConfig: config, ai: ai);
+      await _tap(tester, 'k14.photo.gallery');
+      await _tap(tester, 'k14.ai.suggest');
+
+      expect(find.text(AiException(AiFailure.quota).message), findsOneWidget);
+      expect(tester.widget<TextField>(field('k14.name')).controller!.text, isEmpty);
+      expect(byId('k14.ai.notice'), findsNothing);
+    });
   });
 }

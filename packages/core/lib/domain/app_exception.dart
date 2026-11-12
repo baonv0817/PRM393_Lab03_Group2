@@ -49,3 +49,33 @@ final class ServiceException extends AppException {
   const ServiceException({String message = 'Có lỗi xảy ra. Thử lại sau.', super.cause, super.stackTrace})
     : super(message);
 }
+
+/// Why the AI could not fill the K14 form (docs/ai-feature.md). Its [analyticsName] is the `reason` of `ai_error`.
+enum AiFailure {
+  disabled('disabled'),
+  quota('quota'),
+  network('network'),
+  notFood('not_food'),
+  badOutput('bad_output'),
+  other('other');
+
+  const AiFailure(this.analyticsName);
+
+  final String analyticsName;
+}
+
+/// The Gemini feature could not help this time. The form still works by hand, so the message always says so.
+final class AiException extends AppException {
+  AiException(this.reason, {super.cause, super.stackTrace}) : super(_messageFor(reason));
+
+  final AiFailure reason;
+
+  static String _messageFor(AiFailure reason) => switch (reason) {
+    AiFailure.disabled => 'Tính năng AI đang tắt. Bạn nhập tay giúp nhé.',
+    AiFailure.quota => 'AI đang quá tải hoặc hết lượt dùng. Bạn nhập tay giúp nhé.',
+    AiFailure.network => 'Không gọi được AI vì mạng yếu hoặc mất mạng. Bạn vẫn nhập tay được.',
+    AiFailure.notFood => 'Ảnh này không giống món ăn hay đồ uống. Chụp lại món hoặc nhập tay.',
+    AiFailure.badOutput => 'AI trả lời không đọc được. Bạn nhập tay giúp nhé.',
+    AiFailure.other => 'AI đang gặp lỗi. Bạn nhập tay giúp nhé.',
+  };
+}

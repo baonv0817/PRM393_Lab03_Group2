@@ -10,6 +10,7 @@ export 'incident.dart';
 export 'kiosk.dart';
 export 'kiosk_stats.dart';
 export 'menu_item.dart';
+export 'menu_item_suggestion.dart';
 export 'notification_prefs.dart';
 export 'order.dart';
 export 'order_draft.dart';

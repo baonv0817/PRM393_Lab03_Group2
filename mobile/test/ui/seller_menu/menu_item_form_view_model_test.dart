@@ -43,11 +43,17 @@ MenuItemFormViewModel _vm(
   FakeCrashService? crash,
   FakeStorageService? storage,
   FakePhotoPickerService? photos,
+  FakeMenuAiService? ai,
+  FakeRemoteConfigService? remoteConfig,
+  FakeAnalyticsService? analytics,
 }) => MenuItemFormViewModel(
   menu: menu,
   storage: storage ?? FakeStorageService(),
   photos: photos ?? FakePhotoPickerService(),
   crash: crash ?? FakeCrashService(),
+  ai: ai ?? FakeMenuAiService(),
+  remoteConfig: remoteConfig ?? FakeRemoteConfigService(),
+  analytics: analytics ?? FakeAnalyticsService(),
   kioskId: kioskId,
   itemId: itemId,
 );

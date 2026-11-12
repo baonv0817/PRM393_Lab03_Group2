@@ -7,6 +7,7 @@ export 'fake_connectivity_service.dart';
 export 'fake_crash_service.dart';
 export 'fake_favorite_repository.dart';
 export 'fake_incident_repository.dart';
+export 'fake_menu_ai_service.dart';
 export 'fake_menu_repository.dart';
 export 'fake_messaging_service.dart';
 export 'fake_notification_repository.dart';

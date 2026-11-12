@@ -78,7 +78,11 @@ class FirebaseDemoViewModel extends ChangeNotifier with SafeChangeNotifier {
       for (final MapEntry(:key, :value) in RemoteKeys.defaults.entries)
         RemoteConfigEntry(
           key: key,
-          value: value is bool ? remoteConfig.getBool(key) : remoteConfig.getInt(key),
+          value: switch (value) {
+            bool() => remoteConfig.getBool(key),
+            int() => remoteConfig.getInt(key),
+            _ => remoteConfig.getString(key),
+          },
           source: remoteConfig.sourceOf(key),
         ),
     ];

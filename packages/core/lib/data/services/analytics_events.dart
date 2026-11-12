@@ -11,4 +11,9 @@ abstract final class AnalyticsEvents {
   static const viewMenuItem = 'view_menu_item';
   static const orderAccepted = 'order_accepted';
   static const orderDelivered = 'order_delivered';
+
+  /// The Gemini feature of K14 (docs/ai-feature.md, docs/analytics-plan.md).
+  static const aiRequest = 'ai_request';
+  static const aiResultAccepted = 'ai_result_accepted';
+  static const aiError = 'ai_error';
 }

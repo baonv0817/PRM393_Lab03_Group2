@@ -12,23 +12,41 @@ import 'package:breakbite_core/utils/safe_change_notifier.dart';
 import 'package:breakbite_core/utils/text.dart';
 import 'package:flutter/foundation.dart';
 
+/// A field of the form that the AI can fill (docs/ai-feature.md).
+enum AiField { name, category, price, prep, description }
+
 /// K14 (add an item) and K15 (edit one): the same form. The field errors show once the staff member has
 /// tried to save (K14-ERR); nothing is written until every field is valid.
 ///
 /// The photo of the item: staff pick one (gallery or camera) and it is shown at once; it goes to Cloudinary
 /// when the item is saved, and the link is stored in the item (`imageUrl`), which is what customers see.
+///
+/// The AI feature (K14 only, docs/ai-feature.md): with a photo chosen, "Điền bằng AI" asks Gemini for the name,
+/// kind, price, preparation time and description. The answer fills the fields, each labelled "Gợi ý từ AI" until
+/// staff change it; nothing is saved until staff press "Lưu món". Remote Config `ai_enabled` shows or hides the
+/// button live; any failure leaves the form as it was and usable by hand.
 class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   MenuItemFormViewModel({
     required this.menu,
     required this.storage,
     required this.photos,
     required this.crash,
+    required this.ai,
+    required this.remoteConfig,
+    required this.analytics,
     required this.kioskId,
     this.itemId,
   }) {
     save = Command0(_save);
+    suggest = Command0(_suggest)..addListener(notifyListeners);
+    _configSub = remoteConfig.watchUpdates().listen((keys) {
+      if (keys.contains(RemoteKeys.aiEnabled)) notifyListeners();
+    });
     load();
   }
+
+  /// The `feature` parameter of the AI events, so a second AI feature can be told apart in Analytics.
+  static const aiFeature = 'k14_photo';
 
   static const maxNameLength = 60;
   static const maxDescriptionLength = 200;
@@ -48,6 +66,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   final StorageService storage;
   final PhotoPickerService photos;
   final CrashService crash;
+  final MenuAiService ai;
+  final RemoteConfigService remoteConfig;
+  final AnalyticsService analytics;
 
   /// The kiosk of the staff member; a new item belongs to it.
   final String? kioskId;
@@ -59,6 +80,17 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   /// Saves the item and returns its id.
   late final Command0<String> save;
+
+  /// Asks Gemini to fill the form from the chosen photo.
+  late final Command0<MenuItemSuggestion> suggest;
+
+  StreamSubscription<Set<String>>? _configSub;
+
+  /// The fields that still hold what the AI proposed (staff have not changed them).
+  final _aiFields = <AiField>{};
+
+  /// How many fields the last suggestion filled; `0` when the AI was not used.
+  int _aiFilledCount = 0;
 
   ViewState<MenuItem?> _state = const ViewLoading();
   MenuItem? _loaded;
@@ -140,8 +172,9 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   bool get hasPhoto => pickedPhoto != null || (photoUrl != null && photoUrl!.isNotEmpty);
 
-  /// A photo is being opened, or the item and its photo are being saved: the photo buttons wait.
-  bool get photoBusy => _picking || _uploadProgress != null;
+  /// A photo is being opened, the AI is reading it, or the item and its photo are being saved: the photo buttons
+  /// wait.
+  bool get photoBusy => _picking || _uploadProgress != null || suggest.running;
 
   /// 0 to 1 while the photo goes to Cloudinary, `null` otherwise.
   double? get uploadProgress => _uploadProgress;
@@ -159,6 +192,8 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
           if (value != null) {
             _picked = value;
             _photoRemoved = false;
+            // A new photo: what the AI said about the previous one no longer applies.
+            if (suggest.failed) suggest.clearResult();
           }
           return const Result.ok(null);
         case Err(:final error):
@@ -173,12 +208,91 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     }
   }
 
+  /// The feature is switched on in Remote Config (read live: turning it off in the console hides the button).
+  bool get aiEnabled => remoteConfig.getBool(RemoteKeys.aiEnabled);
+
+  /// The AI helps add a new item (K14); editing an existing one (K15) keeps what staff wrote.
+  bool get aiAvailable => isNew && aiEnabled;
+
+  /// A photo has been chosen in this form and nothing else is running.
+  bool get canSuggest => aiAvailable && _picked != null && !photoBusy && !save.running;
+
+  /// The field still holds the AI's suggestion, so the form labels it "Gợi ý từ AI".
+  bool isAiSuggested(AiField field) => _aiFields.contains(field);
+
+  /// Some fields still hold the AI's suggestion: the form shows the notice to check them before saving.
+  bool get hasAiSuggestion => _aiFields.isNotEmpty;
+
+  /// Why the last "Điền bằng AI" did not work, shown under the button until another photo is chosen or the AI is
+  /// asked again; `null` otherwise.
+  String? get aiError => switch (suggest.result) {
+    Err(:final error) => error.message,
+    _ => null,
+  };
+
+  Future<Result<MenuItemSuggestion>> _suggest() async {
+    final photo = _picked;
+    if (!aiEnabled) return Result.error(AiException(AiFailure.disabled));
+    if (photo == null) {
+      return const Result.error(ValidationException('Chọn hoặc chụp ảnh món trước để AI gợi ý.'));
+    }
+    final model = remoteConfig.getString(RemoteKeys.aiModel);
+    unawaited(analytics.logEvent(AnalyticsEvents.aiRequest, {'feature': aiFeature, 'model': model}));
+    final result = await ai.suggestFromPhoto(
+      photo.bytes,
+      model: model,
+      prompt: remoteConfig.getString(RemoteKeys.aiPrompt),
+    );
+    switch (result) {
+      case Ok(:final value):
+        _apply(value);
+      case Err(:final error):
+        final reason = error is AiException ? error.reason : AiFailure.other;
+        unawaited(
+          analytics.logEvent(AnalyticsEvents.aiError, {
+            'feature': aiFeature,
+            'reason': reason.analyticsName,
+            'model': model,
+          }),
+        );
+        // Quota, network and "not food" are expected and shown to staff; the rest is worth a look in Crashlytics.
+        if (reason == AiFailure.other || reason == AiFailure.badOutput) {
+          crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.suggest');
+        }
+    }
+    return result;
+  }
+
+  void _apply(MenuItemSuggestion suggestion) {
+    _aiFields.clear();
+    _name = suggestion.name.length > maxNameLength ? suggestion.name.substring(0, maxNameLength) : suggestion.name;
+    _aiFields.add(AiField.name);
+    _category = suggestion.category;
+    _aiFields.add(AiField.category);
+    if (suggestion.priceVnd case final price?) {
+      _price = '$price';
+      _aiFields.add(AiField.price);
+    }
+    if (suggestion.prepMinutes case final minutes?) {
+      _prep = '${minutes.clamp(0, maxPrepMinutes)}';
+      _aiFields.add(AiField.prep);
+    }
+    if (suggestion.description.isNotEmpty) {
+      final text = suggestion.description;
+      _description = text.length > maxDescriptionLength ? text.substring(0, maxDescriptionLength) : text;
+      _aiFields.add(AiField.description);
+    }
+    _aiFilledCount = _aiFields.length;
+    notifyListeners();
+  }
+
   /// Takes the photo off the item (the logo shows instead). Nothing is deleted from Cloudinary.
   void removePhoto() {
     if (photoBusy || !hasPhoto) return;
     _picked = null;
     _uploaded = null;
     _photoRemoved = true;
+    if (suggest.failed) suggest.clearResult();
     notifyListeners();
   }
 
@@ -191,32 +305,38 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// The − and + of the preparation time, one minute at a time between 0 and [maxPrepMinutes].
   void changePrepMinutes(int delta) {
     _prep = '${(prepMinutesValue + delta).clamp(0, maxPrepMinutes)}';
+    _aiFields.remove(AiField.prep);
     notifyListeners();
   }
 
   void setName(String value) {
     _name = value.length > maxNameLength ? value.substring(0, maxNameLength) : value;
+    _aiFields.remove(AiField.name);
     notifyListeners();
   }
 
   void setPrice(String value) {
     _price = value;
+    _aiFields.remove(AiField.price);
     notifyListeners();
   }
 
   void setPrepMinutes(String value) {
     _prep = value;
+    _aiFields.remove(AiField.prep);
     notifyListeners();
   }
 
   void setDescription(String value) {
     _description = value.length > maxDescriptionLength ? value.substring(0, maxDescriptionLength) : value;
+    _aiFields.remove(AiField.description);
     notifyListeners();
   }
 
   void setCategory(ItemCategory value) {
     if (value == _category) return;
     _category = value;
+    _aiFields.remove(AiField.category);
     notifyListeners();
   }
 
@@ -329,7 +449,21 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
       item = choice == null || choice == !base.soldOut ? changed : changed.withSoldOut(!choice);
     }
     final result = await menu.upsertItem(item);
-    if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.save');
+    switch (result) {
+      case Ok() when _aiFilledCount > 0:
+        // The staff member saved an item the AI helped fill: how much of the suggestion did they keep?
+        unawaited(
+          analytics.logEvent(AnalyticsEvents.aiResultAccepted, {
+            'feature': aiFeature,
+            'fields_kept': _aiFields.length,
+            'fields_changed': _aiFilledCount - _aiFields.length,
+          }),
+        );
+      case Ok():
+        break;
+      case Err(:final error):
+        crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.save');
+    }
     return result;
   }
 
@@ -369,7 +503,11 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   @override
   void dispose() {
+    unawaited(_configSub?.cancel());
     save.dispose();
+    suggest
+      ..removeListener(notifyListeners)
+      ..dispose();
     super.dispose();
   }
 }

@@ -41,3 +41,6 @@ node_modules/
 
 # Log lỗi của trình biên dịch Kotlin
 .kotlin/
+
+# App Check debug token of a test device (docs/ai-feature.md): a secret, never committed.
+mobile/env/app_check.json

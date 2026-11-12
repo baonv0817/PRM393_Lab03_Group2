@@ -69,6 +69,20 @@ class FirebaseRemoteConfigService implements RemoteConfigService {
   }
 
   @override
+  String getString(String key) {
+    try {
+      final value = _config.getString(key);
+      if (value.trim().isNotEmpty) return value;
+    } catch (_) {
+      // Falls through to the in-app default below.
+    }
+    return switch (RemoteKeys.defaults[key]) {
+      final String value => value,
+      _ => '',
+    };
+  }
+
+  @override
   RemoteValueSource sourceOf(String key) {
     try {
       return _config.getValue(key).source == ValueSource.valueRemote

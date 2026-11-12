@@ -12,6 +12,7 @@ class AppDependencies {
     required this.messaging,
     required this.orderAlerts,
     required this.photoPicker,
+    required this.menuAi,
     required this.reminders,
     required this.storage,
     required this.remoteConfig,
@@ -37,6 +38,7 @@ class AppDependencies {
   final MessagingService messaging;
   final OrderAlertService orderAlerts;
   final PhotoPickerService photoPicker;
+  final MenuAiService menuAi;
   final ReminderService reminders;
   final StorageService storage;
   final RemoteConfigService remoteConfig;
@@ -63,6 +65,7 @@ class AppDependencies {
     Provider<MessagingService>.value(value: messaging),
     Provider<OrderAlertService>.value(value: orderAlerts),
     Provider<PhotoPickerService>.value(value: photoPicker),
+    Provider<MenuAiService>.value(value: menuAi),
     Provider<ReminderService>.value(value: reminders),
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
