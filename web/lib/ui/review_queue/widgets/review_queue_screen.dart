@@ -21,15 +21,21 @@ class ReviewQueueScreen extends StatelessWidget {
   const ReviewQueueScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) => ReviewQueueViewModel(
-      orders: context.read<OrderRepository>(),
-      kioskId: context.read<AdminSession>().kioskId!,
-      analytics: context.read<AnalyticsService>(),
-      remoteConfig: context.read<RemoteConfigService>(),
-    ),
-    child: const _ReviewQueueView(),
-  );
+  Widget build(BuildContext context) {
+    // The admin's kiosk picker changes the kiosk while this screen stays open: a new kiosk gets a new view model
+    // (the key), so the screen never keeps listening to the previous kiosk.
+    final kioskId = context.select<AdminSession, String?>((s) => s.kioskId)!;
+    return ChangeNotifierProvider(
+      key: ValueKey(kioskId),
+      create: (context) => ReviewQueueViewModel(
+        orders: context.read<OrderRepository>(),
+        kioskId: kioskId,
+        analytics: context.read<AnalyticsService>(),
+        remoteConfig: context.read<RemoteConfigService>(),
+      ),
+      child: const _ReviewQueueView(),
+    );
+  }
 }
 
 class _ReviewQueueView extends StatefulWidget {

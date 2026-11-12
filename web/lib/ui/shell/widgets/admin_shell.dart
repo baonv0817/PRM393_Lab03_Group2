@@ -59,7 +59,7 @@ class AdminShell extends StatelessWidget {
                         )
                       : session.kioskId == null
                       ? const EmptyView(message: 'Chưa có kiosk nào. Thêm kiosk trong Firestore rồi tải lại trang.')
-                      : KeyedSubtree(key: ValueKey(session.kioskId), child: child),
+                      : child,
                 ),
               ],
             ),

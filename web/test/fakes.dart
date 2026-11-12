@@ -65,8 +65,13 @@ class FakeOrderRepository implements OrderRepository {
   Result<KioskStats> stats = const Result.ok(KioskStats.empty);
   DateTime? statsSince;
 
+  final watchedKiosks = <String>[];
+
   @override
-  Stream<List<Order>> watchKioskQueue(String kioskId) => queue.stream;
+  Stream<List<Order>> watchKioskQueue(String kioskId) {
+    watchedKiosks.add(kioskId);
+    return queue.stream;
+  }
 
   @override
   Future<Result<void>> accept(Order order, {required Duration readyIn}) async {
