@@ -53,8 +53,14 @@ class DemoDeps {
 
 Finder byId(String id) => find.byWidgetPredicate((w) => w is TestId && w.id == id);
 
-Future<void> scrollTo(WidgetTester tester, String id) =>
-    tester.scrollUntilVisible(byId(id), 200, scrollable: find.byType(Scrollable).first);
+/// Scrolls until the widget is built, then brings all of it on screen: `scrollUntilVisible` stops as soon as the
+/// widget peeks in at the bottom edge, where a tap on its centre would miss (the Remote Config list grew with the
+/// three AI keys of the final assignment).
+Future<void> scrollTo(WidgetTester tester, String id) async {
+  await tester.scrollUntilVisible(byId(id), 200, scrollable: find.byType(Scrollable).first);
+  await tester.ensureVisible(byId(id));
+  await tester.pumpAndSettle();
+}
 
 Future<FirebaseDemoViewModel> pumpDemo(WidgetTester tester, DemoDeps deps, {Size size = TestScreens.narrow}) async {
   final demo = deps.build();

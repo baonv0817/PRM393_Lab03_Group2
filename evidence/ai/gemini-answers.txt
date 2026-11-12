@@ -1,0 +1,36 @@
+Gemini K14 answer (gemini-3.5-flash-lite): {
+  "isFood": true,
+  "name": "Bánh mì pate chả lụa",
+  "category": "food",
+  "priceVnd": 20000,
+  "prepMinutes": 3,
+  "description": "Bánh mì giòn rụm kẹp nhân thịt nguội, chả lụa, đồ chua và rau mùi tươi ngon."
+}
+
+Gemini K14 answer (gemini-3.5-flash-lite): {
+  "isFood": true,
+  "name": "Trà đào mát lạnh",
+  "category": "drink",
+  "priceVnd": 15000,
+  "prepMinutes": 3,
+  "description": "Ly trà đào thanh mát kèm đá viên giúp giải nhiệt ngày hè."
+}
+
+Gemini K14 answer (gemini-3.5-flash-lite): {
+  "isFood": true,
+  "name": "Cơm gà sốt teriyaki",
+  "category": "food",
+  "priceVnd": 35000,
+  "prepMinutes": 10,
+  "description": "Cơm gà sốt teriyaki đậm đà ăn kèm mè rang và hành lá thơm ngon."
+}
+
+Gemini K14 answer (gemini-3.5-flash-lite): {
+  "isFood": false,
+  "name": "",
+  "category": "other",
+  "priceVnd": 0,
+  "prepMinutes": 0,
+  "description": ""
+}
+

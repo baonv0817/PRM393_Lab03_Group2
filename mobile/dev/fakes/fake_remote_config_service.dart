@@ -34,6 +34,15 @@ class FakeRemoteConfigService implements RemoteConfigService {
   bool getBool(String key) => (values[key] as bool?) ?? false;
 
   @override
+  String getString(String key) => switch (values[key]) {
+    final String value when value.trim().isNotEmpty => value,
+    _ => switch (RemoteKeys.defaults[key]) {
+      final String value => value,
+      _ => '',
+    },
+  };
+
+  @override
   RemoteValueSource sourceOf(String key) =>
       fromConsole.contains(key) ? RemoteValueSource.console : RemoteValueSource.inApp;
 }

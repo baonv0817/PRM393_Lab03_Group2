@@ -17,6 +17,11 @@ Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 | `export_report` | A file is generated and uploaded | `file_size_kb` (int), `source` (string: firebase_demo, order_detail), `order_id` (string, only for a single-order receipt) | Which orders get a receipt exported? | Demo area, S12 |
 | `order_accepted` | Seller accepts an order | `order_id` (string), `wait_seconds` (int) | How fast does the counter accept orders? | K03 |
 | `order_delivered` | Seller hands over the order | `order_id` (string), `paid_cash` (bool) | How many orders are paid in cash? | K06 |
+| `ai_request` | Staff press "Điền bằng AI" on K14 with a photo chosen (final assignment, `docs/ai-feature.md`) | `feature` (string: k14_photo), `model` (string, from Remote Config `ai_model`) | How often do staff ask the AI when they add an item, and with which model? | K14 |
+| `ai_result_accepted` | An item the AI helped fill is saved | `feature` (string), `fields_kept` (int), `fields_changed` (int) | How much of the suggestion do staff keep: is the AI saving them typing, or do they rewrite it? | K14 → K08 |
+| `ai_error` | The AI could not fill the form; the form stays usable by hand | `feature` (string), `reason` (string: disabled, quota, network, not_food, bad_output, other), `model` (string) | How often does the AI fail, and why (quota, network, photos that are not food)? | K14 |
+
+No AI event carries the photo, the item name or anything about the staff member: only the feature, the model and counts.
 
 User property: `setUserId(uid)` after sign-in; never put an email or name in a user property.
 

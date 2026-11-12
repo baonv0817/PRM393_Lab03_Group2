@@ -21,6 +21,9 @@ class FirebaseDemoScreen extends StatelessWidget {
     RemoteKeys.quickItemsLimit: 'Số món nhanh trên Trang chủ',
     RemoteKeys.promoBannerEnabled: 'Banner Combo Giờ Vàng',
     RemoteKeys.pickupSlotEnabled: 'Hẹn giờ nhận món',
+    RemoteKeys.aiEnabled: 'AI điền món từ ảnh (K14)',
+    RemoteKeys.aiModel: 'Model Gemini',
+    RemoteKeys.aiPrompt: 'Hướng dẫn cho AI',
   };
 
   static Future<void> _copy(BuildContext context, String url) async {
@@ -195,11 +198,20 @@ class _ConfigList extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(switch (entry.value) {
-                      true => 'Bật',
-                      false => 'Tắt',
-                      final other => '$other',
-                    }, style: text.titleMedium),
+                    // A text value (the model, the prompt) can be long: it keeps to the space left and ends with "…".
+                    Flexible(
+                      child: Text(
+                        switch (entry.value) {
+                          true => 'Bật',
+                          false => 'Tắt',
+                          final other => '$other',
+                        },
+                        style: text.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
                   ],
                 ),
               ),

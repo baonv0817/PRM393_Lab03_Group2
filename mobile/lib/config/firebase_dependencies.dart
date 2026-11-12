@@ -4,6 +4,7 @@ import 'package:breakbite/config/dependencies.dart';
 import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/services/connectivity_plus_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_crash_service.dart';
+import 'package:breakbite/data/services/firebase/firebase_menu_ai_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_messaging_service.dart';
 import 'package:breakbite/data/services/image_picker_photo_service.dart';
 import 'package:breakbite/data/services/local/local_order_alert_service.dart';
@@ -35,6 +36,7 @@ import 'package:flutter/foundation.dart';
 
 Future<AppDependencies> createFirebaseDependencies() async {
   await initializeFirebase();
+  await activateAppCheck();
   final crashlytics = FirebaseCrashlytics.instance;
   reportUncaughtErrors(crashlytics);
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -54,6 +56,7 @@ Future<AppDependencies> createFirebaseDependencies() async {
     connectivity: ConnectivityPlusService(),
     messaging: FirebaseMessagingService(messaging: FirebaseMessaging.instance, db: db),
     photoPicker: ImagePickerPhotoService(),
+    menuAi: FirebaseMenuAiService(),
     reminders: LocalReminderService(),
     orderAlerts: LocalOrderAlertService(),
     storage: CloudinaryStorageService(CloudinaryConfig.fromEnvironment()),
