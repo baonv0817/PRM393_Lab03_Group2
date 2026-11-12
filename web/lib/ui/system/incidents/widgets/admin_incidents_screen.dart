@@ -1,5 +1,6 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/incidents/view_models/admin_incidents_view_model.dart';
+import 'package:breakbite_admin/ui/system/widgets/list_panel.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -103,15 +104,13 @@ class AdminIncidentsScreen extends StatelessWidget {
             Expanded(
               child: vm.visible.isEmpty
                   ? const EmptyView(message: 'Không có sự cố nào ở mục này.', icon: Icons.filter_list_off)
-                  : ListView.separated(
+                  : ListPanel(
                       itemCount: vm.visible.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) {
                         final incident = vm.visible[i];
                         return TestId(
                           'a07.row.${incident.id}',
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                          child: PanelRow(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

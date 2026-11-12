@@ -1,6 +1,7 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/admin_labels.dart';
 import 'package:breakbite_admin/ui/system/users/view_models/admin_users_view_model.dart';
+import 'package:breakbite_admin/ui/system/widgets/list_panel.dart';
 import 'package:breakbite_core/data/repositories/admin/admin_repositories.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
@@ -104,9 +105,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             Expanded(
               child: vm.visible.isEmpty
                   ? const EmptyView(message: AdminUsersViewModel.noMatchMessage, icon: Icons.search_off)
-                  : ListView.separated(
+                  : ListPanel(
                       itemCount: vm.visible.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) => _UserRow(vm: vm, user: vm.visible[i], onEdit: _edit),
                     ),
             ),
@@ -131,8 +131,7 @@ class _UserRow extends StatelessWidget {
     final self = vm.isSelf(user);
     return TestId(
       'a01.row.${user.uid}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: PanelRow(
         child: Row(
           children: [
             UserAvatar(name: user.displayName, photoUrl: user.photoUrl, size: 40),
@@ -154,12 +153,21 @@ class _UserRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (user.kioskId != null)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: Text(vm.kioskName(user.kioskId), style: text.bodyMedium),
+            SizedBox(
+              width: 170,
+              child: Text(
+                user.kioskId == null ? '' : vm.kioskName(user.kioskId),
+                style: text.bodyMedium,
+                overflow: TextOverflow.ellipsis,
               ),
-            StatusBadge(label: roleLabel(user.role), warning: user.role == UserRole.admin),
+            ),
+            SizedBox(
+              width: 112,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: StatusBadge(label: roleLabel(user.role), warning: user.role == UserRole.admin),
+              ),
+            ),
             const SizedBox(width: AppSpacing.sm),
             TestId(
               'a01.edit.${user.uid}',

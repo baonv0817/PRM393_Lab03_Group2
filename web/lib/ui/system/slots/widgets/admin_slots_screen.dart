@@ -1,5 +1,6 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/slots/view_models/admin_slots_view_model.dart';
+import 'package:breakbite_admin/ui/system/widgets/list_panel.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -67,16 +68,14 @@ class _SlotList extends StatelessWidget {
               'a03.empty',
               child: EmptyView(message: message ?? AdminSlotsViewModel.emptyMessage, icon: Icons.schedule),
             ),
-            ViewData(:final data) => ListView.separated(
+            ViewData(:final data) => ListPanel(
               itemCount: data.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, i) {
                 final slot = data[i];
                 final newDay = i == 0 || formatDate(data[i - 1].startAt) != formatDate(slot.startAt);
                 return TestId(
                   'a03.slot.${slot.id}',
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: PanelRow(
                     child: Row(
                       children: [
                         SizedBox(

@@ -1,5 +1,6 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/kiosks/view_models/admin_kiosks_view_model.dart';
+import 'package:breakbite_admin/ui/system/widgets/list_panel.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -61,9 +62,8 @@ class AdminKiosksScreen extends StatelessWidget {
             onAction: () => _edit(context, vm, null),
           ),
         ),
-        ViewData(:final data) => ListView.separated(
+        ViewData(:final data) => ListPanel(
           itemCount: data.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, i) => _KioskRow(kiosk: data[i], onEdit: () => _edit(context, vm, data[i])),
         ),
       },
@@ -86,8 +86,7 @@ class _KioskRow extends StatelessWidget {
         : 'Không giới hạn giờ';
     return TestId(
       'a02.row.${kiosk.id}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: PanelRow(
         child: Row(
           children: [
             Expanded(
@@ -107,7 +106,13 @@ class _KioskRow extends StatelessWidget {
                 ],
               ),
             ),
-            StatusBadge(label: kiosk.open ? 'Đang nhận đơn' : 'Đóng', warning: !kiosk.open),
+            SizedBox(
+              width: 140,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: StatusBadge(label: kiosk.open ? 'Đang nhận đơn' : 'Đóng', warning: !kiosk.open),
+              ),
+            ),
             const SizedBox(width: AppSpacing.sm),
             TestId(
               'a02.edit.${kiosk.id}',

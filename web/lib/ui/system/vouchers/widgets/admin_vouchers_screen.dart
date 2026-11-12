@@ -1,5 +1,6 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/vouchers/view_models/admin_vouchers_view_model.dart';
+import 'package:breakbite_admin/ui/system/widgets/list_panel.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -108,9 +109,8 @@ class AdminVouchersScreen extends StatelessWidget {
             Expanded(
               child: vm.visible.isEmpty
                   ? const EmptyView(message: 'Không có mã nào ở mục này.', icon: Icons.filter_list_off)
-                  : ListView.separated(
+                  : ListPanel(
                       itemCount: vm.visible.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) {
                         final voucher = vm.visible[i];
                         return _VoucherRow(
@@ -146,8 +146,7 @@ class _VoucherRow extends StatelessWidget {
     final hours = voucher.activeFrom == null ? '' : ' · ${voucher.activeFrom}–${voucher.activeTo}';
     return TestId(
       'a04.row.${voucher.code}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: PanelRow(
         child: Row(
           children: [
             Expanded(
@@ -169,9 +168,15 @@ class _VoucherRow extends StatelessWidget {
                 ],
               ),
             ),
-            StatusBadge(
-              label: _statusLabel(status),
-              warning: status == VoucherStatus.expired || status == VoucherStatus.off,
+            SizedBox(
+              width: 112,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: StatusBadge(
+                  label: _statusLabel(status),
+                  warning: status == VoucherStatus.expired || status == VoucherStatus.off,
+                ),
+              ),
             ),
             const SizedBox(width: AppSpacing.sm),
             TestId(
