@@ -44,3 +44,6 @@ node_modules/
 
 # App Check debug token of a test device (docs/ai-feature.md): a secret, never committed.
 mobile/env/app_check.json
+
+# Web admin build for Firebase Hosting (cd web && flutter build web --release --output ../firebase/web-build)
+firebase/web-build/
