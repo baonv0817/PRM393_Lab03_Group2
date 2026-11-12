@@ -34,5 +34,6 @@ AppDependencies createFakeDependencies({UserRole role = UserRole.user, bool sign
     reviews: FakeReviewRepository(),
     favorites: FakeFavoriteRepository(),
     notifications: FakeNotificationRepository(),
+    announcements: FakeAnnouncementRepository(),
   );
 }

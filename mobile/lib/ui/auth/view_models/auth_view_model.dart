@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:breakbite_core/data/repositories/repositories.dart';
 import 'package:breakbite_core/data/services/services.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
+import 'package:breakbite_core/domain/mobile_access.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/utils/command.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -12,7 +13,14 @@ import 'package:flutter/foundation.dart';
 class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
   AuthViewModel(this._auth, this._analytics, this._crash, this._session, this._messaging) {
     _sub = _auth.authStateChanges().listen(
-      (user) {
+      (signedIn) {
+        // An admin account is turned away with the reason (the web admin is theirs) and signed out at once.
+        final problem = signedIn == null ? null : mobileAccessProblem(signedIn);
+        if (problem != null) {
+          _message = problem;
+          unawaited(_auth.signOut());
+        }
+        final user = problem == null ? signedIn : null;
         final previous = _user;
         _user = user;
         _initialized = true;
@@ -77,6 +85,11 @@ class AuthViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
     final result = await _auth.signInWithGoogle();
     switch (result) {
+      case Ok(:final value) when mobileAccessProblem(value) != null:
+        final problem = mobileAccessProblem(value)!;
+        _message = problem;
+        notifyListeners();
+        return Result.error(PermissionDeniedException(message: problem));
       case Ok():
         await _analytics.logEvent(AnalyticsEvents.login, {'method': 'google'});
       case Err(error: CancelledException()):

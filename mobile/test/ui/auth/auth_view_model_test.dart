@@ -66,6 +66,30 @@ void main() {
     vm.dispose();
   });
 
+  test('an admin account is turned away with a clear message and signed out (admins use the web admin)', () async {
+    final analytics = FakeAnalyticsService();
+    final auth = FakeAuthService(role: UserRole.admin);
+    final vm = make(auth: auth, analytics: analytics);
+    await Future<void>.delayed(Duration.zero);
+    final result = await vm.signIn.execute();
+    await Future<void>.delayed(Duration.zero);
+    expect(result!.errorOrNull, isA<PermissionDeniedException>());
+    expect(vm.user, isNull);
+    expect(vm.message, contains('quản trị viên'));
+    expect(vm.message, contains('breakbite-1315b.web.app'));
+    expect(analytics.events.where((e) => e.name == 'login'), isEmpty, reason: 'a rejected account does not log in');
+    vm.dispose();
+  });
+
+  test('an admin who is already signed in when the app opens is signed out with the same message', () async {
+    final vm = make(auth: FakeAuthService(role: UserRole.admin, signedIn: true));
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.initialized, isTrue);
+    expect(vm.user, isNull);
+    expect(vm.message, contains('trang web quản trị'));
+    vm.dispose();
+  });
+
   test('successful sign-in sets the user, logs the login event and the user id', () async {
     final analytics = FakeAnalyticsService();
     final crash = FakeCrashService();

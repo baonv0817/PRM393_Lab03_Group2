@@ -10,6 +10,7 @@ import 'package:breakbite/data/services/image_picker_photo_service.dart';
 import 'package:breakbite/data/services/local/local_order_alert_service.dart';
 import 'package:breakbite/data/services/local/local_reminder_service.dart';
 import 'package:breakbite/data/services/pdf/pdf_report_file_service.dart';
+import 'package:breakbite_core/data/repositories/firestore/firestore_announcement_repository.dart';
 import 'package:breakbite_core/data/repositories/firestore/firestore_cart_repository.dart';
 import 'package:breakbite_core/data/repositories/firestore/firestore_favorite_repository.dart';
 import 'package:breakbite_core/data/repositories/firestore/firestore_incident_repository.dart';
@@ -74,5 +75,6 @@ Future<AppDependencies> createFirebaseDependencies() async {
     reviews: FirestoreReviewRepository(db),
     favorites: FirestoreFavoriteRepository(db),
     notifications: FirestoreNotificationRepository(db),
+    announcements: FirestoreAnnouncementRepository(db),
   );
 }
