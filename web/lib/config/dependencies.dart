@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:breakbite_admin/config/browser_connectivity.dart';
 import 'package:breakbite_admin/config/firebase_setup.dart';
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
 import 'package:breakbite_core/data/repositories/announcement_repository.dart';
@@ -10,6 +11,7 @@ import 'package:breakbite_core/data/repositories/menu_repository.dart';
 import 'package:breakbite_core/data/repositories/order_repository.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
+import 'package:breakbite_core/data/services/connectivity_service.dart';
 import 'package:breakbite_core/data/services/firebase/firebase_analytics_service.dart';
 import 'package:breakbite_core/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite_core/data/services/firebase/firebase_remote_config_service.dart';
@@ -38,6 +40,7 @@ Future<List<SingleChildWidget>> firebaseProviders() async {
     announcements: FirestoreAnnouncementRepository(db),
     analytics: FirebaseAnalyticsService(FirebaseAnalytics.instance),
     remoteConfig: remoteConfig,
+    connectivity: BrowserConnectivityService(),
   );
 }
 
@@ -48,6 +51,7 @@ List<SingleChildWidget> adminProviders({
   required AnnouncementRepository announcements,
   required AnalyticsService analytics,
   required RemoteConfigService remoteConfig,
+  required ConnectivityService connectivity,
 }) => [
   Provider<AuthService>.value(value: auth),
   Provider<OrderRepository>.value(value: orders),
@@ -56,6 +60,6 @@ List<SingleChildWidget> adminProviders({
   Provider<AnalyticsService>.value(value: analytics),
   Provider<RemoteConfigService>.value(value: remoteConfig),
   ChangeNotifierProvider<AdminSession>(
-    create: (_) => AdminSession(auth: auth, menu: menu, analytics: analytics),
+    create: (_) => AdminSession(auth: auth, menu: menu, analytics: analytics, connectivity: connectivity),
   ),
 ];

@@ -26,6 +26,22 @@ void main() {
       expect(session.rejection, isNull);
     });
 
+    test('offline: the session says so live, and "Thử lại" asks the browser again', () async {
+      final connectivity = FakeConnectivity();
+      final session = AdminSession(auth: FakeAuthService(), menu: FakeMenuRepository(), connectivity: connectivity);
+      expect(session.online, isTrue);
+      var notified = 0;
+      session.addListener(() => notified++);
+      connectivity.set(false);
+      await settle();
+      expect(session.online, isFalse);
+      expect(AdminSession.offlineMessage, contains('Mất kết nối mạng'));
+      connectivity.online = true;
+      await session.checkConnection();
+      expect(session.online, isTrue);
+      expect(notified, 2);
+    });
+
     test('a signed-in staff member logs admin_sign_in with the role; a rejected customer logs nothing', () async {
       final analytics = FakeAnalytics();
       final session = AdminSession(auth: FakeAuthService(), menu: FakeMenuRepository(), analytics: analytics);
