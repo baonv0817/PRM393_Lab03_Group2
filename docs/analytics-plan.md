@@ -23,6 +23,20 @@ Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 
 No AI event carries the photo, the item name or anything about the staff member: only the feature, the model and counts.
 
+### Web admin (final assignment, `web/`)
+
+The web admin logs to the same Google Analytics property through its own web app ("BreakBite Admin", measurement id `G-5690JF2EHK`), with the same `FirebaseAnalyticsService` from `packages/core`. Its events answer questions about the staff side of the cross-role flow.
+
+| Event | When | Parameters (type) | Product question | Screen |
+|---|---|---|---|---|
+| `admin_sign_in` | A staff member or an admin gets in (a customer account is turned away and logs nothing) | `role` (string: staff, admin) | Do staff use the web admin, or only the phone? | W01 |
+| `order_reviewed` | An order of the review queue is approved or rejected | `decision` (string: approved, rejected), `ready_in_min` (int, approved only), `preset_reason` (bool, rejected only: one of the Remote Config `reject_reasons` or typed) | How many web orders are rejected, and are the preset reasons enough? | W03 |
+| `menu_item_saved` | An item is created or edited | `is_new` (bool), `category` (string), `sold_out` (bool) | How often is the menu changed from the web? | W02 |
+| `menu_item_archived` | An item is archived or restored | `archived` (bool) | Are items archived instead of deleted? | W02 |
+| `announcement_saved` | An admin saves an announcement | `published` (bool), `audience` (string: all, kiosk) | How many announcements reach customers, and for which audience? | W05 |
+
+No web event carries the reject reason text, the announcement text, a name or an e-mail.
+
 User property: `setUserId(uid)` after sign-in; never put an email or name in a user property.
 
 ## Evidence

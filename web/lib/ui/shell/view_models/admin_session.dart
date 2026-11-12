@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
+import 'package:breakbite_core/data/services/analytics_events.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/app_user.dart';
@@ -15,13 +17,14 @@ import 'package:flutter/foundation.dart';
 /// admin picks one from the top bar. A customer account is signed out at once with [rejection] as the reason
 /// (W01, "reject non-staff accounts").
 class AdminSession extends ChangeNotifier with SafeChangeNotifier {
-  AdminSession({required this._auth, required this._menu}) {
+  AdminSession({required this._auth, required this._menu, this._analytics}) {
     signIn = Command0(_signIn);
     _authSub = _auth.authStateChanges().listen(_onUser, onError: _onAuthError);
   }
 
   final AuthService _auth;
   final MenuRepository _menu;
+  final AnalyticsService? _analytics;
   StreamSubscription<AppUser?>? _authSub;
   StreamSubscription<List<Kiosk>>? _kioskSub;
 
@@ -72,6 +75,8 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
     if (result case Ok(:final value)) {
       final problem = webAdminAccessProblem(value);
       if (problem != null) return Result.error(ValidationException(problem));
+      unawaited(_analytics?.setUserId(value.uid));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.adminSignIn, {'role': value.role.name}));
     }
     return result;
   }

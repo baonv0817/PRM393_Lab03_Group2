@@ -29,6 +29,11 @@
       "defaultValue": {
         "value": "Bạn là trợ lý nhập món cho quầy ăn trong trường đại học ở Việt Nam. Nhìn ảnh và điền thông tin cho một món đang bán. Nếu ảnh không phải đồ ăn hoặc đồ uống, đặt isFood = false và để trống các trường khác. Tên món ngắn gọn bằng tiếng Việt, tối đa 40 ký tự. Giá gợi ý theo mức giá căng tin sinh viên, đơn vị đồng, làm tròn đến 1.000. Thời gian chuẩn bị tính bằng phút. Mô tả một câu, tối đa 120 ký tự, không nhắc đến người trong ảnh."
       }
+    },
+    "reject_reasons": {
+      "defaultValue": {
+        "value": "Hết nguyên liệu|Quầy sắp đóng cửa|Quá tải, không kịp làm|Đơn trùng"
+      }
     }
   }
 }

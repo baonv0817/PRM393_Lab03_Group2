@@ -3,6 +3,7 @@ import 'package:breakbite_admin/ui/menu_management/widgets/menu_item_dialog.dart
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/domain/models/menu_item.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -21,8 +22,11 @@ class MenuManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) =>
-        MenuManagementViewModel(menu: context.read<MenuRepository>(), kioskId: context.read<AdminSession>().kioskId!),
+    create: (context) => MenuManagementViewModel(
+      menu: context.read<MenuRepository>(),
+      kioskId: context.read<AdminSession>().kioskId!,
+      analytics: context.read<AnalyticsService>(),
+    ),
     child: const _MenuManagementView(),
   );
 }

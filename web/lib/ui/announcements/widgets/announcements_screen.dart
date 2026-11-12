@@ -2,6 +2,7 @@ import 'package:breakbite_admin/ui/announcements/view_models/announcements_view_
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_core/data/repositories/announcement_repository.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/domain/models/announcement.dart';
 import 'package:breakbite_core/domain/models/kiosk.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
@@ -27,6 +28,7 @@ class AnnouncementsScreen extends StatelessWidget {
         announcements: context.read<AnnouncementRepository>(),
         uid: session.user!.uid,
         canWrite: session.isAdmin,
+        analytics: context.read<AnalyticsService>(),
       ),
       child: const _AnnouncementsView(),
     );
