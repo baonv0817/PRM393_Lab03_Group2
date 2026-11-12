@@ -48,10 +48,11 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// The `feature` parameter of the AI events, so a second AI feature can be told apart in Analytics.
   static const aiFeature = 'k14_photo';
 
-  static const maxNameLength = 60;
-  static const maxDescriptionLength = 200;
-  static const maxPriceVnd = 1000000;
-  static const maxPrepMinutes = 120;
+  // One source for the form's limits: the AI suggestion is parsed against the same ones (CR-F09).
+  static const maxNameLength = MenuItemSuggestion.maxNameLength;
+  static const maxDescriptionLength = MenuItemSuggestion.maxDescriptionLength;
+  static const maxPriceVnd = MenuItemSuggestion.maxPriceVnd;
+  static const maxPrepMinutes = MenuItemSuggestion.maxPrepMinutes;
   static const defaultPrepMinutes = 5;
 
   static const noKioskMessage = 'Tài khoản này chưa được gán kiosk nên chưa thêm hay sửa món được.';
@@ -273,7 +274,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     _aiFields.clear();
     bool take(AiField field) => !_editedWhileSuggesting.contains(field);
     if (take(AiField.name)) {
-      _name = suggestion.name.length > maxNameLength ? suggestion.name.substring(0, maxNameLength) : suggestion.name;
+      _name = suggestion.name; // already cut to maxNameLength by MenuItemSuggestion.parse
       _aiFields.add(AiField.name);
     }
     if (take(AiField.category)) {
@@ -285,12 +286,11 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
       _aiFields.add(AiField.price);
     }
     if (suggestion.prepMinutes case final minutes? when take(AiField.prep)) {
-      _prep = '${minutes.clamp(0, maxPrepMinutes)}';
+      _prep = '$minutes';
       _aiFields.add(AiField.prep);
     }
     if (suggestion.description.isNotEmpty && take(AiField.description)) {
-      final text = suggestion.description;
-      _description = text.length > maxDescriptionLength ? text.substring(0, maxDescriptionLength) : text;
+      _description = suggestion.description;
       _aiFields.add(AiField.description);
     }
     _editedWhileSuggesting.clear();
