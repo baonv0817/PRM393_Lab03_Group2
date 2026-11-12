@@ -58,6 +58,9 @@ void reportUncaughtErrors(FirebaseCrashlytics crashlytics) {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await initializeFirebase();
+  // This handler runs in its own isolate: without App Check here, the inbox write below would be refused once
+  // App Check is enforced on Firestore (CR-F03).
+  await activateAppCheck();
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid == null) return;
   try {
