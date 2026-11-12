@@ -213,5 +213,30 @@ void main() {
       expect(inbox.of('u'), isEmpty);
       expect(OrderStatusNotifier.messageFor(orders.all.single), isNotNull);
     });
+
+    test('a rejected cash order is not promised a refund; a paid one is', () {
+      Order rejected(PaymentMethod method, PaymentStatus status) => Order(
+        id: 'o1',
+        uid: 'u',
+        items: const [CartItem(itemId: 'k-cafe', name: 'Cà Phê Sữa Đá', priceVnd: 18000, quantity: 1)],
+        totalVnd: 18000,
+        paymentMethod: method,
+        paymentStatus: status,
+        status: OrderStatus.cancelled,
+        kioskId: 'k',
+        createdAt: DateTime(2026, 11, 12, 23, 54),
+        orderCode: '25RPEH',
+        cancelReason: 'Quầy sắp đóng cửa',
+        cancelledBy: CancelledBy.staff,
+      );
+      expect(
+        OrderStatusNotifier.messageFor(rejected(PaymentMethod.cash, PaymentStatus.unpaid))!.body,
+        'Lý do: Quầy sắp đóng cửa. Đơn trả tại quầy nên bạn không mất tiền.',
+      );
+      expect(
+        OrderStatusNotifier.messageFor(rejected(PaymentMethod.momo, PaymentStatus.paid))!.body,
+        'Lý do: Quầy sắp đóng cửa. Bạn được hoàn tiền.',
+      );
+    });
   });
 }

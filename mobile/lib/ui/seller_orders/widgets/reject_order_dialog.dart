@@ -6,15 +6,19 @@ import 'package:flutter/material.dart';
 
 /// K12: why an order is turned down. Returns the text to save, or `null` when staff keep the order.
 /// The customer is refunded automatically (D04), so the dialog says so; a reason is required.
-Future<String?> showRejectOrderDialog(BuildContext context, {required String orderCode}) => showDialog<String>(
-  context: context,
-  builder: (_) => _RejectDialog(orderCode: orderCode),
-);
+Future<String?> showRejectOrderDialog(BuildContext context, {required String orderCode, bool paid = true}) =>
+    showDialog<String>(
+      context: context,
+      builder: (_) => _RejectDialog(orderCode: orderCode, paid: paid),
+    );
 
 class _RejectDialog extends StatefulWidget {
-  const _RejectDialog({required this.orderCode});
+  const _RejectDialog({required this.orderCode, required this.paid});
 
   final String orderCode;
+
+  /// A cash order is not paid yet: nothing is refunded, so the dialog does not promise a refund.
+  final bool paid;
 
   @override
   State<_RejectDialog> createState() => _RejectDialogState();
@@ -75,7 +79,10 @@ class _RejectDialogState extends State<_RejectDialog> {
                   ),
                 ),
               const SizedBox(height: AppSpacing.xs),
-              Text('Khách được hoàn tiền tự động.', style: text.bodyMedium?.copyWith(color: context.appColors.muted)),
+              Text(
+                widget.paid ? 'Khách được hoàn tiền tự động.' : 'Đơn trả tại quầy, khách chưa trả tiền.',
+                style: text.bodyMedium?.copyWith(color: context.appColors.muted),
+              ),
             ],
           ),
         ),
