@@ -5,6 +5,7 @@
       "name": "BreakBite customer (fake data, signed in)",
       "request": "launch",
       "type": "dart",
+      "cwd": "mobile",
       "program": "dev/main_dev.dart",
       "args": ["--dart-define=DEV_SIGNED_IN=true"]
     },
@@ -12,6 +13,7 @@
       "name": "BreakBite seller (fake data, signed in)",
       "request": "launch",
       "type": "dart",
+      "cwd": "mobile",
       "program": "dev/main_dev.dart",
       "args": ["--dart-define=DEV_SIGNED_IN=true", "--dart-define=DEV_ROLE=staff"]
     },
@@ -19,12 +21,14 @@
       "name": "BreakBite (fake data, from the start: Onboarding then Sign-in)",
       "request": "launch",
       "type": "dart",
+      "cwd": "mobile",
       "program": "dev/main_dev.dart"
     },
     {
       "name": "BreakBite (Firebase Emulator)",
       "request": "launch",
       "type": "dart",
+      "cwd": "mobile",
       "program": "lib/main.dart",
       "args": ["--dart-define=USE_FIREBASE_EMULATOR=true", "--dart-define-from-file=env/cloudinary.json"]
     },
@@ -32,6 +36,7 @@
       "name": "BreakBite (real Firebase)",
       "request": "launch",
       "type": "dart",
+      "cwd": "mobile",
       "program": "lib/main.dart",
       "args": ["--dart-define-from-file=env/cloudinary.json"]
     }
