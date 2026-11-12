@@ -5,6 +5,13 @@ cụ thể bằng `expected_output` rồi so sánh, không chỉ kiểm `result.
 Bỏ qua khi chưa có máy chủ ARTEMIS hoặc `ARTEMIS_DEVICE_SERIAL` (fixture `artemis`).
 """
 import json
+import os
+
+
+def test_account() -> str:
+    """Tài khoản cần chọn ở hộp chọn tài khoản Google (máy có thể có nhiều tài khoản)."""
+    account = os.environ.get("TEST_GOOGLE_ACCOUNT")
+    return f'tài khoản "{account}"' if account else "tài khoản test"
 
 
 def parsed(result) -> dict:
@@ -16,7 +23,8 @@ def parsed(result) -> dict:
 async def test_tc01_sign_in(artemis):
     result = await artemis.run(
         "Ứng dụng BreakBite đã cài và đang đăng xuất. Mở app, chạm đăng nhập bằng Google, "
-        "chọn tài khoản test. Xác nhận màn Trang chủ hiện và thanh dưới có 4 tab.",
+        f"ở hộp chọn tài khoản của hệ thống chọn {test_account()} rồi đợi tới khi đăng nhập xong. "
+        "Xác nhận màn Trang chủ hiện và thanh dưới có 4 tab.",
         expected_output='JSON: {"tab_count": số tab ở thanh dưới, "kiosk": tên kiosk ở thanh trên cùng}',
     )
     assert result.succeeded, result.error or result.status

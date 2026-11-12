@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="723.403" timestamp="2026-11-12T13:04:09.479523+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc05_payment_declined_then_cash_then_cancel" time="722.611"><failure message="AssertionError: failed&#10;assert False&#10; +  where False = TaskResult(task_id='2afee186-d404-4212-a3b5-45e1f392dd4c', status='failed', goal='BreakBite đang đăng nhập, đang ở Tra...hen trying to open the cart or navigate the checkout flow, preventing completion of the task.', error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x000001A07FF74EC0&gt;
+
+    async def test_tc05_payment_declined_then_cash_then_cancel(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, đang ở Trang chủ. Nếu giỏ đang trống, chạm nút + của món đầu tiên đúng một lần "
+            "để giỏ có 1 món. Mở giỏ, tiếp tục thanh toán, chạm \"Xác nhận\". Ở màn cổng "
+            'thanh toán chạm "Từ chối". Ghi xem giỏ còn món không. Chọn "Tiền mặt tại Kiosk" và đặt lại. Ở màn đơn '
+            'hàng chạm "Huỷ đơn" và xác nhận. Ghi mã đơn và câu hiện trên màn "Đơn đã huỷ".',
+            expected_output=(
+                'JSON: {"cart_kept_after_decline": true hoặc false, "order_code": mã đơn, '
+                '"cancelled_screen_visible": true hoặc false, "cancel_line": câu trên màn đơn đã huỷ}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: failed
+E       assert False
+E        +  where False = TaskResult(task_id='2afee186-d404-4212-a3b5-45e1f392dd4c', status='failed', goal='BreakBite đang đăng nhập, đang ở Tra...hen trying to open the cart or navigate the checkout flow, preventing completion of the task.', error=None, turns=None).succeeded
+
+test_order.py:101: AssertionError</failure></testcase></testsuite></testsuites>

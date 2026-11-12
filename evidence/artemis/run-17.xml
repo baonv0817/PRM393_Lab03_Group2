@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="267.729" timestamp="2026-11-12T12:11:46.396781+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc05_payment_declined_then_cash_then_cancel" time="267.506"><failure message="AssertionError: assert 'Bạn đã huỷ đơn này' in 'Đã huỷ'">artemis = &lt;conftest.Artemis object at 0x000002AB4DDF4AD0&gt;
+
+    async def test_tc05_payment_declined_then_cash_then_cancel(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, đang ở Trang chủ. Nếu giỏ đang trống, chạm nút + của món đầu tiên đúng một lần "
+            "để giỏ có 1 món. Mở giỏ, tiếp tục thanh toán, chạm \"Xác nhận\". Ở màn cổng "
+            'thanh toán chạm "Từ chối". Ghi xem giỏ còn món không. Chọn "Tiền mặt tại Kiosk" và đặt lại. Ở màn đơn '
+            'hàng chạm "Huỷ đơn" và xác nhận. Ghi mã đơn và câu hiện trên màn "Đơn đã huỷ".',
+            expected_output=(
+                'JSON: {"cart_kept_after_decline": true hoặc false, "order_code": mã đơn, '
+                '"cancelled_screen_visible": true hoặc false, "cancel_line": câu trên màn đơn đã huỷ}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert data["cart_kept_after_decline"] is True
+        assert str(data["order_code"]).strip()
+        assert data["cancelled_screen_visible"] is True
+&gt;       assert "Bạn đã huỷ đơn này" in data["cancel_line"]
+E       AssertionError: assert 'Bạn đã huỷ đơn này' in 'Đã huỷ'
+
+test_order.py:103: AssertionError</failure></testcase></testsuite></testsuites>

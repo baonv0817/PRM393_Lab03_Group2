@@ -2,19 +2,34 @@
 
   uv run python run_repeat.py              # 3 lần, mọi test
   uv run python run_repeat.py -n 5 -k tc03 # 5 lần, chỉ các test khớp "tc03"
+  uv run python run_repeat.py -k tc05 --start 6   # ghi run-6…run-8, giữ nguyên các run cũ
 
 Mỗi lần chạy ghi một báo cáo JUnit vào evidence/artemis/run-<n>.xml; bảng Markdown được in ra màn hình và
-ghi vào evidence/artemis/pass-rate.md. Test bị bỏ qua (skip) không tính vào tỉ lệ.
+ghi vào evidence/artemis/pass-rate.md. Test bị bỏ qua (skip) không tính vào tỉ lệ. Script từ chối ghi đè
+một run-<n>.xml đã có; dùng --start để chọn số tiếp theo.
 """
 import argparse
 import collections
+import os
 import pathlib
 import subprocess
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE.parent / "evidence" / "artemis"
+PACKAGE = "vn.edu.fpt.breakbite"
+
+
+def restart_app() -> None:
+    """Tắt và mở lại app để lượt chạy bắt đầu ở Trang chủ (hoặc màn đăng nhập), không ở màn lượt trước để lại."""
+    serial = os.environ["ARTEMIS_DEVICE_SERIAL"]
+    adb = ["adb", "-s", serial, "shell"]
+    subprocess.run([*adb, "am", "force-stop", PACKAGE], check=False)
+    subprocess.run([*adb, "monkey", "-p", PACKAGE, "-c", "android.intent.category.LAUNCHER", "1"],
+                   check=False, capture_output=True)
+    time.sleep(5)
 
 
 def run_once(index: int, keyword: str | None) -> pathlib.Path:
@@ -60,9 +75,19 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--runs", type=int, default=3)
     parser.add_argument("-k", "--keyword")
+    parser.add_argument("--start", type=int, default=1, help="số của run đầu tiên (run-<start>.xml)")
+    parser.add_argument("--restart-app", action="store_true", help="tắt và mở lại app trước mỗi lượt")
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    reports = [run_once(i, args.keyword) for i in range(1, args.runs + 1)]
+    indices = range(args.start, args.start + args.runs)
+    taken = [f"run-{i}.xml" for i in indices if (OUT / f"run-{i}.xml").exists()]
+    if taken:
+        sys.exit(f"Đã có {', '.join(taken)} trong {OUT}; chọn --start khác để không ghi đè bằng chứng cũ.")
+    reports = []
+    for i in indices:
+        if args.restart_app:
+            restart_app()
+        reports.append(run_once(i, args.keyword))
     result = table(collect(reports))
     (OUT / "pass-rate.md").write_text(result + "\n", encoding="utf-8")
     print(result)

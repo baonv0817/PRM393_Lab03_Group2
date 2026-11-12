@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="165.294" timestamp="2026-11-12T12:24:38.584601+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_order" name="test_tc04_wrong_voucher" time="165.130"><failure message="AssertionError: assert ('40.000' in 'Bỏ mã giảm giá để tiếp tục.')">artemis = &lt;conftest.Artemis object at 0x000001928B8A4AD0&gt;
+
+    async def test_tc04_wrong_voucher(artemis):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập. Nếu giỏ đang trống, chạm nút + của món đầu tiên ở Trang chủ một lần để giỏ có "
+            "đúng 1 món. Mở giỏ hàng, chạm ô voucher. Chạm vào ô nhập có chữ gợi ý "
+            "\"Nhập mã giảm giá\", GÕ BB20 vào ô đó (kiểm tra ô đã hiện BB20), rồi mới chạm \"Áp dụng\"; "
+            "ghi trạng thái của BB20 trong danh sách và thông báo dưới ô nhập. Quay lại, thêm một món thứ hai vào giỏ, "
+            "mở lại ô voucher, chọn BBSTUDENT, quay về giỏ rồi xoá bớt một món. Ghi thông báo giỏ hàng hiện ra, "
+            'xem nút thanh toán có bấm được không và ghi tổng tiền trước và sau khi chọn "Bỏ mã".',
+            expected_output=(
+                'JSON: {"bb20_label": chữ cạnh BB20 trong danh sách, "bb20_message": thông báo dưới ô nhập, '
+                '"cart_message": thông báo giỏ hàng sau khi xoá món, "checkout_enabled": true hoặc false}'
+            ),
+        )
+        assert result.succeeded, result.error or result.status
+        data = parsed(result)
+        assert "hết hạn" in data["bb20_label"].lower()
+        assert "BB20" in data["bb20_message"] and "hết hạn" in data["bb20_message"].lower()
+&gt;       assert "40.000" in data["cart_message"] and "BBSTUDENT" in data["cart_message"]
+E       AssertionError: assert ('40.000' in 'Bỏ mã giảm giá để tiếp tục.')
+
+test_order.py:83: AssertionError</failure></testcase></testsuite></testsuites>
