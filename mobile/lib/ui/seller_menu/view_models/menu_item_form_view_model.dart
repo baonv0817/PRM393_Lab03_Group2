@@ -419,10 +419,8 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     final kiosk = kioskId!;
     final name = _name.trim();
     final description = _description.trim();
-    final photo = await _uploadPhoto(kiosk);
-    if (photo case Err(:final error)) return Result.error(error);
-    final newUrl = photo.valueOrNull;
-    final MenuItem item;
+    // A new item's name is checked before the photo goes up, so a taken name never leaves an image behind on
+    // Cloudinary (CR-F06; the unsigned upload preset cannot delete it afterwards).
     if (isNew) {
       final slug = slugify(name);
       switch (await menu.getItem('$kiosk-$slug')) {
@@ -436,6 +434,12 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
           crash.recordNonFatal(error, error.stackTrace, 'menuItemForm.checkName');
           return Result.error(error);
       }
+    }
+    final photo = await _uploadPhoto(kiosk);
+    if (photo case Err(:final error)) return Result.error(error);
+    final newUrl = photo.valueOrNull;
+    final MenuItem item;
+    if (isNew) {
       item = MenuItem(
         id: '',
         name: name,
