@@ -29,7 +29,26 @@ AppException _fromFirebaseCode(String code, Object error, StackTrace? stack) => 
   'unauthenticated' ||
   'user-disabled' ||
   'requires-recent-login' => PermissionDeniedException(cause: error, stackTrace: stack),
-  'not-found' || 'user-not-found' => NotFoundException(cause: error, stackTrace: stack),
+  'user-not-found' ||
+  'wrong-password' ||
+  'invalid-credential' => ValidationException('Email hoặc mật khẩu không đúng.', cause: error, stackTrace: stack),
+  'email-already-in-use' => ValidationException(
+    'Email này đã có tài khoản. Hãy đăng nhập.',
+    cause: error,
+    stackTrace: stack,
+  ),
+  'invalid-email' => ValidationException('Email chưa đúng dạng.', cause: error, stackTrace: stack),
+  'weak-password' => ValidationException(
+    'Mật khẩu quá yếu. Dùng ít nhất 8 ký tự gồm chữ và số.',
+    cause: error,
+    stackTrace: stack,
+  ),
+  'operation-not-allowed' => ServiceException(
+    message: 'Đăng nhập bằng email chưa được bật. Liên hệ quản trị viên.',
+    cause: error,
+    stackTrace: stack,
+  ),
+  'not-found' => NotFoundException(cause: error, stackTrace: stack),
   'cancelled' ||
   'popup-closed-by-user' ||
   'web-context-canceled' => CancelledException(cause: error, stackTrace: stack),

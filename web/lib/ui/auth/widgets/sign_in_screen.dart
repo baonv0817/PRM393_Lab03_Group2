@@ -3,6 +3,7 @@ import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
 import 'package:breakbite_core/ui/core/widgets/brand.dart';
 import 'package:breakbite_core/ui/core/widgets/buttons.dart';
+import 'package:breakbite_core/ui/core/widgets/email_auth_form.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +29,7 @@ class SignInScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: ListenableBuilder(
-                  listenable: command,
+                  listenable: Listenable.merge([command, session.signInWithEmail, session.register]),
                   builder: (context, _) => Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -37,7 +38,7 @@ class SignInScreen extends StatelessWidget {
                       Text('BreakBite · Quản trị', style: text.headlineMedium, textAlign: TextAlign.center),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        'Dành cho nhân viên kiosk và quản trị viên. Đăng nhập bằng tài khoản Google đã được cấp quyền.',
+                        'Dành cho nhân viên kiosk và quản trị viên. Đăng nhập bằng email hoặc tài khoản Google đã được cấp quyền.',
                         style: text.bodyMedium?.copyWith(color: colors.muted),
                         textAlign: TextAlign.center,
                       ),
@@ -64,9 +65,19 @@ class SignInScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.md),
                       ],
+                      EmailAuthForm(
+                        idPrefix: 'w01',
+                        running: session.signInWithEmail.running || session.register.running,
+                        onSignIn: (email, password) =>
+                            session.signInWithEmail.execute((email: email, password: password)),
+                        onRegister: (name, email, password) =>
+                            session.register.execute((name: name, email: email, password: password)),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
                       SizedBox(
                         width: double.infinity,
                         child: AppButton(
+                          variant: AppButtonVariant.secondary,
                           label: 'Đăng nhập với Google',
                           icon: Icons.login,
                           large: true,

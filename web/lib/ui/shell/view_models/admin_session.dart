@@ -5,6 +5,7 @@ import 'package:breakbite_core/data/services/analytics_events.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
+import 'package:breakbite_core/domain/credentials.dart';
 import 'package:breakbite_core/domain/models/app_user.dart';
 import 'package:breakbite_core/domain/models/kiosk.dart';
 import 'package:breakbite_core/domain/web_access.dart';
@@ -19,6 +20,8 @@ import 'package:flutter/foundation.dart';
 class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   AdminSession({required this._auth, required this._menu, this._analytics}) {
     signIn = Command0(_signIn);
+    signInWithEmail = Command1(_signInWithEmail);
+    register = Command1(_register);
     _authSub = _auth.authStateChanges().listen(_onUser, onError: _onAuthError);
   }
 
@@ -29,6 +32,13 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
   StreamSubscription<List<Kiosk>>? _kioskSub;
 
   late final Command0<AppUser> signIn;
+
+  /// Signs in with an email and a password, for people without a Google account.
+  late final Command1<AppUser, ({String email, String password})> signInWithEmail;
+
+  /// Creates an account with an email and a password and signs it in. The account is a customer account until an
+  /// admin gives it a role, so the site turns it away until then.
+  late final Command1<AppUser, ({String name, String email, String password})> register;
 
   bool _ready = false;
   AppUser? _user;
@@ -81,6 +91,43 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
     return result;
   }
 
+  Future<Result<AppUser>> _signInWithEmail(({String email, String password}) form) async {
+    final problem = Credentials.signInProblem(form.email, form.password);
+    if (problem != null) return _refused(problem);
+    _rejection = null;
+    notifyListeners();
+    return _checked(await _auth.signInWithEmail(form.email, form.password));
+  }
+
+  Future<Result<AppUser>> _register(({String name, String email, String password}) form) async {
+    final problem = Credentials.registerProblem(form.name, form.email, form.password);
+    if (problem != null) return _refused(problem);
+    _rejection = null;
+    notifyListeners();
+    return _checked(await _auth.registerWithEmail(name: form.name, email: form.email, password: form.password));
+  }
+
+  Result<AppUser> _refused(String problem) {
+    _rejection = problem;
+    notifyListeners();
+    return Result.error(ValidationException(problem));
+  }
+
+  /// Like the Google sign-in: a customer account or a staff member without a kiosk is told why it cannot enter.
+  Result<AppUser> _checked(Result<AppUser> result) {
+    switch (result) {
+      case Ok(:final value):
+        final problem = webAdminAccessProblem(value);
+        if (problem != null) return Result.error(ValidationException(problem));
+        unawaited(_analytics?.setUserId(value.uid));
+        unawaited(_analytics?.logEvent(AnalyticsEvents.adminSignIn, {'role': value.role.name}));
+      case Err(:final error):
+        _rejection = error.message;
+        notifyListeners();
+    }
+    return result;
+  }
+
   void _onUser(AppUser? user) {
     _ready = true;
     if (user == null) {
@@ -127,6 +174,8 @@ class AdminSession extends ChangeNotifier with SafeChangeNotifier {
     _authSub?.cancel();
     _kioskSub?.cancel();
     signIn.dispose();
+    signInWithEmail.dispose();
+    register.dispose();
     super.dispose();
   }
 }

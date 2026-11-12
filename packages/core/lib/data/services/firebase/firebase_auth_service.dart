@@ -71,6 +71,43 @@ class FirebaseAuthService implements AuthService {
   });
 
   @override
+  Future<Result<AppUser>> signInWithEmail(String email, String password) => guard(() async {
+    final credential = await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+    return _finishSignIn(credential.user);
+  });
+
+  @override
+  Future<Result<AppUser>> registerWithEmail({required String name, required String email, required String password}) =>
+      guard(() async {
+        final credential = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+        final user = credential.user;
+        if (user == null) throw const ServiceException(message: 'Không tạo được tài khoản. Thử lại sau.');
+        try {
+          await user.updateDisplayName(name.trim());
+          await _ensureProfileOnce(user, required: true);
+          // The profile may have been made, by the sign-in listener, before the name was set: write the name.
+          await _profile(user.uid).update({'displayName': name.trim(), ...Stamp.updated()});
+          final snapshot = await _profile(user.uid).get();
+          return _toAppUser(user, snapshot.data());
+        } catch (_) {
+          await _auth.signOut();
+          rethrow;
+        }
+      });
+
+  Future<AppUser> _finishSignIn(User? user) async {
+    if (user == null) throw const ServiceException(message: 'Không đăng nhập được. Thử lại sau.');
+    try {
+      await _ensureProfileOnce(user, required: true);
+      final snapshot = await _profile(user.uid).get();
+      return _toAppUser(user, snapshot.data());
+    } catch (_) {
+      await _auth.signOut();
+      rethrow;
+    }
+  }
+
+  @override
   Future<Result<void>> signOut() => guard(() async {
     final uid = _auth.currentUser?.uid;
     if (uid != null) _profiles.remove(uid)?.ignore();

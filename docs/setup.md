@@ -92,6 +92,8 @@ flutterfire configure --project <firebase-project-id>   # generates lib/firebase
 
 The team project is `breakbite-1315b` (Spark plan; files go to Cloudinary, see below). `lib/firebase_options.dart` and `android/app/google-services.json` are already in the repo, so a newcomer **does not need** to run `flutterfire configure` again; they only need to be invited to the project (Project settings, Users and permissions, role Editor).
 
+**Email and password.** People without a Google account sign in or register with an email, in the mobile app and in the web admin. In the Firebase Console, Authentication, Sign-in method, enable **Email/Password** once (it needs no SHA-1). Passwords are at least 8 characters with a letter and a digit; Firebase Auth stores them, the app never does. A new account is a customer account: it cannot enter the web admin until an admin gives it a role.
+
 **SHA-1 for Google Sign-in.** Every machine has its own debug key, so each person gets the SHA-1 of their own machine and sends it to whoever holds the project, to add under Project settings, Your apps, BreakBite, Add fingerprint. Until it is added, Google sign-in fails with `ApiException: 10`.
 
 ```powershell

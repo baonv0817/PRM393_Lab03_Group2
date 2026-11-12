@@ -37,6 +37,22 @@ class FakeAuthService implements AuthService {
   }
 
   @override
+  Future<Result<AppUser>> signInWithEmail(String email, String password) async {
+    emit(nextUser);
+    return Result.ok(nextUser);
+  }
+
+  @override
+  Future<Result<AppUser>> registerWithEmail({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    emit(nextUser);
+    return Result.ok(nextUser);
+  }
+
+  @override
   Future<Result<void>> signOut() async {
     signOuts++;
     emit(null);

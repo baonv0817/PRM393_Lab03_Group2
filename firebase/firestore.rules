@@ -59,7 +59,17 @@ service cloud.firestore {
                         && request.resource.data.get('fcmTokens', []).size() <= 5)
                     && validProfile(request.resource.data)
                     && stampedOnUpdate();
-      allow update: if isAdmin() && stampedOnUpdate();
+      // The admin website: only role and kiosk, a known role, a kiosk that exists for staff, and never one's own
+      // role or kiosk (an admin cannot demote themselves, so the site is never left without an admin).
+      allow update: if isAdmin()
+                    && changedKeys().hasOnly(['role', 'kioskId', 'updatedAt'])
+                    && (uid != request.auth.uid || !changedKeys().hasAny(['role', 'kioskId']))
+                    && request.resource.data.role in ['user', 'staff', 'admin']
+                    && (request.resource.data.role != 'staff'
+                        || (request.resource.data.get('kioskId', null) is string
+                            && exists(/databases/$(database)/documents/kiosks/$(request.resource.data.kioskId))))
+                    && (request.resource.data.role == 'staff' || !('kioskId' in request.resource.data))
+                    && stampedOnUpdate();
 
       match /favorites/{dishId} {
         allow read, delete: if isOwner(uid);
@@ -344,6 +354,22 @@ service cloud.firestore {
                     && !changedKeys().hasAny(['createdBy'])
                     && stampedOnUpdate();
       allow delete: if false;
+    }
+
+    // The audit log of the admin website: written by an admin in the same batch as the change it records,
+    // read by admins, never edited or deleted.
+    match /audit_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+                    && request.resource.data.keys().hasOnly(['actorUid', 'actorName', 'action', 'target', 'summary',
+                         'createdAt', 'updatedAt'])
+                    && request.resource.data.actorUid == request.auth.uid
+                    && request.resource.data.actorName is string && request.resource.data.actorName.size() <= 120
+                    && request.resource.data.action is string && request.resource.data.action.size() <= 40
+                    && request.resource.data.target is string && request.resource.data.target.size() <= 200
+                    && request.resource.data.summary is string && request.resource.data.summary.size() <= 500
+                    && stampedOnCreate();
+      allow update, delete: if false;
     }
 
     match /{document=**} {

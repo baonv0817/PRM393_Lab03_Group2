@@ -1,5 +1,6 @@
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/widgets/motion.dart';
 import 'package:breakbite_core/utils/command.dart';
 import 'package:breakbite_core/utils/result.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,9 @@ class AdminPage extends StatelessWidget {
   final List<Widget> actions;
   final Widget child;
 
+  /// Below this width the actions move under the title.
+  static const _stackBelow = 860.0;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -21,20 +25,43 @@ class AdminPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
+          Reveal(
+            rise: 6,
+            duration: const Duration(milliseconds: 320),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final heading = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Semantics(header: true, child: Text(title, style: text.headlineMedium)),
                     if (subtitle != null)
                       Text(subtitle!, style: text.bodyMedium?.copyWith(color: context.appColors.muted)),
                   ],
-                ),
-              ),
-              ...actions,
-            ],
+                );
+                // On a narrow window the filters go under the title instead of squeezing it into a column of letters.
+                if (box.maxWidth < _stackBelow && actions.isNotEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      heading,
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: actions,
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: heading),
+                    ...actions,
+                  ],
+                );
+              },
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(child: child),
