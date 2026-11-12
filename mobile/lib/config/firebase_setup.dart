@@ -31,14 +31,14 @@ Future<void> initializeFirebase() async {
 const _appCheckDebugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN');
 
 /// App Check: every Firestore and AI Logic request then carries a token that proves it comes from this app.
-/// A debug build, or any build given a debug token, uses the debug provider; other builds use Play Integrity.
+/// Only a debug build uses the debug provider (with the token from env/app_check.json when given); a release build
+/// always uses Play Integrity and ignores any debug token, so the token can never ship inside an APK (CR-F05).
 /// A failure is logged, not thrown: while enforcement is off in the console the requests still go through.
 Future<void> activateAppCheck() async {
   if (usingFirebaseEmulator) return;
-  final useDebugProvider = kDebugMode || _appCheckDebugToken.isNotEmpty;
   try {
     await FirebaseAppCheck.instance.activate(
-      providerAndroid: useDebugProvider
+      providerAndroid: kDebugMode
           ? AndroidDebugProvider(debugToken: _appCheckDebugToken.isEmpty ? null : _appCheckDebugToken)
           : const AndroidPlayIntegrityProvider(),
     );
@@ -58,6 +58,9 @@ void reportUncaughtErrors(FirebaseCrashlytics crashlytics) {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await initializeFirebase();
+  // This handler runs in its own isolate: without App Check here, the inbox write below would be refused once
+  // App Check is enforced on Firestore (CR-F03).
+  await activateAppCheck();
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid == null) return;
   try {
