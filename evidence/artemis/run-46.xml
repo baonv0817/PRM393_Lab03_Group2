@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="208.942" timestamp="2026-11-12T22:37:29.525197+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_ai_feature" name="test_tc40_ai_fills_the_new_item_from_a_dish_photo" time="208.865" /></testsuite></testsuites>
