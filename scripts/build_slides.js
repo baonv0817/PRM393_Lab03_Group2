@@ -1,12 +1,18 @@
-// Builds slides/Lab03_SE193905_slides.pptx (15 slides) from the repo's own evidence.
+// Builds slides/Lab03_SE193905_slides.pptx (15 slides, text in Vietnamese) from the repo's own evidence.
 //
 // Run from the repo root:
+//   python scripts/prepare_slide_images.py             (crops the console screenshots into slides/img/)
 //   NODE_PATH=<folder with node_modules/pptxgenjs> node scripts/build_slides.js
-// The theme is written into the file by apply_theme.js of the Claude pptx skill when it is available (SKILL_DIR);
+// SKILL_DIR=<Claude pptx skill folder> writes the theme colours into the file with its apply_theme.js;
 // without it the file still opens, with Office's stock scheme colours.
 //
-// Layout rules used: one message per slide, the title is the conclusion, the evidence (screenshot, table, diagram)
-// carries the slide, 16:9, two fonts (Cambria for titles, Calibri for text), one dominant brand colour.
+// Structure: Lab 3 handout section 9 (slide list) and Software_Project_Presentation_Guideline (one message per
+// slide, the title states the conclusion, evidence on every "it works" slide). Every cloud-service slide has the
+// same frame, because the lecturer grades how well each service is explained:
+//   left   how it works, as a sequence diagram (who issues what, where it is stored, what the app does)
+//   right  evidence from the app or the console
+//   bottom "Khi lỗi" (failure handling) and the code path
+// Icons in slides/img/icons are Lucide icons (ISC licence) rendered to PNG through react-icons.
 const path = require('path');
 const fs = require('fs');
 const pptxgen = require('pptxgenjs');
@@ -14,7 +20,9 @@ const pptxgen = require('pptxgenjs');
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'slides', 'Lab03_SE193905_slides.pptx');
 const SKILL_DIR = process.env.SKILL_DIR || '';
-const img = (...p) => path.join(ROOT, 'evidence', ...p);
+const ev = (...p) => path.join(ROOT, 'evidence', ...p);
+const crop = (f) => path.join(ROOT, 'slides', 'img', f);
+const icon = (name, tone) => path.join(ROOT, 'slides', 'img', 'icons', `${name}-${tone || 'w'}.png`);
 
 const THEME = {
   name: 'BreakBite',
@@ -28,341 +36,767 @@ const THEME = {
 };
 
 const pres = new pptxgen();
-pres.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 in
+pres.layout = 'LAYOUT_WIDE'; // 13.333 x 7.5 in
 pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
 pres.title = 'BreakBite - PRM393 Lab 3';
-pres.author = 'Team BreakBite';
+pres.author = 'Team BreakBite (Group 2)';
 pres.company = 'PRM393';
 const C = pres.SchemeColor;
+const S = pres.ShapeType;
 
-const W = 13.33;
 const MX = 0.6; // side margin
-const CW = W - 2 * MX; // content width
+const CW = 12.133; // content width
+const RIGHT = MX + CW;
+const TOP = 2.05; // top of the content area
+const CODE_FONT = 'Courier New';
+const FOOTER = 'BreakBite · PRM393 Lab 3 · Nhóm 2';
 
+// -- layouts ---------------------------------------------------------------------------------------------------
+const titleBox = { x: MX, y: 0.88, w: CW, h: 1.05 };
+pres.defineSlideMaster({
+  title: 'TITLE',
+  background: { color: C.text2 },
+  placeholders: [
+    { placeholder: { options: { name: 'title', type: 'title', x: MX, y: 2.5, w: 6.4, h: 1.2, fontSize: 60, bold: true, color: C.background1, valign: 'top', margin: 0 }, text: '' } },
+  ],
+});
 pres.defineSlideMaster({
   title: 'CONTENT',
   background: { color: C.background1 },
   objects: [
-    { text: { text: 'BreakBite · PRM393 Lab 3', options: { x: MX, y: 7.0, w: 6, h: 0.3, fontSize: 10, color: C.accent5, margin: 0 } } },
+    { text: { text: FOOTER, options: { x: MX, y: 7.02, w: 6, h: 0.3, fontSize: 10, color: C.accent5, margin: 0 } } },
   ],
-  slideNumber: { x: W - MX - 0.6, y: 7.0, w: 0.6, h: 0.3, fontSize: 10, color: C.accent5, align: 'right' },
+  slideNumber: { x: RIGHT - 0.6, y: 7.02, w: 0.6, h: 0.3, fontSize: 10, color: C.accent5, align: 'right' },
   placeholders: [
-    { placeholder: { options: { name: 'title', type: 'title', x: MX, y: 0.35, w: CW, h: 1.15, fontSize: 30, bold: true, color: C.text2, valign: 'top', margin: 0 }, text: '' } },
+    { placeholder: { options: Object.assign({ name: 'title', type: 'title', fontSize: 28, bold: true, color: C.text2, valign: 'top', margin: 0 }, titleBox), text: '' } },
   ],
 });
 pres.defineSlideMaster({
-  title: 'DARK',
+  title: 'CLOSING',
   background: { color: C.text2 },
-  objects: [],
+  objects: [
+    { text: { text: FOOTER, options: { x: MX, y: 7.02, w: 6, h: 0.3, fontSize: 10, color: C.accent6, margin: 0 } } },
+  ],
+  slideNumber: { x: RIGHT - 0.6, y: 7.02, w: 0.6, h: 0.3, fontSize: 10, color: C.accent6, align: 'right' },
   placeholders: [
-    { placeholder: { options: { name: 'title', type: 'title', x: MX, y: 0.35, w: CW, h: 1.15, fontSize: 30, bold: true, color: C.background1, valign: 'top', margin: 0 }, text: '' } },
+    { placeholder: { options: Object.assign({ name: 'title', type: 'title', fontSize: 28, bold: true, color: C.background1, valign: 'top', margin: 0 }, titleBox), text: '' } },
   ],
 });
 
-const TITLE = { placeholder: 'title', x: MX, y: 0.35, w: CW, h: 1.15, fontSize: 30, bold: true, fontFace: 'Cambria', color: C.text2, valign: 'top', margin: 0 };
-function content(title, notes) {
-  const s = pres.addSlide({ masterName: 'CONTENT' });
-  s.addText(title, TITLE);
+// -- building blocks -------------------------------------------------------------------------------------------
+// Text margins in pptxgenjs are points, ordered [left, right, bottom, top]; table margins below 1 are inches.
+function text(s, str, o) {
+  s.addText(str, Object.assign({ isTextBox: true, fontSize: 14, color: C.text1, margin: 0, valign: 'top' }, o));
+}
+// Kicker above the title: an icon in an orange circle and the section label.
+function kicker(s, label, iconName, dark) {
+  s.addShape(S.ellipse, { x: MX, y: 0.33, w: 0.42, h: 0.42, fill: { color: C.accent1 }, line: { type: 'none' }, objectName: 'kicker-icon-bg' });
+  s.addImage({ path: icon(iconName, 'w'), x: MX + 0.09, y: 0.42, w: 0.24, h: 0.24, objectName: 'kicker-icon' });
+  text(s, label, { x: MX + 0.56, y: 0.33, w: 10, h: 0.42, fontSize: 12, bold: true, charSpacing: 1.5, color: dark ? C.accent1 : C.accent2, valign: 'middle' });
+}
+// The placeholder gets its position and style again on the slide: LibreOffice (used for the PDF) does not
+// inherit them from the layout and would put the title at the top-left corner.
+function titleOpts(dark) {
+  return Object.assign({ placeholder: 'title', fontSize: 28, bold: true, fontFace: THEME.headFontFace, color: dark ? C.background1 : C.text2, valign: 'top', margin: 0 }, titleBox);
+}
+function slide(section, layout, label, iconName, title, notes) {
+  const s = pres.addSlide({ masterName: layout, sectionTitle: section });
+  kicker(s, label, iconName, layout === 'CLOSING');
+  s.addText(title, titleOpts(layout === 'CLOSING'));
   if (notes) s.addNotes(notes);
   return s;
 }
-
-// -- small building blocks -------------------------------------------------------------------------------------
-function text(s, str, o) {
-  s.addText(str, Object.assign({ isTextBox: true, fontSize: 16, color: C.text1, margin: 0, valign: 'top' }, o));
+function caption(s, str, x, y, w, o) {
+  text(s, str, Object.assign({ x, y, w, h: 0.3, fontSize: 11, color: C.accent5 }, o));
 }
-function bullets(s, items, o) {
-  const runs = items.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < items.length - 1, paraSpaceAfter: 8 } }));
-  s.addText(runs, Object.assign({ isTextBox: true, fontSize: 16, color: C.text1, margin: 0, valign: 'top' }, o));
+function shadow() {
+  return { type: 'outer', color: '000000', opacity: 0.22, blur: 6, offset: 2, angle: 90 };
 }
-function picture(s, file, x, y, w, h, name) {
-  s.addImage({ path: file, x, y, w, h, sizing: { type: 'contain', w, h }, objectName: name });
+// A phone screenshot (1080 x 2400) in a dark frame. Returns the frame width.
+function phone(s, file, x, y, h, name) {
+  const b = 0.06;
+  const ih = h - 2 * b;
+  const iw = ih * 0.45;
+  s.addShape(S.roundRect, { x, y, w: iw + 2 * b, h, rectRadius: 0.12, fill: { color: C.text1 }, line: { type: 'none' }, shadow: shadow(), objectName: `${name}-frame` });
+  s.addImage({ path: file, x: x + b, y: y + b, w: iw, h: ih, objectName: name });
+  return iw + 2 * b;
 }
-function caption(s, str, x, y, w) {
-  text(s, str, { x, y, w, h: 0.5, fontSize: 12, color: C.accent5 });
+// A console screenshot or crop with a thin border. Width is given; returns the height used.
+function shot(s, file, x, y, w, aspect, name) {
+  const h = w / aspect;
+  s.addShape(S.rect, { x: x - 0.02, y: y - 0.02, w: w + 0.04, h: h + 0.04, fill: { color: C.accent6 }, line: { type: 'none' }, objectName: `${name}-border` });
+  s.addImage({ path: file, x, y, w, h, objectName: name });
+  return h;
 }
-function box(s, label, x, y, w, h, o) {
-  s.addText(label, Object.assign({
-    shape: pres.ShapeType.roundRect, rectRadius: 0.08, x, y, w, h, fontSize: 15, bold: true, align: 'center', valign: 'middle',
-    color: C.text2, fill: { color: C.background2 }, line: { color: C.accent6, width: 1 }, margin: 0.08,
-  }, o));
+function card(s, x, y, w, h, o) {
+  s.addShape(S.roundRect, Object.assign({ x, y, w, h, rectRadius: 0.08, fill: { color: C.background2 }, line: { color: C.accent6, width: 0.75 } }, o));
 }
-function arrow(s, x, y, w) {
-  s.addShape(pres.ShapeType.rightArrow, { x, y, w, h: 0.28, fill: { color: C.accent2 }, line: { color: C.accent2, width: 0 } });
-}
-// A row of boxes joined by arrows. Returns the y of the bottom edge.
-function flow(s, labels, x, y, w, h, o) {
-  const gap = 0.45;
-  const bw = (w - gap * (labels.length - 1)) / labels.length;
-  labels.forEach((l, i) => {
-    const bx = x + i * (bw + gap);
-    box(s, l, bx, y, bw, h, o);
-    if (i < labels.length - 1) arrow(s, bx + bw + 0.06, y + h / 2 - 0.14, gap - 0.12);
-  });
-  return y + h;
-}
-function stat(s, big, label, x, y, w, color) {
-  s.addText(big, { isTextBox: true, x, y, w, h: 1.1, fontSize: 54, bold: true, fontFace: 'Cambria', color: color || C.accent2, margin: 0, valign: 'middle' });
-  text(s, label, { x, y: y + 1.1, w, h: 0.7, fontSize: 16, color: C.text1 });
-}
-function failure(s, str, y) {
+function failure(s, str, x, y, w, h) {
   s.addText([
-    { text: 'If it fails  ', options: { bold: true, color: C.accent4 } },
+    { text: 'Khi lỗi   ', options: { bold: true, color: C.accent4 } },
     { text: str, options: { color: C.text1 } },
   ], {
-    isTextBox: true, shape: pres.ShapeType.roundRect, rectRadius: 0.06, x: MX, y, w: CW, h: 0.7, fontSize: 15,
-    fill: { color: C.background2 }, line: { color: C.accent6, width: 1 }, margin: [0.08, 0.2, 0.08, 0.2], valign: 'middle',
+    isTextBox: true, shape: S.roundRect, rectRadius: 0.08, x, y, w, h, fontSize: 13.5, valign: 'middle',
+    fill: { color: C.accent4, transparency: 91 }, line: { type: 'none' }, margin: [12, 12, 4, 4], objectName: 'khi-loi',
   });
 }
-const hdr = (t) => ({ text: t, options: { bold: true, color: C.background1, fill: { color: C.text2 }, fontSize: 13, valign: 'middle' } });
-const cell = (t, o) => ({ text: t, options: Object.assign({ fontSize: 12.5, color: C.text1, valign: 'middle' }, o) });
-
-// -- 1. title ---------------------------------------------------------------------------------------------------
-{
-  const s = pres.addSlide({ masterName: 'DARK' });
-  s.addImage({ path: path.join(ROOT, 'assets', 'brand', 'breakbite_logo.png'), x: MX, y: 0.9, w: 1.5, h: 1.5, objectName: 'logo' });
-  s.addText('BreakBite', { isTextBox: true, x: MX, y: 2.7, w: 9, h: 1.2, fontSize: 66, bold: true, fontFace: 'Cambria', color: C.background1, margin: 0 });
-  text(s, 'Pre-order food in the break between two classes, collect it at the counter.', { x: MX, y: 4.0, w: 9.5, h: 0.9, fontSize: 26, color: C.accent1 });
-  text(s, 'PRM393 · Lab 3 · Cloud-enabled mobile app: Firebase, ARTEMIS tests, AI code review', { x: MX, y: 5.35, w: 11, h: 0.4, fontSize: 18, color: C.background1 });
-  text(s, 'Team BreakBite · Campus District 9 · Flutter + Firebase + Cloudinary', { x: MX, y: 5.8, w: 11, h: 0.4, fontSize: 18, color: C.background1 });
-  text(s, 'github.com/baonv0817/PRM393_Lab03_Group2', { x: MX, y: 6.7, w: 8, h: 0.3, fontSize: 12, color: C.accent6 });
-  s.addNotes('Topic: a pre-order app for students with a short break. Customer app and seller app are one Flutter project; the account role picks the app. Backend: Firebase on the free Spark plan plus Cloudinary for files.');
+function code(s, paths, x, y, w) {
+  s.addText([
+    { text: 'Mã nguồn  ', options: { bold: true, color: C.accent5, fontFace: THEME.bodyFontFace, fontSize: 11 } },
+    { text: paths, options: { color: C.text2, fontFace: CODE_FONT, fontSize: 10 } },
+  ], { isTextBox: true, x, y, w, h: 0.42, margin: 0, valign: 'top', objectName: 'code-path' });
+}
+function badge(s, n, cx, cy, d) {
+  const r = (d || 0.28) / 2;
+  s.addText(String(n), {
+    shape: S.ellipse, x: cx - r, y: cy - r, w: 2 * r, h: 2 * r, fontSize: 10.5, bold: true, align: 'center', valign: 'middle',
+    color: C.background1, fill: { color: C.accent2 }, line: { color: C.background1, width: 1 }, margin: 0,
+  });
 }
 
-// -- 2. persona + success criterion ---------------------------------------------------------------------------
-{
-  const s = content('A student with a short break can order in under 35 seconds and 8 taps',
-    'Persona and Lab 2 success criterion. The purchase analytics event measures the 35 seconds and 8 taps. 44 of 44 screens are built: 30 customer screens (S01-S30) and 15 seller screens (K01-K15), K07 is not in Figma.');
-  text(s, 'Persona: a student who studies on Campus District 9 and has about 15 minutes between two classes.', { x: MX, y: 1.6, w: CW, h: 0.7, fontSize: 20 });
-  stat(s, '35 s', 'to finish an order (Lab 2 success criterion)', MX, 2.7, 3.6);
-  stat(s, '8 taps', 'at most, from Home to a placed order', MX + 4.2, 2.7, 3.6);
-  stat(s, '44 / 44', 'screens built, customer app S01–S30 and seller app K01–K15', MX + 8.4, 2.7, 3.7);
-  flow(s, ['F1  Quick order', 'F2  Voucher, with errors', 'F3  Payment error, then cash'], MX, 5.2, CW, 0.9);
-  caption(s, 'The purchase event of the analytics plan (docs/analytics-plan.md) measures the criterion.', MX, 6.3, CW);
+// Sequence diagram: actors in lanes, one numbered message per row.
+// msgs: { from, to, text } ; from === to draws a note on that lane.
+function seq(s, { x, y, w, actors, msgs, rowH }) {
+  rowH = rowH || 0.62;
+  const lane = w / actors.length;
+  const cx = {};
+  actors.forEach((a, i) => { cx[a.key] = x + lane * (i + 0.5); });
+  const headH = 0.5;
+  const hw = Math.min(lane - 0.14, 1.9);
+  const top = y + headH;
+  const end = top + 0.12 + msgs.length * rowH;
+  actors.forEach((a) => s.addShape(S.line, { x: cx[a.key], y: top, w: 0, h: end - top, line: { color: C.accent6, width: 1.5, dashType: 'dash' } }));
+  actors.forEach((a) => s.addText(a.label, {
+    shape: S.roundRect, rectRadius: 0.06, x: cx[a.key] - hw / 2, y, w: hw, h: headH, fontSize: 12.5, bold: true,
+    align: 'center', valign: 'middle', color: C.background1, fill: { color: C.text2 }, line: { type: 'none' }, margin: 3,
+  }));
+  const clamp = (lx, lw) => Math.max(x, Math.min(lx, x + w - lw));
+  msgs.forEach((m, i) => {
+    const rowTop = top + 0.12 + i * rowH;
+    const ay = rowTop + rowH - 0.13;
+    const x1 = cx[m.from];
+    if (m.from === m.to) {
+      const nw = Math.min(w, 4.6);
+      const nx = clamp(x1 - nw / 2, nw);
+      s.addText(m.text, {
+        shape: S.roundRect, rectRadius: 0.06, x: nx, y: rowTop + 0.04, w: nw, h: rowH - 0.1, fontSize: 12, align: 'left', valign: 'middle',
+        color: C.text1, fill: { color: C.background2 }, line: { color: C.accent1, width: 1 }, margin: [27, 6, 1, 1],
+      });
+      badge(s, i + 1, nx + 0.2, rowTop + 0.04 + (rowH - 0.1) / 2);
+      return;
+    }
+    const x2 = cx[m.to];
+    const right = x2 > x1;
+    const lx = Math.min(x1, x2);
+    const rx = Math.max(x1, x2);
+    s.addShape(S.line, {
+      x: lx, y: ay, w: rx - lx, h: 0,
+      line: Object.assign({ color: C.accent2, width: 1.75 }, right ? { endArrowType: 'triangle' } : { beginArrowType: 'triangle' }),
+    });
+    // The label starts next to the numbered badge and runs in the arrow's direction, so the badge never covers it.
+    const room = right ? x + w - x1 - 0.2 : x1 - 0.2 - x;
+    const lw = Math.min(Math.max(rx - lx - 0.3, 3.3), room);
+    const lxx = right ? x1 + 0.2 : x1 - 0.2 - lw;
+    s.addText(m.text, {
+      isTextBox: true, x: lxx, y: rowTop, w: lw, h: ay - rowTop - 0.06, fontSize: 12, align: right ? 'left' : 'right', valign: 'bottom',
+      color: C.text1, margin: [2, 2, 0, 0],
+    });
+    badge(s, i + 1, x1, ay);
+  });
+  return end;
 }
 
-// -- 3. Figma vs app ---------------------------------------------------------------------------------------------
+// Row of boxes joined by arrows.
+function flow(s, items, x, y, w, h, o) {
+  const gap = 0.42;
+  const bw = (w - gap * (items.length - 1)) / items.length;
+  items.forEach((it, i) => {
+    const bx = x + i * (bw + gap);
+    s.addText([
+      { text: it[0], options: { bold: true, fontSize: 15, color: C.text2, breakLine: true } },
+      { text: it[1], options: { fontSize: 12, color: C.text1 } },
+    ], Object.assign({
+      shape: S.roundRect, rectRadius: 0.08, x: bx, y, w: bw, h, align: 'center', valign: 'middle',
+      fill: { color: C.background2 }, line: { color: C.accent6, width: 0.75 }, margin: 6,
+    }, o));
+    if (i < items.length - 1) s.addShape(S.rightArrow, { x: bx + bw + 0.08, y: y + h / 2 - 0.13, w: gap - 0.16, h: 0.26, fill: { color: C.accent1 }, line: { type: 'none' } });
+  });
+}
+function stat(s, big, label, x, y, w, o) {
+  o = o || {};
+  s.addText(big, { isTextBox: true, x, y, w, h: o.bigH || 0.8, fontSize: o.size || 44, bold: true, fontFace: THEME.headFontFace, color: o.color || C.accent2, margin: 0, valign: 'bottom' });
+  text(s, label, { x, y: y + (o.bigH || 0.8) + 0.05, w, h: o.labelH || 0.7, fontSize: o.labelSize || 13, color: o.labelColor || C.text1 });
+}
+const hdr = (t, o) => ({ text: t, options: Object.assign({ bold: true, color: C.background1, fill: { color: C.text2 }, fontSize: 12, valign: 'middle' }, o) });
+const cellOpts = (o) => Object.assign({ fontSize: 12.5, color: C.text1, valign: 'middle' }, o);
+
+// Service-slide grid
+const LX = MX; // diagram
+const LW = 6.2;
+const RX = 7.1; // evidence
+const RW = RIGHT - RX;
+
+// ===============================================================================================================
+// 1. Title
+pres.addSection({ title: 'Sản phẩm' });
 {
-  const s = content('The app follows the Figma design, and every difference has a written reason',
-    'Left of each pair is Figma v2, right is the app. 33 deviations D01-D33 are in docs/design-traceability.md section 5, each with a reason.');
-  const pairs = ['p1-S02.png', 'p1-S05-VOUCHER-ERR.png', 'p2-K10.png'];
-  pairs.forEach((f, i) => picture(s, img('figma', f), 0.8 + i * 4.04, 1.5, 3.64, 4.1, 'figma-pair-' + (i + 1)));
-  caption(s, 'Home (S02) · cart with a voucher error (S05) · shop settings of the seller (K10). In each pair Figma is on the left and the app on the right.', MX, 5.65, CW);
-  bullets(s, [
-    'D01: Google Sign-In replaces e-mail + OTP (handout requirement).',
-    'D12: add-to-cart stepper and floating cart button replace the + icon and cart icon.',
-    'D23: no photo box on menu items, because files go to Cloudinary, not Cloud Storage.',
-  ], { x: MX, y: 6.0, w: CW, h: 0.95, fontSize: 13 });
+  const s = pres.addSlide({ masterName: 'TITLE', sectionTitle: 'Sản phẩm' });
+  s.addImage({ path: path.join(ROOT, 'assets', 'brand', 'breakbite_logo.png'), x: MX, y: 0.75, w: 1.0, h: 1.0, objectName: 'logo' });
+  text(s, 'PRM393 · LAB 3 · NHÓM 2', { x: MX, y: 2.1, w: 6.4, h: 0.35, fontSize: 13, bold: true, charSpacing: 2, color: C.accent1 });
+  s.addText('BreakBite', { placeholder: 'title', x: MX, y: 2.5, w: 6.4, h: 1.2, fontSize: 60, bold: true, fontFace: THEME.headFontFace, color: C.background1, valign: 'top', margin: 0 });
+  text(s, 'Sinh viên đặt món trước giữa hai tiết học và đến kiosk lấy món.', { x: MX, y: 3.75, w: 6.2, h: 1.0, fontSize: 22, color: C.background1 });
+  const facts = [
+    ['NGƯỜI DÙNG', 'Sinh viên và nhân viên kiosk, Campus Quận 9'],
+    ['ỨNG DỤNG', 'Flutter trên Android; app khách và app bếp chung một bản build'],
+    ['BACKEND', 'Firebase (gói Spark miễn phí) và Cloudinary cho tệp'],
+  ];
+  facts.forEach((f, i) => {
+    const x = MX + i * 2.2;
+    text(s, f[0], { x, y: 5.0, w: 2.0, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent1 });
+    text(s, f[1], { x, y: 5.32, w: 2.0, h: 0.95, fontSize: 14, color: C.background1 });
+  });
+  text(s, 'github.com/baonv0817/PRM393_Lab03_Group2', { x: MX, y: 6.75, w: 6.5, h: 0.3, fontSize: 12, color: C.accent6 });
+  const pw = phone(s, ev('auth', '2-signed-in.png'), 7.15, 0.7, 5.7, 'customer-home');
+  phone(s, ev('p4-real', 'K02-new-order.png'), 7.15 + pw + 0.35, 0.7, 5.7, 'seller-orders');
+  caption(s, 'App khách · Trang chủ', 7.15, 6.5, pw, { align: 'center', color: C.accent6 });
+  caption(s, 'App bếp · đơn mới', 7.15 + pw + 0.35, 6.5, pw, { align: 'center', color: C.accent6 });
+  s.addNotes('BreakBite là app đặt món trước cho sinh viên Campus Quận 9: đặt trong giờ giải lao, đến kiosk lấy món. '
+    + 'Một project Flutter chứa cả app khách và app bếp; vai trò trong tài khoản (users/{uid}.role) quyết định mở app nào. '
+    + 'Backend là Firebase gói Spark miễn phí; tệp PDF lưu trên Cloudinary vì Cloud Storage cần gói trả phí. '
+    + 'Hai ảnh bên phải chụp trên Firebase thật: Trang chủ của khách và màn đơn mới của bếp.');
 }
 
-// -- 4. architecture ------------------------------------------------------------------------------------------------
+// 2. Persona, success criterion, flows
 {
-  const s = content('Screens never touch an SDK: three layers, enforced by a test',
-    'MVVM with Provider and go_router. Dependencies only point down. test/architecture_test.dart fails if a screen imports an SDK, holds a colour or text-style literal, or a ViewModel lacks SafeChangeNotifier. Fake data lives in dev/, outside lib/.');
-  flow(s, ['Screen\nui/*/widgets\ndraws ViewState', 'ViewModel\nui/*/view_models\nstate, validation, Command', 'Repository / Service\ndata/\nwraps one SDK'], MX, 1.7, 8.2, 1.7, { fontSize: 14 });
-  box(s, 'Model  domain/models  ·  immutable data and pure rules', MX, 3.7, 8.2, 0.8, { fontSize: 14 });
-  box(s, 'Firebase Auth · Firestore · FCM · Analytics · Crashlytics · Remote Config · Cloudinary', MX, 4.8, 8.2, 0.8, { fontSize: 14, color: C.background1, fill: { color: C.text2 } });
-  stat(s, '752', 'widget and ViewModel tests, no device needed', 9.6, 1.6, 3.2);
-  stat(s, '88', 'Firestore rules tests', 9.6, 3.6, 3.2);
-  text(s, 'Fakes in dev/ replace Firebase for tests, so the submitted build holds no mock data.', { x: MX, y: 5.95, w: 8.2, h: 0.8, fontSize: 16 });
+  const s = slide('Sản phẩm', 'CONTENT', 'SẢN PHẨM · TÓM TẮT LAB 2', 'user',
+    'Sinh viên có 15 phút giải lao đặt xong một đơn dưới 35 giây và tối đa 8 lần chạm',
+    'Persona từ Lab 2: sinh viên học ở Campus Quận 9, có khoảng 15 phút giữa hai tiết. '
+    + 'Tiêu chí thành công: đặt xong một đơn dưới 35 giây, tối đa 8 lần chạm, đo bằng sự kiện purchase trong kế hoạch Analytics. '
+    + 'Bảng bên phải là ba luồng Lab 2 và luồng của bếp. Mỗi luồng có nhánh lỗi và một ca ARTEMIS chạy hết luồng đó (TC-03, 04, 05, 12). '
+    + 'Đã làm 44/44 màn của trang Final UI: 30 màn khách S01–S30 và các màn bếp K01–K15 (K07 không có khung Figma).');
+  card(s, MX, TOP, 3.75, 4.8);
+  const ix = MX + 0.25;
+  text(s, 'PERSONA', { x: ix, y: TOP + 0.2, w: 3.3, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent2 });
+  text(s, 'Sinh viên học ở Campus Quận 9, có khoảng 15 phút giữa hai tiết.', { x: ix, y: TOP + 0.52, w: 3.3, h: 0.95, fontSize: 15 });
+  text(s, 'TIÊU CHÍ THÀNH CÔNG (LAB 2)', { x: ix, y: TOP + 1.6, w: 3.3, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent2 });
+  stat(s, '< 35 s', 'để đặt xong một đơn', ix, TOP + 1.9, 1.4, { size: 30, bigH: 0.6, labelH: 0.5 });
+  stat(s, '≤ 8 chạm', 'từ Trang chủ đến khi đặt đơn', ix + 1.45, TOP + 1.9, 1.85, { size: 30, bigH: 0.6, labelH: 0.6 });
+  text(s, 'PHẠM VI ĐÃ LÀM', { x: ix, y: TOP + 3.3, w: 3.3, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent2 });
+  text(s, [
+    { text: '44 / 44', options: { bold: true, fontFace: THEME.headFontFace, fontSize: 22, color: C.accent2 } },
+    { text: '  màn Final UI, cả app khách và app bếp', options: { fontSize: 14 } },
+  ], { x: ix, y: TOP + 3.6, w: 3.3, h: 0.75 });
+  caption(s, 'Đo bằng sự kiện purchase trong kế hoạch Analytics.', ix, TOP + 4.3, 3.3, { h: 0.4 });
+
+  const rows = [
+    [hdr(''), hdr('Luồng'), hdr('Màn hình'), hdr('Nhánh lỗi'), hdr('Test', { align: 'center' })],
+    ['F1', 'Đặt nhanh từ Trang chủ', 'S02 → S05 giỏ → S06 thanh toán → cổng → S07 theo dõi', 'Thanh toán bị từ chối →\nS06-ERR', 'TC-03'],
+    ['F2', 'Tuỳ chọn món và dùng mã giảm giá', 'S03 thực đơn → S04 món → S05 giỏ → S29 mã', 'Mã BB20 hết hạn →\nS05-VOUCHER-ERR', 'TC-04'],
+    ['F3', 'Xử lý khi thanh toán thất bại', 'S06-ERR → S07-CASH →\nS07-DIALOG → S10', 'Trả tiền mặt tại kiosk; giỏ hàng được giữ', 'TC-05'],
+    ['K', 'Bếp: nhận, làm và giao đơn', 'K02 → K03 → K04 → K05 quét mã → K06', 'Sai mã nhận món →\nK05-ERR', 'TC-12'],
+  ].map((r, i) => (i === 0 ? r : r.map((t, j) => ({
+    text: t,
+    options: cellOpts({
+      bold: j <= 1, color: j === 0 ? C.background1 : j === 3 ? C.accent4 : C.text1, align: j === 0 || j === 4 ? 'center' : 'left',
+      fill: { color: j === 0 ? C.accent2 : (i % 2 ? C.background1 : C.background2) }, fontSize: j === 0 ? 14 : 13,
+    }),
+  }))));
+  s.addTable(rows, { x: 4.65, y: TOP, w: 8.083, colW: [0.55, 2.1, 2.55, 2.08, 0.803], rowH: [0.42, 0.95, 0.95, 0.95, 0.95], border: { type: 'solid', pt: 0.75, color: C.accent6 }, margin: [0.04, 0.1, 0.04, 0.1] });
+  caption(s, 'Mã màn hình theo file Figma Lab 2; bảng đầy đủ ở docs/design-traceability.md, mục 3.', 4.65, 6.45, 8.0);
 }
 
-// -- 5. design system ------------------------------------------------------------------------------------------------
+// 3. Figma vs app
+pres.addSection({ title: 'Thiết kế' });
 {
-  const s = content('One set of design tokens drives every screen',
-    'Tokens in lib/ui/core/theme: app_colors (Figma v2 colours, WCAG contrast tests), app_dimens (48 dp tap target), app_theme. Components are one widget each in lib/ui/core/widgets. The widget catalog dev/widget_catalog.dart is tested at 360 and 412 dp with text 1.0 and 1.3.');
-  flow(s, ['Tokens\ncolors, spacing,\nradius', 'Theme\nMaterial theme\nbuilt from tokens', 'Components\nAppButton, AppChip,\nQuantityStepper, state views', 'Screens'], MX, 1.8, 8.6, 1.6, { fontSize: 14 });
-  bullets(s, [
-    'Screens hold no colour or text-style literal; the architecture test fails if one appears.',
-    'Widget catalog tested at 360 and 412 dp, text 1.0 and 1.3: no overflow, every tap target at least 48 dp.',
-    'Loading, empty and error states are shared widgets, not copies.',
-  ], { x: MX, y: 3.9, w: 8.6, h: 2.6, fontSize: 17 });
-  picture(s, img('auth', '2-signed-in.png'), 9.9, 1.6, 2.8, 5.1, 'home-screen');
+  const s = slide('Thiết kế', 'CONTENT', 'THIẾT KẾ · FIGMA VÀ APP', 'palette',
+    'App bám theo màn Figma, và 34 điểm khác biệt đều có lý do được ghi lại',
+    'Mỗi ảnh là một cặp: bên trái là Figma (Final UI v2), bên phải là app thật trên Android. Ba cặp ứng với ba luồng F1, F2, F3. '
+    + 'Có 34 khác biệt D01–D34, mỗi khác biệt ghi lý do trong docs/design-traceability.md mục 5. '
+    + 'Ví dụ D01: đổi đăng nhập e-mail + OTP sang Google Sign-In vì đề Lab 3 bắt buộc. D12: nút + biến thành bộ tăng giảm số lượng nên bỏ snackbar. '
+    + 'D23: form món của bếp không có ô ảnh vì app không tải ảnh lên, Cloudinary chỉ nhận PDF.');
+  const pairs = [['p1-S02.png', 'F1 · Trang chủ (S02)'], ['p1-S05-VOUCHER-ERR.png', 'F2 · giỏ có mã hết hạn (S05)'], ['p1-S06-ERR.png', 'F3 · lỗi thanh toán (S06-ERR)']];
+  const ph = 3.4;
+  const pw = ph * 1110 / 1250;
+  pairs.forEach((p, i) => {
+    const x = MX + i * (pw + 0.3);
+    shot(s, ev('figma', p[0]), x, TOP, pw, 1110 / 1250, `figma-pair-${i + 1}`);
+    caption(s, p[1], x, TOP + ph + 0.08, pw);
+  });
+  const sx = MX + 3 * (pw + 0.3) + 0.1;
+  stat(s, '34', 'điểm khác D01–D34, mỗi điểm có lý do', sx, TOP, RIGHT - sx, { size: 54, bigH: 0.9, labelH: 0.6, labelSize: 14 });
+  caption(s, 'Ghi ở mục 5 của\ndocs/design-traceability.md', sx, TOP + 1.65, RIGHT - sx, { h: 0.5 });
+  text(s, 'Mỗi cặp: bên trái là Figma, bên phải là app.', { x: sx, y: TOP + 2.4, w: RIGHT - sx, h: 0.8, fontSize: 12, color: C.accent5 });
+  const devs = [
+    ['D01  ', 'Google Sign-In thay e-mail + OTP: đề Lab 3 bắt buộc.'],
+    ['D12  ', 'Nút + thành bộ tăng giảm, bỏ snackbar: bộ đếm đã cho thấy kết quả.'],
+    ['D23  ', 'Form món không có ô ảnh: app không tải ảnh lên, chỉ tải PDF.'],
+  ];
+  devs.forEach((d, i) => {
+    const x = MX + i * (pw + 0.3);
+    s.addText([{ text: d[0], options: { bold: true, color: C.accent2 } }, { text: d[1], options: { color: C.text1 } }], {
+      isTextBox: true, shape: S.roundRect, rectRadius: 0.08, x, y: 5.95, w: pw, h: 0.85, fontSize: 13, valign: 'middle',
+      fill: { color: C.background2 }, line: { color: C.accent6, width: 0.75 }, margin: [9, 9, 3, 3],
+    });
+  });
 }
 
-// -- Firebase service slides: how it works (left), evidence (right), failure strip (bottom) ---------------------------
-// 6. Auth
+// 4. Architecture
 {
-  const s = content('Google verifies the user, Firebase issues the session',
-    'GoogleSignIn returns a Google ID token; GoogleAuthProvider.credential then FirebaseAuth.signInWithCredential gives a Firebase ID token (JWT, about 1 hour) and a refresh token. SHA-1 of each build machine must be registered or Google returns no token.');
-  flow(s, ['Google account picker', 'Google ID token', 'Firebase ID token + refresh token'], MX, 1.6, 7.6, 1.0, { fontSize: 14 });
-  bullets(s, [
-    'The app holds no password; the SDK keeps the tokens and refreshes them.',
-    'SHA-1 of every build machine is registered in the project.',
-    'The role in users/{uid} routes to the customer or the seller app.',
-    'Firestore rules read request.auth.uid from the token.',
-  ], { x: MX, y: 3.0, w: 7.6, h: 3.0, fontSize: 17 });
-  picture(s, img('auth', '2-signed-in.png'), 8.7, 1.6, 1.9, 4.2, 'auth-signed-in');
-  picture(s, img('auth', '3-cancelled.png'), 10.8, 1.6, 1.9, 4.2, 'auth-cancelled');
-  caption(s, 'Signed in · cancelled picker', 8.7, 5.85, 4);
-  failure(s, 'Cancelled sign-in, no network and no token each show their own message; the router waits on a splash screen until the sign-in state is known.', 6.25);
+  const s = slide('Thiết kế', 'CONTENT', 'THIẾT KẾ · KIẾN TRÚC', 'layers',
+    'Màn hình không gọi SDK trực tiếp: mỗi lớp chỉ gọi lớp ngay bên dưới, và có test kiểm tra điều đó',
+    'MVVM với Provider. Màn hình chỉ vẽ ViewState và chuyển thao tác. ViewModel giữ trạng thái kiểu sealed class ViewState: đang tải, rỗng, lỗi, có dữ liệu. '
+    + 'Repository hoặc service mới gọi SDK; mỗi SDK có một lớp, được tiêm qua Provider nên khi test thay bằng bản giả trong dev/. '
+    + 'test/architecture_test.dart thất bại nếu màn hình import SDK, dùng literal màu hoặc kiểu chữ, hoặc ViewModel thiếu SafeChangeNotifier. '
+    + 'Nhóm không có server riêng: dữ liệu được bảo vệ bằng Security Rules chạy trên máy chủ Firebase. Cloudinary thay Cloud Storage vì Cloud Storage cần gói Blaze.');
+  const layers = [
+    ['phone', 'Màn hình', 'ui/*/widgets', 'Vẽ ViewState và chuyển thao tác xuống. Không import SDK, không literal màu.'],
+    ['layers', 'ViewModel', 'ui/*/view_models', 'Giữ ViewState: đang tải, rỗng, lỗi hoặc có dữ liệu. Kiểm tra dữ liệu và chạy lệnh.'],
+    ['firestore', 'Repository / Service', 'data/', 'Mỗi SDK một lớp, tiêm qua Provider. Trả về Result, không ném exception.'],
+  ];
+  const lw = 6.3;
+  layers.forEach((l, i) => {
+    const y = TOP + i * 1.3;
+    card(s, MX, y, lw, 0.98);
+    s.addShape(S.ellipse, { x: MX + 0.2, y: y + 0.25, w: 0.48, h: 0.48, fill: { color: C.accent1 }, line: { type: 'none' } });
+    s.addImage({ path: icon(l[0], 'w'), x: MX + 0.31, y: y + 0.36, w: 0.26, h: 0.26 });
+    text(s, l[1], { x: MX + 0.85, y: y + 0.17, w: 1.95, h: 0.36, fontSize: 16, bold: true, color: C.text2 });
+    text(s, l[2], { x: MX + 0.85, y: y + 0.55, w: 1.95, h: 0.3, fontSize: 10.5, fontFace: CODE_FONT, color: C.accent5 });
+    text(s, l[3], { x: MX + 2.85, y: y + 0.08, w: lw - 3.0, h: 0.82, fontSize: 13.5, valign: 'middle' });
+    if (i < 2) s.addShape(S.downArrow, { x: MX + lw / 2 - 0.15, y: y + 1.02, w: 0.3, h: 0.24, fill: { color: C.accent1 }, line: { type: 'none' } });
+  });
+  s.addText([
+    { text: 'domain/models', options: { fontFace: CODE_FONT, fontSize: 11, color: C.text2, bold: true } },
+    { text: '   dữ liệu bất biến và quy tắc thuần, lớp nào cũng dùng', options: { fontSize: 13 } },
+  ], { isTextBox: true, shape: S.roundRect, rectRadius: 0.08, x: MX, y: TOP + 3.95, w: lw, h: 0.5, valign: 'middle', color: C.text1, fill: { color: C.background1 }, line: { color: C.accent5, width: 0.75, dashType: 'dash' }, margin: [14, 14, 0, 0] });
+  s.addShape(S.rightArrow, { x: MX + lw + 0.08, y: TOP + 2.6 + 0.36, w: 0.42, h: 0.26, fill: { color: C.accent1 }, line: { type: 'none' } });
+
+  const bx = MX + lw + 0.58;
+  const bw = RIGHT - bx;
+  s.addShape(S.roundRect, { x: bx, y: TOP, w: bw, h: 4.45, rectRadius: 0.1, fill: { color: C.text2 }, line: { type: 'none' } });
+  s.addImage({ path: icon('cloud', 'w'), x: bx + 0.25, y: TOP + 0.2, w: 0.32, h: 0.32 });
+  text(s, 'Dịch vụ đám mây, không có server riêng', { x: bx + 0.7, y: TOP + 0.18, w: bw - 0.9, h: 0.36, fontSize: 16, bold: true, color: C.background1, valign: 'middle' });
+  const chips = [
+    ['auth', 'Authentication'], ['firestore', 'Cloud Firestore'], ['shield', 'Security Rules'], ['fcm', 'Cloud Messaging'],
+    ['analytics', 'Analytics'], ['crash', 'Crashlytics'], ['config', 'Remote Config'], ['upload', 'Cloudinary (tệp PDF)'],
+  ];
+  const cw = (bw - 0.6) / 2;
+  chips.forEach((c, i) => {
+    const x = bx + 0.2 + (i % 2) * (cw + 0.2);
+    const y = TOP + 0.75 + Math.floor(i / 2) * 0.74;
+    s.addShape(S.roundRect, { x, y, w: cw, h: 0.6, rectRadius: 0.08, fill: { color: C.background1 }, line: { type: 'none' } });
+    s.addImage({ path: icon(c[0], 'o'), x: x + 0.15, y: y + 0.15, w: 0.3, h: 0.3 });
+    text(s, c[1], { x: x + 0.55, y, w: cw - 0.6, h: 0.6, fontSize: 13.5, bold: true, color: C.text2, valign: 'middle' });
+  });
+  text(s, 'Security Rules chạy trên máy chủ Firebase. Cloudinary thay Cloud Storage vì Cloud Storage cần gói Blaze trả phí.', { x: bx + 0.25, y: TOP + 3.75, w: bw - 0.5, h: 0.6, fontSize: 12.5, color: C.background2 });
+  s.addText([
+    { text: 'Có test kiểm tra  ', options: { bold: true, color: C.accent2 } },
+    { text: 'test/architecture_test.dart thất bại nếu màn hình import SDK · 752 test widget và ViewModel chạy trên bản giả trong dev/, không cần thiết bị', options: { color: C.text1 } },
+  ], { isTextBox: true, x: MX, y: 6.6, w: CW, h: 0.34, fontSize: 13, margin: 0, valign: 'top' });
 }
-// 7. Firestore
+
+// 5. Design system
 {
-  const s = content('The server decides who reads and writes, and 88 tests prove it',
-    'Rules run on the Firebase server, deny by default, access by role, staff only at their own kiosk. Orders are placed, edited and cancelled in transactions. 16 composite indexes in firebase/firestore.indexes.json: the seller shift screen failed on the real project until they were added.');
-  stat(s, '88', 'rules tests plus an integration test against the real rules', MX, 1.6, 3.6);
-  stat(s, '16', 'composite indexes; missing ones only fail on the real Firestore', MX, 3.7, 3.6);
-  bullets(s, [
-    'Deny by default; customers reach only their own data; staff only their own kiosk.',
-    'Place, edit and cancel an order in one transaction.',
-    'Screens listen with snapshots(), so a sold-out item shows at once.',
-  ], { x: 4.4, y: 1.7, w: 3.6, h: 4.0, fontSize: 16 });
-  picture(s, img('storage', '5-firestore-reports.png'), 8.2, 1.6, 4.55, 2.9, 'firestore-console');
-  caption(s, 'Firestore console: a document in reports with uid, url and size.', 8.2, 4.55, 4.55);
-  failure(s, 'A write that depends on current data runs in a transaction, so the user reads “Đơn này vừa được xử lý ở nơi khác”, not a rules error.', 6.15);
+  const s = slide('Thiết kế', 'CONTENT', 'THIẾT KẾ · DESIGN SYSTEM TRONG CODE', 'palette',
+    'Một bộ design token điều khiển mọi màn hình, và có test chặn literal màu trong màn hình',
+    'Token nằm ở lib/ui/core/theme: app_colors (màu từ Figma v2), app_dimens (khoảng cách, bo góc, vùng chạm 48 dp), app_theme dựng ThemeData gồm ColorScheme và TextTheme. '
+    + 'Mỗi component Lab 2 là một widget trong lib/ui/core/widgets, có biến thể và trạng thái là tham số. Trạng thái đang tải, rỗng, lỗi là widget dùng chung (state_views.dart). '
+    + 'Kiểm thử: widget catalog chạy ở 360 và 412 dp, cỡ chữ 1.0 và 1.3, không tràn; các cặp màu có test độ tương phản WCAG.');
+  flow(s, [
+    ['Token', 'app_colors · app_dimens'],
+    ['Theme', 'ThemeData: ColorScheme, TextTheme'],
+    ['Component', 'mỗi cái một widget, trạng thái là tham số'],
+    ['Màn hình', 'đọc từ theme, không literal'],
+  ], MX, TOP, 7.9, 1.05);
+  text(s, 'TOKEN MÀU · lib/ui/core/theme/app_colors.dart', { x: MX, y: 3.35, w: 7.9, h: 0.3, fontSize: 11, bold: true, charSpacing: 1, color: C.accent2 });
+  const sw = [
+    ['primary', 'F69D39', C.accent1], ['onPrimary', '622B14', C.text2], ['primaryText', 'B45309', C.accent2], ['background', 'FAF8F5', C.background2],
+    ['border', 'E4DFD8', C.accent6], ['muted', '6B5F55', C.accent5], ['success', '15803D', C.accent3], ['error', 'B91C1C', C.accent4],
+  ];
+  const sww = (7.9 - 7 * 0.13) / 8;
+  sw.forEach((c, i) => {
+    const x = MX + i * (sww + 0.13);
+    s.addShape(S.roundRect, { x, y: 3.7, w: sww, h: 0.6, rectRadius: 0.06, fill: { color: c[2] }, line: { color: C.accent6, width: 0.75 } });
+    text(s, c[0], { x, y: 4.36, w: sww, h: 0.25, fontSize: 11, bold: true, color: C.text1 });
+    text(s, c[1], { x, y: 4.6, w: sww, h: 0.25, fontSize: 10, fontFace: CODE_FONT, color: C.accent5 });
+  });
+  text(s, 'TOKEN KHOẢNG CÁCH VÀ KÍCH THƯỚC · app_dimens.dart', { x: MX, y: 5.05, w: 7.9, h: 0.3, fontSize: 11, bold: true, charSpacing: 1, color: C.accent2 });
+  let x = MX;
+  [4, 8, 12, 16, 24, 32].forEach((dp) => {
+    const sz = 0.1 + dp * 0.016;
+    s.addShape(S.rect, { x, y: 5.95 - sz, w: sz, h: sz, fill: { color: C.accent1 }, line: { type: 'none' } });
+    text(s, String(dp), { x, y: 6.0, w: 0.6, h: 0.25, fontSize: 11, color: C.accent5 });
+    x += Math.max(sz, 0.3) + 0.25;
+  });
+  text(s, 'Vùng chạm ≥ 48 dp · chữ thân ≥ 14 sp · bo góc 8 (chip), 16 (card), 24 (sheet)', { x: x + 0.2, y: 5.45, w: MX + 7.9 - x - 0.2, h: 0.75, fontSize: 13.5, valign: 'middle' });
+  caption(s, 'Đã test: widget catalog ở 360 và 412 dp, cỡ chữ ×1.0 và ×1.3, không tràn; các cặp màu qua test tương phản WCAG.', MX, 6.5, 7.9, { h: 0.4 });
+  const ph = 4.1;
+  const w1 = phone(s, ev('auth', '2-signed-in.png'), 8.75, TOP, ph, 'state-data');
+  phone(s, ev('p1', 'S05-EMPTY.png'), 8.75 + w1 + 0.15, TOP, ph, 'state-empty');
+  caption(s, 'Có dữ liệu: Trang chủ', 8.75, TOP + ph + 0.08, w1, { align: 'center' });
+  caption(s, 'Trạng thái rỗng: giỏ hàng', 8.75 + w1 + 0.15 - 0.1, TOP + ph + 0.08, w1 + 0.2, { align: 'center' });
 }
-// 8. Cloudinary
+
+// 6. Authentication
+pres.addSection({ title: 'Dịch vụ đám mây' });
 {
-  const s = content('Files go to Cloudinary because Cloud Storage needs a paid plan',
-    'Cloud Storage for Firebase needs the Blaze plan (payment card). The same StorageService interface sends the PDF to Cloudinary with an unsigned upload preset, so the app holds no secret. The lecturer confirmed in writing that Cloudinary or S3 is acceptable.');
-  flow(s, ['App builds PDF', 'Upload with unsigned preset', 'Cloudinary returns a URL', 'URL saved in Firestore reports'], MX, 1.6, CW, 1.0, { fontSize: 14 });
-  bullets(s, [
-    'No API secret in the app; limits live in the preset.',
-    'Owner-only read rules on the reports collection.',
-    'StorageService interface: S3 would replace Cloudinary without touching screens.',
-  ], { x: MX, y: 2.95, w: 4.3, h: 3.0, fontSize: 16 });
-  picture(s, img('storage', '2-url.png'), 5.2, 2.85, 2.4, 3.05, 'upload-done');
-  picture(s, img('storage', '4-cloudinary-library.png'), 7.8, 2.85, 4.95, 3.05, 'cloudinary-library');
-  caption(s, 'Upload finished · the PDF in the Cloudinary library', 5.2, 5.95, 7);
-  failure(s, 'Not configured, larger than 5 MB, no network and timeout each have a message, and the retry button stays.', 6.3);
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 1 / 7 · FIREBASE AUTHENTICATION', 'auth',
+    'Google xác minh người dùng, Firebase cấp phiên đăng nhập, và app không giữ mật khẩu',
+    'Luồng: google_sign_in mở hộp chọn tài khoản, Google trả Google ID token. App đưa token đó cho FirebaseAuth.signInWithCredential, Firebase Auth cấp Firebase ID token (JWT, hết hạn sau khoảng 1 giờ) và refresh token; SDK giữ và tự làm mới, app không lưu mật khẩu. '
+    + 'Vì sao cần SHA-1: Google chỉ trả token cho app có chứng chỉ ký đã khai báo trong project; mỗi máy build debug có SHA-1 riêng. '
+    + 'authStateChanges báo người dùng hiện tại cho router: chưa đăng nhập thì ở màn đăng nhập S26, đã đăng nhập thì đọc role trong users/{uid} để mở app khách hoặc app bếp. '
+    + 'Phía server: mọi yêu cầu Firestore mang ID token, Rules đọc request.auth.uid. Danh sách tài khoản xem ở Console, Authentication, Users (evidence/auth/4-console-users.png).');
+  seq(s, {
+    x: LX, y: TOP, w: LW,
+    actors: [{ key: 'app', label: 'App BreakBite' }, { key: 'g', label: 'Google Sign-In' }, { key: 'fa', label: 'Firebase Auth' }],
+    msgs: [
+      { from: 'app', to: 'g', text: 'Mở hộp chọn tài khoản Google' },
+      { from: 'g', to: 'app', text: 'Google ID token, chỉ trả cho app có SHA-1 đã đăng ký' },
+      { from: 'app', to: 'fa', text: 'signInWithCredential(Google ID token)' },
+      { from: 'fa', to: 'app', text: 'Firebase ID token (JWT, khoảng 1 giờ) + refresh token; SDK giữ và tự làm mới' },
+      { from: 'app', to: 'app', text: 'authStateChanges → router: chưa đăng nhập → S26; role trong users/{uid} chọn app khách hay app bếp' },
+    ],
+  });
+  failure(s, 'Huỷ chọn tài khoản: hiện “Bạn đã huỷ đăng nhập.” và ở lại màn đăng nhập. Mất mạng hoặc không có token: mỗi trường hợp một thông báo. Đăng xuất gỡ token FCM rồi xoá phiên.', LX, 5.92, LW, 0.95);
+  const ph = 3.85;
+  const shots = [['1-signed-out.png', 'Chưa đăng nhập'], ['3-cancelled.png', 'Huỷ chọn tài khoản'], ['2-signed-in.png', 'Đã đăng nhập']];
+  let px = RX;
+  shots.forEach((p, i) => {
+    const w = phone(s, ev('auth', p[0]), px, TOP, ph, `auth-${i + 1}`);
+    caption(s, p[1], px - 0.05, TOP + ph + 0.06, w + 0.1, { align: 'center' });
+    px += w + 0.08;
+  });
+  code(s, 'data/services/firebase/firebase_auth_service.dart · routing/router.dart', RX, 6.42, RW);
 }
+
+// 7. Firestore and Rules
+{
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 2 / 7 · CLOUD FIRESTORE VÀ SECURITY RULES', 'firestore',
+    'Security Rules trên máy chủ Firebase quyết định mọi lượt đọc ghi, và 88 test kiểm tra chúng',
+    'Firestore là cơ sở dữ liệu NoSQL trên máy chủ Google; SDK trong app nói chuyện trực tiếp với nó, không qua server của nhóm. '
+    + 'Màn hình lắng nghe bằng snapshots(), nên khi bếp báo hết món thì app khách thấy ngay. '
+    + 'Mỗi yêu cầu đi qua Security Rules (firebase/firestore.rules) trên máy chủ: mặc định từ chối; khách chỉ đọc ghi dữ liệu của mình (request.auth.uid); nhân viên chỉ làm ở kiosk của mình. 88 test rules chạy trên Emulator. '
+    + 'Đặt đơn chạy trong transaction: đọc kiosk (còn nhận đơn không), mã giảm giá và suất giờ nhận, rồi mới ghi đơn và trừ suất; sửa và huỷ đơn cũng vậy, nên hai người cùng sửa không ghi đè nhau. '
+    + 'Truy vấn lọc nhiều trường cần index tổng hợp: Emulator không đòi, Firestore thật thì báo lỗi, nên đã thêm 16 index. '
+    + 'Hạn chế đã biết (CR-01): giá trong đơn do app gửi, Rules mới kiểm giá > 0, chưa đối chiếu với thực đơn.');
+  seq(s, {
+    x: LX, y: TOP, w: LW,
+    actors: [{ key: 'c', label: 'App khách' }, { key: 'fs', label: 'Firestore + Rules' }, { key: 'k', label: 'App bếp' }],
+    msgs: [
+      { from: 'c', to: 'fs', text: 'Lắng nghe thực đơn của kiosk bằng snapshots()' },
+      { from: 'fs', to: 'fs', text: 'Rules: mặc định từ chối; request.auth.uid phải là chủ dữ liệu hoặc nhân viên của kiosk này' },
+      { from: 'k', to: 'fs', text: 'Báo món hết (chỉ nhân viên kiosk này)' },
+      { from: 'fs', to: 'c', text: 'Đẩy thay đổi: món hiện hết hàng ngay' },
+      { from: 'c', to: 'fs', text: 'Đặt đơn trong transaction: đọc kiosk, mã giảm giá, suất giờ nhận rồi mới ghi' },
+    ],
+  });
+  failure(s, 'Bị từ chối hoặc mất mạng: màn hình hiện trạng thái lỗi có nút Thử lại; khi mất mạng SDK đọc từ bộ nhớ đệm. Bếp xử lý một đơn vừa bị đổi ở máy khác thì thấy “Đơn này vừa được xử lý ở nơi khác.”', LX, 5.92, LW, 0.95);
+  const tw = (RW - 0.25) / 2;
+  card(s, RX, TOP, tw, 1.55);
+  stat(s, '88', 'test rules chạy trên Firestore Emulator', RX + 0.2, TOP + 0.05, tw - 0.3, { size: 40, bigH: 0.7, labelH: 0.6 });
+  card(s, RX + tw + 0.25, TOP, tw, 1.55);
+  stat(s, '16', 'index tổng hợp; Firestore thật đòi, Emulator thì không', RX + tw + 0.45, TOP + 0.05, tw - 0.3, { size: 40, bigH: 0.7, labelH: 0.75, labelSize: 12.5 });
+  const h = shot(s, crop('firestore-reports.png'), RX, TOP + 1.85, RW, 1200 / 390, 'firestore-console');
+  caption(s, 'Firestore console: tài liệu reports có uid, fileName, sizeKb và url Cloudinary', RX, TOP + 1.85 + h + 0.06, RW, { h: 0.45 });
+  code(s, 'firebase/firestore.rules · firebase/tests/ · data/repositories/firestore/', RX, 6.42, RW);
+}
+
+// 8. File upload (Cloudinary)
+{
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 3 / 7 · TẢI TỆP LÊN (CLOUDINARY THAY CLOUD STORAGE)', 'upload',
+    'Biên nhận PDF được tải lên Cloudinary bằng preset không ký, nên app không giữ khoá bí mật nào',
+    'Cloud Storage for Firebase cần gói Blaze (thẻ thanh toán); thầy đã đồng ý dùng Cloudinary hoặc S3. '
+    + 'App tạo biên nhận PDF trên máy, gửi HTTP multipart tới api.cloudinary.com/v1_1/<cloud>/auto/upload kèm upload preset không ký, thư mục breakbite/reports/{uid}. '
+    + 'Preset không ký nghĩa là app không giữ khoá bí mật nào; nếu để khoá trong app thì ai tải app cũng lấy được. Giới hạn (loại tệp, dung lượng) đặt trong cấu hình preset. '
+    + 'Cloudinary trả URL; app lưu uid, tên tệp, URL, dung lượng vào Firestore reports, và Rules chỉ cho chủ sở hữu đọc. '
+    + 'StorageService là interface: muốn đổi sang S3 thì viết một lớp mới, không sửa màn hình. Giới hạn 5 MB, chờ tối đa 60 giây.');
+  seq(s, {
+    x: LX, y: TOP, w: LW,
+    actors: [{ key: 'app', label: 'App BreakBite' }, { key: 'cl', label: 'Cloudinary' }, { key: 'fs', label: 'Firestore' }],
+    msgs: [
+      { from: 'app', to: 'app', text: 'Tạo biên nhận PDF ngay trên điện thoại' },
+      { from: 'app', to: 'cl', text: 'Upload (app hiện tiến độ): tệp + upload_preset không ký, thư mục breakbite/reports/{uid}' },
+      { from: 'cl', to: 'app', text: 'Trả về secure URL; app hiện link' },
+      { from: 'app', to: 'fs', text: 'Lưu reports/{id}: uid, fileName, url, sizeKb' },
+      { from: 'fs', to: 'fs', text: 'Rules: chỉ chủ sở hữu đọc được tài liệu này' },
+    ],
+  });
+  failure(s, 'Chưa cấu hình, tệp quá 5 MB, mất mạng, hoặc quá 60 giây không phản hồi: mỗi lỗi một thông báo, và nút Thử lại vẫn còn.', LX, 5.92, LW, 0.95);
+  const ph = 3.85;
+  const w = phone(s, ev('storage', '2-url.png'), RX, TOP, ph, 'upload-done');
+  caption(s, 'Tải xong, hiện URL', RX, TOP + ph + 0.06, w, { align: 'center' });
+  const cx = RX + w + 0.3;
+  const cw = RIGHT - cx;
+  const h = shot(s, crop('cloudinary-library.png'), cx, TOP, cw, 1238 / 520, 'cloudinary-library');
+  caption(s, 'Cloudinary: tệp PDF trong breakbite/reports/{uid}', cx, TOP + h + 0.06, cw, { h: 0.45 });
+  s.addText([
+    { text: 'Vì sao không dùng Cloud Storage\n', options: { bold: true, color: C.text2, fontSize: 14 } },
+    { text: 'Cloud Storage cần gói Blaze trả phí; thầy đã đồng ý dùng Cloudinary hoặc S3. StorageService là interface, nên đổi sang S3 không phải sửa màn hình nào.', options: { fontSize: 13, color: C.text1 } },
+  ], { isTextBox: true, shape: S.roundRect, rectRadius: 0.08, x: cx, y: TOP + h + 0.55, w: cw, h: ph - h - 0.55, valign: 'top', fill: { color: C.background2 }, line: { color: C.accent6, width: 0.75 }, margin: [10, 10, 7, 7] });
+  code(s, 'data/services/cloudinary/cloudinary_storage_service.dart', RX, 6.42, RW);
+}
+
 // 9. FCM
 {
-  const s = content('Push notifications arrive in all three app states and open the right order',
-    'The token identifies one app install on one device, issued by FCM through Google Play Services. The app saves it in users/{uid}.fcmTokens (up to 5 devices). The message here was sent from Firebase Console, Messaging, Send test message. Bug found by this test: from a closed app the tap opened the order and Home replaced it when the splash redirected; PushRouter now waits until the app is ready (lib/app.dart).');
-  picture(s, img('fcm', '2-foreground.png'), MX, 1.6, 1.85, 4.15, 'fcm-foreground');
-  picture(s, img('fcm', '3-background.png'), MX + 2.05, 1.6, 1.85, 4.15, 'fcm-background');
-  picture(s, img('fcm', '4-terminated-tap-before-fix.png'), MX + 4.1, 1.6, 1.85, 4.15, 'fcm-before');
-  picture(s, img('fcm', '4-terminated-tap-after-fix.png'), MX + 6.15, 1.6, 1.85, 4.15, 'fcm-after');
-  caption(s, 'App open · background · closed, tap before the fix (ends on Home) · after the fix (opens the order)', MX, 5.8, 8.0);
-  bullets(s, [
-    'The FCM token identifies one install; the app stores it in users/{uid}.fcmTokens, up to 5 devices.',
-    'Sent from Firebase Console (Send test message) or an Admin SDK script.',
-    'Android 13+ asks for permission; a refusal never blocks the app.',
-    'Every message is saved to the in-app list (S19).',
-  ], { x: 9.0, y: 1.6, w: 3.75, h: 4.6, fontSize: 15 });
-  failure(s, 'A refused permission or a failed token write never blocks sign-in or sign-out.', 6.25);
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 4 / 7 · FIREBASE CLOUD MESSAGING', 'fcm',
+    'Token FCM định danh một bản cài app; bên gửi có quyền server dùng token đó để gửi tới điện thoại',
+    'Token FCM là chuỗi định danh một bản cài app trên một thiết bị. Dịch vụ FCM của Google cấp nó qua Google Play Services khi app gọi getToken(); token có thể đổi (cài lại app, xoá dữ liệu) nên app nghe onTokenRefresh. '
+    + 'Client có lưu: sau đăng nhập app ghi token vào users/{uid}.fcmTokens (tối đa 5 thiết bị) và gỡ khi đăng xuất, để bên gửi biết gửi tới đâu. '
+    + 'Gửi tin: phải có một bên có quyền server gọi FCM HTTP v1 messages:send kèm token. Ở đây là Firebase Console, mục Send test message (dán token), hoặc script firebase/seed/send-push.mjs dùng Admin SDK đọc token trong Firestore rồi gửi; script đã viết nhưng chưa chạy với FCM thật vì cần khoá tài khoản dịch vụ. '
+    + 'Không có Cloud Functions vì gói Spark; hệ thống thật sẽ đặt đoạn gửi trên server, chạy khi bếp đổi trạng thái đơn. '
+    + 'Nhận: app đang mở thì onMessage hiện banner trong app; chạy nền hoặc đã đóng thì hệ thống hiện thông báo; chạm vào thì onMessageOpenedApp hoặc getInitialMessage, rồi PushRouter mở đúng đơn. Mọi tin đều lưu vào users/{uid}/notifications (màn S19). '
+    + 'Lỗi tìm được khi test: chạm thông báo lúc app đã đóng thì mở đơn rồi bị Trang chủ đè lên; đã sửa trong lib/app.dart (chờ router sẵn sàng).');
+  seq(s, {
+    x: LX, y: TOP, w: LW, rowH: 0.58,
+    actors: [{ key: 'app', label: 'App trên điện thoại' }, { key: 'f', label: 'FCM (Play services)' }, { key: 'snd', label: 'Bên gửi' }],
+    msgs: [
+      { from: 'app', to: 'f', text: 'getToken() sau khi đăng nhập' },
+      { from: 'f', to: 'app', text: 'Token = bản cài app này trên máy này' },
+      { from: 'app', to: 'app', text: 'Lưu vào users/{uid}.fcmTokens (tối đa 5 máy); gỡ khi đăng xuất' },
+      { from: 'snd', to: 'snd', text: 'Console “Send test message” (dán token),\nhoặc send-push.mjs đọc token từ Firestore' },
+      { from: 'snd', to: 'f', text: 'HTTP v1: token, tiêu đề, nội dung, orderId' },
+      { from: 'f', to: 'app', text: 'Giao tin: app đang mở → onMessage; chạy nền hoặc đã đóng → khay thông báo' },
+    ],
+  });
+  failure(s, 'Từ chối quyền (Android 13+): app vẫn chạy, chỉ không có thông báo hệ thống. Lỗi token không bao giờ chặn đăng nhập hay đăng xuất.', LX, 6.3, LW, 0.6);
+  const ph = 3.85;
+  const shots = [['2-foreground.png', 'Đang mở: banner trong app'], ['3-background.png', 'Chạy nền: khay thông báo'], ['4-terminated-tap-after-fix.png', 'Đã đóng: chạm mở đúng đơn']];
+  let px = RX;
+  shots.forEach((p, i) => {
+    const w = phone(s, ev('fcm', p[0]), px, TOP, ph, `fcm-${i + 1}`);
+    caption(s, p[1], px - 0.05, TOP + ph + 0.06, w + 0.1, { align: 'center' });
+    px += w + 0.08;
+  });
+  code(s, 'data/services/firebase/firebase_messaging_service.dart · routing/push_router.dart · firebase/seed/send-push.mjs', RX, 6.38, RW);
 }
+
 // 10. Analytics
 {
-  const s = content('11 planned events reach DebugView with their parameters',
-    'docs/analytics-plan.md was written before the code. Each event answers a product question; purchase tests the 35 s and 8 tap criterion. setUserId is called after sign-in; parameters hold no name or e-mail. DebugView is enabled with adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite.');
-  picture(s, path.join(ROOT, 'slides', 'img', 'debugview-top-events.png'), MX, 1.6, 8.5, 4.25, 'debugview');
-  caption(s, 'DebugView with debug mode on: the events of the plan and their counts.', MX, 5.95, 8.5);
-  bullets(s, [
-    'Sign-in: login, logout',
-    'Find: search, view_menu_item',
-    'Order: add_to_cart, reorder, begin_checkout, purchase, payment_failed',
-    'Seller: order_accepted, order_delivered',
-    'Files: export_report',
-    'purchase measures the success criterion. No personal data in parameters.',
-  ], { x: 9.4, y: 1.7, w: 3.35, h: 4.8, fontSize: 15 });
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 5 / 7 · GOOGLE ANALYTICS FOR FIREBASE', 'analytics',
+    'Cả 11 sự kiện trong kế hoạch, mỗi sự kiện gắn một câu hỏi về luồng, đều hiện trong DebugView',
+    'Kế hoạch docs/analytics-plan.md viết trước khi code: 11 sự kiện, mỗi sự kiện trả lời một câu hỏi sản phẩm và gắn với một bước của luồng Lab 2; purchase dùng để kiểm mục tiêu dưới 35 giây và 8 lần chạm. '
+    + 'App gọi logEvent qua AnalyticsService (màn hình không gọi SDK). SDK gom sự kiện trên máy và gửi theo lô nên báo cáo thường chậm. '
+    + 'Muốn thấy ngay thì bật chế độ debug: adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite, sự kiện hiện trong DebugView sau vài giây. '
+    + 'setUserId(uid) sau khi đăng nhập; tham số không chứa tên hay e-mail. reorder có ghi trong code nhưng không nằm trong bảng kế hoạch.');
+  seq(s, {
+    x: LX, y: TOP, w: LW,
+    actors: [{ key: 'app', label: 'App (AnalyticsService)' }, { key: 'sdk', label: 'Analytics SDK' }, { key: 'fb', label: 'Firebase' }],
+    msgs: [
+      { from: 'app', to: 'sdk', text: 'logEvent(tên, tham số); setUserId(uid) sau khi đăng nhập' },
+      { from: 'sdk', to: 'sdk', text: 'Xếp sự kiện vào hàng đợi trên máy' },
+      { from: 'sdk', to: 'fb', text: 'Gửi theo lô: báo cáo hiện sau' },
+      { from: 'sdk', to: 'fb', text: 'Bật debug mode: gửi ngay → DebugView sau vài giây' },
+    ],
+  });
+  text(s, [
+    { text: 'Kế hoạch có trước code. ', options: { bold: true, color: C.text2 } },
+    { text: 'Mỗi sự kiện trả lời một câu hỏi sản phẩm và gắn với một bước của luồng; purchase kiểm mục tiêu 35 s, 8 chạm. Tham số không chứa tên hay e-mail.' },
+  ], { x: LX, y: 5.2, w: LW, h: 0.8, fontSize: 13.5 });
+  failure(s, 'logEvent lỗi thì AnalyticsService bắt lại, luồng của người dùng không bị dừng.', LX, 6.1, LW, 0.75);
+  const dh = 4.0;
+  const dw = dh * 660 / 680;
+  shot(s, crop('debugview.png'), RX, TOP, dw, 660 / 680, 'debugview');
+  caption(s, 'DebugView bật debug mode: dòng sự kiện và top events', RX, TOP + dh + 0.06, dw + 0.3);
+  const lx = RX + dw + 0.25;
+  const lw = RIGHT - lx;
+  text(s, 'THẤY TRONG DEBUGVIEW', { x: lx, y: TOP, w: lw, h: 0.3, fontSize: 11, bold: true, charSpacing: 1, color: C.accent2 });
+  const events = ['login', 'logout', 'search', 'view_menu_item', 'add_to_cart', 'begin_checkout', 'purchase', 'payment_failed', 'export_report', 'order_accepted', 'order_delivered'];
+  events.forEach((e, i) => {
+    const y = TOP + 0.38 + i * 0.31;
+    s.addImage({ path: icon('check', 'o'), x: lx, y: y + 0.05, w: 0.2, h: 0.2 });
+    text(s, e, { x: lx + 0.27, y, w: lw - 0.27, h: 0.3, fontSize: 12.5, color: C.text1, valign: 'middle' });
+  });
+  caption(s, '+ reorder (có ghi, không nằm trong kế hoạch)', lx, TOP + 0.42 + 11 * 0.31, lw, { h: 0.45 });
+  code(s, 'data/services/firebase/firebase_analytics_service.dart', RX, 6.55, RW);
 }
-// 11. Crashlytics + Remote Config
+
+// 11. Crashlytics
 {
-  const s = content('Crashlytics records errors, and Remote Config changes the app without a rebuild',
-    'Crashlytics: uncaught errors plus handled errors recorded as non-fatal, with the keys role and kiosk_id. A crash is sent on the next app start. Remote Config: quick_items_limit was changed from 5 to 2 and published; Home showed 2 items without a restart because the app listens to onConfigUpdated.');
-  text(s, 'Crashlytics', { x: MX, y: 1.6, w: 5.8, h: 0.4, fontSize: 20, bold: true, color: C.text2 });
-  picture(s, img('crashlytics', '1-non-fatal.png'), MX, 2.1, 5.8, 3.1, 'crashlytics-nonfatal');
-  bullets(s, ['Uncaught and handled errors, keys role and kiosk_id.', 'A crash is sent on the next app start.'], { x: MX, y: 5.4, w: 5.8, h: 1.2, fontSize: 14 });
-  text(s, 'Remote Config', { x: 6.9, y: 1.6, w: 5.8, h: 0.4, fontSize: 20, bold: true, color: C.text2 });
-  picture(s, img('remote-config', '2-console.png'), 6.9, 2.1, 3.7, 3.1, 'rc-console');
-  picture(s, img('remote-config', '3-after.png'), 10.8, 2.1, 1.9, 3.1, 'rc-after');
-  bullets(s, ['quick_items_limit 5 → 2: Home shows 2 items at once.', 'Offline: last values, or the defaults in the app.'], { x: 6.9, y: 5.4, w: 5.8, h: 1.2, fontSize: 14 });
-}
-// 12. ARTEMIS
-{
-  const s = content('ARTEMIS ran 10 cases at least 3 times each; 4 pass every run',
-    'ARTEMIS flash profile with Gemini 3.5 Flash Lite on an Android emulator against the real Firebase project; 10 of 31 cases run, 21 not run (free model quota; most need two devices, the staff role, airplane mode or the notification shade). Failures: the agent counted 4 of 5 items in a list that needs scrolling, tapped a stepper once, did not type into a field, and missed short-lived snackbars; repeated by hand, the app behaved correctly where checked (screenshots in evidence/artemis/manual).');
-  const rows = [
-    [hdr('Case'), hdr('Runs'), hdr('Pass'), hdr('Why it failed, or note')],
-    ['TC-06 search, no result', '3', '3/3', 'Stable'],
-    ['TC-07 main tabs', '3', '3/3', 'Stable'],
-    ['TC-08 item and order detail', '3', '3/3', 'Stable'],
-    ['TC-09 export and upload', '3', '3/3', 'Stable'],
-    ['TC-10 Remote Config items', '3', '2/3', 'Agent counted 4 of 5 in a scrolling list'],
-    ['TC-17 quantity stepper', '3', '2/3', 'Agent tapped the stepper once'],
-    ['TC-16 default payment', '4', '3/4', 'First run read a vanishing snackbar'],
-    ['TC-14 change kiosk', '3', '1/3', 'Agent misread; by hand the cart empties'],
-    ['TC-15 student profile', '3', '1/3', 'Agent did not read the saved value'],
-    ['TC-04 wrong voucher', '3', '0/3', 'Agent did not type BB20 into the field'],
-  ].map((r, i) => (i === 0 ? r : r.map((t, j) => cell(t, {
-    align: j === 1 || j === 2 ? 'center' : 'left',
-    bold: j === 2,
-    color: j === 2 ? (t === '3/3' ? C.accent3 : C.accent4) : C.text1,
-    fill: { color: i % 2 ? C.background1 : C.background2 },
-  }))));
-  s.addTable(rows, { x: MX, y: 1.55, w: 8.3, colW: [2.6, 0.65, 0.75, 4.3], rowH: 0.43, border: { type: 'solid', pt: 0.5, color: C.accent6 }, margin: [0, 0.08, 0, 0.08] });
-  stat(s, '10 / 31', 'cases run; 21 not run', 9.3, 1.6, 3.4);
-  bullets(s, [
-    'Each failure was traced to the agent, then checked by hand.',
-    'Fix in the tests: read a saved value instead of a snackbar.',
-    'Harness: the final report is read from the server trace.',
-  ], { x: 9.3, y: 3.6, w: 3.45, h: 2.8, fontSize: 14 });
-  caption(s, 'Table and run files: docs/test-plan.md section 3, evidence/artemis/run-*.xml', MX, 6.45, 8.3);
-}
-// 13. code review
-{
-  const s = content('Of 10 AI review findings, 5 were fixed with a test, 1 is a known limit, 4 were rejected',
-    'Tool: Claude Code /code-review. Each finding was opened in the code before deciding, because the tool can be wrong. The new tests fail on the old code and pass on the new (CR-05 was run both ways). CR-07 to CR-10 rejected with a reason each; CR-10 was partly wrong in its own text.');
-  const rows = [
-    [hdr('ID'), hdr('Finding'), hdr('Decision'), hdr('Fix commit')],
-    ['CR-01', 'Order total uses client prices, never the menu', 'Accepted, known limit', '—'],
-    ['CR-02', 'A new item with an existing name overwrites it', 'Fixed', 'd6d8113'],
-    ['CR-03', 'Incident answered twice from a stale copy', 'Fixed (transaction)', 'd1291a6'],
-    ['CR-04', '“Mark all read” over the 500-write batch cap', 'Fixed (batches of 400)', '9243bf3'],
-    ['CR-05', '“Xem đơn cũ hơn” could add nothing', 'Fixed, test fails before', '2980559'],
-    ['CR-06', 'First “Có lại lúc” option ignored seconds', 'Fixed', 'ba8dc33'],
-    ['CR-07 – 10', 'Slot release, busy guard, extra reads, submit check', 'Rejected, a reason each', '—'],
-  ].map((r, i) => (i === 0 ? r : r.map((t, j) => cell(t, {
-    bold: j === 0,
-    color: j === 2 ? (t.startsWith('Fixed') ? C.accent3 : t.startsWith('Rejected') ? C.accent5 : C.accent2) : C.text1,
-    fill: { color: i % 2 ? C.background1 : C.background2 },
-  }))));
-  s.addTable(rows, { x: MX, y: 1.7, w: CW, colW: [1.3, 5.9, 3.3, 1.62], rowH: 0.55, fontSize: 14, border: { type: 'solid', pt: 0.5, color: C.accent6 }, margin: [0, 0.1, 0, 0.1] });
-  caption(s, 'Unchanged tool output: evidence/code-review/ · full table with reasons: docs/code-review.md', MX, 6.3, CW);
-}
-// 14. challenges and lessons
-{
-  const s = content('The real Firebase and a real test agent exposed what fakes and emulators hid',
-    'Challenges and lessons. The shared change in each: test against the real thing early, and check what an AI tool says before acting on it.');
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 6 / 7 · FIREBASE CRASHLYTICS', 'crash',
+    'Crashlytics lưu báo cáo trên máy và gửi ở lần mở app sau, kèm người dùng và hai khoá',
+    'Khi app sập, SDK ghi báo cáo vào bộ nhớ máy và chỉ gửi ở lần mở app kế tiếp, nên Console cập nhật chậm sau một crash. '
+    + 'Lỗi Flutter chưa bắt được thu qua FlutterError.onError và PlatformDispatcher.onError (lib/config/firebase_setup.dart), ghi là fatal. '
+    + 'Lỗi đã bắt nhưng đáng ghi thì gọi recordNonFatal kèm lý do, ví dụ auth.signInWithGoogle, push.opened. Ảnh trên cùng là một non-fatal thật: Firestore permission-denied trong một stream. '
+    + 'Mỗi báo cáo có uid (setUserIdentifier) và hai khoá role, kiosk_id. Nút Ghi lỗi thử và Làm sập app thử nằm trong Khu demo Firebase, có hỏi xác nhận trước khi crash.');
+  seq(s, {
+    x: LX, y: TOP, w: LW, rowH: 0.66,
+    actors: [{ key: 'app', label: 'App Flutter' }, { key: 'sdk', label: 'Crashlytics SDK' }, { key: 'con', label: 'Crashlytics console' }],
+    msgs: [
+      { from: 'app', to: 'sdk', text: 'Lỗi chưa bắt: FlutterError.onError, PlatformDispatcher.onError → fatal' },
+      { from: 'app', to: 'sdk', text: 'Lỗi đã bắt trên luồng thật: recordNonFatal(e, stack, reason)' },
+      { from: 'sdk', to: 'sdk', text: 'Lưu báo cáo trên máy, kèm uid và hai khoá role, kiosk_id' },
+      { from: 'sdk', to: 'con', text: 'Lần mở app sau: gửi lên; console gom thành một issue' },
+    ],
+  });
+  failure(s, 'Crashlytics chỉ ghi lại: người dùng vẫn thấy thông báo của luồng lỗi đó. Nút crash thử nằm trong Khu demo Firebase, phải xác nhận trước.', LX, 5.55, LW, 0.95);
+  let y = TOP;
   const items = [
-    ['Cloud Storage is paid', 'Files go to Cloudinary behind the same StorageService interface.'],
-    ['A UI check is not a rule', 'Real rules on the emulator found gaps that fake data hid (CR-01, CR-03).'],
-    ['Real Firebase found two bugs', 'Missing indexes broke the shift screen; a push tapped on a closed app ended on Home.'],
-    ['An AI test agent is flaky', 'It mistyped, miscounted and missed snackbars; each failure was checked by hand.'],
-    ['An AI review is a list of questions', '4 of 10 findings were rejected after reading the code and the rules.'],
-    ['Write the plan first', 'Traceability and the test plan before the screens; late changes cost a row and a Figma edit.'],
+    ['crash-nonfatal.png', 1120 / 213, 'Non-fatal: lỗi permission-denied của Firestore từ một stream thật, và lỗi demo'],
+    ['crash-fatal.png', 1120 / 130, 'Fatal: crash thử'],
+    ['crash-keys.png', 1092 / 260, 'Khoá của một sự kiện: kiosk_id q9-t2, role user'],
   ];
-  const cw = (CW - 0.4) / 2;
   items.forEach((it, i) => {
-    const x = MX + (i % 2) * (cw + 0.4);
-    const y = 1.7 + Math.floor(i / 2) * 1.7;
-    s.addShape(pres.ShapeType.roundRect, { x, y, w: cw, h: 1.5, rectRadius: 0.08, fill: { color: C.background2 }, line: { color: C.accent6, width: 1 } });
-    s.addText(String(i + 1), { shape: pres.ShapeType.ellipse, x: x + 0.2, y: y + 0.2, w: 0.55, h: 0.55, fontSize: 16, bold: true, align: 'center', valign: 'middle', color: C.background1, fill: { color: C.accent2 }, margin: 0 });
-    text(s, it[0], { x: x + 0.95, y: y + 0.18, w: cw - 1.15, h: 0.4, fontSize: 17, bold: true, color: C.text2 });
-    text(s, it[1], { x: x + 0.95, y: y + 0.65, w: cw - 1.15, h: 0.8, fontSize: 14 });
+    const h = shot(s, crop(it[0]), RX, y, RW, it[1], `crashlytics-${i + 1}`);
+    caption(s, it[2], RX, y + h + 0.05, RW);
+    y += h + 0.45;
+  });
+  code(s, 'data/services/firebase/firebase_crash_service.dart · config/firebase_setup.dart', RX, 6.42, RW);
+}
+
+// 12. Remote Config
+{
+  const s = slide('Dịch vụ đám mây', 'CONTENT', 'DỊCH VỤ ĐÁM MÂY 7 / 7 · FIREBASE REMOTE CONFIG', 'config',
+    'Publish một giá trị trên console là Trang chủ đổi theo, không cần build lại app',
+    'Giá trị nằm trên server Remote Config; app có giá trị mặc định (RemoteKeys.defaults, khớp firebase/remote-config-defaults.json): quick_items_limit 5, promo_banner_enabled true, pickup_slot_enabled true. '
+    + 'App fetch giá trị mới tối đa mỗi giờ một lần (0 khi debug), chờ tối đa 10 giây, rồi activate để dùng. '
+    + 'onConfigUpdated là kênh thời gian thực: khi bấm Publish trên Console, server báo cho app, app activate và Trang chủ vẽ lại ngay, không cần build hay khởi động lại. '
+    + 'Ảnh: trước là giá trị mặc định (có banner Giờ Vàng, 5 món nhanh); sau khi publish quick_items_limit = 2 và promo_banner_enabled = false thì Trang chủ còn 2 món, mất banner. '
+    + 'Mất mạng: dùng giá trị activate lần cuối, hoặc mặc định ở lần mở đầu tiên.');
+  seq(s, {
+    x: LX, y: TOP, w: LW, rowH: 0.66,
+    actors: [{ key: 'app', label: 'App BreakBite' }, { key: 'rc', label: 'Remote Config' }, { key: 'con', label: 'Firebase console' }],
+    msgs: [
+      { from: 'app', to: 'app', text: 'Mặc định trong app: quick_items_limit 5, promo_banner_enabled, pickup_slot_enabled' },
+      { from: 'app', to: 'rc', text: 'fetch tối đa mỗi giờ một lần (0 khi debug), chờ tối đa 10 s, rồi activate' },
+      { from: 'con', to: 'rc', text: 'Publish quick_items_limit = 2, promo_banner_enabled = false' },
+      { from: 'rc', to: 'app', text: 'onConfigUpdated (thời gian thực) → activate → Trang chủ vẽ lại' },
+    ],
+  });
+  failure(s, 'Mất mạng hoặc fetch lỗi: app giữ giá trị activate lần cuối, hoặc giá trị mặc định ở lần mở đầu tiên.', LX, 5.55, LW, 0.95);
+  const ih = 2.5;
+  const iw = ih * 1080 / 1320;
+  const gap = RW - 2 * iw;
+  shot(s, crop('rc-before.png'), RX, TOP, iw, 1080 / 1320, 'rc-before');
+  s.addShape(S.rightArrow, { x: RX + iw + gap / 2 - 0.3, y: TOP + ih / 2 - 0.17, w: 0.6, h: 0.34, fill: { color: C.accent1 }, line: { type: 'none' } });
+  shot(s, crop('rc-after.png'), RX + iw + gap, TOP, iw, 1080 / 1320, 'rc-after');
+  caption(s, 'Trước: mặc định, có banner, 5 món', RX, TOP + ih + 0.06, iw + 0.5);
+  caption(s, 'Sau khi publish: không banner, 2 món', RX + iw + gap - 0.6, TOP + ih + 0.06, iw + 0.6, { align: 'right' });
+  const cy = TOP + ih + 0.5;
+  const h = shot(s, crop('rc-console.png'), RX, cy, RW, 1122 / 230, 'rc-console');
+  caption(s, 'Console: các giá trị vừa publish (“Just now”)', RX, cy + h + 0.05, RW);
+  code(s, 'data/services/firebase/firebase_remote_config_service.dart', RX, 6.62, RW);
+}
+
+// 13. ARTEMIS
+pres.addSection({ title: 'Bằng chứng' });
+{
+  const s = slide('Bằng chứng', 'CONTENT', 'BẰNG CHỨNG · KIỂM THỬ ĐẦU CUỐI BẰNG GOOGLE ARTEMIS', 'bot',
+    'ARTEMIS chạy 11 ca, mỗi ca ít nhất 3 lần; 10 ca qua mọi lần, và các lần chạy tìm ra một lỗi thật của app',
+    'ARTEMIS là agent AI điều khiển máy Android từ câu lệnh tiếng tự nhiên. Chạy hồ sơ Flash, model Gemini 3.5 Flash Lite, trên máy ảo với project Firebase thật; commit ARTEMIS được ghim trong README. '
+    + 'Mỗi test là một hàm pytest gửi một chỉ dẫn: điểm bắt đầu, các bước, và điều phải thấy cuối cùng. Agent trả về các giá trị nó đọc được dạng JSON, test so sánh các giá trị đó, không chỉ xem trạng thái SUCCESS. '
+    + '11 ca được chấm, mỗi ca ít nhất 3 lần: 10 ca đạt 3/3, TC-05 đạt 3/4 (lần hỏng do máy chủ đang chạy cả bộ flutter test, sinh ANR). '
+    + 'Các lần hỏng trước đó đều tìm ra nguyên nhân: câu chỉ dẫn mơ hồ (TC-03, TC-10), ARTEMIS dán chữ bằng KEYCODE_PASTE mà ô nhập Flutter bỏ qua (TC-04, đã vá), và lỗi thật của app P-01 (TC-05), đã sửa. '
+    + 'Phiên khám phá hồ sơ Pro 15,8 phút, 57 bước, tìm được một lỗi mức trung bình: xuất được biên nhận cho đơn đã huỷ.');
+  const rows = [
+    ['TC-01', 'Đăng nhập qua hộp chọn tài khoản Google (native)', '3', '3/3'],
+    ['TC-02', 'Đăng xuất; nút Back không quay lại Trang chủ', '3', '3/3'],
+    ['TC-03', 'F1 đặt nhanh + sự kiện purchase trong Logcat', '3', '3/3'],
+    ['TC-04', 'F2 mã BB20 hết hạn (nhánh lỗi)', '3', '3/3'],
+    ['TC-05', 'F3 thanh toán bị từ chối, chuyển tiền mặt', '4', '3/4'],
+    ['TC-06', 'Tìm kiếm không có kết quả (nhánh lỗi)', '3', '3/3'],
+    ['TC-07', 'Mỗi tab hiện đúng màn gốc', '3', '3/3'],
+    ['TC-08', 'Chi tiết món và chi tiết đơn', '3', '3/3'],
+    ['TC-09', 'Xuất và tải lên biên nhận', '3', '3/3'],
+    ['TC-10', 'Giá trị Remote Config trên Trang chủ', '3', '3/3'],
+    ['TC-12', 'Bếp: nhận, làm, quét mã, giao đơn', '3', '3/3'],
+  ].map((r, i) => r.map((t, j) => ({
+    text: t,
+    options: cellOpts({
+      bold: j === 0 || j === 3, align: j >= 2 ? 'center' : 'left', fontSize: 12.5,
+      color: j === 3 ? (t === '3/3' ? C.accent3 : C.accent2) : C.text1,
+      fill: { color: i % 2 ? C.background2 : C.background1 },
+    }),
+  })));
+  rows.unshift([hdr('Ca'), hdr('Kiểm tra gì'), hdr('Số lần', { align: 'center' }), hdr('Qua', { align: 'center' })]);
+  s.addTable(rows, { x: MX, y: TOP, w: 7.3, colW: [0.85, 4.75, 0.85, 0.85], rowH: 0.355, border: { type: 'solid', pt: 0.75, color: C.accent6 }, margin: [0, 0.1, 0, 0.1] });
+  caption(s, 'Các lần hỏng trước đó do câu chỉ dẫn (TC-03, TC-10), cách ARTEMIS gõ chữ (TC-04) và máy chạy quá tải (TC-05); nguyên nhân từng lần ở docs/test-plan.md §3. Kết quả: evidence/artemis/run-*.xml.', MX, 6.35, 7.3, { h: 0.5 });
+  const cx = 8.25;
+  const cw = RIGHT - cx;
+  const cards = [
+    ['test', 'Một test được kiểm thế nào', 'pytest gửi một chỉ dẫn: điểm bắt đầu, các bước, điều phải thấy trên màn hình. Agent trả về giá trị nó đọc được dạng JSON, test so các giá trị đó chứ không chỉ xem SUCCESS.', 1.75],
+    ['alert', 'Tìm ra và đã sửa lỗi app (P-01)', 'Sau khi thanh toán bị từ chối, đơn tiền mặt đã tạo nhưng màn hình vẫn đứng ở trang lỗi. Đã sửa trong CheckoutScreen._confirm.', 1.45],
+    ['bot', 'Phiên khám phá, hồ sơ Pro', '15,8 phút, 57 bước. Một lỗi còn mở: xuất được biên nhận cho đơn đã huỷ.', 1.2],
+  ];
+  let y = TOP;
+  cards.forEach((c) => {
+    card(s, cx, y, cw, c[3]);
+    s.addShape(S.ellipse, { x: cx + 0.18, y: y + 0.17, w: 0.38, h: 0.38, fill: { color: C.accent1 }, line: { type: 'none' } });
+    s.addImage({ path: icon(c[0], 'w'), x: cx + 0.26, y: y + 0.25, w: 0.22, h: 0.22 });
+    text(s, c[1], { x: cx + 0.68, y: y + 0.16, w: cw - 0.85, h: 0.4, fontSize: 14.5, bold: true, color: C.text2, valign: 'middle' });
+    text(s, c[2], { x: cx + 0.68, y: y + 0.58, w: cw - 0.85, h: c[3] - 0.68, fontSize: 13 });
+    y += c[3] + 0.2;
   });
 }
-// 15. where to find everything
+
+// 14. AI code review
 {
-  const s = pres.addSlide({ masterName: 'DARK' });
-  s.addText('Everything on these slides links to a file in the repository', Object.assign({}, TITLE, { color: C.background1 }));
-  const rows = [
-    ['Traceability and deviations', 'docs/design-traceability.md'],
-    ['Architecture, Firebase design', 'docs/architecture.md · docs/firebase-design.md'],
-    ['Analytics plan', 'docs/analytics-plan.md'],
-    ['ARTEMIS test plan, results, tests', 'docs/test-plan.md · e2e_test/ · evidence/artemis/'],
-    ['Code review', 'docs/code-review.md · evidence/code-review/'],
-    ['Screenshots', 'evidence/'],
-    ['Demo video', 'link in README.md'],
-  ].map((r) => r.map((t, j) => ({ text: t, options: { fontSize: 15, color: j ? C.accent1 : C.background1, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', pt: 0.5, color: C.accent5 }, { type: 'none' }] } })));
-  s.addTable(rows, { x: MX, y: 1.7, w: 8.0, colW: [3.2, 4.8], rowH: 0.52, margin: [0, 0.05, 0, 0.05] });
-  text(s, 'AI tools used for the slides', { x: 9.1, y: 1.7, w: 3.7, h: 0.4, fontSize: 18, bold: true, color: C.accent1 });
-  text(s, 'Claude Code (Claude Sonnet 5.5) wrote the generator scripts/build_slides.js with pptxgenjs; layout follows assertion-evidence slide design. Screenshots come from evidence/.', { x: 9.1, y: 2.2, w: 3.7, h: 2.6, fontSize: 14, color: C.background1 });
-  text(s, 'Report: report/Lab03_SE193905.pdf', { x: MX, y: 6.0, w: 8, h: 0.4, fontSize: 15, color: C.background1 });
-  s.addNotes('Every claim on the slides links to a file in the repo. List of AI tools used is also in the README and the report.');
+  const s = slide('Bằng chứng', 'CONTENT', 'BẰNG CHỨNG · REVIEW CODE BẰNG AI', 'review',
+    'Review AI đưa ra 10 phát hiện: sửa 5, giữ 1 làm hạn chế đã biết, bác 4 kèm lý do',
+    'Công cụ: Claude Code, lệnh /code-review, chạy trên pull request để phát hiện chỉ đúng dòng. Đầu ra gốc lưu ở evidence/code-review/. '
+    + 'Mỗi phát hiện đều mở code ra đọc trước khi quyết định vì công cụ có thể sai: CR-10 nói mô tả không được trim nhưng repository có trim. '
+    + 'Năm lỗi được sửa, mỗi lỗi một commit có mã CR và có test; test mới hỏng trên code cũ và qua trên code mới (CR-05 đã chạy cả hai chiều). '
+    + 'CR-01 được chấp nhận nhưng chưa sửa: muốn sửa phải đọc giá từng món trong transaction đặt đơn và thêm kiểm tra trong Rules, đụng vào luồng F1, F2 của thành viên khác sát hạn nộp, nên ghi là hạn chế đã biết. '
+    + 'Bốn phát hiện bị bác, mỗi cái có lý do dựa trên Rules, trạng thái nút hoặc số lần đọc thật.');
+  const data = [
+    ['CR-01', 'bảo mật', 'firestore_order_repository.dart:52', 'Tổng tiền dùng giá do app gửi lên', 'Chấp nhận, hạn chế đã biết', '—'],
+    ['CR-02', 'lỗi', 'firestore_menu_repository.dart:91', 'Thêm món mới có thể ghi đè món khác', 'Đã sửa', 'd6d8113'],
+    ['CR-03', 'lỗi', 'firestore_incident_repository.dart:98', 'Một sự cố có thể bị xử lý hai lần', 'Đã sửa (transaction)', 'd1291a6'],
+    ['CR-04', 'hiệu năng', 'firestore_notification_repository.dart:55', 'markAllRead lỗi khi quá 500 thông báo', 'Đã sửa (lô 400)', '9243bf3'],
+    ['CR-05', 'lỗi', 'order_history_view_model.dart:98', '“Xem đơn cũ hơn” có thể thêm trang rỗng', 'Đã sửa (test hỏng ở bản cũ)', '2980559'],
+    ['CR-06', 'lỗi', 'seller_menu_view_model.dart:41', 'Mốc “Có lại lúc” đầu tiên bỏ qua giây', 'Đã sửa', 'ba8dc33'],
+    ['CR-07', 'lỗi', 'firestore_order_repository.dart:275', 'Trả suất giờ nhận mà không đọc trước', 'Bác: không suất nào bị xoá', '—'],
+    ['CR-08', 'bảo trì', 'shop_view_model.dart:134', 'Lượt ghi bị bỏ qua vẫn báo ok', 'Bác: nút đã bị khoá', '—'],
+    ['CR-09', 'hiệu năng', 'shift_stats_view_model.dart:116', 'K11 đọc mọi kiosk để lấy một giờ mở cửa', 'Bác: 2 kiosk, 2 lượt đọc', '—'],
+    ['CR-10', 'thiếu test', 'incident_view_model.dart:128', 'Gửi báo cáo sự cố không kiểm trạng thái', 'Bác: công cụ sai một phần', '—'],
+  ];
+  const rows = data.map((r, i) => r.map((t, j) => ({
+    text: t,
+    options: cellOpts({
+      bold: j === 0, fontSize: j === 2 ? 10 : j >= 3 && j <= 4 ? 11.5 : 12, fontFace: j === 2 || j === 5 ? CODE_FONT : THEME.bodyFontFace,
+      color: j === 4 ? (t.startsWith('Đã sửa') ? C.accent3 : t.startsWith('Bác') ? C.accent5 : C.accent2) : (j === 2 ? C.text2 : C.text1),
+      fill: { color: i % 2 ? C.background2 : C.background1 },
+    }),
+  })));
+  rows.unshift([hdr('Mã'), hdr('Loại'), hdr('File:dòng'), hdr('Phát hiện'), hdr('Quyết định'), hdr('Commit')]);
+  s.addTable(rows, { x: MX, y: TOP, w: CW, colW: [0.75, 1.15, 3.62, 3.45, 2.28, 0.883], rowH: 0.4, border: { type: 'solid', pt: 0.75, color: C.accent6 }, margin: [0, 0.08, 0, 0.08] });
+  caption(s, 'Công cụ: Claude Code /code-review trên một pull request · đầu ra gốc ở evidence/code-review/ · lý do từng mục ở docs/code-review.md', MX, 6.6, CW);
+}
+
+// 15. Lessons and links
+{
+  const s = slide('Bằng chứng', 'CLOSING', 'TỔNG KẾT · BÀI HỌC VÀ ĐƯỜNG DẪN', 'lesson',
+    'Chạy trên Firebase thật và kiểm lại mọi kết quả của AI đã lộ ra lỗi mà bản giả và Emulator không thấy',
+    'Bốn bài học. Một: chạy trên project thật sớm; thiếu index và lỗi chạm thông báo khi app đóng chỉ lộ ra ở đó. '
+    + 'Hai: dữ liệu được bảo vệ bởi Rules trên server, không phải bởi giao diện. '
+    + 'Ba: agent kiểm thử AI cần câu chỉ dẫn chính xác; phần lớn lần chạy hỏng là do câu chữ hoặc công cụ, không phải do app. '
+    + 'Bốn: kết quả review AI là danh sách câu hỏi; 4/10 phát hiện sai khi đọc code. '
+    + 'Bên phải là đường dẫn tới từng tài liệu trong repo, và công cụ AI đã dùng để làm slide này.');
+  const lessons = [
+    ['Chạy trên project thật từ sớm', 'Thiếu index và lỗi chạm thông báo khi app đã đóng chỉ lộ ra ở đó.'],
+    ['Server quyết định, không phải màn hình', 'Rules và transaction bảo vệ dữ liệu; 88 test kiểm tra Rules.'],
+    ['Agent test AI cần câu chỉ dẫn chính xác', 'Phần lớn lần chạy hỏng do câu chữ hoặc công cụ, không phải do app.'],
+    ['Kết quả review AI là danh sách câu hỏi', '4/10 phát hiện sai khi đọc kỹ code.'],
+  ];
+  lessons.forEach((l, i) => {
+    const y = TOP + i * 1.18;
+    s.addText(String(i + 1), { shape: S.ellipse, x: MX, y: y + 0.03, w: 0.46, h: 0.46, fontSize: 16, bold: true, align: 'center', valign: 'middle', color: C.text2, fill: { color: C.accent1 }, line: { type: 'none' }, margin: 0 });
+    text(s, l[0], { x: MX + 0.65, y, w: 5.9, h: 0.4, fontSize: 17, bold: true, color: C.background1, valign: 'middle' });
+    text(s, l[1], { x: MX + 0.65, y: y + 0.42, w: 5.9, h: 0.6, fontSize: 14, color: C.accent6 });
+  });
+  const lx = 7.55;
+  const lw = RIGHT - lx;
+  text(s, 'TÌM Ở ĐÂU', { x: lx, y: TOP, w: lw, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent1 });
+  const links = [
+    ['Truy vết, khác biệt', 'docs/design-traceability.md'],
+    ['Kiến trúc, Firebase', 'docs/architecture.md\ndocs/firebase-design.md'],
+    ['Kế hoạch Analytics', 'docs/analytics-plan.md'],
+    ['Test và kết quả chạy', 'docs/test-plan.md · e2e_test/\nevidence/artemis/'],
+    ['Review code', 'docs/code-review.md\nevidence/code-review/'],
+    ['Báo cáo, video demo', 'report/Lab03_SE193905.pdf\nlink video trong README.md'],
+  ].map((r) => r.map((t, j) => ({ text: t, options: { fontSize: j ? 12 : 13, color: j ? C.accent1 : C.background1, valign: 'middle', border: [{ type: 'none' }, { type: 'none' }, { type: 'solid', pt: 0.5, color: C.accent5 }, { type: 'none' }] } })));
+  s.addTable(links, { x: lx, y: TOP + 0.38, w: lw, colW: [1.95, lw - 1.95], rowH: 0.46, margin: [0, 0.05, 0, 0.05] });
+  text(s, 'CÔNG CỤ AI DÙNG ĐỂ LÀM SLIDE', { x: lx, y: 5.3, w: lw, h: 0.3, fontSize: 11, bold: true, charSpacing: 1.5, color: C.accent1 });
+  text(s, 'Claude Code (Claude Opus 5.5) viết scripts/build_slides.js (pptxgenjs) và scripts/prepare_slide_images.py. Icon: Lucide (giấy phép ISC). Mọi ảnh chụp lấy từ evidence/.', { x: lx, y: 5.62, w: lw, h: 0.9, fontSize: 12.5, color: C.background1 });
+  text(s, 'github.com/baonv0817/PRM393_Lab03_Group2', { x: lx, y: 6.6, w: lw, h: 0.3, fontSize: 12, color: C.accent6 });
 }
 
 (async () => {
