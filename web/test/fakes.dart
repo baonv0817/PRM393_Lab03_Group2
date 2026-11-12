@@ -6,7 +6,9 @@ import 'dart:async';
 import 'package:breakbite_core/data/repositories/announcement_repository.dart';
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
 import 'package:breakbite_core/data/repositories/order_repository.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
+import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -165,3 +167,50 @@ MenuItem item(String dishId, {bool soldOut = false, bool archived = false, Strin
 
 /// Lets stream events and async commands settle.
 Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+class FakeAnalytics implements AnalyticsService {
+  final events = <(String, Map<String, Object>?)>[];
+  String? userId;
+
+  Iterable<Map<String, Object>?> paramsOf(String name) => events.where((e) => e.$1 == name).map((e) => e.$2);
+
+  @override
+  Future<void> logEvent(String name, [Map<String, Object>? parameters]) async => events.add((name, parameters));
+
+  @override
+  Future<void> setUserId(String? uid) async => userId = uid;
+}
+
+class FakeRemoteConfig implements RemoteConfigService {
+  FakeRemoteConfig([Map<String, Object>? values]) : values = {...RemoteKeys.defaults, ...?values};
+
+  final Map<String, Object> values;
+  final updates = StreamController<Set<String>>.broadcast();
+
+  /// Changes a value the way a console publish does: the new value, then the update event.
+  void publish(String key, Object value) {
+    values[key] = value;
+    updates.add({key});
+  }
+
+  @override
+  Future<void> fetchAndActivate() async {}
+
+  @override
+  Stream<Set<String>> watchUpdates() => updates.stream;
+
+  @override
+  bool getBool(String key) => values[key] as bool;
+
+  @override
+  int getInt(String key) => values[key] as int;
+
+  @override
+  String getString(String key) => '${values[key]}';
+
+  @override
+  RemoteValueSource sourceOf(String key) => RemoteValueSource.inApp;
+
+  @override
+  DateTime? get lastFetchedAt => null;
+}

@@ -8,6 +8,16 @@ abstract final class RemoteKeys {
   static const aiModel = 'ai_model';
   static const aiPrompt = 'ai_prompt';
 
+  /// The reasons the web admin's review queue (W03) offers when staff reject an order, separated by `|`.
+  static const rejectReasons = 'reject_reasons';
+  static const defaultRejectReasons = 'Hết nguyên liệu|Quầy sắp đóng cửa|Quá tải, không kịp làm|Đơn trùng';
+
+  /// [raw] split on `|`, trimmed, without empty or repeated entries; [defaultRejectReasons] when nothing is left.
+  static List<String> reasonsFrom(String raw) {
+    final reasons = raw.split('|').map((r) => r.trim()).where((r) => r.isNotEmpty).toSet().toList();
+    return reasons.isEmpty ? defaultRejectReasons.split('|') : reasons;
+  }
+
   static const defaultAiModel = 'gemini-3.5-flash-lite';
   static const defaultAiPrompt =
       'Bạn là trợ lý nhập món cho quầy ăn trong trường đại học ở Việt Nam. Nhìn ảnh và điền thông tin cho một '
@@ -24,6 +34,7 @@ abstract final class RemoteKeys {
     aiEnabled: false,
     aiModel: defaultAiModel,
     aiPrompt: defaultAiPrompt,
+    rejectReasons: defaultRejectReasons,
   };
 }
 

@@ -7,5 +7,6 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
-  runApp(MultiProvider(providers: firebaseProviders(), child: const AdminApp()));
+  await activateAppCheck();
+  runApp(MultiProvider(providers: await firebaseProviders(), child: const AdminApp()));
 }

@@ -16,4 +16,11 @@ abstract final class AnalyticsEvents {
   static const aiRequest = 'ai_request';
   static const aiResultAccepted = 'ai_result_accepted';
   static const aiError = 'ai_error';
+
+  /// The web admin (docs/analytics-plan.md, section "Web admin").
+  static const adminSignIn = 'admin_sign_in';
+  static const orderReviewed = 'order_reviewed';
+  static const menuItemSaved = 'menu_item_saved';
+  static const menuItemArchived = 'menu_item_archived';
+  static const announcementSaved = 'announcement_saved';
 }

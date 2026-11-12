@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
+import 'package:breakbite_core/data/services/analytics_events.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/menu_item.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -37,13 +39,14 @@ class MenuItemInput {
 /// (S03), search (S28) and the seller menu (K08) read. Archived items stay in Firestore (no deletes) and come
 /// back with "Khôi phục".
 class MenuManagementViewModel extends ChangeNotifier with SafeChangeNotifier {
-  MenuManagementViewModel({required this._menu, required this.kioskId}) {
+  MenuManagementViewModel({required this._menu, required this.kioskId, this._analytics}) {
     save = Command1(_save);
     toggleArchived = Command1(_toggleArchived);
     _listen();
   }
 
   final MenuRepository _menu;
+  final AnalyticsService? _analytics;
   final String kioskId;
   StreamSubscription<List<MenuItem>>? _sub;
 
@@ -126,7 +129,7 @@ class MenuManagementViewModel extends ChangeNotifier with SafeChangeNotifier {
         );
   }
 
-  Future<Result<String>> _save((MenuItem?, MenuItemInput) request) {
+  Future<Result<String>> _save((MenuItem?, MenuItemInput) request) async {
     final (existing, input) = request;
     final item = MenuItem(
       id: existing?.id ?? '',
@@ -143,10 +146,26 @@ class MenuManagementViewModel extends ChangeNotifier with SafeChangeNotifier {
       availableAgainAt: input.soldOut ? existing?.availableAgainAt : null,
       archived: existing?.archived ?? false,
     );
-    return _menu.upsertItem(item);
+    final result = await _menu.upsertItem(item);
+    if (result is Ok) {
+      unawaited(
+        _analytics?.logEvent(AnalyticsEvents.menuItemSaved, {
+          'is_new': existing == null,
+          'category': input.category.name,
+          'sold_out': input.soldOut,
+        }),
+      );
+    }
+    return result;
   }
 
-  Future<Result<void>> _toggleArchived(MenuItem item) => _menu.setArchived(item.id, !item.archived);
+  Future<Result<void>> _toggleArchived(MenuItem item) async {
+    final result = await _menu.setArchived(item.id, !item.archived);
+    if (result is Ok) {
+      unawaited(_analytics?.logEvent(AnalyticsEvents.menuItemArchived, {'archived': !item.archived}));
+    }
+    return result;
+  }
 
   @override
   void dispose() {

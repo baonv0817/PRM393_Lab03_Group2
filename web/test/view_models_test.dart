@@ -3,6 +3,8 @@ import 'package:breakbite_admin/ui/dashboard/view_models/dashboard_view_model.da
 import 'package:breakbite_admin/ui/menu_management/view_models/menu_management_view_model.dart';
 import 'package:breakbite_admin/ui/review_queue/view_models/review_queue_view_model.dart';
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
+import 'package:breakbite_core/data/services/analytics_events.dart';
+import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -22,6 +24,24 @@ void main() {
       expect(session.signedIn, isTrue);
       expect(session.kioskId, 'k1');
       expect(session.rejection, isNull);
+    });
+
+    test('a signed-in staff member logs admin_sign_in with the role; a rejected customer logs nothing', () async {
+      final analytics = FakeAnalytics();
+      final session = AdminSession(auth: FakeAuthService(), menu: FakeMenuRepository(), analytics: analytics);
+      await session.signIn.execute();
+      expect(analytics.paramsOf(AnalyticsEvents.adminSignIn), [
+        {'role': 'staff'},
+      ]);
+      expect(analytics.userId, 's1');
+      final other = FakeAnalytics();
+      final rejected = AdminSession(
+        auth: FakeAuthService(nextUser: customer),
+        menu: FakeMenuRepository(),
+        analytics: other,
+      );
+      await rejected.signIn.execute();
+      expect(other.events, isEmpty);
     });
 
     test('a customer account is signed out with the reason (reject non-staff)', () async {
@@ -90,6 +110,41 @@ void main() {
       expect(orders.rejected, [('2', 'Hết nguyên liệu')]);
     });
 
+    test('logs order_reviewed with the decision, never the reason text', () async {
+      final orders = FakeOrderRepository();
+      final analytics = FakeAnalytics();
+      final vm = ReviewQueueViewModel(orders: orders, kioskId: 'k1', analytics: analytics);
+      orders.queue.add([order('1'), order('2', createdAt: DateTime(2026, 11, 12, 10))]);
+      await settle();
+      await vm.approve.execute(const Duration(minutes: 10));
+      vm.select(vm.state.dataOrNull![1]);
+      await vm.reject.execute('Khách gọi huỷ');
+      expect(analytics.paramsOf(AnalyticsEvents.orderReviewed), [
+        {'decision': 'approved', 'ready_in_min': 10},
+        {'decision': 'rejected', 'preset_reason': false},
+      ]);
+    });
+
+    test('the reject reasons come from Remote Config and change live', () async {
+      final config = FakeRemoteConfig({RemoteKeys.rejectReasons: 'Hết bánh| Hết bánh |  |Máy hỏng'});
+      final vm = ReviewQueueViewModel(orders: FakeOrderRepository(), kioskId: 'k1', remoteConfig: config);
+      expect(vm.rejectReasons, ['Hết bánh', 'Máy hỏng'], reason: 'trimmed, no empty or repeated entries');
+      var notified = 0;
+      vm.addListener(() => notified++);
+      config.publish(RemoteKeys.rejectReasons, 'Quầy đóng sớm');
+      await settle();
+      expect(vm.rejectReasons, ['Quầy đóng sớm']);
+      expect(notified, 1);
+      config.publish(RemoteKeys.rejectReasons, ' | ');
+      await settle();
+      expect(vm.rejectReasons, RemoteKeys.defaultRejectReasons.split('|'), reason: 'an empty value keeps the defaults');
+    });
+
+    test('without Remote Config the in-app reasons are offered', () {
+      final vm = ReviewQueueViewModel(orders: FakeOrderRepository(), kioskId: 'k1');
+      expect(vm.rejectReasons, ['Hết nguyên liệu', 'Quầy sắp đóng cửa', 'Quá tải, không kịp làm', 'Đơn trùng']);
+    });
+
     test('empty and error states', () async {
       final orders = FakeOrderRepository();
       final vm = ReviewQueueViewModel(orders: orders, kioskId: 'k1');
@@ -141,6 +196,24 @@ void main() {
       expect(menu.saved.last.archived, isTrue, reason: 'editing an archived item does not bring it back');
     });
 
+    test('logs menu_item_saved and menu_item_archived only when the write succeeds', () async {
+      final analytics = FakeAnalytics();
+      final vm = MenuManagementViewModel(menu: FakeMenuRepository(), kioskId: 'k1', analytics: analytics);
+      const input = MenuItemInput(name: 'Cà phê', priceVnd: 18000, category: ItemCategory.drink, prepMinutes: 2);
+      await vm.save.execute((null, input));
+      await vm.save.execute((
+        null,
+        const MenuItemInput(name: '', priceVnd: 1, category: ItemCategory.food, prepMinutes: 1),
+      ));
+      await vm.toggleArchived.execute(item('tra-dao'));
+      expect(analytics.paramsOf(AnalyticsEvents.menuItemSaved), [
+        {'is_new': true, 'category': 'drink', 'sold_out': false},
+      ]);
+      expect(analytics.paramsOf(AnalyticsEvents.menuItemArchived), [
+        {'archived': true},
+      ]);
+    });
+
     test('a validation error from the repository reaches the dialog', () async {
       final vm = MenuManagementViewModel(menu: FakeMenuRepository(), kioskId: 'k1');
       const input = MenuItemInput(name: '', priceVnd: 1, category: ItemCategory.food, prepMinutes: 1);
@@ -188,6 +261,22 @@ void main() {
         publish: true,
         kioskId: 'k1',
       ));
+    });
+
+    test('logs announcement_saved with the audience, not the text', () async {
+      final analytics = FakeAnalytics();
+      final vm = AnnouncementsViewModel(
+        announcements: FakeAnnouncementRepository(),
+        uid: 'a1',
+        canWrite: true,
+        analytics: analytics,
+      );
+      await vm.submit.execute(const AnnouncementInput(title: 'Nghỉ lễ', body: 'Nghỉ 2/9', publish: true));
+      await vm.submit.execute(const AnnouncementInput(title: 'Nháp', body: 'b', publish: false, kioskId: 'k1'));
+      expect(analytics.paramsOf(AnalyticsEvents.announcementSaved), [
+        {'published': true, 'audience': 'all'},
+        {'published': false, 'audience': 'kiosk'},
+      ]);
     });
 
     test('staff only read the published list and cannot submit', () async {

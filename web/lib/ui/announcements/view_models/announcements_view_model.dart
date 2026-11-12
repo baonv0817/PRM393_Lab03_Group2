@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:breakbite_core/data/repositories/announcement_repository.dart';
+import 'package:breakbite_core/data/services/analytics_events.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/announcement.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -24,14 +26,19 @@ class AnnouncementInput {
 /// W05 Announcement form: an admin writes to `announcements`; published ones appear in the mobile inbox (S19) in
 /// real time. Staff see the published list only (the rules let only admins write).
 class AnnouncementsViewModel extends ChangeNotifier with SafeChangeNotifier {
-  AnnouncementsViewModel({required AnnouncementRepository announcements, required this.uid, required this.canWrite})
-    : _repo = announcements {
+  AnnouncementsViewModel({
+    required AnnouncementRepository announcements,
+    required this.uid,
+    required this.canWrite,
+    this._analytics,
+  }) : _repo = announcements {
     submit = Command1(_submit);
     setStatus = Command1(_setStatus);
     _listen();
   }
 
   final AnnouncementRepository _repo;
+  final AnalyticsService? _analytics;
   final String uid;
 
   /// Admins write; staff only read.
@@ -71,13 +78,22 @@ class AnnouncementsViewModel extends ChangeNotifier with SafeChangeNotifier {
     if (!canWrite) {
       return const Result.error(PermissionDeniedException(message: 'Chỉ quản trị viên được đăng thông báo.'));
     }
-    return _repo.create(
+    final result = await _repo.create(
       title: input.title,
       body: input.body,
       createdBy: uid,
       publish: input.publish,
       kioskId: input.kioskId,
     );
+    if (result is Ok) {
+      unawaited(
+        _analytics?.logEvent(AnalyticsEvents.announcementSaved, {
+          'published': input.publish,
+          'audience': input.kioskId == null ? 'all' : 'kiosk',
+        }),
+      );
+    }
+    return result;
   }
 
   Future<Result<void>> _setStatus((Announcement, AnnouncementStatus) change) {

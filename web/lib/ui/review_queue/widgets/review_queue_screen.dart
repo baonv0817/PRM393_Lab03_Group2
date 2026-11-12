@@ -2,6 +2,8 @@ import 'package:breakbite_admin/ui/review_queue/view_models/review_queue_view_mo
 import 'package:breakbite_admin/ui/shell/view_models/admin_session.dart';
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_core/data/repositories/order_repository.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
+import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/models/order.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
@@ -20,8 +22,12 @@ class ReviewQueueScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (context) =>
-        ReviewQueueViewModel(orders: context.read<OrderRepository>(), kioskId: context.read<AdminSession>().kioskId!),
+    create: (context) => ReviewQueueViewModel(
+      orders: context.read<OrderRepository>(),
+      kioskId: context.read<AdminSession>().kioskId!,
+      analytics: context.read<AnalyticsService>(),
+      remoteConfig: context.read<RemoteConfigService>(),
+    ),
     child: const _ReviewQueueView(),
   );
 }
@@ -220,7 +226,7 @@ class _OrderDetail extends StatelessWidget {
   Future<void> _askReason(BuildContext context, ReviewQueueViewModel vm) async {
     final reason = await showDialog<String>(
       context: context,
-      builder: (_) => _RejectDialog(order: order),
+      builder: (_) => _RejectDialog(order: order, reasons: vm.rejectReasons),
     );
     if (reason != null) await vm.reject.execute(reason);
   }
@@ -268,9 +274,12 @@ class _ReadyInPickerState extends State<_ReadyInPicker> {
 }
 
 class _RejectDialog extends StatefulWidget {
-  const _RejectDialog({required this.order});
+  const _RejectDialog({required this.order, required this.reasons});
 
   final Order order;
+
+  /// The preset reasons (Remote Config `reject_reasons`), never empty.
+  final List<String> reasons;
 
   @override
   State<_RejectDialog> createState() => _RejectDialogState();
@@ -278,7 +287,7 @@ class _RejectDialog extends StatefulWidget {
 
 class _RejectDialogState extends State<_RejectDialog> {
   final _other = TextEditingController();
-  String? _picked = ReviewQueueViewModel.rejectReasons.first;
+  late String? _picked = widget.reasons.first;
 
   @override
   void dispose() {
@@ -303,7 +312,7 @@ class _RejectDialogState extends State<_RejectDialog> {
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
-              for (final r in ReviewQueueViewModel.rejectReasons)
+              for (final r in widget.reasons)
                 AppChip(label: r, selected: r == _picked, onSelected: (_) => setState(() => _picked = r)),
               AppChip(
                 label: 'Lý do khác',

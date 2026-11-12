@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:breakbite_core/data/repositories/order_repository.dart';
+import 'package:breakbite_core/data/services/analytics_events.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
+import 'package:breakbite_core/data/services/remote_config_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/order.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -14,21 +17,29 @@ import 'package:flutter/foundation.dart';
 /// write the mobile order tracking screen (S07) listens to, so the customer sees the result in real time
 /// (docs/cross-role-flow.md).
 class ReviewQueueViewModel extends ChangeNotifier with SafeChangeNotifier {
-  ReviewQueueViewModel({required this._orders, required this.kioskId}) {
+  ReviewQueueViewModel({required this._orders, required this.kioskId, this._analytics, this._remoteConfig}) {
     approve = Command1(_approve);
     reject = Command1(_reject);
+    _configSub = _remoteConfig?.watchUpdates().listen((keys) {
+      if (keys.contains(RemoteKeys.rejectReasons)) notifyListeners();
+    });
     _listen();
   }
 
   /// Times staff can promise, in minutes; the first is the default.
   static const readyInChoices = [10, 5, 15, 20];
 
-  /// Reasons offered when rejecting; staff may also type their own.
-  static const rejectReasons = ['Hết nguyên liệu', 'Quầy sắp đóng cửa', 'Quá tải, không kịp làm', 'Đơn trùng'];
-
   final OrderRepository _orders;
   final String kioskId;
+  final AnalyticsService? _analytics;
+  final RemoteConfigService? _remoteConfig;
   StreamSubscription<List<Order>>? _sub;
+  StreamSubscription<Set<String>>? _configSub;
+
+  /// Reasons offered when rejecting, from Remote Config `reject_reasons` (changed in the console without a new
+  /// deploy); staff may also type their own.
+  List<String> get rejectReasons =>
+      RemoteKeys.reasonsFrom(_remoteConfig?.getString(RemoteKeys.rejectReasons) ?? RemoteKeys.defaultRejectReasons);
 
   late final Command1<void, Duration> approve;
   late final Command1<void, String> reject;
@@ -84,18 +95,37 @@ class ReviewQueueViewModel extends ChangeNotifier with SafeChangeNotifier {
   Future<Result<void>> _approve(Duration readyIn) async {
     final order = selected;
     if (order == null) return const Result.error(ValidationException('Chọn một đơn để duyệt.'));
-    return _orders.accept(order, readyIn: readyIn);
+    final result = await _orders.accept(order, readyIn: readyIn);
+    if (result is Ok) {
+      unawaited(
+        _analytics?.logEvent(AnalyticsEvents.orderReviewed, {
+          'decision': 'approved',
+          'ready_in_min': readyIn.inMinutes,
+        }),
+      );
+    }
+    return result;
   }
 
   Future<Result<void>> _reject(String reason) async {
     final order = selected;
     if (order == null) return const Result.error(ValidationException('Chọn một đơn để từ chối.'));
-    return _orders.reject(order, reason: reason);
+    final result = await _orders.reject(order, reason: reason);
+    if (result is Ok) {
+      unawaited(
+        _analytics?.logEvent(AnalyticsEvents.orderReviewed, {
+          'decision': 'rejected',
+          'preset_reason': rejectReasons.contains(reason),
+        }),
+      );
+    }
+    return result;
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _configSub?.cancel();
     approve.dispose();
     reject.dispose();
     super.dispose();
