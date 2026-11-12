@@ -115,7 +115,7 @@ and the item can still be saved.
 | `mobile/test/domain/models/menu_item_suggestion_test.dart` | JSON → model: a full answer, rounding and limits, missing values, unknown kind, a code fence, not food, garbage, no name |
 | `mobile/test/ui/seller_menu/menu_item_form_ai_test.dart` | Remote Config on/off live, K15 without AI, model and prompt from Remote Config, only the photo sent, fields filled and labelled, a changed field loses its label, `ai_request` / `ai_result_accepted` / `ai_error` with their parameters, every failure reason, the reason staying until another photo |
 | `mobile/test/ui/seller_menu/menu_item_form_screen_test.dart` (group "K14 AI") | No button while off; the button waits for a photo, fills the fields and shows the labels; a failure shows why and leaves the form empty |
-| `e2e_test/test_ai_feature.py` (ARTEMIS) | TC-40: a dish photo fills K14 (name, price, "Món ăn", the label). TC-41: the logo is refused, the name stays empty and typing still works. Results in `docs/test-report.md` |
+| `e2e_test/test_ai_feature.py` (ARTEMIS) | TC-40: a dish photo fills K14 (name, price, "Món ăn", the label). TC-41: the logo is refused, the name stays empty and typing still works. Results in `docs/test-plan.md` section 3.4 |
 
 ## 7. Running it and the demo
 
