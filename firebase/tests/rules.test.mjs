@@ -591,3 +591,132 @@ describe('Cloud Storage (fallback, not used by the app)', () => {
     await assertFails(uploadBytes(ref(st('s2'), 'menu/k1/x.png'), png, { contentType: 'image/png' }));
   });
 });
+
+// ---------------------------------------------------------------------------------------------------------------
+// Final assignment, Appendix B: at least one allowed and one denied case per role per collection.
+// u1 = user, s1 = staff of kiosk k1, a1 = admin. The IDs are the rows of docs/test-report.md section 2.
+// ---------------------------------------------------------------------------------------------------------------
+const seedMatrix = async () => env.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await setDoc(doc(db, 'menu_items/k2-banh-mi'), menuItem({ kioskId: 'k2', dishId: 'banh-mi', name: 'Bánh mì', searchName: 'banh mi', category: 'food', ...stored() }));
+  await setDoc(doc(db, 'carts/u1'), { kioskId: 'k1', items: [], ...stored() });
+  await setDoc(doc(db, 'incidents/o6'), { uid: 'u1', orderId: 'o6', kioskId: 'k1', type: 'late', description: 'Chờ lâu', status: 'open', ...stored() });
+  await setDoc(doc(db, 'reports/r1'), { uid: 'u1', orderId: 'o6', fileName: 'a.pdf', url: 'https://x/a.pdf', publicId: 'p', sizeKb: 3, ...stored() });
+  await setDoc(doc(db, 'announcements/pub'), { title: 'Nghỉ lễ', body: 'Kiosk nghỉ 2/9', status: 'published', createdBy: 'a1', ...stored() });
+  await setDoc(doc(db, 'announcements/draft'), { title: 'Nháp', body: 'Chưa gửi', status: 'draft', createdBy: 'a1', ...stored() });
+  await setDoc(doc(db, 'users/u1/notifications/n1'), { title: 'Đơn sẵn sàng', body: '…', read: false, ...stored() });
+});
+
+const announcement = (over) => ({ title: 'Đổi giờ mở cửa', body: 'Kiosk Q9 mở từ 6:30', status: 'published', createdBy: 'a1', ...created(), ...over });
+const newKiosk = () => ({ name: 'Kiosk mới', open: false, waitMinutes: 0, ...created() });
+const newMenuItem = () => menuItem({ dishId: 'cafe', name: 'Cà phê', searchName: 'ca phe', ...created() });
+const reviewOf = (uid, orderId) => ({ uid, orderId, itemId: 'k1-tacos', dishId: 'tacos', kioskId: 'k1', rating: 5, ...created() });
+const reportOf = (uid) => ({ uid, fileName: 'b.pdf', url: 'https://x/b.pdf', publicId: 'q', sizeKb: 4, ...created() });
+const note = () => ({ title: 't', body: 'b', read: false, ...created() });
+
+const ALLOWED = 'Allowed';
+const DENIED = 'Denied';
+
+export const MATRIX = [
+  // users/{uid}
+  ['R-01', 'users', 'user', 'read own profile', ALLOWED, () => getDoc(doc(as('u1'), 'users/u1'))],
+  ['R-02', 'users', 'user', 'update own role to admin', DENIED, () => updateDoc(doc(as('u1'), 'users/u1'), { role: 'admin', ...touched() })],
+  ['R-03', 'users', 'staff', 'update own display name', ALLOWED, () => updateDoc(doc(as('s1'), 'users/s1'), { displayName: 'Hạnh K1', ...touched() })],
+  ['R-04', 'users', 'staff', 'read a customer profile', DENIED, () => getDoc(doc(as('s1'), 'users/u1'))],
+  ['R-05', 'users', 'admin', 'change a user role to staff', ALLOWED, () => updateDoc(doc(as('a1'), 'users/u2'), { role: 'staff', kioskId: 'k2', ...touched() })],
+  ['R-06', 'users', 'admin', 'delete a user', DENIED, () => deleteDoc(doc(as('a1'), 'users/u2'))],
+  // users/{uid}/notifications (mobile inbox)
+  ['R-07', 'notifications', 'user', 'read own inbox item', ALLOWED, () => getDoc(doc(as('u1'), 'users/u1/notifications/n1'))],
+  ['R-08', 'notifications', 'user', 'read another user inbox', DENIED, () => getDoc(doc(as('u2'), 'users/u1/notifications/n1'))],
+  ['R-09', 'notifications', 'staff', 'create own inbox item', ALLOWED, () => setDoc(doc(as('s1'), 'users/s1/notifications/x'), note())],
+  ['R-10', 'notifications', 'staff', 'write into a customer inbox', DENIED, () => setDoc(doc(as('s1'), 'users/u1/notifications/x'), note())],
+  ['R-11', 'notifications', 'admin', 'create own inbox item', ALLOWED, () => setDoc(doc(as('a1'), 'users/a1/notifications/x'), note())],
+  ['R-12', 'notifications', 'admin', 'read a customer inbox', DENIED, () => getDoc(doc(as('a1'), 'users/u1/notifications/n1'))],
+  // kiosks/{id}
+  ['R-13', 'kiosks', 'user', 'read a kiosk', ALLOWED, () => getDoc(doc(as('u1'), 'kiosks/k1'))],
+  ['R-14', 'kiosks', 'user', 'close a kiosk', DENIED, () => updateDoc(doc(as('u1'), 'kiosks/k1'), { open: false, ...touched() })],
+  ['R-15', 'kiosks', 'staff', 'close own kiosk', ALLOWED, () => updateDoc(doc(as('s1'), 'kiosks/k1'), { open: false, ...touched() })],
+  ['R-16', 'kiosks', 'staff', 'close another kiosk', DENIED, () => updateDoc(doc(as('s1'), 'kiosks/k2'), { open: false, ...touched() })],
+  ['R-17', 'kiosks', 'admin', 'create a kiosk', ALLOWED, () => setDoc(doc(as('a1'), 'kiosks/k9'), newKiosk())],
+  ['R-18', 'kiosks', 'admin', 'delete a kiosk', DENIED, () => deleteDoc(doc(as('a1'), 'kiosks/k3'))],
+  // kiosks/{id}/slots/{slotId}
+  ['R-19', 'slots', 'user', 'book a slot (+1)', ALLOWED, () => updateDoc(doc(as('u1'), 'kiosks/k1/slots/sl1'), { booked: increment(1), ...touched() })],
+  ['R-20', 'slots', 'user', 'create a slot', DENIED, () => setDoc(doc(as('u1'), 'kiosks/k1/slots/x'), { capacity: 9, booked: 0, ...created() })],
+  ['R-21', 'slots', 'staff', 'create a slot at own kiosk', ALLOWED, () => setDoc(doc(as('s1'), 'kiosks/k1/slots/x'), { capacity: 5, booked: 0, ...created() })],
+  ['R-22', 'slots', 'staff', 'create a slot at another kiosk', DENIED, () => setDoc(doc(as('s1'), 'kiosks/k2/slots/x'), { capacity: 5, booked: 0, ...created() })],
+  ['R-23', 'slots', 'admin', 'change a slot capacity', ALLOWED, () => updateDoc(doc(as('a1'), 'kiosks/k1/slots/sl1'), { capacity: 4, ...touched() })],
+  ['R-24', 'slots', 'admin', 'delete a slot', DENIED, () => deleteDoc(doc(as('a1'), 'kiosks/k1/slots/sl1'))],
+  // menu_items/{id} (web management screen)
+  ['R-25', 'menu_items', 'user', 'read the menu', ALLOWED, () => getDocs(query(collection(as('u1'), 'menu_items'), where('kioskId', '==', 'k1')))],
+  ['R-26', 'menu_items', 'user', 'change a price', DENIED, () => updateDoc(doc(as('u1'), 'menu_items/k1-tacos'), { priceVnd: 1000, ...touched() })],
+  ['R-27', 'menu_items', 'staff', 'archive an item of own kiosk', ALLOWED, () => updateDoc(doc(as('s1'), 'menu_items/k1-tacos'), { archived: true, ...touched() })],
+  ['R-28', 'menu_items', 'staff', 'archive an item of another kiosk', DENIED, () => updateDoc(doc(as('s1'), 'menu_items/k2-banh-mi'), { archived: true, ...touched() })],
+  ['R-29', 'menu_items', 'staff', 'archive with a non-boolean value', DENIED, () => updateDoc(doc(as('s1'), 'menu_items/k1-tacos'), { archived: 'yes', ...touched() })],
+  ['R-30', 'menu_items', 'admin', 'create an item', ALLOWED, () => setDoc(doc(as('a1'), 'menu_items/k1-cafe'), newMenuItem())],
+  ['R-31', 'menu_items', 'admin', 'delete an item', DENIED, () => deleteDoc(doc(as('a1'), 'menu_items/k1-tacos'))],
+  // vouchers/{CODE}
+  ['R-32', 'vouchers', 'user', 'read a voucher', ALLOWED, () => getDoc(doc(as('u1'), 'vouchers/BBSTUDENT'))],
+  ['R-33', 'vouchers', 'user', 'create a voucher', DENIED, () => setDoc(doc(as('u1'), 'vouchers/FREE'), voucher(created()))],
+  ['R-34', 'vouchers', 'staff', 'read a voucher', ALLOWED, () => getDoc(doc(as('s1'), 'vouchers/BBSTUDENT'))],
+  ['R-35', 'vouchers', 'staff', 'switch a voucher off', DENIED, () => updateDoc(doc(as('s1'), 'vouchers/BBSTUDENT'), { active: false, ...touched() })],
+  ['R-36', 'vouchers', 'admin', 'create a voucher', ALLOWED, () => setDoc(doc(as('a1'), 'vouchers/NEW10'), voucher(created()))],
+  ['R-37', 'vouchers', 'admin', 'delete a voucher', DENIED, () => deleteDoc(doc(as('a1'), 'vouchers/BBSTUDENT'))],
+  // carts/{uid}
+  ['R-38', 'carts', 'user', 'read own cart', ALLOWED, () => getDoc(doc(as('u1'), 'carts/u1'))],
+  ['R-39', 'carts', 'user', 'read another cart', DENIED, () => getDoc(doc(as('u2'), 'carts/u1'))],
+  ['R-40', 'carts', 'staff', 'write own cart', ALLOWED, () => setDoc(doc(as('s1'), 'carts/s1'), { kioskId: 'k1', items: [], ...created() })],
+  ['R-41', 'carts', 'staff', 'read a customer cart', DENIED, () => getDoc(doc(as('s1'), 'carts/u1'))],
+  ['R-42', 'carts', 'admin', 'write own cart', ALLOWED, () => setDoc(doc(as('a1'), 'carts/a1'), { kioskId: 'k1', items: [], ...created() })],
+  ['R-43', 'carts', 'admin', 'read a customer cart', DENIED, () => getDoc(doc(as('a1'), 'carts/u1'))],
+  // orders/{id} (cross-role flow: mobile places, web approves or rejects)
+  ['R-44', 'orders', 'user', 'place a pending order', ALLOWED, () => setDoc(doc(as('u1'), 'orders/n1'), newOrder())],
+  ['R-45', 'orders', 'user', 'place an order already preparing', DENIED, () => setDoc(doc(as('u1'), 'orders/n2'), newOrder({ status: 'preparing' }))],
+  ['R-46', 'orders', 'user', 'approve own order', DENIED, () => updateDoc(doc(as('u1'), 'orders/o1'), { status: 'preparing', acceptedAt: serverTimestamp(), ...touched() })],
+  ['R-47', 'orders', 'staff', 'approve pending → preparing', ALLOWED, () => updateDoc(doc(as('s1'), 'orders/o2'), { status: 'preparing', acceptedAt: serverTimestamp(), readyBy: future, ...touched() })],
+  ['R-48', 'orders', 'staff', 'reject pending → cancelled with a reason', ALLOWED, () => updateDoc(doc(as('s1'), 'orders/o1'), { status: 'cancelled', cancelledBy: 'staff', cancelReason: 'Hết nguyên liệu', cancelledAt: serverTimestamp(), ...touched() })],
+  ['R-49', 'orders', 'staff', 'reject without a reason', DENIED, () => updateDoc(doc(as('s1'), 'orders/o1'), { status: 'cancelled', cancelledBy: 'staff', cancelledAt: serverTimestamp(), ...touched() })],
+  ['R-50', 'orders', 'staff', 'approve an order of another kiosk', DENIED, () => updateDoc(doc(as('s1'), 'orders/o5'), { status: 'preparing', acceptedAt: serverTimestamp(), readyBy: future, ...touched() })],
+  ['R-51', 'orders', 'admin', 'read an order of any kiosk', ALLOWED, () => getDoc(doc(as('a1'), 'orders/o5'))],
+  ['R-52', 'orders', 'admin', 'delete an order', DENIED, () => deleteDoc(doc(as('a1'), 'orders/o5'))],
+  // reviews/{orderId}_{itemId}
+  ['R-53', 'reviews', 'user', 'review own delivered order', ALLOWED, () => setDoc(doc(as('u1'), 'reviews/o6_k1-tacos'), reviewOf('u1', 'o6'))],
+  ['R-54', 'reviews', 'user', 'review a pending order', DENIED, () => setDoc(doc(as('u1'), 'reviews/o1_k1-tacos'), reviewOf('u1', 'o1'))],
+  ['R-55', 'reviews', 'staff', 'read the reviews (dashboard average)', ALLOWED, () => getDocs(query(collection(as('s1'), 'reviews'), where('kioskId', '==', 'k1')))],
+  ['R-56', 'reviews', 'staff', 'write a review for a customer', DENIED, () => setDoc(doc(as('s1'), 'reviews/o6_k1-tacos'), reviewOf('u1', 'o6'))],
+  ['R-57', 'reviews', 'admin', 'read the reviews', ALLOWED, () => getDocs(collection(as('a1'), 'reviews'))],
+  ['R-58', 'reviews', 'admin', 'delete a review', DENIED, () => deleteDoc(doc(as('a1'), 'reviews/o6_k1-tacos'))],
+  // incidents/{orderId}
+  ['R-59', 'incidents', 'user', 'read own incident', ALLOWED, () => getDoc(doc(as('u1'), 'incidents/o6'))],
+  ['R-60', 'incidents', 'user', 'resolve own incident', DENIED, () => updateDoc(doc(as('u1'), 'incidents/o6'), { status: 'inProgress', ...touched() })],
+  ['R-61', 'incidents', 'staff', 'take an incident of own kiosk', ALLOWED, () => updateDoc(doc(as('s1'), 'incidents/o6'), { status: 'inProgress', ...touched() })],
+  ['R-62', 'incidents', 'staff', 'take it from another kiosk', DENIED, () => updateDoc(doc(as('s2'), 'incidents/o6'), { status: 'inProgress', ...touched() })],
+  ['R-63', 'incidents', 'admin', 'reject an incident with a note', ALLOWED, () => updateDoc(doc(as('a1'), 'incidents/o6'), { status: 'resolved', resolution: 'rejected', resolutionNote: 'Đã giao đủ', resolvedAt: serverTimestamp(), handledBy: 'a1', ...touched() })],
+  ['R-64', 'incidents', 'admin', 'delete an incident', DENIED, () => deleteDoc(doc(as('a1'), 'incidents/o6'))],
+  // reports/{id} (Lab 3 PDF receipt metadata)
+  ['R-65', 'reports', 'user', 'read own receipt metadata', ALLOWED, () => getDoc(doc(as('u1'), 'reports/r1'))],
+  ['R-66', 'reports', 'user', 'save metadata as someone else', DENIED, () => setDoc(doc(as('u2'), 'reports/r2'), reportOf('u1'))],
+  ['R-67', 'reports', 'staff', 'save own receipt metadata', ALLOWED, () => setDoc(doc(as('s1'), 'reports/r3'), reportOf('s1'))],
+  ['R-68', 'reports', 'staff', 'read a customer receipt', DENIED, () => getDoc(doc(as('s1'), 'reports/r1'))],
+  ['R-69', 'reports', 'admin', 'save own receipt metadata', ALLOWED, () => setDoc(doc(as('a1'), 'reports/r4'), reportOf('a1'))],
+  ['R-70', 'reports', 'admin', 'edit a receipt', DENIED, () => updateDoc(doc(as('a1'), 'reports/r1'), { sizeKb: 1, ...touched() })],
+  // announcements/{id} (web announcement form → mobile inbox)
+  ['R-71', 'announcements', 'user', 'list published announcements', ALLOWED, () => getDocs(query(collection(as('u1'), 'announcements'), where('status', '==', 'published')))],
+  ['R-72', 'announcements', 'user', 'read a draft', DENIED, () => getDoc(doc(as('u1'), 'announcements/draft'))],
+  ['R-73', 'announcements', 'staff', 'read a published announcement', ALLOWED, () => getDoc(doc(as('s1'), 'announcements/pub'))],
+  ['R-74', 'announcements', 'staff', 'publish an announcement', DENIED, () => setDoc(doc(as('s1'), 'announcements/s'), announcement({ createdBy: 's1' }))],
+  ['R-75', 'announcements', 'admin', 'publish an announcement', ALLOWED, () => setDoc(doc(as('a1'), 'announcements/new'), announcement())],
+  ['R-76', 'announcements', 'admin', 'archive an announcement', ALLOWED, () => updateDoc(doc(as('a1'), 'announcements/pub'), { status: 'archived', ...touched() })],
+  ['R-77', 'announcements', 'admin', 'publish a 121-character title', DENIED, () => setDoc(doc(as('a1'), 'announcements/long'), announcement({ title: 'x'.repeat(121) }))],
+  ['R-78', 'announcements', 'admin', 'publish with an unknown field', DENIED, () => setDoc(doc(as('a1'), 'announcements/odd'), announcement({ pinned: true }))],
+  ['R-79', 'announcements', 'admin', 'change the author', DENIED, () => updateDoc(doc(as('a1'), 'announcements/pub'), { createdBy: 'u1', ...touched() })],
+  ['R-80', 'announcements', 'admin', 'delete an announcement', DENIED, () => deleteDoc(doc(as('a1'), 'announcements/pub'))],
+];
+
+describe('Appendix B matrix (final assignment)', () => {
+  beforeEach(seedMatrix);
+  for (const [id, coll, role, operation, expected, run] of MATRIX) {
+    test(`${id} ${coll} · ${role} · ${operation} → ${expected}`, async () => {
+      await (expected === ALLOWED ? assertSucceeds(run()) : assertFails(run()));
+    });
+  }
+});

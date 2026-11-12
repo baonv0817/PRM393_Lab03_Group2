@@ -58,6 +58,7 @@ MenuItem menuItemFromData(String id, Json data) => MenuItem(
     final String name => SoldOutReason.values.asNameMap()[name],
     _ => null,
   },
+  archived: _bool(data['archived']),
 );
 
 Json menuItemToData(MenuItem item, {required String dishId}) => {
@@ -70,6 +71,7 @@ Json menuItemToData(MenuItem item, {required String dishId}) => {
   'category': item.category.name,
   'prepMinutes': item.prepMinutes,
   'soldOut': item.soldOut,
+  'archived': item.archived,
   'imageUrl': ?item.imageUrl,
 };
 

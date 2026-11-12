@@ -8,7 +8,8 @@ import '../../../dev/fakes/fakes.dart';
 
 class _FailingMenu extends FakeMenuRepository {
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) =>
+      Stream.error(Exception('offline'));
 }
 
 MenuItem _item(

@@ -86,8 +86,9 @@ class FakeMenuRepository implements MenuRepository {
   ]);
 
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) =>
-      _menu.stream.map((items) => items.where((e) => e.kioskId == kioskId).toList());
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) => _menu.stream.map(
+    (items) => items.where((e) => e.kioskId == kioskId && (includeArchived || !e.archived)).toList(),
+  );
 
   @override
   Future<Result<MenuItem>> getItem(String id) async {
@@ -194,6 +195,15 @@ class FakeMenuRepository implements MenuRepository {
       for (final e in _menu.value)
         e.id == id ? e.withSoldOut(soldOut, reason: reason, availableAgainAt: availableAgainAt) : e,
     ]);
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> setArchived(String id, bool archived) async {
+    if (!_menu.value.any((e) => e.id == id)) {
+      return const Result.error(NotFoundException(message: 'Không tìm thấy món.'));
+    }
+    _menu.set([for (final e in _menu.value) e.id == id ? e.withArchived(archived) : e]);
     return const Result.ok(null);
   }
 }

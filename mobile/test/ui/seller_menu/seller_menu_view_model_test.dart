@@ -11,7 +11,8 @@ import '../../../dev/fakes/fakes.dart';
 
 class _FailingMenu extends FakeMenuRepository {
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(const NetworkException());
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) =>
+      Stream.error(const NetworkException());
 }
 
 class _OfflineWrite extends FakeMenuRepository {

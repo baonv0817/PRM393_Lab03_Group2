@@ -4,7 +4,8 @@ import 'package:breakbite_core/domain/models/voucher.dart';
 import 'package:breakbite_core/utils/result.dart';
 
 abstract interface class MenuRepository {
-  Stream<List<MenuItem>> watchMenu(String kioskId);
+  /// The kiosk's items by name. Archived items are left out unless [includeArchived] (the web admin).
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false});
 
   Future<Result<MenuItem>> getItem(String id);
 
@@ -25,4 +26,8 @@ abstract interface class MenuRepository {
   /// Staff set an item sold out (K09) or available again. [reason] and [availableAgainAt] describe a sold-out
   /// item (the expected time is shown to customers) and are dropped when the item is available again.
   Future<Result<void>> setSoldOut(String id, bool soldOut, {SoldOutReason? reason, DateTime? availableAgainAt});
+
+  /// Staff or an admin archive an item from the web admin, or bring it back. An archived item disappears from
+  /// the customer menu, search and the seller menu; carts holding it see it as no longer sold.
+  Future<Result<void>> setArchived(String id, bool archived);
 }

@@ -17,6 +17,7 @@ class MenuItem {
     this.imageUrl,
     this.availableAgainAt,
     this.soldOutReason,
+    this.archived = false,
   });
 
   final String id;
@@ -34,6 +35,13 @@ class MenuItem {
   /// Set only while the item is sold out.
   final SoldOutReason? soldOutReason;
 
+  /// Archived from the web admin: hidden from customers and the seller menu, kept for old orders and reviews.
+  /// Items are never deleted (docs/data-model.md section 3.3).
+  final bool archived;
+
+  /// Customers can order it: on sale and not archived.
+  bool get orderable => !soldOut && !archived;
+
   MenuItem copyWith({bool? soldOut, int? priceVnd}) => MenuItem(
     id: id,
     name: name,
@@ -47,6 +55,7 @@ class MenuItem {
     imageUrl: imageUrl,
     availableAgainAt: (soldOut ?? this.soldOut) ? availableAgainAt : null,
     soldOutReason: (soldOut ?? this.soldOut) ? soldOutReason : null,
+    archived: archived,
   );
 
   /// The item as it is after staff set it sold out (K09) or available again: the reason and the expected
@@ -64,5 +73,23 @@ class MenuItem {
     imageUrl: imageUrl,
     availableAgainAt: soldOut ? availableAgainAt : null,
     soldOutReason: soldOut ? reason : null,
+    archived: archived,
+  );
+
+  /// The item after the web admin archives it or brings it back; nothing else changes.
+  MenuItem withArchived(bool archived) => MenuItem(
+    id: id,
+    name: name,
+    priceVnd: priceVnd,
+    category: category,
+    prepMinutes: prepMinutes,
+    dishId: dishId,
+    soldOut: soldOut,
+    kioskId: kioskId,
+    description: description,
+    imageUrl: imageUrl,
+    availableAgainAt: availableAgainAt,
+    soldOutReason: soldOutReason,
+    archived: archived,
   );
 }

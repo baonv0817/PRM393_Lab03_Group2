@@ -12,7 +12,8 @@ Finder byId(String id) => find.bySemanticsIdentifier(id);
 
 class _FailingMenu extends FakeMenuRepository {
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(Exception('offline'));
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) =>
+      Stream.error(Exception('offline'));
 }
 
 Future<FakeCartRepository> pumpAlternatives(

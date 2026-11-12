@@ -19,12 +19,17 @@ class FirestoreMenuRepository implements MenuRepository {
   CollectionReference<Json> get _items => _db.collection('menu_items');
 
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => guardStream(
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) => guardStream(
     _items
         .where('kioskId', isEqualTo: kioskId)
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => [for (final doc in snapshot.docs) menuItemFromData(doc.id, doc.data())]),
+        .map(
+          (snapshot) => [
+            for (final doc in snapshot.docs)
+              if (includeArchived || doc.data()['archived'] != true) menuItemFromData(doc.id, doc.data()),
+          ],
+        ),
   );
 
   @override
@@ -132,6 +137,10 @@ class FirestoreMenuRepository implements MenuRepository {
           ...Stamp.updated(),
         }),
       );
+
+  @override
+  Future<Result<void>> setArchived(String id, bool archived) =>
+      guard(() => _items.doc(id).update({'archived': archived, ...Stamp.updated()}));
 
   String? _validate(MenuItem item, String dishId) {
     if (item.kioskId.isEmpty) return 'Món phải thuộc một kiosk.';

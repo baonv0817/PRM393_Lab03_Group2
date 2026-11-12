@@ -112,6 +112,7 @@ Slots are created per day by staff or by the seed script, which creates the next
 | `availableAgainAt` | ts? | staff | "Có lại lúc 10:30" (K09, S22). Display only: the item stays sold out until staff switch `soldOut` off |
 | `optionGroups` | list<map>? | staff | At most 5 groups (spice level, toppings — S04). **Not used in Lab 3 (DB-02/04):** the customer writes preferences in the line `note`; the rules still accept the field so the final assignment can add options without a migration |
 | `imageUrl` | string? | staff | A bundled asset (`assets/images/menu/…`, sample data) or an `https://` Cloudinary link `breakbite/menu/{kioskId}/…`. `MenuItemImage` handles both and falls back to the logo |
+| `archived` | bool? | staff, admin (web admin W02) | Final assignment. `true` hides the item from the customer menu, search and the seller menu (`MenuRepository.watchMenu` leaves it out unless `includeArchived`) and a cart holding it sees it as no longer sold; the web admin can restore it. Absent means `false`, so **no migration** |
 
 The average rating (S04) is an aggregation query, `average('rating')` over `reviews` where `dishId == d`; it is not stored because customers cannot edit items.
 
@@ -219,6 +220,8 @@ Metadata of a generated PDF (the orders summary from the Firebase demo area, the
 ### 3.10 `announcements/{id}` (final assignment)
 
 Written by admins from the web admin; customers read only `published` ones in the inbox (S19), where the read state is a notification with id `AppNotification.idForAnnouncement(id)`. Fields: `title`, `body`, `kioskId?` (absent = every kiosk), `status` (`draft`, `published`, `archived`), `createdBy`, `publishedAt?`.
+
+Rules (`validAnnouncement`): only admins create and update; the keys are exactly these fields plus the timestamps, `title` 1–120 characters, `body` 1–1000, `status` one of the three values, `createdBy` is the author on create and never changes, nobody deletes. Status transitions: `draft → published`, `published → archived` (web W05). Screens: web W05 (all, admins), mobile S19 (published, `kioskId` absent or the customer's kiosk; index `status ASC, publishedAt DESC`). Model `Announcement`, repository `AnnouncementRepository` in `packages/core`.
 
 ## 4. Order lifecycle
 

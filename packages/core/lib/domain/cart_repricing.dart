@@ -46,6 +46,8 @@ RepricedCart repriceCart(List<CartItem> lines, Map<String, MenuItem> currentById
     final current = currentById[line.itemId];
     if (current == null) {
       changes.add(NoLongerSold(line));
+    } else if (current.archived) {
+      changes.add(NoLongerSold(line));
     } else if (current.soldOut) {
       changes.add(NowSoldOut(line));
     } else if (current.priceVnd != line.priceVnd) {

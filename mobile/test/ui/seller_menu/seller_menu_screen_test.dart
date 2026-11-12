@@ -14,12 +14,13 @@ Finder byId(String id) => find.bySemanticsIdentifier(id);
 
 class _FailingMenu extends FakeMenuRepository {
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => Stream.error(const NetworkException());
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) =>
+      Stream.error(const NetworkException());
 }
 
 class _NeverLoads extends FakeMenuRepository {
   @override
-  Stream<List<MenuItem>> watchMenu(String kioskId) => const Stream.empty();
+  Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) => const Stream.empty();
 }
 
 class _OfflineWrite extends FakeMenuRepository {
