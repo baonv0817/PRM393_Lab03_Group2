@@ -463,6 +463,28 @@ void main() {
       vm.dispose();
     });
 
+    test('a kiosk that is on but outside its opening hours is closed to orders and says when it opens', () async {
+      final vm = make(
+        menu: _KioskMenu(
+          const Kiosk(
+            id: 'q9-t2',
+            name: 'Kiosk Q9 · Tầng 2',
+            open: true,
+            waitMinutes: 5,
+            openTime: '12:00',
+            closeTime: '17:00',
+          ),
+        ),
+        clock: () => _now,
+      );
+      await settle();
+      expect(vm.closed, isTrue, reason: 'the fixed clock of these tests is before noon');
+      expect(vm.closedTitle, 'Quán đang đóng cửa');
+      expect(vm.reopenLabel, 'Mở lại lúc 12:00');
+      expect(vm.kioskStatus, 'Ngoài giờ mở cửa · mở lại 12:00');
+      vm.dispose();
+    });
+
     test('a closed kiosk explains when it opens and previews every item in stock, not only quick ones', () async {
       final vm = make(
         menu: _KioskMenu(

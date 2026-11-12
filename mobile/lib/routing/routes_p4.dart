@@ -47,6 +47,7 @@ final GoRoute sellerOrdersRoute = GoRoute(
         incidents: context.read<IncidentRepository>(),
         crash: context.read<CrashService>(),
         analytics: context.read<AnalyticsService>(),
+        alerts: context.read<OrderAlertService>(),
         kioskId: kioskId,
       ),
       child: const SellerOrdersScreen(),

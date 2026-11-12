@@ -5,6 +5,8 @@ import 'package:breakbite/config/firebase_setup.dart';
 import 'package:breakbite/data/services/connectivity_plus_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_crash_service.dart';
 import 'package:breakbite/data/services/firebase/firebase_messaging_service.dart';
+import 'package:breakbite/data/services/image_picker_photo_service.dart';
+import 'package:breakbite/data/services/local/local_order_alert_service.dart';
 import 'package:breakbite/data/services/local/local_reminder_service.dart';
 import 'package:breakbite/data/services/pdf/pdf_report_file_service.dart';
 import 'package:breakbite_core/data/repositories/firestore/firestore_cart_repository.dart';
@@ -51,7 +53,9 @@ Future<AppDependencies> createFirebaseDependencies() async {
     crash: FirebaseCrashService(crashlytics),
     connectivity: ConnectivityPlusService(),
     messaging: FirebaseMessagingService(messaging: FirebaseMessaging.instance, db: db),
+    photoPicker: ImagePickerPhotoService(),
     reminders: LocalReminderService(),
+    orderAlerts: LocalOrderAlertService(),
     storage: CloudinaryStorageService(CloudinaryConfig.fromEnvironment()),
     remoteConfig: remoteConfig,
     reportFiles: PdfReportFileService(),

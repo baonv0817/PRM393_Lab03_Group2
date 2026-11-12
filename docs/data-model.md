@@ -80,7 +80,7 @@ Ids: `q9-t2` (Campus Q9, floor 2), `q9-t4` (Campus Q9, floor 4), `nvh-t1` (Stude
 | `pausedUntil` | ts? | staff | K10 "pause 15 minutes": no orders until then (rules) |
 | `waitMinutes` | int | staff | 0–120; estimated wait (S02, S27) |
 | `maxOrdersPerSlot` | int? | staff | > 0; default capacity of new slots |
-| `openTime`, `closeTime` | string? | staff | "06:30", "17:00"; display only |
+| `openTime`, `closeTime` | string? | staff | "06:30", "17:00" on the phone's clock. Orders are refused outside them (the app checks, as for a pause; the rules only check `open`); closing before opening means past midnight; without both times there are no hours to keep |
 | `notice` | string? | staff | Shown on Home when closed (S21) |
 
 Staff can change only `open`, `pausedUntil`, `waitMinutes`, `maxOrdersPerSlot`, `notice`, `openTime`, `closeTime`; the rules check their types.
@@ -111,7 +111,7 @@ Slots are created per day by staff or by the seed script, which creates the next
 | `soldOutReason` | string? | staff | `outOfIngredients`, `machineBroken`, `other` (K09) |
 | `availableAgainAt` | ts? | staff | "Có lại lúc 10:30" (K09, S22). Display only: the item stays sold out until staff switch `soldOut` off |
 | `optionGroups` | list<map>? | staff | At most 5 groups (spice level, toppings — S04). **Not used in Lab 3 (DB-02/04):** the customer writes preferences in the line `note`; the rules still accept the field so the final assignment can add options without a migration |
-| `imageUrl` | string? | staff | A bundled asset (`assets/images/menu/…`, sample data) or an `https://` Cloudinary link `breakbite/menu/{kioskId}/…`. `MenuItemImage` handles both and falls back to the logo |
+| `imageUrl` | string? | staff | A bundled asset (`assets/images/menu/…`, sample data) or an `https://` Cloudinary link `breakbite/menu/{kioskId}/…`, which K14/K15 upload when the item is saved. `MenuItemImage` handles both and falls back to the logo. Removing the photo deletes the field (`FieldValue.delete()`), it is not set to null |
 | `archived` | bool? | staff, admin (web admin W02) | Final assignment. `true` hides the item from the customer menu, search and the seller menu (`MenuRepository.watchMenu` leaves it out unless `includeArchived`) and a cart holding it sees it as no longer sold; the web admin can restore it. Absent means `false`, so **no migration** |
 
 The average rating (S04) is an aggregation query, `average('rating')` over `reviews` where `dishId == d`; it is not stored because customers cannot edit items.

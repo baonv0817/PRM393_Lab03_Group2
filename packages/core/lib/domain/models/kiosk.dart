@@ -55,7 +55,7 @@ class KioskSettings {
   final int? maxOrdersPerSlot;
   final String? notice;
 
-  /// "HH:mm", display only.
+  /// "HH:mm": the opening hours. Orders are refused outside them (`isWithinHours`); both times are needed.
   final String? openTime;
   final String? closeTime;
 
@@ -104,5 +104,27 @@ class Kiosk {
   final DateTime? pausedUntil;
   final int? maxOrdersPerSlot;
 
-  bool acceptsOrders(DateTime now) => open && (pausedUntil == null || pausedUntil!.isBefore(now));
+  /// Minutes after midnight of "HH:mm", or `null` when it is not set or not a clock time.
+  static int? _minutesOf(String? time) {
+    if (time == null || !KioskSettings.isClockTime(time)) return null;
+    return int.parse(time.substring(0, 2)) * 60 + int.parse(time.substring(3));
+  }
+
+  /// Within the opening hours of K10, read on the clock of [now] (the phone's, which is Vietnam time for the
+  /// students and staff using it). Without both times, or with the same time twice, the kiosk has no hours and
+  /// this is always true. Closing before opening means the hours run past midnight.
+  bool isWithinHours(DateTime now) {
+    final from = _minutesOf(openTime);
+    final to = _minutesOf(closeTime);
+    if (from == null || to == null || from == to) return true;
+    final minute = now.hour * 60 + now.minute;
+    return from < to ? minute >= from && minute < to : minute >= from || minute < to;
+  }
+
+  /// A pause ("tạm ngưng", K10) is running at [now].
+  bool isPaused(DateTime now) => pausedUntil != null && pausedUntil!.isAfter(now);
+
+  /// Whether an order can be placed at [now]: the "Đang nhận đơn" switch is on, it is within the opening hours
+  /// and no pause is running.
+  bool acceptsOrders(DateTime now) => open && isWithinHours(now) && !isPaused(now);
 }

@@ -1,4 +1,5 @@
 import 'package:breakbite/ui/seller_menu/view_models/menu_item_form_view_model.dart';
+import 'package:breakbite_core/data/services/services.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
@@ -17,12 +18,39 @@ class _OfflineSave extends FakeMenuRepository {
   Future<Result<String>> upsertItem(MenuItem item) async => const Result.error(NetworkException());
 }
 
+/// Refuses the first upload, as a lost connection would.
+class _FlakyStorage extends FakeStorageService {
+  int attempts = 0;
+
+  @override
+  Future<Result<UploadedFile>> upload({
+    required UploadFolder folder,
+    required String ownerId,
+    required String fileName,
+    required List<int> bytes,
+    void Function(double progress)? onProgress,
+  }) {
+    attempts++;
+    if (attempts == 1) return Future.value(const Result.error(NetworkException()));
+    return super.upload(folder: folder, ownerId: ownerId, fileName: fileName, bytes: bytes, onProgress: onProgress);
+  }
+}
+
 MenuItemFormViewModel _vm(
   FakeMenuRepository menu, {
   String? kioskId = 'q9-t2',
   String? itemId,
   FakeCrashService? crash,
-}) => MenuItemFormViewModel(menu: menu, crash: crash ?? FakeCrashService(), kioskId: kioskId, itemId: itemId);
+  FakeStorageService? storage,
+  FakePhotoPickerService? photos,
+}) => MenuItemFormViewModel(
+  menu: menu,
+  storage: storage ?? FakeStorageService(),
+  photos: photos ?? FakePhotoPickerService(),
+  crash: crash ?? FakeCrashService(),
+  kioskId: kioskId,
+  itemId: itemId,
+);
 
 Future<MenuItem> _stored(FakeMenuRepository menu, String id) async => (await menu.getItem(id) as Ok<MenuItem>).value;
 
@@ -34,6 +62,125 @@ void _fill(MenuItemFormViewModel vm, {String name = 'Bún bò Huế', String pri
 }
 
 void main() {
+  group('MenuItemFormViewModel the photo of the item (K14, K15)', () {
+    test(
+      'a new item with a photo: it goes to Cloudinary under menu/<kiosk>/ and its link is saved in the item',
+      () async {
+        final menu = FakeMenuRepository();
+        final storage = FakeStorageService();
+        final vm = _vm(menu, storage: storage);
+        await pumpEventQueue();
+        expect(vm.hasPhoto, isFalse);
+
+        expect((await vm.pickPhoto(PhotoSource.gallery)).isOk, isTrue);
+        expect(vm.hasPhoto, isTrue);
+        expect(vm.pickedPhoto, isNotNull);
+        expect(storage.uploads, isEmpty, reason: 'nothing is sent before the item is saved');
+
+        vm
+          ..setName('Bánh flan')
+          ..setPrice('15000');
+        final result = await vm.save.execute();
+
+        expect(result!.isOk, isTrue);
+        expect(storage.uploads.single.url, startsWith('https://'));
+        expect(storage.uploads.single.publicId, 'breakbite/menu/q9-t2/mon.png');
+        final stored = await _stored(menu, 'q9-t2-banh-flan');
+        expect(stored.imageUrl, storage.uploads.single.url);
+        expect(vm.uploadProgress, isNull);
+        vm.dispose();
+      },
+    );
+
+    test('backing out of the picker changes nothing; a refused permission is an error that is not a crash', () async {
+      final crash = FakeCrashService();
+      final photos = FakePhotoPickerService()..next = null;
+      final vm = _vm(FakeMenuRepository(), photos: photos, crash: crash);
+      await pumpEventQueue();
+
+      expect((await vm.pickPhoto(PhotoSource.camera)).isOk, isTrue);
+      expect(vm.hasPhoto, isFalse);
+      expect(photos.asked, [PhotoSource.camera]);
+
+      photos.failure = const PermissionDeniedException(message: 'Chưa cho phép dùng camera.');
+      final denied = await vm.pickPhoto(PhotoSource.camera);
+      expect((denied as Err<void>).error.message, 'Chưa cho phép dùng camera.');
+      expect(vm.hasPhoto, isFalse);
+      expect(crash.errors, isEmpty);
+      vm.dispose();
+    });
+
+    test(
+      'a failed upload writes nothing, and the retry sends the photo once more, then it is not sent twice',
+      () async {
+        final menu = FakeMenuRepository();
+        final storage = _FlakyStorage();
+        final vm = _vm(menu, storage: storage);
+        await pumpEventQueue();
+        await vm.pickPhoto(PhotoSource.gallery);
+        vm
+          ..setName('Bánh flan')
+          ..setPrice('15000');
+
+        final first = await vm.save.execute();
+        expect((first! as Err<String>).error, isA<NetworkException>());
+        expect((await menu.getItem('q9-t2-banh-flan')).valueOrNull, isNull, reason: 'the item was not written');
+
+        expect((await vm.save.execute())!.isOk, isTrue);
+        expect(storage.attempts, 2);
+        expect(storage.uploads, hasLength(1));
+        vm.dispose();
+      },
+    );
+
+    test('editing: a new photo replaces the old link, nothing changed keeps it, removing it clears it', () async {
+      final menu = FakeMenuRepository();
+      final storage = FakeStorageService();
+
+      final keep = _vm(menu, itemId: 'm1', storage: storage);
+      await pumpEventQueue();
+      expect(keep.hasPhoto, isTrue);
+      expect(keep.photoUrl, 'assets/images/menu/tacos-bo.jpg');
+      expect(keep.canSave, isFalse);
+      keep.setPrice('41000');
+      await keep.save.execute();
+      expect((await _stored(menu, 'm1')).imageUrl, 'assets/images/menu/tacos-bo.jpg');
+      keep.dispose();
+
+      final replace = _vm(menu, itemId: 'm1', storage: storage);
+      await pumpEventQueue();
+      await replace.pickPhoto(PhotoSource.gallery);
+      expect(replace.canSave, isTrue, reason: 'a new photo is a change');
+      expect(replace.photoUrl, isNull, reason: 'the new picture is shown instead of the saved one');
+      await replace.save.execute();
+      expect((await _stored(menu, 'm1')).imageUrl, storage.uploads.single.url);
+      replace.dispose();
+
+      final remove = _vm(menu, itemId: 'm1', storage: storage);
+      await pumpEventQueue();
+      remove.removePhoto();
+      expect((remove.hasPhoto, remove.canSave), (false, true));
+      await remove.save.execute();
+      expect((await _stored(menu, 'm1')).imageUrl, isNull);
+      remove.dispose();
+    });
+
+    test(
+      'choosing a photo after removing one shows the new photo, and removing it again is a no-op without one',
+      () async {
+        final vm = _vm(FakeMenuRepository(), itemId: 'm1');
+        await pumpEventQueue();
+        vm.removePhoto();
+        expect(vm.hasPhoto, isFalse);
+        vm.removePhoto();
+        await vm.pickPhoto(PhotoSource.gallery);
+        expect(vm.hasPhoto, isTrue);
+        expect(vm.pickedPhoto, isNotNull);
+        vm.dispose();
+      },
+    );
+  });
+
   group('MenuItemFormViewModel adding an item (K14)', () {
     test('starts empty with a preparation time already filled, and shows no error before saving is tried', () async {
       final vm = _vm(FakeMenuRepository());

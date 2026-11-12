@@ -298,7 +298,13 @@ class FirestoreOrderRepository implements OrderRepository {
     if (data == null) throw const NotFoundException(message: 'Không tìm thấy kiosk.');
     final kiosk = kioskFromData(snapshot.id, data);
     if (!kiosk.open) throw ValidationException('${kiosk.name} đang đóng cửa. Chọn kiosk khác để đặt món.');
-    if (!kiosk.acceptsOrders(_now())) {
+    final now = _now();
+    if (!kiosk.isWithinHours(now)) {
+      throw ValidationException(
+        '${kiosk.name} đang ngoài giờ mở cửa (${kiosk.openTime}–${kiosk.closeTime}). Chọn kiosk khác hoặc quay lại sau.',
+      );
+    }
+    if (kiosk.isPaused(now)) {
       throw ValidationException('${kiosk.name} tạm ngưng nhận đơn đến ${formatTime(kiosk.pausedUntil!)}.');
     }
   }

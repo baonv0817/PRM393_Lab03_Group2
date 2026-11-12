@@ -113,7 +113,10 @@ class CartQuote {
     final k = kiosk;
     if (value.isEmpty) return null;
     if (k == null) return 'Không tìm thấy kiosk của giỏ hàng.';
-    if (!k.acceptsOrders(now)) return '${k.name} đang tạm ngưng nhận đơn. ${kioskStatusLabel(k, now: now)}.';
+    if (!k.acceptsOrders(now)) {
+      final why = k.open && !k.isWithinHours(now) ? 'đang ngoài giờ mở cửa' : 'đang tạm ngưng nhận đơn';
+      return '${k.name} $why. ${kioskStatusLabel(k, now: now)}.';
+    }
     return null;
   }
 

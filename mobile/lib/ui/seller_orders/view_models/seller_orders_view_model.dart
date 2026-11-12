@@ -32,6 +32,7 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.incidents,
     required this.crash,
     required this.analytics,
+    required this.alerts,
     required this.kioskId,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now {
@@ -47,10 +48,17 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
   final IncidentRepository incidents;
   final CrashService crash;
   final AnalyticsService analytics;
+
+  /// Rings the phone when an order arrives while the list is open.
+  final OrderAlertService alerts;
   final String? kioskId;
   final DateTime Function() _clock;
 
   StreamSubscription<List<Order>>? _ordersSub;
+
+  /// The orders waiting to be accepted at the last snapshot; `null` until the first one arrives, so the orders
+  /// that were already there when the list opened do not ring.
+  Set<String>? _knownPending;
   StreamSubscription<List<Kiosk>>? _kioskSub;
   StreamSubscription<List<Incident>>? _incidentSub;
   ViewState<List<Order>> _state = const ViewLoading();
@@ -97,6 +105,22 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
   }
 
+  /// Rings for the orders that are waiting and were not at the last snapshot. Accepting or turning an order down
+  /// takes it out of the waiting ones and never rings.
+  void _alertForNew(List<Order> list) {
+    final pending = {
+      for (final o in list)
+        if (o.status == OrderStatus.pending) o.id: o,
+    };
+    final known = _knownPending;
+    _knownPending = pending.keys.toSet();
+    if (known == null) return;
+    final fresh = pending.keys.where((id) => !known.contains(id)).toList();
+    if (fresh.isEmpty) return;
+    final code = fresh.length == 1 ? pending[fresh.single]!.orderCode : null;
+    unawaited(alerts.newOrders(count: fresh.length, orderCode: code == null || code.isEmpty ? null : code));
+  }
+
   void load() {
     unawaited(_ordersSub?.cancel());
     unawaited(_kioskSub?.cancel());
@@ -108,12 +132,14 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
       return;
     }
     _state = const ViewLoading();
+    _knownPending = null;
     notifyListeners();
     _ordersSub = orders
         .watchKioskQueue(id)
         .listen(
           (list) {
             _state = ViewData(list);
+            _alertForNew(list);
             notifyListeners();
           },
           onError: (Object error, StackTrace stack) {

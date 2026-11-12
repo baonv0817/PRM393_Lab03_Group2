@@ -2,6 +2,7 @@ import 'package:breakbite_core/data/firebase/firebase_errors.dart';
 import 'package:breakbite_core/data/firebase/firestore_helpers.dart';
 import 'package:breakbite_core/data/repositories/firestore/firestore_mappers.dart';
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
+import 'package:breakbite_core/data/repositories/menu_returns.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -20,16 +21,18 @@ class FirestoreMenuRepository implements MenuRepository {
 
   @override
   Stream<List<MenuItem>> watchMenu(String kioskId, {bool includeArchived = false}) => guardStream(
-    _items
-        .where('kioskId', isEqualTo: kioskId)
-        .orderBy('name')
-        .snapshots()
-        .map(
-          (snapshot) => [
-            for (final doc in snapshot.docs)
-              if (includeArchived || doc.data()['archived'] != true) menuItemFromData(doc.id, doc.data()),
-          ],
-        ),
+    withReturns(
+      _items
+          .where('kioskId', isEqualTo: kioskId)
+          .orderBy('name')
+          .snapshots()
+          .map(
+            (snapshot) => [
+              for (final doc in snapshot.docs)
+                if (includeArchived || doc.data()['archived'] != true) menuItemFromData(doc.id, doc.data()),
+            ],
+          ),
+    ),
   );
 
   @override
@@ -37,7 +40,7 @@ class FirestoreMenuRepository implements MenuRepository {
     final snapshot = await _items.doc(id).get();
     final data = snapshot.data();
     if (data == null) throw const NotFoundException(message: 'Không tìm thấy món.');
-    return menuItemFromData(snapshot.id, data);
+    return menuItemFromData(snapshot.id, data).availableAt(DateTime.now());
   });
 
   @override
@@ -48,7 +51,7 @@ class FirestoreMenuRepository implements MenuRepository {
       final chunk = unique.sublist(start, (start + _inQueryLimit).clamp(0, unique.length));
       final snapshot = await _items.where(FieldPath.documentId, whereIn: chunk).get();
       for (final doc in snapshot.docs) {
-        found[doc.id] = menuItemFromData(doc.id, doc.data());
+        found[doc.id] = menuItemFromData(doc.id, doc.data()).availableAt(DateTime.now());
       }
     }
     return found;
@@ -98,7 +101,9 @@ class FirestoreMenuRepository implements MenuRepository {
       if (current.exists) {
         // A new item (no id yet) must not replace the one another staff member just created.
         if (item.id.isEmpty) throw const ValidationException('Món này đã có trong thực đơn.');
-        tx.update(ref, {...data, ...Stamp.updated()});
+        // `data` leaves `imageUrl` out when the item has no photo; an update would then keep the old one, so
+        // the field is deleted (K15 "Xoá ảnh").
+        tx.update(ref, {...data, if (item.imageUrl == null) 'imageUrl': FieldValue.delete(), ...Stamp.updated()});
       } else {
         tx.set(ref, {...data, ...Stamp.created()});
       }

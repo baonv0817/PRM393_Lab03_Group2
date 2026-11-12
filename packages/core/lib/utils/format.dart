@@ -115,6 +115,7 @@ String orderItemsSummary(Order order) =>
 
 String kioskStatusLabel(Kiosk kiosk, {required DateTime now}) {
   if (!kiosk.open) return kiosk.openTime == null ? 'Đang đóng cửa' : 'Đóng · mở lại ${kiosk.openTime}';
+  if (!kiosk.isWithinHours(now)) return 'Ngoài giờ mở cửa · mở lại ${kiosk.openTime}';
   final pausedUntil = kiosk.pausedUntil;
   if (pausedUntil != null && pausedUntil.isAfter(now)) return 'Tạm ngưng · nhận đơn lại lúc ${formatTime(pausedUntil)}';
   final low = kiosk.waitMinutes > 1 ? kiosk.waitMinutes - 1 : 1;
