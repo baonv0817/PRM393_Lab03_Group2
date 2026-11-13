@@ -69,7 +69,7 @@ Requirements: the versions below, an Android emulator or phone, and for the Fire
 ```powershell
 cd mobile
 flutter pub get
-flutter test                                    # 829 tests, no device needed
+flutter test                                    # 830 tests, no device needed
 # the real project; env/cloudinary.json is committed (cloud name and unsigned preset, not secrets),
 # env/app_check.json is gitignored: copy env/app_check.example.json and put your debug token in it
 flutter run --dart-define-from-file=env/cloudinary.json --dart-define-from-file=env/app_check.json
