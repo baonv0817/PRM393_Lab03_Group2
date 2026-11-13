@@ -30,12 +30,18 @@ class CartControls {
     onChanged: _onChanged,
   );
 
+  /// What the customer just added and the cart has not shown yet. Adding goes through a Firestore transaction, which
+  /// only completes after a round trip to the server, so without this the cart button and the counts would wait for
+  /// the network. [target] is the quantity the dish should have once the write shows up; a failed write drops it.
+  final _adding = <String, ({int target, bool confirmed})>{};
+
   Cart get value => _value;
 
   void start() {
     stop();
     _sub = cart.watchCart(uid).listen((current) {
       _value = current;
+      _adding.removeWhere((id, add) => add.confirmed || _storedQuantity(id) >= add.target);
       _quantities.settle(_storedQuantity);
       _onChanged();
     }, onError: (Object e, StackTrace s) => crash.recordNonFatal(e, s, '$_source.watchCart'));
@@ -46,12 +52,22 @@ class CartControls {
   int get count {
     var total = 0;
     for (final line in _value.items) {
-      total += _quantities.pendingOf(line.itemId) ?? line.quantity;
+      total += _quantities.pendingOf(line.itemId) ?? _shownQuantity(line.itemId);
+    }
+    // A dish added a moment ago that is not in the snapshot yet counts for what it will be.
+    for (final MapEntry(key: id, value: add) in _adding.entries) {
+      if (_value.items.every((line) => line.itemId != id)) total += add.target;
     }
     return total;
   }
 
-  int quantityOf(String itemId) => _quantities.pendingOf(itemId) ?? _storedQuantity(itemId);
+  int quantityOf(String itemId) => _quantities.pendingOf(itemId) ?? _shownQuantity(itemId);
+
+  int _shownQuantity(String itemId) {
+    final stored = _storedQuantity(itemId);
+    final adding = _adding[itemId]?.target ?? 0;
+    return adding > stored ? adding : stored;
+  }
 
   int _storedQuantity(String itemId) => _value.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
 
@@ -63,6 +79,11 @@ class CartControls {
 
   Future<Result<void>> add(MenuItem item, {int quantity = 1, String note = ''}) async {
     final alreadyInCart = _storedQuantity(item.id) > 0;
+    final target = (_shownQuantity(item.id) + quantity).clamp(0, Cart.maxQuantity);
+    if (!blocksAdd(item)) {
+      _adding[item.id] = (target: target, confirmed: false);
+      _onChanged();
+    }
     final result = await cart.addItem(
       uid,
       kioskId: item.kioskId,
@@ -74,8 +95,17 @@ class CartControls {
     }
     switch (result) {
       case Ok():
+        // The snapshot with the new line may already be here: then there is nothing left to show early.
+        if (_adding[item.id] case final add? when _storedQuantity(item.id) >= add.target) {
+          _adding.remove(item.id);
+        } else if (_adding.containsKey(item.id)) {
+          _adding[item.id] = (target: target, confirmed: true);
+        }
+        _onChanged();
         await _logAdd(item, quantity);
       case Err(:final error):
+        _adding.remove(item.id);
+        _onChanged();
         crash.recordNonFatal(error, error.stackTrace, '$_source.addToCart');
     }
     return result;

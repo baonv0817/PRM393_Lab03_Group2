@@ -15,7 +15,7 @@ import 'package:flutter/foundation.dart';
 class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
   CartViewModel({
     required this.cart,
-    required MenuRepository menu,
+    required this.menu,
     required this.crash,
     required this.uid,
     DateTime Function()? clock,
@@ -37,8 +37,16 @@ class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
   static const maxNoteLength = 100;
 
   final CartRepository cart;
+  final MenuRepository menu;
   final CrashService crash;
   final String uid;
+
+  /// The photo of each dish in the cart. A cart line keeps only the name and price, so the photos are read from the
+  /// menu once per dish; until a photo arrives (or if the dish no longer exists) the row shows the logo.
+  final _imageUrls = <String, String?>{};
+  final _imagesRequested = <String>{};
+
+  String? imageUrlOf(String itemId) => _imageUrls[itemId];
 
   late final CartQuote quote;
   late final Command0<void> clearCart;
@@ -51,6 +59,28 @@ class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
   void _changed() {
     _quantities.settle(_storedQuantity);
     notifyListeners();
+    _loadImages();
+  }
+
+  void _loadImages() {
+    final missing = [
+      for (final line in quote.value.items)
+        if (_imagesRequested.add(line.itemId)) line.itemId,
+    ];
+    if (missing.isEmpty) return;
+    unawaited(() async {
+      final result = await menu.getItems(missing);
+      switch (result) {
+        case Ok(:final value):
+          for (final id in missing) {
+            _imageUrls[id] = value[id]?.imageUrl;
+          }
+          notifyListeners();
+        case Err():
+          // A missing photo is not worth an error: let the next change of the cart try again.
+          _imagesRequested.removeAll(missing);
+      }
+    }());
   }
 
   int _storedQuantity(String itemId) =>
