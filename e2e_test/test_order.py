@@ -127,7 +127,34 @@ async def test_tc17_home_stepper(artemis):
     assert int(data["cart_badge_after"] or 0) == 0
 
 
-async def test_tc30_sold_out_alternatives(artemis):
+@pytest.fixture
+def food_sold_out_and_empty_cart():
+    """TC-30's starting point on the real project: "Tacos Gà" of Kiosk Q9 · Tầng 2 sold out (as K09 writes it),
+    the customer's cart empty; afterwards the cart is emptied and the item put back as it was."""
+    import datetime as dt
+
+    import project_data as pd
+
+    uid = os.environ.get("CUSTOMER_UID") or os.environ.get("CROSS_ROLE_CUSTOMER_UID")
+    if not uid:
+        pytest.skip("CUSTOMER_UID is not set")
+    item = "menu_items/q9-t2-tacos-ga"
+    was_sold_out = pd.get(item)["fields"].get("soldOut", {}).get("booleanValue", False)
+    if not was_sold_out:
+        back = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=2)
+        pd.update(item, {
+            "soldOut": {"booleanValue": True},
+            "soldOutReason": {"stringValue": "outOfIngredients"},
+            "availableAgainAt": {"timestampValue": pd.iso(back)},
+        })
+    pd.remove(f"carts/{uid}")
+    yield
+    pd.remove(f"carts/{uid}")
+    if not was_sold_out:
+        pd.update(item, {"soldOut": {"booleanValue": False}}, delete=("soldOutReason", "availableAgainAt"))
+
+
+async def test_tc30_sold_out_alternatives(artemis, food_sold_out_and_empty_cart):
     result = await artemis.run(
         "BreakBite đang đăng nhập, kiosk Q9 · Tầng 2, giỏ trống, có một món ăn đang tạm hết. Mở tab Thực đơn, "
         'chạm thẻ có nhãn "Tạm hết". Trên màn "Món tạm hết", chạm + của món đầu tiên trong mục '

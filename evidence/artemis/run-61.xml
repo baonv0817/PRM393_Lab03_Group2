@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="261.191" timestamp="2026-11-13T13:19:17.633599+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_lab2_flows" name="test_tc32_f6_favorite_from_the_item_page_to_the_cart" time="261.120" /></testsuite></testsuites>

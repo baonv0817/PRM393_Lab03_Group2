@@ -27,14 +27,16 @@ $env:ARTEMIS_PROFILE = "flash"     # "pro" only for the exploratory session
 $env:ARTEMIS_TRACES_DIR = "C:/src/artemis/traces"   # the traces folder of your ARTEMIS server
 $env:TEST_GOOGLE_ACCOUNT = "<the customer test account>"   # TC-01 picks it in the account chooser
 adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite   # TC-03 reads the purchase event from Logcat
-$env:CROSS_ROLE_CUSTOMER_UID = "<uid of the customer test account>"   # TC-42, TC-43 (Firebase console, Authentication)
+$env:CROSS_ROLE_CUSTOMER_UID = "<uid of the customer test account>"   # TC-30, TC-32 to 34, TC-42, TC-43 (Firebase console, Authentication)
 uv run pytest -v
 ```
 
 TC-42 and TC-43 (`test_cross_role.py`, the mobile steps of the cross-role flow) play the kiosk while the agent waits on
 "Theo dõi đơn": they approve or reject the customer's new order through the Firestore REST API, with the token of the
 Firebase CLI (`firebase login` on this machine) or `$env:CROSS_ROLE_ACCESS_TOKEN`. The kiosk must be open at the time
-of the run (K10 hours). Without `CROSS_ROLE_CUSTOMER_UID` the two tests are skipped.
+of the run (K10 hours). Without `CROSS_ROLE_CUSTOMER_UID` (or `CUSTOMER_UID`) these tests are skipped.
+
+TC-30 and TC-32 to TC-34 (`test_order.py`, `test_lab2_flows.py`, the Lab 2 flows F9, F6 and F8) use the same access (`project_data.py`) to set their starting point and clean up: an empty cart, one dish sold out as K09 writes it, and for TC-34 one of the customer's orders being prepared marked ready as K04 writes it, after the app has restarted and shows Home. They also read back what the app wrote (the favorite, the cart), so a misread screen cannot pass. Each TC-34 run uses one order in "Đang làm".
 
 The pinned ARTEMIS version returns no structured output (`result.output` is empty), so `conftest.py` reads the agent's final JSON report from `<ARTEMIS_TRACES_DIR>/<session id>/stdout.log`; without `ARTEMIS_TRACES_DIR` the tests that compare values fail. The server and the tests must be on the same machine.
 
@@ -42,7 +44,7 @@ Run every test ≥ 3 times with `uv run python run_repeat.py -n 3` (add `-k tc03
 
 The prompts sent to the agent are written in Vietnamese on purpose, because the app's UI is in Vietnamese and the agent matches the text it sees on screen.
 
-Files by feature: `test_auth.py` (TC-01, 02), `test_order.py` (TC-03 with the Analytics `purchase` check that used to be TC-13, 04, 05, 17, 30, 31), `test_browse.py` (TC-06, 07, 08), `test_profile_firebase.py` (TC-09, 10, 14, 15, 16), `test_seller_push_analytics.py` (TC-11, 12), `test_order_manage.py` (TC-18 to 24), `test_seller_menu_shop.py` (TC-25 to 29).
+Files by feature: `test_auth.py` (TC-01, 02), `test_order.py` (TC-03 with the Analytics `purchase` check that used to be TC-13, 04, 05, 17, 30, 31), `test_browse.py` (TC-06, 07, 08), `test_profile_firebase.py` (TC-09, 10, 14, 15, 16), `test_seller_push_analytics.py` (TC-11, 12), `test_order_manage.py` (TC-18 to 24), `test_seller_menu_shop.py` (TC-25 to 29), `test_lab2_flows.py` (TC-32 to 34), `test_ai_feature.py` (TC-40, 41), `test_cross_role.py` (TC-42, 43); `project_data.py` is the shared Firestore access.
 
 The graded suite is the 11 cases that cover section 7 of the handout (TC-01 to TC-10 and TC-12); run them with `-k "tc01 or tc02 or tc03 or tc04 or tc05 or tc06 or tc07 or tc08 or tc09 or tc10 or tc12"`. TC-01 needs the app signed out, TC-12 the staff account, the others the customer account (see `docs/test-plan.md` section 3).
 

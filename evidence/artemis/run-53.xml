@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="200.191" timestamp="2026-11-13T12:34:36.784203+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_lab2_flows" name="test_tc32_f6_favorite_from_the_item_page_to_the_cart" time="120.894"><failure message="AssertionError: []&#10;assert [] == [('q9-t2-cafe-sua', 1)]&#10;  &#10;  Right contains one more item: ('q9-t2-cafe-sua', 1)&#10;  Use -v to get more diff">artemis = &lt;conftest.Artemis object at 0x0000026D065ED940&gt;
+uid = 'q1GG5YwMUJYcMLp53rPruj6B7QI3', empty_cart = None
+
+    async def test_tc32_f6_favorite_from_the_item_page_to_the_cart(artemis, uid, empty_cart):
+        before = favorite_ids(uid)
+        try:
+            result = await artemis.run(
+                "BreakBite đang đăng nhập bằng tài khoản khách, kiosk đang chọn là Kiosk Q9 · Tầng 2, giỏ hàng trống. "
+                + GO_HOME
+                + f'Mở tab "Thực đơn", chạm thẻ món "{COFFEE}" để mở trang món. Ở trang món, chạm nút trái tim '
+                '"Thêm vào món yêu thích" ở thanh trên cùng đúng một lần, rồi chạm nút quay lại ở góc trên bên trái. Mở '
+                'tab "Cá nhân", chạm "Món yêu thích". Ghi tên các món trong danh sách. Chạm nút + của món '
+                f'"{COFFEE}" đúng một lần.',
+                expected_output='JSON: {"favorites": danh sách tên món trong "Món yêu thích", "added": true nếu đã chạm +}',
+            )
+            assert result.succeeded, result.error or result.status
+            data = parsed(result)
+            assert any(COFFEE.lower() in str(name).lower() for name in data["favorites"]), data
+            # What the app wrote: the favorite, and the item in the cart.
+            assert "cafe-sua" in favorite_ids(uid) - before
+            lines = cart_lines(uid)
+&gt;           assert [(line["itemId"], line["quantity"]) for line in lines] == [(COFFEE_ID, 1)], lines
+E           AssertionError: []
+E           assert [] == [('q9-t2-cafe-sua', 1)]
+E             
+E             Right contains one more item: ('q9-t2-cafe-sua', 1)
+E             Use -v to get more diff
+
+test_lab2_flows.py:124: AssertionError</failure></testcase><testcase classname="test_order" name="test_tc30_sold_out_alternatives" time="78.977" /></testsuite></testsuites>

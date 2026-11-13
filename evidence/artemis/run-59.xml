@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="159.964" timestamp="2026-11-13T13:10:07.942044+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_lab2_flows" name="test_tc32_f6_favorite_from_the_item_page_to_the_cart" time="159.777"><failure message="AssertionError: {'favorites': [], 'added': True}&#10;assert False&#10; +  where False = any(&lt;generator object test_tc32_f6_favorite_from_the_item_page_to_the_cart.&lt;locals&gt;.&lt;genexpr&gt; at 0x000001AA9FC71A80&gt;)">artemis = &lt;conftest.Artemis object at 0x000001AA9FC9D940&gt;
+uid = 'q1GG5YwMUJYcMLp53rPruj6B7QI3', empty_cart = None
+
+    async def test_tc32_f6_favorite_from_the_item_page_to_the_cart(artemis, uid, empty_cart):
+        before = favorite_ids(uid)
+        try:
+            result = await artemis.run(
+                "BreakBite đang đăng nhập bằng tài khoản khách, kiosk đang chọn là Kiosk Q9 · Tầng 2, giỏ hàng trống. "
+                + GO_HOME
+                + f'Mở tab "Thực đơn", chạm thẻ món "{COFFEE}" để mở trang món. Ở trang món, chạm nút trái tim '
+                '"Thêm vào món yêu thích" ở thanh trên cùng đúng một lần, rồi chạm nút quay lại ở góc trên bên trái. Mở '
+                'tab "Cá nhân", chạm "Món yêu thích". Ghi tên các món trong danh sách. Trên thẻ món '
+                f'"{COFFEE}", chạm nút + tròn ở góc dưới bên phải của thẻ đúng một lần (chỉ chạm nút +, KHÔNG chạm ảnh '
+                "hay tên món vì sẽ mở trang món); sau khi chạm, nút + đổi thành bộ đếm hiện số 1.",
+                expected_output='JSON: {"favorites": danh sách tên món trong "Món yêu thích", "added": true nếu đã chạm +}',
+            )
+            assert result.succeeded, result.error or result.status
+            data = parsed(result)
+&gt;           assert any(COFFEE.lower() in str(name).lower() for name in data["favorites"]), data
+E           AssertionError: {'favorites': [], 'added': True}
+E           assert False
+E            +  where False = any(&lt;generator object test_tc32_f6_favorite_from_the_item_page_to_the_cart.&lt;locals&gt;.&lt;genexpr&gt; at 0x000001AA9FC71A80&gt;)
+
+test_lab2_flows.py:121: AssertionError</failure></testcase></testsuite></testsuites>

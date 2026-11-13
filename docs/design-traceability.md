@@ -108,6 +108,16 @@ The kiosk an admin works on is chosen in the top bar (`AdminSession`); staff alw
 | F1 Quick order from Home | S02 | S02-ADDED → S05 → S06 → S06-GATEWAY → S07 | Declined at the gateway → S06-ERR | TC-03 |
 | F2 Customize an item and use a voucher | S03 | S04 → S05 → S29 | Expired code → S05-VOUCHER-ERR | TC-04 |
 | F3 Payment error, keep the cart | S06-ERR | S07-CASH → S07-DIALOG → S10 | Cash at the kiosk | TC-05 |
+| F4 Edit or cancel an order | S07 | Edit: S09 → "Lưu thay đổi" → S07 with the new total. Cancel: S07-DIALOG → S10 → "Đặt lại" or Home | Once the kiosk accepts, "Sửa đơn" and "Huỷ đơn" are gone; the limit is the kiosk's acceptance (`pending`), not a 60-second timer | TC-21 (edit), TC-05 (ends with a cancel at S10); flow test "S07 opens S09, a changed quantity is saved" |
+| F5 History and spending | S08 | S11 (week, month, all, with the total spent) → S12 → "Đặt lại món này" → S05; S12 → S24 | No order yet: S08-EMPTY → "Xem thực đơn" | TC-20 (S11), TC-08 (S12), TC-18 (receipt), TC-23 (S24) |
+| F6 Favorites and quick reorder | S15 or S02 | S04 heart → S15 → S13 → + → cart; S02 → S14 ("Chọn đơn khác để đặt lại") → "Thêm vào giỏ" → S05. The card itself puts the last order in the cart in one tap (D32) | A sold-out favorite keeps its "Tạm hết" card, after the ones on sale; a dish the chosen kiosk does not sell says "Kiosk này chưa bán món này" | TC-32, TC-33 |
+| F7 Account and settings | S15 | S16 → "Lưu hồ sơ"; S17 → "Lưu mặc định"; S18 (each switch saved as it is flipped) | A wrong student ID is shown and not saved; "Xoá dữ liệu trên máy" is replaced by "Đăng xuất" behind a confirmation (D07) | TC-15, TC-16, TC-02 |
+| F8 Notification and pickup | S19 | "Xem mã nhận món" → S20 → scanned at K05 → K06 | Not built: the second reminder after 10 minutes and the counter keeping the order after 30 minutes (the app has no server to send them) | TC-34, TC-22 (S20), TC-11 (a push opens its screen), TC-12 (K05) |
+| F9 Closed kiosk and sold-out item | S02, S03 | S21 → "Chọn kiosk khác" → S27; S03 "Tạm hết" → S22 → + on a replacement | No pre-order on S21 and no "notify me" links (D28, D29) | TC-31, TC-30 |
+| F10 After pickup | S12 | S23 → "Gửi đánh giá"; S24 → "Gửi báo cáo" | A second report of the same order is not sent; the first report's status shows instead | TC-24, TC-23 |
+| F11 Order for a class break | S05 | S25 ("Sớm nhất" or a break slot) → S05 → S06 → S07 | A full slot ("Đã đủ") or one the kiosk cannot make in time cannot be chosen; no timetable (D18) | Widget test "S25 … offers as soon as possible and the break slots" |
+| F12 Offline | Any screen | S30 → "Thử lại" → back where the customer was, or "Xem giỏ hàng" → S05 | Still offline: "Thử lại" keeps S30 | TC-19 (offline receipt export); flow test "S30: offline covers the app…" |
+| F13 Loading | S02 | S02-LOADING (skeleton) → S02 | A load error shows "Thử lại" | Widget test "shows loading then the quick items" |
 | Seller: from accepting an order to handover | K01 | K02 → K03 → K04 → K05 → K06 | Invalid code → K05-ERR → K06-CASH | TC-12 |
 
 ## 4. Lab 2 components → widgets (`packages/core/lib/ui/core/widgets/`, shared by the app and the web admin)

@@ -18,7 +18,7 @@ Checked on 12/11/2026 against the documents and the `evidence/` folder of this r
 
 ## 2. Lab 2 flows
 
-[design-traceability §3][dt-flows] lists four flows. The tests and deviation D28 name three more (F6, F8, F9), so they are added here. F4, F5 and F7 are not named anywhere in this repository (V04 in section 7).
+[design-traceability §3][dt-flows] lists four flows. The tests and deviation D28 name three more (F6, F8, F9), so they are added here. F4, F5 and F7 were added from the Lab 2 repository on 13/11/2026 (V04): every flow F1 to F13 is now in [design-traceability §3][dt-flows] with its test cases.
 
 | Flow | Screens | Status | Evidence |
 |---|---|---|---|
@@ -26,9 +26,9 @@ Checked on 12/11/2026 against the documents and the `evidence/` folder of this r
 | F2 Customize an item and use a voucher. Error: expired code → S05-VOUCHER-ERR | S03, S04, S05, S29 | Works | TC-04 3/3 (run-31 to 33). The earlier failures came from the ARTEMIS typing tool (E-01) and from instructions, not from the app ([§3.1][tp31], [§3.3][tp33]). [`S03`](../evidence/p1/S03.png), [`S04`](../evidence/p1/S04.png), [`S29`](../evidence/p1/S29.png), [`S05-VOUCHER`](../evidence/p1/S05-VOUCHER.png), [`S05-VOUCHER-ERR`](../evidence/p1/S05-VOUCHER-ERR.png) |
 | F3 Payment error, keep the cart. Alternative: cash at the kiosk, then cancel | S06-ERR, S07-CASH, S07-DIALOG, S10 | **Fixed** (12/11/2026, P-01): the screen stayed on "Thanh toán chưa thành công" after a cash order was created; `CheckoutScreen._confirm` and `GatewayScreen._pay` now read the router before the `await` | Bug found by TC-05 (run-15 to 17). Fixed build: 3/4 (run-21 failed on host load, explained) ([§3.1][tp31], P-01 in [§3.3][tp33]). [`S06-ERR`](../evidence/p1/S06-ERR.png), [`S06-ERR-CASH`](../evidence/p1/S06-ERR-CASH.png), [`S07-CASH`](../evidence/p1/S07-CASH.png), [`S07-DIALOG`](../evidence/p1/S07-DIALOG.png), [`p2-real/S10`](../evidence/p2-real/S10.png) |
 | Seller: from accepting an order to handover. Error: invalid code → K05-ERR; alternative K06-CASH | K01 to K06, K02-EMPTY, K05-ERR, K06-CASH, K12 | Works | TC-12 3/3 (run-37 to 39), three orders handed over ([§3.1][tp31]). Real Firebase: [`evidence/p4-real/`](../evidence/p4-real/) (K02, K04, K05 with a valid code and the cash to collect, K05 with the camera refused). K05-ERR and K12 are proven only by [`seller_orders_flow_test.dart`][flow-seller] (V03) |
-| F6 Favorite an item, quick reorder | S04 (heart), S13, S02 → S14 → S05 | To verify | Only the full-app tests "F6 …" and "F6 reorder …" in [`p5_flows_test.dart`][flow-p5]. No device screenshot and no ARTEMIS case found |
-| F8 Order ready → inbox → pickup code | S19, S20 | To verify | Full-app test "F8 …" in [`p5_flows_test.dart`][flow-p5]. On the real build the parts work one by one: push saved in S19 ([`fcm/5-inbox`](../evidence/fcm/5-inbox.png)), push tap opens the order ([`fcm/3-background-tap-opens-order`](../evidence/fcm/3-background-tap-opens-order.png)), S20 ([`p2-real/S20`](../evidence/p2-real/S20.png)). The whole path on a device has no evidence |
-| F9 Sold-out item → alternatives | S03, S22 | Works | Real phone: [`S03-SOLDOUT`](../evidence/p1/S03-SOLDOUT.png), [`S22`](../evidence/p1/S22.png); D28. ARTEMIS TC-30 is written but was not run |
+| F6 Favorite an item, quick reorder | S04 (heart), S13, S02 → S14 → S05 | Works (V01 done 13/11/2026) | ARTEMIS TC-32 3/3 and TC-33 3/3 on the real project ([test-plan §3.6](test-plan.md#36-lab-2-flows-f6-f8-f9-13112026)); full-app tests "F6 …" and "F6 reorder …" in [`p5_flows_test.dart`][flow-p5] |
+| F8 Order ready → inbox → pickup code | S19, S20 | To verify | Full-app test "F8 …" in [`p5_flows_test.dart`][flow-p5]. On the real build the parts work one by one: push saved in S19 ([`fcm/5-inbox`](../evidence/fcm/5-inbox.png)), push tap opens the order ([`fcm/3-background-tap-opens-order`](../evidence/fcm/3-background-tap-opens-order.png)), S20 ([`p2-real/S20`](../evidence/p2-real/S20.png)). The whole path: ARTEMIS TC-34 3/3 (V02 done 13/11/2026, [test-plan §3.6](test-plan.md#36-lab-2-flows-f6-f8-f9-13112026)) |
+| F9 Sold-out item → alternatives | S03, S22 | Works | Real phone: [`S03-SOLDOUT`](../evidence/p1/S03-SOLDOUT.png), [`S22`](../evidence/p1/S22.png); D28. ARTEMIS TC-30 3/3 (13/11/2026, [test-plan §3.6](test-plan.md#36-lab-2-flows-f6-f8-f9-13112026)) |
 
 Count: 4 works, 1 fixed, 0 still missing, 2 to verify.
 
@@ -46,10 +46,10 @@ Count: 4 works, 1 fixed, 0 still missing, 2 to verify.
 | S09, S10, S11, S20, S23, S24 | Edit, cancelled order, history, pickup QR, review, incident | Works | Real Firebase run on 10/11/2026: [`evidence/p2-real/`](../evidence/p2-real/) (`S09` to `S24-sent`); full-app tests in [`ordering_flows_test.dart`][flow-order]. ARTEMIS TC-20 to TC-24 are written, not run |
 | S16, S17 | Student profile, default payment method | Works | Pro session "Seen working" ([§4.1][tp41]); TC-16 3/4 and TC-15 1/3 were extra cases where the agent misread a snackbar ([§3.2][tp32]) |
 | S18, S19 | Notification settings, notification center | Works | [`fcm/5-inbox`](../evidence/fcm/5-inbox.png); S18 opened in the Pro session and loads by hand ([§4.1][tp41]) |
-| S13, S14 | Favorites, quick reorder | To verify | See F6 |
+| S13, S14 | Favorites, quick reorder | Works | See F6 (TC-32, TC-33) |
 | S21, S27 | Closed kiosk on Home, kiosk picker | Works; opening hours follow the phone's clock: **Still missing** (G03) | [`p1/S21`](../evidence/p1/S21.png); [`tc14-warning-dialog`](../evidence/artemis/manual/tc14-warning-dialog.png), [`tc14-cart-emptied`](../evidence/artemis/manual/tc14-cart-emptied.png) (TC-14 1/3, the agent misread, [§3.2][tp32]). D35: "Ngoài giờ mở cửa" uses the phone's clock |
 | S25, S29 | Pickup time, voucher picker | Works | [`p1/S25`](../evidence/p1/S25.png), [`p1/S29`](../evidence/p1/S29.png) |
-| S30 | Offline cover | To verify | Only the full-app test "S30: offline covers the app …" in [`p5_flows_test.dart`][flow-p5]. No airplane-mode evidence on a device |
+| S30 | Offline cover | Works (V03 done 13/11/2026) | Airplane mode on the emulator: [`S30-offline`](../evidence/gap/S30-offline-2026-11-13.png), "Thử lại" while still offline keeps it ([`S30-retry-still-offline`](../evidence/gap/S30-retry-still-offline-2026-11-13.png)), back online it goes away by itself ([`S30-back-online`](../evidence/gap/S30-back-online-2026-11-13.png)); full-app test "S30: offline covers the app …" in [`p5_flows_test.dart`][flow-p5] |
 | K08, K09, K14, K15 | Menu management | Works | Real Firebase: [`p2-real/K08`](../evidence/p2-real/K08.png) to [`K15-saved`](../evidence/p2-real/K15-saved.png). TC-25, TC-26 written, not run |
 | K10, K11 | Shop, shift statistics | Works; the "Âm báo đơn mới" switch is not built (D21): **Still missing** (G07) | [`p2-real/K10`](../evidence/p2-real/K10.png), [`K10-closed`](../evidence/p2-real/K10-closed.png), [`K11`](../evidence/p2-real/K11.png) |
 | K13 | Customer incidents | Works | [`K13-incident`](../evidence/p4-real/K13-incident.png), [`K13-taken`](../evidence/p4-real/K13-taken.png), [`K13-rejected`](../evidence/p4-real/K13-rejected.png) |
@@ -80,7 +80,7 @@ One row per requirement of the Lab 3 handout (section numbers in brackets).
 | L18 | Remote Config: ≥ 2 parameters change the app without a rebuild (§6) | Works | [`1-before`](../evidence/remote-config/1-before.png), [`2-console`](../evidence/remote-config/2-console.png), [`3-after`](../evidence/remote-config/3-after.png); TC-10 3/3 |
 | L19 | Every service shows a message on its failure case (§6) | Works | "Failure handling" rows of [firebase-design.md](firebase-design.md); [`auth/3-cancelled`](../evidence/auth/3-cancelled.png). Offline on a device: To verify (S30, V03) |
 | L20 | `test-plan.md`: flows mapped to screens, ≥ 10 cases with every field (§7) | Works | [test-plan §1–2][tp2]: 11 graded cases |
-| L21 | Coverage: every Lab 2 flow with its error path, sign-in, main action, each tab, each detail, export, Remote Config, sign-out (§7) | Works for F1, F2, F3 and the seller flow; F6, F8, F9 have no ARTEMIS run (V01, V02) | "Graded suite" paragraph of [test-plan §2][tp2] |
+| L21 | Coverage: every Lab 2 flow with its error path, sign-in, main action, each tab, each detail, export, Remote Config, sign-out (§7) | Works: F1, F2, F3, F6, F8, F9 and the seller flow each 3/3 in ARTEMIS (F6, F8, F9 added 13/11/2026) | "Graded suite" paragraph of [test-plan §2][tp2] |
 | L22 | ≥ 1 error-path test and ≥ 1 native interaction (§7) | Works | Error path: TC-04, TC-05, TC-06. Native: TC-01 (system account chooser) |
 | L23 | Exploratory session, Pro profile, 15 to 30 minutes, issues listed (§7) | Works | [test-plan §4.1][tp41]: 15.8 minutes; [`exploratory-2026-11-12.json`](../evidence/artemis/exploratory-2026-11-12.json) |
 | L24 | pytest through the ARTEMIS SDK; assert on reported values; ≥ 3 runs each with pass rate; flaky tests explained (§7) | Works | [§3.1][tp31] (every graded case ≥ 3 runs), causes in [§3.3][tp33]; [`evidence/artemis/`](../evidence/artemis/) `run-1.xml` to `run-46.xml` |
@@ -157,10 +157,10 @@ CR-01 is the only accepted finding without a fix. A real fix needs pricing on a 
 
 | ID | What | Owner | Plan |
 |---|---|---|---|
-| V01 | F6 (S13, S14) on a device | `#99 user2665` | Screenshots, and an ARTEMIS case with 3 runs (the final handout §9 asks for every Lab 2 flow) |
-| V02 | F8 (bell → S19 → "Xem mã nhận món" → S20) on a device; F9 in ARTEMIS (TC-30) | `#99 user2665` | Same as V01 |
-| V03 | S30 offline and K05-ERR on a device | `#99 user2665` | Airplane-mode screenshot (TC-19); a wrong code typed in K05 |
-| V04 | Lab 2 flows F4, F5, F7 are not named in this repository | `#97 baodhg` | Check the Lab 2 repository (`PRM323-Lab2-Group2`); add each missing flow to [design-traceability §3][dt-flows] with a test case |
+| V01 | F6 (S13, S14) on a device | `#99 user2665` | **Done 13/11/2026**: ARTEMIS TC-32 and TC-33, 3/3 each, checked against Firestore |
+| V02 | F8 (bell → S19 → "Xem mã nhận món" → S20) on a device; F9 in ARTEMIS (TC-30) | `#99 user2665` | **Done 13/11/2026**: ARTEMIS TC-34 (F8) and TC-30 (F9), 3/3 each |
+| V03 | S30 offline and K05-ERR on a device | `#99 user2665` | **Done 13/11/2026**: [`S30-offline`](../evidence/gap/S30-offline-2026-11-13.png) (and retry, back online), [`K05-wrong-code`](../evidence/gap/K05-wrong-code-2026-11-13.png) ("Mã không hợp lệ hoặc đã hết hạn") |
+| V04 | Lab 2 flows F4, F5, F7 are not named in this repository | `#97 baodhg` | **Done 13/11/2026**: F4 to F13 from `03-P2-ux-design/04-user-flow.md` of the Lab 2 repository added to [design-traceability §3][dt-flows], each with its screens, error branch and test cases |
 | V05 | Announcement and admin rejection on a phone; the phone side of the cross-role flow; `docs/cross-role-flow.md` | — | **Done 13/11/2026**: see "Cross-role flow, phone side" in section 6 and [test-report §4](test-report.md) |
 | V06 | App Check enforcement on Firestore and AI Logic once the web admin sends tokens | Mikan382 | The web URL works (checklist on the deployed site); the web sends App Check tokens since #105. Enforcement is turned on last, after a final check of both clients |
 | V07 | Cloudinary for the PDF against final handout §4 | `#98 baonv0817` | Ask the lecturer; record the answer in [README "Deviations"][readme-dev] |
