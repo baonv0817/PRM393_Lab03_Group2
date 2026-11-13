@@ -1,5 +1,6 @@
 import 'package:breakbite_admin/ui/shell/widgets/admin_page.dart';
 import 'package:breakbite_admin/ui/system/stats/view_models/admin_stats_view_model.dart';
+import 'package:breakbite_admin/ui/system/stats/widgets/insight_card.dart';
 import 'package:breakbite_core/data/repositories/admin/admin_repositories.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
@@ -205,6 +206,8 @@ class _Dashboard extends StatelessWidget {
                   ),
                 ),
               ),
+            const InsightCard(),
+            if (context.read<AdminStatsViewModel>().insightAvailable) const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,

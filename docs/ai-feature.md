@@ -136,3 +136,23 @@ demo, because the Lab 3 build has no App Check.
 
 Claude Code (Anthropic) wrote most of the code, the tests and this document from the handout and the issue; the
 team member reviewed and ran it on the emulator and is able to explain it.
+
+## Stats summary on the web admin (A08)
+
+A second use of the same Gemini setup, on the admin's statistics page (`/system/stats`).
+
+- **What it does:** "Tóm tắt bằng AI" turns the figures on screen (orders, revenue, change against the period before,
+  cancel rate, busiest hours, kiosks, best sellers) into 3 to 4 bullet points: what stands out, what to worry about,
+  one thing to do. Free text, not structured output; the page shows it as written with a notice that AI wrote it.
+- **When it runs:** only when the admin presses "Tạo tóm tắt". Changing the period or the kiosk clears the text, since
+  it described the old figures.
+- **What is sent:** `statsDigest` (`packages/core/lib/domain/stats_digest.dart`): totals, kiosk names and dish names
+  as plain text. No customer name, e-mail or order id (covered by a test).
+- **Remote Config:** the same `ai_enabled` and `ai_model` as K14, plus its own prompt `ai_insight_prompt`. With
+  `ai_enabled` off the card is not shown.
+- **Failures:** quota, network, empty answer and other errors show a message in the card (`AiException.insight`);
+  the charts below are untouched. Analytics: `ai_request` and `ai_error` with `feature = stats_insight`.
+- **Code:** `StatsInsightService` (core), `FirebaseStatsInsightService` (`web/lib/config/`),
+  `AdminStatsViewModel.generateInsight`, `InsightCard`. Tests: `web/test/system/admin_stats_insight_test.dart`.
+- **Needs in the console:** App Check (reCAPTCHA Enterprise) registered for the web app, and the Gemini Developer API
+  enabled in Firebase AI Logic. Publish the new `ai_insight_prompt` parameter with `ai_enabled = true`.

@@ -68,7 +68,18 @@ enum AiFailure {
 final class AiException extends AppException {
   AiException(this.reason, {super.cause, super.stackTrace}) : super(_messageFor(reason));
 
+  /// For the statistics summary, where the page keeps working and nobody types anything by hand.
+  AiException.insight(this.reason, {super.cause, super.stackTrace}) : super(_insightMessageFor(reason));
+
   final AiFailure reason;
+
+  static String _insightMessageFor(AiFailure reason) => switch (reason) {
+    AiFailure.disabled => 'Tính năng AI đang tắt.',
+    AiFailure.quota => 'AI đang quá tải hoặc hết lượt dùng. Thử lại sau ít phút.',
+    AiFailure.network => 'Không gọi được AI vì mạng yếu hoặc mất mạng. Biểu đồ bên dưới vẫn đầy đủ.',
+    AiFailure.notFood || AiFailure.badOutput => 'AI trả lời không đọc được. Thử tạo lại.',
+    AiFailure.other => 'AI đang gặp lỗi. Biểu đồ bên dưới vẫn đầy đủ.',
+  };
 
   static String _messageFor(AiFailure reason) => switch (reason) {
     AiFailure.disabled => 'Tính năng AI đang tắt. Bạn nhập tay giúp nhé.',

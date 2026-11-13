@@ -17,6 +17,9 @@ import 'package:breakbite_admin/ui/system/vouchers/view_models/admin_vouchers_vi
 import 'package:breakbite_admin/ui/system/vouchers/widgets/admin_vouchers_screen.dart';
 import 'package:breakbite_core/data/repositories/admin/admin_repositories.dart';
 import 'package:breakbite_core/data/repositories/menu_repository.dart';
+import 'package:breakbite_core/data/services/analytics_service.dart';
+import 'package:breakbite_core/data/services/remote_config_service.dart';
+import 'package:breakbite_core/data/services/stats_insight_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -133,8 +136,13 @@ final List<RouteBase> systemPages = [
     pageBuilder: (context, state) => _fade(
       state,
       ChangeNotifierProvider(
-        create: (_) =>
-            AdminStatsViewModel(orders: context.read<AdminOrderRepository>(), menu: context.read<MenuRepository>()),
+        create: (_) => AdminStatsViewModel(
+          orders: context.read<AdminOrderRepository>(),
+          menu: context.read<MenuRepository>(),
+          insightService: context.read<StatsInsightService?>(),
+          remoteConfig: context.read<RemoteConfigService>(),
+          analytics: context.read<AnalyticsService>(),
+        ),
         child: const AdminStatsScreen(),
       ),
     ),

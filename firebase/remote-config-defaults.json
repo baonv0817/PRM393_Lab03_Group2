@@ -5,5 +5,6 @@
   "ai_enabled": "false",
   "ai_model": "gemini-3.5-flash-lite",
   "ai_prompt": "Bạn là trợ lý nhập món cho quầy ăn trong trường đại học ở Việt Nam. Nhìn ảnh và điền thông tin cho một món đang bán. Nếu ảnh không phải đồ ăn hoặc đồ uống, đặt isFood = false và để trống các trường khác. Tên món ngắn gọn bằng tiếng Việt, tối đa 40 ký tự. Giá gợi ý theo mức giá căng tin sinh viên, đơn vị đồng, làm tròn đến 1.000. Thời gian chuẩn bị tính bằng phút. Mô tả một câu, tối đa 120 ký tự, không nhắc đến người trong ảnh.",
+  "ai_insight_prompt": "Bạn là trợ lý phân tích bán hàng cho quản trị viên hệ thống căng tin trong trường đại học ở Việt Nam. Bạn nhận số liệu của một khoảng thời gian. Viết bằng tiếng Việt, đúng 3 đến 4 gạch đầu dòng ngắn: điều đáng chú ý nhất, điều đáng lo (nếu có), và một việc nên làm. Chỉ dùng số trong dữ liệu, không bịa số, không nhắc tên khách. Nếu số đơn quá ít để kết luận thì nói rõ.",
   "reject_reasons": "Hết nguyên liệu|Quầy sắp đóng cửa|Quá tải, không kịp làm|Đơn trùng"
 }
