@@ -70,7 +70,8 @@ Requirements: the versions below, an Android emulator or phone, and for the Fire
 cd mobile
 flutter pub get
 flutter test                                    # 819 tests, no device needed
-# the real project; env/*.json are gitignored, copy them from env/*.example.json
+# the real project; env/cloudinary.json is committed (cloud name and unsigned preset, not secrets),
+# env/app_check.json is gitignored: copy env/app_check.example.json and put your debug token in it
 flutter run --dart-define-from-file=env/cloudinary.json --dart-define-from-file=env/app_check.json
 # fake data, no Firebase
 flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=DEV_ROLE=user
@@ -153,4 +154,5 @@ Never commit service-account keys, API keys or keystores. Keys and test accounts
 `mobile/android/app/google-services.json` and the web app's `firebase_options.dart` may be committed (a Firebase web API
 key only names the project; the Security Rules and App Check protect the data). The App Check debug token goes in
 `mobile/env/app_check.json`, which is gitignored (`mobile/env/app_check.example.json` shows the format). The ARTEMIS
-model key lives only in the ARTEMIS server's `.env`.
+model key lives only in the ARTEMIS server's `.env`. A scan of the whole Git history on 13/11/2026 found no secret:
+[`evidence/security/secret-scan-2026-11-13.md`](evidence/security/secret-scan-2026-11-13.md).
