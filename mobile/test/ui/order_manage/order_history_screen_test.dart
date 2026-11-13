@@ -102,7 +102,7 @@ void main() {
       expect(find.text('Tuần 14/09 – 20/09'), findsOneWidget);
       expect(byId('s11.order.o1'), findsOneWidget);
       expect(find.text('#O1 · 03/11'), findsOneWidget);
-      expect(find.text('Đã nhận lúc 12:30'), findsOneWidget);
+      expect(find.text('Đã lấy món lúc 12:30'), findsOneWidget);
       expect(find.text('Đã huỷ'), findsOneWidget);
       expect(find.text('Đã hiển thị tất cả đơn của bạn.'), findsOneWidget);
       expect(byId('s11.more'), findsNothing);

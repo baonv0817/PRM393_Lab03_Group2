@@ -358,6 +358,32 @@ void main() {
     expect(find.text('Chi tiết đơn'), findsOneWidget);
   });
 
+  testWidgets('S08: tapping anywhere on an active order card opens S07 (P-02)', (tester) async {
+    final deps = createFakeDependencies(signedIn: true);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'dev-user');
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(BreakBiteApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Đơn hàng').last);
+    await tester.pumpAndSettle();
+
+    // The items line, not the "Xem mã QR nhận món" button.
+    final card = byId('s08.order.$id');
+    await tester.tap(find.descendant(of: card, matching: find.byIcon(Icons.schedule)));
+    await tester.pumpAndSettle();
+    expect(byId('s07.qr.open'), findsOneWidget);
+
+    // P-03: only the 6 digits under the QR are called the pickup code; the header names the order.
+    final order = orders.all.singleWhere((o) => o.id == id);
+    expect(find.text('Đơn tại ${order.kioskName}'), findsOneWidget);
+    expect(find.text('Mã nhận món: ${order.pickupCode}'), findsOneWidget);
+    expect(find.textContaining('Mã nhận tại'), findsNothing);
+  });
+
   testWidgets('S07 enlarges the pickup QR code in S20, and closing it returns to the order', (tester) async {
     final deps = createFakeDependencies(signedIn: true);
     final orders = deps.orders as FakeOrderRepository;

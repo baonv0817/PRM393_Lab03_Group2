@@ -24,7 +24,7 @@ void main() {
   });
 
   test('every order status has a label', () {
-    expect(OrderStatus.values.map(orderStatusLabel), ['Đã nhận đơn', 'Đang làm', 'Sẵn sàng', 'Hoàn tất', 'Đã huỷ']);
+    expect(OrderStatus.values.map(orderStatusLabel), ['Chờ xác nhận', 'Đang làm', 'Sẵn sàng', 'Hoàn tất', 'Đã huỷ']);
   });
 
   test('review tags and star ratings have a label; an unknown tag is shown as stored', () {

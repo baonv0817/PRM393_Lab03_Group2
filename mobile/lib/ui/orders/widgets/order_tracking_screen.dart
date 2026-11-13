@@ -160,7 +160,8 @@ class _Body extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Mã nhận tại ${order.kioskName}', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                  // The order number, not the code to show at the counter: that one is under the QR (P-03, D38).
+                  Text('Đơn tại ${order.kioskName}', style: text.bodyMedium?.copyWith(color: colors.muted)),
                   Row(
                     children: [
                       Expanded(
@@ -214,7 +215,7 @@ class _Body extends StatelessWidget {
                       'Quét tại đầu đọc kiosk để nhận món',
                       style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
-                    Text('Mã số: ${order.pickupCode}', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                    Text('Mã nhận món: ${order.pickupCode}', style: text.bodyMedium?.copyWith(color: colors.muted)),
                     TestId(
                       's07.qr.open',
                       child: AppButton(

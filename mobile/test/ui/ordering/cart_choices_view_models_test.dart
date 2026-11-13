@@ -194,7 +194,7 @@ void main() {
       expect(vm.finished.map((o) => o.id), containsAll([doneId, cancelledId]));
       expect(vm.timing(find(activeId)), 'Chờ kiosk nhận đơn');
       expect(vm.timing(find(cancelledId)), 'Đã huỷ');
-      expect(vm.timing(find(doneId)), startsWith('Đã nhận '));
+      expect(vm.timing(find(doneId)), startsWith('Đã lấy món '));
       expect(vm.title(find(activeId)), '#$activeId · Kiosk');
       vm.dispose();
     });
