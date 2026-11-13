@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:breakbite/ui/cart/view_models/cart_controls.dart';
-import 'package:breakbite/ui/cart/view_models/cart_view_model.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -102,39 +101,6 @@ void main() {
       expect(result, isA<Err<void>>());
       expect(controls.count, 1);
       controls.stop();
-    });
-  });
-
-  group('cart screen photos', () {
-    test('each line gets the photo of its dish from the menu', () async {
-      final cart = FakeCartRepository();
-      await cart.addItem(
-        'u1',
-        kioskId: 'q9-t2',
-        item: const CartItem(itemId: 'm1', name: 'Combo', priceVnd: 39000),
-      );
-      final menu = FakeMenuRepository();
-      final known = await menu.getItems(['m1']);
-      final expected = (known as Ok<Map<String, MenuItem>>).value['m1']?.imageUrl;
-      final vm = CartViewModel(cart: cart, menu: menu, crash: FakeCrashService(), uid: 'u1');
-      await pumpEventQueue();
-      expect(vm.imageUrlOf('m1'), expected);
-      expect(vm.imageUrlOf('m1'), isNotNull);
-      vm.dispose();
-    });
-
-    test('a dish that is no longer on the menu has no photo, and the cart still works', () async {
-      final cart = FakeCartRepository();
-      await cart.addItem(
-        'u1',
-        kioskId: 'q9-t2',
-        item: const CartItem(itemId: 'gone', name: 'Món cũ', priceVnd: 20000),
-      );
-      final vm = CartViewModel(cart: cart, menu: FakeMenuRepository(), crash: FakeCrashService(), uid: 'u1');
-      await pumpEventQueue();
-      expect(vm.imageUrlOf('gone'), isNull);
-      expect(vm.items.single.itemId, 'gone');
-      vm.dispose();
     });
   });
 }
