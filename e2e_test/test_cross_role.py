@@ -22,46 +22,16 @@ Mỗi lần chạy tạo một đơn tiền mặt mới (được duyệt hoặc
 import datetime as dt
 import json
 import os
-import pathlib
-import subprocess
 import threading
 import time
-import urllib.request
 
 import pytest
 
-PROJECT = "breakbite-1315b"
-DOCS = f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)/documents"
+from project_data import DOCS
+from project_data import call as _call
+from project_data import ts as _ts
+
 REJECT_REASON = "Hết nguyên liệu"
-
-
-def _access_token() -> str:
-    token = os.environ.get("CROSS_ROLE_ACCESS_TOKEN")
-    if token:
-        return token
-    # `firebase projects:list` refreshes the CLI's token, which is then read from its config file.
-    subprocess.run("firebase projects:list", shell=True, capture_output=True, check=False)
-    config = pathlib.Path.home() / ".config" / "configstore" / "firebase-tools.json"
-    return json.loads(config.read_text(encoding="utf-8"))["tokens"]["access_token"]
-
-
-def _call(method: str, url: str, body: dict | None = None) -> dict:
-    request = urllib.request.Request(
-        url,
-        data=None if body is None else json.dumps(body).encode(),
-        method=method,
-        headers={
-            "Authorization": f"Bearer {_access_token()}",
-            "x-goog-user-project": PROJECT,
-            "Content-Type": "application/json",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read() or b"{}")
-
-
-def _ts(value: dict) -> dt.datetime:
-    return dt.datetime.fromisoformat(value["timestampValue"].replace("Z", "+00:00"))
 
 
 class StaffDecision(threading.Thread):

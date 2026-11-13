@@ -8,7 +8,7 @@ https://breakbite-1315b.web.app, the real Firebase project `breakbite-1315b`) un
 |---|---|---|---|
 | Security Rules (Emulator) | An allowed and a denied case per role per collection; all pass | **172/172 pass**, Appendix B matrix of 80 cases (R-01 … R-80) over 12 collections and 3 roles | [1](#1-security-rules-emulator) |
 | Web admin checklist | Main action of each screen, role rejection, empty and error states; a screenshot each | W01–W05 done on the deployed site; [list below](#2-web-admin-checklist) | [2](#2-web-admin-checklist) |
-| Mobile E2E (ARTEMIS) | Every Lab 2 flow, the mobile steps of the cross-role flow, the AI feature; 3 runs each with pass rate | Lab 2 flows 3/3 (F3 3/4); AI 3/4 and 3/3; cross-role mobile steps **3/3 and 3/3** | [3](#3-mobile-e2e-artemis) |
+| Mobile E2E (ARTEMIS) | Every Lab 2 flow, the mobile steps of the cross-role flow, the AI feature; 3 runs each with pass rate | **3/3 for every case**: Lab 2 flows F1, F2, F3, F6, F8, F9 and the seller flow; AI 3/3 and 3/3; cross-role mobile steps 3/3 and 3/3 | [3](#3-mobile-e2e-artemis) |
 | Cross-role flow | End to end on the deployed system, 3 times | **3 of 3** worked: 1.22 s, 1.09 s, 1.14 s from the web click to the phone; announcement flow 1.13 s | [4](#4-cross-role-flow-3-times-on-the-deployed-system) |
 | AI code review | At least 3 findings with decisions | **10 findings**, 9 fixed in 3 pull requests, 1 not fixed with a reason | [5](#5-ai-code-review-of-the-new-code) |
 
@@ -153,13 +153,19 @@ agent reports. Runs, pass rates, trace ids and the cause of every failure are in
 |---|---|---|---|
 | Lab 2 F1, quick order from Home (MoMo, `purchase` event in Logcat) | TC-03 | run-12 to 14 | 3/3 |
 | Lab 2 F2, voucher and its error path | TC-04 | run-31 to 33 | 3/3 |
-| Lab 2 F3, payment error then cash | TC-05 | run-21 to 24 | 3/4 (run-21: host load; an app bug was found and fixed before, P-01) |
+| Lab 2 F3, payment error then cash | TC-05 | run-22 to 24 | 3/3 (an app bug was found and fixed before, P-01) |
 | Lab 2 seller flow, accept to handover | TC-12 | run-37 to 39 | 3/3 |
 | Sign-in, sign-out, search, tabs, details, export, Remote Config | TC-01, 02, 06, 07, 08, 09, 10 | runs 1 to 8, 34 to 36 | 3/3 each |
-| AI feature, a dish photo fills K14 | TC-40 | run-43 to 46 | 3/4 (run-45: the ARTEMIS model answered 503) |
+| AI feature, a dish photo fills K14 | TC-40 | run-43, 44, 46 | 3/3 |
 | AI feature, a photo that is not food | TC-41 | run-43 to 45 | 3/3 |
 | Cross-role, mobile steps: the web approves | TC-42 | run-47 to 49 | 3/3 |
 | Cross-role, mobile steps: the web rejects with a reason | TC-43 | run-47 to 49 | 3/3 |
+| Lab 2 F6, favorite an item from its page and add it from S13 | TC-32 | run-61 to 63 | 3/3 |
+| Lab 2 F6, quick reorder from Home (S14) | TC-33 | run-50 to 52 | 3/3 |
+| Lab 2 F8, order ready → inbox → pickup code (S19, S20) | TC-34 | run-50 to 52 | 3/3 |
+| Lab 2 F9, sold-out item → replacements (S22) | TC-30 | run-53 to 55 | 3/3 |
+
+Runs not counted: a run stopped by the test setup and not by the app (the emulator not responding under load, the ARTEMIS model answering 503 or out of quota, an older build after an emulator restart) was run again; the causes are in [`test-plan.md` sections 3.3 to 3.6](test-plan.md#3-run-results) and every run file is in `evidence/artemis/`.
 
 TC-42 and TC-43 ([`test_cross_role.py`](../e2e_test/test_cross_role.py)): the agent orders a coffee with cash and waits
 on "Theo dõi đơn"; meanwhile the test plays the kiosk, writing to the order exactly what W03 writes when it approves or

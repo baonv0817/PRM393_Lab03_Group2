@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="4" time="749.114" timestamp="2026-11-13T12:04:02.353180+07:00" hostname="DESKTOP-JMV72MV"><testcase classname="test_lab2_flows" name="test_tc32_f6_favorite_from_the_item_page_to_the_cart" time="120.793" /><testcase classname="test_lab2_flows" name="test_tc33_f6_quick_reorder_from_home_fills_the_cart" time="109.732" /><testcase classname="test_lab2_flows" name="test_tc34_f8_ready_notification_opens_the_pickup_code" time="72.926" /><testcase classname="test_order" name="test_tc30_sold_out_alternatives" time="445.286"><failure message="AssertionError: failed&#10;assert False&#10; +  where False = TaskResult(task_id='538257c1-b8fc-4df2-8465-4afd52eacd5b', status='failed', goal='BreakBite đang đăng nhập, kiosk Q9 ·...&quot;cart_badge&quot;: số trên nút giỏ hàng}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded">artemis = &lt;conftest.Artemis object at 0x0000028CCF41C8A0&gt;
+food_sold_out_and_empty_cart = None
+
+    async def test_tc30_sold_out_alternatives(artemis, food_sold_out_and_empty_cart):
+        result = await artemis.run(
+            "BreakBite đang đăng nhập, kiosk Q9 · Tầng 2, giỏ trống, có một món ăn đang tạm hết. Mở tab Thực đơn, "
+            'chạm thẻ có nhãn "Tạm hết". Trên màn "Món tạm hết", chạm + của món đầu tiên trong mục '
+            '"Gợi ý thay thế còn hàng", rồi chạm + trên bộ đếm của nó thêm một lần.',
+            expected_output=(
+                'JSON: {"screen_title": tiêu đề màn hình, "first_alternative": tên món thay thế đầu tiên, '
+                '"cart_badge": số trên nút giỏ hàng}'
+            ),
+        )
+&gt;       assert result.succeeded, result.error or result.status
+E       AssertionError: failed
+E       assert False
+E        +  where False = TaskResult(task_id='538257c1-b8fc-4df2-8465-4afd52eacd5b', status='failed', goal='BreakBite đang đăng nhập, kiosk Q9 ·..."cart_badge": số trên nút giỏ hàng}', profile=None, device_serial='emulator-5554', output=None, error=None, turns=None).succeeded
+
+test_order.py:167: AssertionError</failure></testcase></testsuite></testsuites>
