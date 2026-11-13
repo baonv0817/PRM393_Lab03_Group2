@@ -260,20 +260,21 @@ class _Body extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.sm),
-        ListenableBuilder(
-          listenable: vm.exportReceipt,
-          builder: (context, _) => TestId(
-            's12.export',
-            child: AppButton(
-              label: 'Xuất biên nhận PDF',
-              icon: Icons.picture_as_pdf_outlined,
-              variant: AppButtonVariant.secondary,
-              large: true,
-              loading: vm.exportReceipt.running,
-              onPressed: vm.exportReceipt.running ? null : onExport,
+        if (vm.canExportReceipt)
+          ListenableBuilder(
+            listenable: vm.exportReceipt,
+            builder: (context, _) => TestId(
+              's12.export',
+              child: AppButton(
+                label: 'Xuất biên nhận PDF',
+                icon: Icons.picture_as_pdf_outlined,
+                variant: AppButtonVariant.secondary,
+                large: true,
+                loading: vm.exportReceipt.running,
+                onPressed: vm.exportReceipt.running ? null : onExport,
+              ),
             ),
           ),
-        ),
         if (vm.stage != ReceiptStage.idle) _ExportProgress(vm: vm),
         if (vm.lastReceipt case final report?) _UploadedCard(report: report, onCopy: () => onCopy(report.url)),
         if (earlier.isNotEmpty) ...[
