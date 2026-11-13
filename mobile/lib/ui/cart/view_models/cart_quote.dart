@@ -29,6 +29,9 @@ class CartQuote {
 
   StreamSubscription<Cart>? _cartSub;
   StreamSubscription<List<Kiosk>>? _kioskSub;
+  StreamSubscription<List<MenuItem>>? _menuSub;
+  String? _menuKioskId;
+  Map<String, String?> _images = const {};
   Cart? _cart;
   List<Kiosk>? _kiosks;
   String? _loadError;
@@ -41,6 +44,9 @@ class CartQuote {
   Cart get value => _cart ?? Cart.empty;
   Voucher? get voucher => _voucher;
   DateTime get now => _clock();
+
+  /// The photo of a cart line, from the kiosk's menu (D42); null until the menu arrives or when the item has none.
+  String? imageOf(String itemId) => _images[itemId];
 
   Kiosk? get kiosk {
     final id = value.kioskId;
@@ -63,12 +69,30 @@ class CartQuote {
   void stop() {
     unawaited(_cartSub?.cancel());
     unawaited(_kioskSub?.cancel());
+    unawaited(_menuSub?.cancel());
+    _menuSub = null;
+    _menuKioskId = null;
   }
 
   void _onCart(Cart value) {
     _cart = value;
+    _watchMenu(value.kioskId);
     _onChanged();
     if (value.voucherCode != _voucherCode) unawaited(_loadVoucher(value.voucherCode));
+  }
+
+  /// Follows the menu of the cart's kiosk for the photos only: a failure leaves the dish icon and is not an error of
+  /// the cart.
+  void _watchMenu(String? kioskId) {
+    if (kioskId == _menuKioskId) return;
+    unawaited(_menuSub?.cancel());
+    _menuKioskId = kioskId;
+    _images = const {};
+    if (kioskId == null) return;
+    _menuSub = menu.watchMenu(kioskId, includeArchived: true).listen((items) {
+      _images = {for (final i in items) i.id: i.imageUrl};
+      _onChanged();
+    }, onError: (Object error, StackTrace stack) => crash.recordNonFatal(error, stack, '$_reason.menuImages'));
   }
 
   void _onError(Object error, StackTrace stack) {

@@ -40,6 +40,22 @@ void main() {
       vm.dispose();
     });
 
+    test('D42: each line shows the photo of its item from the kiosk menu', () async {
+      final cart = FakeCartRepository();
+      await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
+      final vm = CartViewModel(
+        cart: cart,
+        menu: FakeMenuRepository(),
+        crash: FakeCrashService(),
+        uid: 'u1',
+        clock: () => _now,
+      );
+      await pumpEventQueue();
+      expect(vm.imageOf('m1'), 'assets/images/menu/tacos-bo.jpg');
+      expect(vm.imageOf('unknown'), isNull);
+      vm.dispose();
+    });
+
     test('a voucher below its minimum blocks checkout until it is removed', () async {
       final cart = FakeCartRepository();
       await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);

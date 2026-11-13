@@ -100,6 +100,7 @@ class CartScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.sm),
                     _CartLine(
                       item: item,
+                      imageUrl: vm.imageOf(item.itemId),
                       onIncrement: item.quantity < Cart.maxQuantity ? () => _change(context, vm, item.itemId, 1) : null,
                       onDecrement: () => _change(context, vm, item.itemId, -1),
                       onEditNote: () => _editNote(context, vm, item),
@@ -168,9 +169,18 @@ class _PickupCard extends StatelessWidget {
 }
 
 class _CartLine extends StatelessWidget {
-  const _CartLine({required this.item, required this.onIncrement, required this.onDecrement, required this.onEditNote});
+  const _CartLine({
+    required this.item,
+    required this.imageUrl,
+    required this.onIncrement,
+    required this.onDecrement,
+    required this.onEditNote,
+  });
 
   final CartItem item;
+
+  /// The photo of the item from the menu (D42); the BreakBite logo when there is none.
+  final String? imageUrl;
   final VoidCallback? onIncrement;
   final VoidCallback onDecrement;
   final VoidCallback onEditNote;
@@ -188,15 +198,7 @@ class _CartLine extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                ),
-                child: Icon(Icons.restaurant, color: colors.primaryText),
-              ),
+              TestId('$testId.image', child: MenuItemImage(imageUrl: imageUrl, size: 56)),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(

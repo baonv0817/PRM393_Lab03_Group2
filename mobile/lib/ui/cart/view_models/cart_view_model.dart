@@ -69,6 +69,9 @@ class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
   }
 
   int get itemCount => items.fold(0, (sum, line) => sum + line.quantity);
+
+  /// The photo of a cart line from the kiosk's menu (D42).
+  String? imageOf(String itemId) => quote.imageOf(itemId);
   Kiosk? get kiosk => quote.kiosk;
   Voucher? get voucher => quote.voucher;
   OrderPricing get pricing => quote.price(items);
