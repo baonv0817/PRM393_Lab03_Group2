@@ -27,8 +27,14 @@ $env:ARTEMIS_PROFILE = "flash"     # "pro" only for the exploratory session
 $env:ARTEMIS_TRACES_DIR = "C:/src/artemis/traces"   # the traces folder of your ARTEMIS server
 $env:TEST_GOOGLE_ACCOUNT = "<the customer test account>"   # TC-01 picks it in the account chooser
 adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite   # TC-03 reads the purchase event from Logcat
+$env:CROSS_ROLE_CUSTOMER_UID = "<uid of the customer test account>"   # TC-42, TC-43 (Firebase console, Authentication)
 uv run pytest -v
 ```
+
+TC-42 and TC-43 (`test_cross_role.py`, the mobile steps of the cross-role flow) play the kiosk while the agent waits on
+"Theo dõi đơn": they approve or reject the customer's new order through the Firestore REST API, with the token of the
+Firebase CLI (`firebase login` on this machine) or `$env:CROSS_ROLE_ACCESS_TOKEN`. The kiosk must be open at the time
+of the run (K10 hours). Without `CROSS_ROLE_CUSTOMER_UID` the two tests are skipped.
 
 The pinned ARTEMIS version returns no structured output (`result.output` is empty), so `conftest.py` reads the agent's final JSON report from `<ARTEMIS_TRACES_DIR>/<session id>/stdout.log`; without `ARTEMIS_TRACES_DIR` the tests that compare values fail. The server and the tests must be on the same machine.
 

@@ -59,6 +59,8 @@ The app's UI is in Vietnamese, so labels the agent must tap or read are written 
 | TC-31 | Home when the kiosk is closed (S21) | Signed in; the kiosk "Nhà văn hóa SV · Tầng 1" is closed (`open: false`, opens at 07:00, as in the seed) | On Home tap the kiosk name, choose "Nhà văn hóa SV · Tầng 1" and confirm; then tap "Chọn kiosk khác" on the card, choose "Kiosk Q9 · Tầng 2" and confirm | Home shows "Đóng · mở lại 07:00" in red, the card "Quán đang đóng cửa" with the kiosk's notice and "Mở lại lúc 07:00", and "Xem trước thực đơn" with cards labelled "Quán đóng" and no + button; after choosing Kiosk Q9 · Tầng 2 the normal Home comes back with search and "Món nhanh"; report the status line and the card title | Error path | Backlog, not run (see below) |
 | TC-40 | Final assignment AI (K14, `docs/ai-feature.md`) | Staff account of Kiosk Q9 · Tầng 2; Remote Config `ai_enabled` = true; `banh-mi.jpg` in the phone's gallery (Pictures/BreakBiteAI) | Món → + → "Thư viện" → the bánh mì photo → "Điền bằng AI"; wait for the "Gợi ý từ AI" notice; close without saving | The name contains "bánh mì", the price is 5 000 – 100 000 đ, "Món ăn" is chosen, "Gợi ý từ AI" is under the name | Happy path, AI | Run: 3/4 pass on the rerun, the failure from the ARTEMIS model (section 3.4) |
 | TC-41 | Final assignment AI, error path | As TC-40, with `breakbite_logo.png` in the gallery | Same steps with the logo; then type "Món thử" in the name; close without saving | The red line under the button says the photo is not food ("không giống món ăn"), the name stays empty, typing still works | Error path, AI | Run: 3/3 pass on the rerun (section 3.4) |
+| TC-42 | Final assignment cross-role flow, mobile steps: the web approves (`docs/cross-role-flow.md`) | Customer account, Kiosk Q9 · Tầng 2 open, empty cart; `CROSS_ROLE_CUSTOMER_UID` set and `firebase login` done on the test machine | Home → + on "Cà Phê Sữa Đá" → cart → "Tiếp tục thanh toán" → "Tiền mặt tại kiosk" → "Xác nhận đặt đơn"; wait on "Theo dõi đơn" while the test approves the order as W03 does | The line under the order code changes to "Dự kiến sẵn sàng … (còn … phút)" and step "Đang làm" is highlighted, without reopening the screen; the reported code is the approved order | Cross-role, happy path | Run: 3/3 pass (section 3.5) |
+| TC-43 | Final assignment cross-role flow, mobile steps: the web rejects with a reason | As TC-42 | Same steps; the test rejects the order with "Hết nguyên liệu" as W03 does | The line under the order code changes to "Đơn đã huỷ: Hết nguyên liệu" and the step bar goes away | Cross-role, error path | Run: 3/3 pass (section 3.5) |
 
 The instructions above are summaries; the full versions are in `e2e_test/`.
 
@@ -138,6 +140,20 @@ No failure came from the app: every session in which the emulator answered and t
 |---|---|---|---|---|---|
 | TC-40 | 4 (run-43 to 46) | 3/4 (75%) | 268 s | f68254f4, 38dc4898, f1c120ae, b7f55a90 | The three passing runs reported `{"name": "Bánh mì thịt" / "Bánh mì chả thịt" / "Bánh mì pate chả lụa", "price": "20000", "category": "Món ăn", "ai_label_under_name": true}` (21 to 25 steps, 10 for run-46). The name Gemini suggests varies between runs (temperature 0.2), the price and kind do not; the test only checks that the name contains "bánh mì". run-45 failed before its first step on the ARTEMIS model (**test infrastructure**, E-06). |
 | TC-41 | 3 (run-43 to 45) | 3/3 (100%) | 226 s | 04ae7e71, 1d44d576, aaebe280 | Each run reported "Ảnh này không giống món ăn hay đồ uống. Chụp lại món hoặc nhập tay.", the name empty after the AI and "Món thử" typed (11 to 22 steps). |
+
+### 3.5 Final assignment cross-role flow, mobile steps (13/11/2026, runs 47 to 49)
+
+Same emulator and ARTEMIS setup, the customer account, the build of `main` at `af7f6d0`, Kiosk Q9 · Tầng 2 open
+(hours set to 00:00–23:59 in K10 for the morning run). Command: `uv run python run_repeat.py -n 3 -k "tc42 or tc43"
+--start 47 --restart-app` with `CROSS_ROLE_CUSTOMER_UID` set. While the agent waits on "Theo dõi đơn", the test plays
+the kiosk: it finds the customer's new pending order and writes what W03 writes (`status`, `acceptedAt`, `readyBy`, or
+`status`, `cancelledBy`, `cancelReason`, `cancelledAt`) through the Firestore REST API. The web side itself was run
+three times by hand on the deployed site (`docs/cross-role-flow.md`) and the rules are covered by R-47 to R-50.
+
+| Test | Runs (files) | Pass rate | Average time | Trace ids (first 8 characters) | Notes |
+|---|---|---|---|---|---|
+| TC-42 | 3 (run-47 to 49) | 3/3 (100%) | 90 s | 591e8872, 1cde4246, 6e6eef18 | Orders #BNMWUF, #RRR2XJ, #OAG28P; each run reported "Dự kiến sẵn sàng 09:1x (còn 9–10 phút)" and "Đang làm" (10 to 11 steps). |
+| TC-43 | 3 (run-47 to 49) | 3/3 (100%) | 106 s | e23b00ca, ef4ab80a, 34f80edb | Orders #YSN696, #NIDFVU, #L4AINN; each run reported "Đơn đã huỷ: Hết nguyên liệu" and no step bar (9 to 11 steps). |
 
 ## 4. Exploratory session (Pro profile, 15 to 30 minutes)
 
