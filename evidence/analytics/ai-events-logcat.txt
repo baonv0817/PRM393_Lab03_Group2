@@ -1,0 +1,19 @@
+AI events on 13/11/2026, real build on the emulator BB_Pixel7, staff account of Kiosk Q9 · Tầng 2, Analytics debug mode on
+(adb shell setprop debug.firebase.analytics.app vn.edu.fpt.breakbite) and verbose Analytics logging
+(adb shell setprop log.tag.FA-SVC VERBOSE). Lines copied from `adb logcat -v time`, filtered on "Logging event" and "ai_".
+
+K14, photo banh-mi.jpg, "Điền bằng AI" (the form was filled with "Bánh mì pate chả lụa"):
+11-13 10:05:23.175 V/FA-SVC  ( 2023): Logging event: origin=app,name=ai_request,params=Bundle[{feature=k14_photo, ga_event_origin(_o)=app, ga_screen_class(_sc)=MainActivity, ga_screen_id(_si)=5389446184614367693, model=gemini-3.5-flash-lite}]
+
+"Lưu món" with the five suggested fields unchanged:
+11-13 10:05:56.895 V/FA-SVC  ( 2023): Logging event: origin=app,name=ai_result_accepted,params=Bundle[{feature=k14_photo, ga_event_origin(_o)=app, ga_screen_class(_sc)=MainActivity, ga_screen_id(_si)=5389446184614367693, fields_kept=5, fields_changed=0}]
+
+The ai_error of the same session (photo breakbite_logo.png, "Ảnh này không giống món ăn hay đồ uống…", 10:00:37) was
+taken before verbose logging was on; it is in DebugView (debugview-ai-events.png).
+
+Note on DebugView: it showed every event name, but not every single event. The ai_request above (10:05:23) is in
+logcat but not in the DebugView timeline. The ai_result_accepted of a first save at about 10:01:40 (logging not yet
+verbose) is not in DebugView either. The second save was logged (above) and reached DebugView at 10:06:01.
+
+Clean-up: the two items saved for this check ("Bánh mì thịt nguội" at 10:01, "Bánh mì pate chả lụa" at 10:06) were
+archived right after (archived = true, the same write as W02 "Lưu trữ"), so customers never see them.
