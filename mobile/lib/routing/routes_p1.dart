@@ -9,6 +9,7 @@ import 'package:breakbite/ui/cart/widgets/voucher_picker_screen.dart';
 import 'package:breakbite/ui/checkout/view_models/checkout_view_model.dart';
 import 'package:breakbite/ui/checkout/widgets/checkout_screen.dart';
 import 'package:breakbite/ui/checkout/widgets/gateway_screen.dart';
+import 'package:breakbite/ui/checkout/widgets/sandbox_gateway_screen.dart';
 import 'package:breakbite/ui/home/view_models/home_view_model.dart';
 import 'package:breakbite/ui/home/widgets/home_screen.dart';
 import 'package:breakbite/ui/menu/view_models/alternatives_view_model.dart';
@@ -162,6 +163,11 @@ final List<GoRoute> p1Routes = [
           crash: context.read<CrashService>(),
           uid: user?.uid ?? '',
           customerName: user?.displayName ?? 'Khách',
+          // D41: Remote Config can send MoMo and VNPAY back to the simulated screen without a new build.
+          gateway:
+              context.read<RemoteConfigService>().getString(RemoteKeys.paymentGateway) == RemoteKeys.gatewaySimulated
+              ? const NoPaymentGateway()
+              : context.read<PaymentGatewayService>(),
         ),
         child: const CheckoutScreen(),
       );
@@ -172,7 +178,9 @@ final List<GoRoute> p1Routes = [
     redirect: (context, state) => state.extra is CheckoutViewModel ? null : AppRoutes.cart,
     builder: (context, state) => ChangeNotifierProvider<CheckoutViewModel>.value(
       value: state.extra! as CheckoutViewModel,
-      child: const GatewayScreen(),
+      child: (state.extra! as CheckoutViewModel).checkout == null
+          ? const GatewayScreen()
+          : const SandboxGatewayScreen(),
     ),
   ),
   GoRoute(

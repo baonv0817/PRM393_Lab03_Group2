@@ -8,6 +8,9 @@ Future<String> placeTestOrder(
   List<CartItem> items = const [CartItem(itemId: 'm1', name: 'Combo', priceVnd: 39000)],
   PaymentMethod method = PaymentMethod.momo,
   String kioskId = 'q9-t2',
+
+  /// D40: a gateway order is created unpaid; by default the helper also pays it, like the gateway does.
+  bool pay = true,
 }) async {
   final result = await orders.placeOrder(
     OrderDraft(
@@ -19,5 +22,7 @@ Future<String> placeTestOrder(
       paymentMethod: method,
     ),
   );
-  return result.valueOrNull!;
+  final id = result.valueOrNull!;
+  if (pay && method != PaymentMethod.cash) await orders.payOrder(id);
+  return id;
 }

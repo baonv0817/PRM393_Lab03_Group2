@@ -3,6 +3,12 @@ abstract final class RemoteKeys {
   static const promoBannerEnabled = 'promo_banner_enabled';
   static const pickupSlotEnabled = 'pickup_slot_enabled';
 
+  /// D41: `sandbox` sends MoMo and VNPAY to their real sandbox gateway (when the build has the keys);
+  /// `simulated` goes back to the simulated gateway screen of D02, without a new build.
+  static const paymentGateway = 'payment_gateway';
+  static const gatewaySandbox = 'sandbox';
+  static const gatewaySimulated = 'simulated';
+
   /// The Gemini feature of K14 (docs/ai-feature.md): on/off, which model, and the instructions it gets.
   static const aiEnabled = 'ai_enabled';
   static const aiModel = 'ai_model';
@@ -39,6 +45,7 @@ abstract final class RemoteKeys {
     quickItemsLimit: 5,
     promoBannerEnabled: true,
     pickupSlotEnabled: true,
+    paymentGateway: gatewaySandbox,
     // Off in the app until the console turns it on, so a build never calls Gemini by surprise.
     aiEnabled: false,
     aiModel: defaultAiModel,

@@ -38,7 +38,7 @@ const storedOrder = (over) => ({
 const newOrder = (over) => ({
   uid: 'u1', customerName: 'Quân', kioskId: 'k1', kioskName: 'Kiosk Q9 · Tầng 2',
   items: [item], subtotalVnd: 39000, discountVnd: 0, totalVnd: 39000,
-  paymentMethod: 'momo', paymentStatus: 'paid', status: 'pending', pickupCode: '123456', ...created(), ...over,
+  paymentMethod: 'momo', paymentStatus: 'unpaid', status: 'pending', pickupCode: '123456', ...created(), ...over,
 });
 
 const menuItem = (over) => ({
@@ -78,6 +78,8 @@ beforeEach(async () => {
     await setDoc(doc(db, 'orders/o4'), storedOrder({ status: 'ready', paymentMethod: 'cash', paymentStatus: 'unpaid' }));
     await setDoc(doc(db, 'orders/o5'), storedOrder({ kioskId: 'k2', kioskName: 'Kiosk Q9 · Tầng 4' }));
     await setDoc(doc(db, 'orders/o6'), storedOrder({ status: 'delivered' }));
+    await setDoc(doc(db, 'orders/o7'), storedOrder({ paymentStatus: 'unpaid' }));
+    await setDoc(doc(db, 'orders/o8'), storedOrder({ status: 'cancelled', paymentStatus: 'unpaid' }));
   });
 });
 
@@ -301,10 +303,10 @@ describe('orders: create', () => {
   test('a customer places a valid order at an open kiosk: allowed', async () => {
     await assertSucceeds(setDoc(doc(as('u1'), 'orders/n1'), newOrder()));
   });
-  test('cash must be unpaid, the other methods paid', async () => {
-    await assertSucceeds(setDoc(doc(as('u1'), 'orders/n2'), newOrder({ paymentMethod: 'cash', paymentStatus: 'unpaid' })));
+  test('every order is created unpaid, whatever the method (D40)', async () => {
+    await assertSucceeds(setDoc(doc(as('u1'), 'orders/n2'), newOrder({ paymentMethod: 'cash' })));
     await assertFails(setDoc(doc(as('u1'), 'orders/n3'), newOrder({ paymentMethod: 'cash', paymentStatus: 'paid' })));
-    await assertFails(setDoc(doc(as('u1'), 'orders/n4'), newOrder({ paymentMethod: 'momo', paymentStatus: 'unpaid' })));
+    await assertFails(setDoc(doc(as('u1'), 'orders/n4'), newOrder({ paymentMethod: 'momo', paymentStatus: 'paid' })));
   });
   test('ordering at a closed or paused kiosk: denied', async () => {
     await assertFails(setDoc(doc(as('u1'), 'orders/n5'), newOrder({ kioskId: 'k3' })));
@@ -399,6 +401,28 @@ describe('orders: customer edits and cancels', () => {
   });
   test('editing someone else\'s order: denied', async () => {
     await assertFails(updateDoc(doc(as('u1'), 'orders/o2'), { status: 'cancelled', cancelledBy: 'customer', cancelledAt: serverTimestamp(), ...touched() }));
+  });
+});
+
+describe('orders: paying after creating (D40)', () => {
+  test('a customer pays their pending gateway order: allowed', async () => {
+    await assertSucceeds(updateDoc(doc(as('u1'), 'orders/o7'), { paymentStatus: 'paid', ...touched() }));
+  });
+  test('paying a cash or cancelled order, or someone else\'s: denied', async () => {
+    await assertFails(updateDoc(doc(as('u1'), 'orders/o1'), { paymentStatus: 'paid', ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'orders/o8'), { paymentStatus: 'paid', ...touched() }));
+    await assertFails(updateDoc(doc(as('u2'), 'orders/o7'), { paymentStatus: 'paid', ...touched() }));
+  });
+  test('paying while changing anything else, or without the server time: denied', async () => {
+    await assertFails(updateDoc(doc(as('u1'), 'orders/o7'), { paymentStatus: 'paid', totalVnd: 1000, subtotalVnd: 1000, ...touched() }));
+    await assertFails(updateDoc(doc(as('u1'), 'orders/o7'), { paymentStatus: 'paid', updatedAt: past }));
+  });
+  test('staff cannot accept an unpaid gateway order, but may reject it', async () => {
+    await assertFails(updateDoc(doc(as('s1'), 'orders/o7'), { status: 'preparing', acceptedAt: serverTimestamp(), readyBy: future, ...touched() }));
+    await assertSucceeds(updateDoc(doc(as('s1'), 'orders/o1'), { status: 'preparing', acceptedAt: serverTimestamp(), readyBy: future, ...touched() }));
+    await assertSucceeds(updateDoc(doc(as('s1'), 'orders/o7'), {
+      status: 'cancelled', cancelledBy: 'staff', cancelReason: 'unpaid', cancelledAt: serverTimestamp(), ...touched(),
+    }));
   });
 });
 

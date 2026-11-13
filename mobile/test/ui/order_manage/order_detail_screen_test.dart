@@ -57,6 +57,7 @@ class _Harness {
       ),
     );
     final id = result.valueOrNull!;
+    await orders.payOrder(id); // D40: paid at the gateway
     Order current() => orders.all.firstWhere((o) => o.id == id);
     await orders.accept(current(), readyIn: const Duration(minutes: 5));
     await orders.markReady(current());

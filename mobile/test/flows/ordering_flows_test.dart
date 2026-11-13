@@ -1,5 +1,6 @@
 import 'package:breakbite/app.dart';
 import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/ui/checkout/view_models/checkout_view_model.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -149,6 +150,10 @@ void main() {
         expect(find.text('Thử lại với VNPAY-QR'), findsOneWidget);
         expect((deps.cart as FakeCartRepository).current('dev-user').items, hasLength(1));
         expect((deps.analytics as FakeAnalyticsService).events.map((e) => e.name), contains('payment_failed'));
+        // D40: the MoMo order was created unpaid and is cancelled by the decline; the kiosk never saw it.
+        final declined = (deps.orders as FakeOrderRepository).all.single;
+        expect((declined.status, declined.paymentStatus), (OrderStatus.cancelled, PaymentStatus.unpaid));
+        expect(declined.cancelReason, CheckoutViewModel.unpaidCancelReason);
 
         await tapId(tester, 's06.method.cash');
         expect(find.text('Đặt đơn, trả tiền mặt tại kiosk'), findsOneWidget);
@@ -157,14 +162,14 @@ void main() {
         expect(byId('s07.header'), findsOneWidget);
         expect(find.text('Trả tại quầy'), findsOneWidget);
         expect(find.text('Trả tại quầy khi nhận: 39.000đ'), findsOneWidget);
-        expect((deps.orders as FakeOrderRepository).all.single.paymentStatus, PaymentStatus.unpaid);
+        expect((deps.orders as FakeOrderRepository).all.last.paymentStatus, PaymentStatus.unpaid);
 
         await tapId(tester, 's07.cancel');
-        expect(find.text('Huỷ đơn #A-204?'), findsOneWidget);
+        expect(find.text('Huỷ đơn #A-205?'), findsOneWidget);
         await tester.tap(find.text('Huỷ đơn').last);
         await tester.pumpAndSettle();
         expect(byId('s10.header'), findsOneWidget);
-        expect(find.text('#A-204'), findsOneWidget);
+        expect(find.text('#A-205'), findsOneWidget);
         expect(find.text('Bạn đã huỷ đơn này.'), findsOneWidget);
         expect(find.text('Bạn chưa trả tiền cho đơn này nên không có khoản nào cần hoàn.'), findsOneWidget);
         expect(find.text('Combo Tacos Bò Phô Mai ×1'), findsOneWidget);
@@ -175,7 +180,7 @@ void main() {
         await tester.tap(find.byTooltip('Đóng'));
         await tester.pumpAndSettle();
         expect(find.text('Món nhanh · tối đa 5 phút'), findsOneWidget);
-        expect((deps.orders as FakeOrderRepository).all.single.status, OrderStatus.cancelled);
+        expect((deps.orders as FakeOrderRepository).all.last.status, OrderStatus.cancelled);
         expect(tester.takeException(), isNull);
       },
     );
@@ -189,7 +194,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(byId('s06.error'), findsOneWidget);
     expect(find.text('Bạn đã rời cổng thanh toán trước khi xác nhận.'), findsOneWidget);
-    expect((deps.orders as FakeOrderRepository).all, isEmpty);
+    final left = (deps.orders as FakeOrderRepository).all.single;
+    expect((left.status, left.cancelledBy), (OrderStatus.cancelled, CancelledBy.customer));
+    expect((deps.cart as FakeCartRepository).current('dev-user').items, hasLength(1));
   });
 
   testWidgets('the cart edits quantities and notes; emptying it shows the empty state', (tester) async {

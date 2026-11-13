@@ -50,7 +50,7 @@ class FakeOrderRepository implements OrderRepository {
         totalVnd: pricing.totalVnd,
         voucherCode: voucher?.code,
         paymentMethod: draft.paymentMethod,
-        paymentStatus: draft.paymentMethod == PaymentMethod.cash ? PaymentStatus.unpaid : PaymentStatus.paid,
+        paymentStatus: PaymentStatus.unpaid,
         status: OrderStatus.pending,
         kioskId: draft.kioskId,
         kioskName: draft.kioskName,
@@ -62,8 +62,20 @@ class FakeOrderRepository implements OrderRepository {
         createdAt: _clock,
       ),
     ]);
-    await cart?.clear(draft.uid);
+    if (draft.paymentMethod == PaymentMethod.cash) await cart?.clear(draft.uid);
     return Result.ok(id);
+  }
+
+  @override
+  Future<Result<void>> payOrder(String orderId) async {
+    final current = _find(orderId);
+    if (current == null) return const Result.error(NotFoundException(message: 'Không tìm thấy đơn hàng.'));
+    if (!current.awaitingPayment) {
+      return const Result.error(ValidationException('Đơn này đã được thanh toán hoặc đã huỷ.'));
+    }
+    _replace(_copy(current, paymentStatus: PaymentStatus.paid));
+    await cart?.clear(current.uid);
+    return const Result.ok(null);
   }
 
   @override
@@ -132,8 +144,9 @@ class FakeOrderRepository implements OrderRepository {
   );
 
   @override
-  Stream<List<Order>> watchKioskQueue(String kioskId) =>
-      _orders.stream.map((l) => _newestFirst(l.where((o) => o.kioskId == kioskId && _active.contains(o.status))));
+  Stream<List<Order>> watchKioskQueue(String kioskId) => _orders.stream.map(
+    (l) => _newestFirst(l.where((o) => o.kioskId == kioskId && _active.contains(o.status) && !o.awaitingPayment)),
+  );
 
   @override
   Future<Result<List<Order>>> findReadyByPickupCode(String kioskId, String pickupCode) async => Result.ok(
@@ -143,8 +156,12 @@ class FakeOrderRepository implements OrderRepository {
   );
 
   @override
-  Future<Result<void>> accept(Order order, {required Duration readyIn}) =>
-      _move(order, from: const [OrderStatus.pending], to: OrderStatus.preparing, readyIn: readyIn);
+  Future<Result<void>> accept(Order order, {required Duration readyIn}) async {
+    if (_find(order.id)?.awaitingPayment ?? false) {
+      return const Result.error(ValidationException('Khách chưa thanh toán đơn này.'));
+    }
+    return _move(order, from: const [OrderStatus.pending], to: OrderStatus.preparing, readyIn: readyIn);
+  }
 
   @override
   Future<Result<void>> markReady(Order order) =>

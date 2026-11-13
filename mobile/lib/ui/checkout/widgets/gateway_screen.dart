@@ -48,16 +48,16 @@ class _GatewayScreenState extends State<GatewayScreen> {
   }
 
   void _leave(GatewayOutcome outcome) {
-    if (_finished) return;
+    if (_finished || _vm.pay.running) return;
     _finished = true;
     _ticker?.cancel();
-    _vm.failGateway(outcome);
+    unawaited(_vm.failGateway(outcome));
     if (context.canPop()) context.pop();
   }
 
   Future<void> _pay() async {
     final router = GoRouter.of(context);
-    final result = await _vm.place.execute();
+    final result = await _vm.pay.execute();
     if (result == null) return;
     switch (result) {
       case Ok(:final value):
@@ -146,20 +146,21 @@ class _GatewayScreenState extends State<GatewayScreen> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    'Xác nhận giao dịch để hoàn tất đơn. Nếu từ chối, giỏ hàng vẫn được giữ.',
+                    'Đơn đã được tạo và chỉ gửi tới kiosk sau khi bạn thanh toán. '
+                    'Nếu từ chối hoặc hết hạn, đơn sẽ bị huỷ và giỏ hàng vẫn được giữ.',
                     style: text.bodyMedium?.copyWith(color: colors.muted),
                   ),
                 ],
               ),
             ),
             ListenableBuilder(
-              listenable: vm.place,
+              listenable: vm.pay,
               builder: (context, _) => BottomActionButton(
                 label: 'Xác nhận thanh toán',
                 icon: Icons.lock_outline,
                 testId: 's06g.pay',
-                loading: vm.place.running,
-                onPressed: vm.place.running ? null : _pay,
+                loading: vm.pay.running,
+                onPressed: vm.pay.running ? null : _pay,
                 secondaryLabel: 'Từ chối giao dịch',
                 secondaryIcon: Icons.close,
                 secondaryTestId: 's06g.decline',

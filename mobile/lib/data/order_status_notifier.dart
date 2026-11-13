@@ -106,7 +106,11 @@ class OrderStatusNotifier {
         // A cash order was never paid, so there is nothing to refund (found in the cross-role runs, 12/11/2026).
         body:
             '${order.cancelReason == null || order.cancelReason!.isEmpty ? 'Kiosk không nhận được đơn này.' : 'Lý do: ${order.cancelReason}.'}'
-            '${order.paymentStatus == PaymentStatus.paid ? ' Bạn được hoàn tiền.' : ' Đơn trả tại quầy nên bạn không mất tiền.'}',
+            '${switch ((order.paymentStatus, order.paymentMethod)) {
+              (PaymentStatus.paid, _) => ' Bạn được hoàn tiền.',
+              (_, PaymentMethod.cash) => ' Đơn trả tại quầy nên bạn không mất tiền.',
+              _ => ' Đơn chưa được thanh toán nên bạn không mất tiền.',
+            }}',
       ),
       _ => null,
     };

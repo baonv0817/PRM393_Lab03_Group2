@@ -96,6 +96,8 @@ class OrderTrackingViewModel extends ChangeNotifier with SafeChangeNotifier {
     final o = order;
     if (o == null) return '';
     return switch (o.status) {
+      // D40: an order left at the gateway (the app was closed) never reached the kiosk.
+      OrderStatus.pending when o.awaitingPayment => 'Chưa thanh toán nên kiosk chưa thấy đơn. Huỷ để đặt lại.',
       OrderStatus.pending => 'Chờ kiosk nhận đơn',
       OrderStatus.preparing => switch (o.readyBy) {
         final readyBy? => 'Dự kiến sẵn sàng ${formatTime(readyBy)} (${formatTimeLeft(readyBy, now: now)})',

@@ -23,6 +23,8 @@ Future<void> seedDevOrders(AppDependencies deps) async {
         paymentMethod: method,
       ),
     )).valueOrNull!;
+    // D40: a gateway order is created unpaid, then paid at the (simulated) gateway.
+    if (method != PaymentMethod.cash) await orders.payOrder(id);
     return orders.all.firstWhere((o) => o.id == id);
   }
 
