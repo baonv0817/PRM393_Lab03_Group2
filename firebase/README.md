@@ -15,6 +15,7 @@ Remote Config parameters and where they are used:
 | `quick_items_limit` | Number of items shown in the "Món nhanh · tối đa 5 phút" section (S02) |
 | `promo_banner_enabled` | Show or hide the Golden Hour Combo banner (S02) |
 | `pickup_slot_enabled` | Show or hide the pickup-time row in the cart (S05, S25) |
+| `payment_gateway` | `sandbox`: MoMo and VNPAY open their sandbox gateway when the build has the keys (D41); `simulated`: the simulated gateway screen (D02), for example if the sandbox is down during a demo |
 
 Deploy: `firebase deploy --only firestore:rules,firestore:indexes,remoteconfig` (needs the Firebase CLI and a login). Add `storage` once Storage is enabled (needs the Blaze plan).
 

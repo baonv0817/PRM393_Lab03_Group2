@@ -8,6 +8,7 @@ export 'crash_service.dart';
 export 'menu_ai_service.dart';
 export 'messaging_service.dart';
 export 'order_alert_service.dart';
+export 'payment_gateway_service.dart';
 export 'photo_picker_service.dart';
 export 'reminder_service.dart';
 export 'remote_config_service.dart';
