@@ -58,7 +58,7 @@ gives it a role on the web ("Người dùng").
 | Lab 3 AI code review | [`docs/code-review.md`](docs/code-review.md) |
 | Environment setup | [`docs/setup.md`](docs/setup.md) |
 | Evidence (screenshots, recordings, logs) | [`evidence/`](evidence/) |
-| Report, slides | [`report/`](report/), [`slides/`](slides/) |
+| Final report (PDF, 10 pages), slides (PPTX and PDF, 15 slides) | [`report/Final_SE193905.pdf`](report/Final_SE193905.pdf), [`slides/Final_SE193905_slides.pptx`](slides/Final_SE193905_slides.pptx), [`slides/Final_SE193905_slides.pdf`](slides/Final_SE193905_slides.pdf); built by `scripts/build_final_report.py` and `scripts/build_final_slides.js` from the repository's evidence |
 
 ## How to run
 
@@ -140,7 +140,8 @@ See [`e2e_test/README.md`](e2e_test/README.md): an ARTEMIS server on the same ma
 | Google ARTEMIS with Gemini 3.5 Flash Lite | The UI test agent: [`e2e_test/`](e2e_test/), results in [`docs/test-plan.md`](docs/test-plan.md) |
 | Gemini `gemini-3.5-flash-lite` through Firebase AI Logic | Inside the app: suggests the name, kind, price, time and description of a new item from its photo (K14), labelled and editable ([`docs/ai-feature.md`](docs/ai-feature.md)) |
 | Claude Code, pptxgenjs | The Lab 3 slides: `scripts/build_slides.js` builds `slides/Lab03_SE193905_slides.pptx` from the repository's evidence |
-| Microsoft Edge TTS (vi-VN-HoaiMyNeural) | The narration of the Lab 3 demo video |
+| Microsoft Edge TTS (vi-VN-HoaiMyNeural) | The narration of the Lab 3 and final demo videos |
+| Claude Code (Claude Opus 5.5), pptxgenjs, PyMuPDF | The final slides, report and demo video: the scripts that build them, the recording of the demo (scrcpy for the phone, the Chrome screencast for the web) and its assembly with ffmpeg. The team checked every slide and page against the repository's evidence |
 | `[the other members add theirs]` | `[fill in]` |
 
 ## Deviations from the handout
