@@ -59,7 +59,44 @@ MenuItem menuItemFromData(String id, Json data) => MenuItem(
     _ => null,
   },
   archived: _bool(data['archived']),
+  optionGroups: optionGroupsFromData(data['optionGroups']),
 );
+
+List<OptionGroup> optionGroupsFromData(Object? value) {
+  if (value is! List) return const [];
+  return [
+    for (final raw in value)
+      if (_map(raw) case final group? when group['id'] is String && group['choices'] is List)
+        OptionGroup(
+          id: _string(group['id']),
+          name: _string(group['name']),
+          required: _bool(group['required']),
+          maxChoices: _int(group['maxChoices'], 1).clamp(1, OptionGroup.maxChoicesPerGroup),
+          choices: [
+            for (final c in group['choices'] as List)
+              if (_map(c) case final choice? when choice['id'] is String)
+                OptionChoice(
+                  id: _string(choice['id']),
+                  name: _string(choice['name']),
+                  extraVnd: _int(choice['extraVnd']),
+                ),
+          ],
+        ),
+  ];
+}
+
+List<Json> optionGroupsToData(List<OptionGroup> groups) => [
+  for (final g in groups)
+    {
+      'id': g.id,
+      'name': g.name.trim(),
+      'required': g.required,
+      'maxChoices': g.maxChoices,
+      'choices': [
+        for (final c in g.choices) {'id': c.id, 'name': c.name.trim(), 'extraVnd': c.extraVnd},
+      ],
+    },
+];
 
 Json menuItemToData(MenuItem item, {required String dishId}) => {
   'kioskId': item.kioskId,
@@ -72,6 +109,7 @@ Json menuItemToData(MenuItem item, {required String dishId}) => {
   'prepMinutes': item.prepMinutes,
   'soldOut': item.soldOut,
   'archived': item.archived,
+  'optionGroups': optionGroupsToData(item.optionGroups),
   'imageUrl': ?item.imageUrl,
 };
 
@@ -124,6 +162,18 @@ CartItem cartItemFromData(Object? value) {
     priceVnd: _int(map['priceVnd']),
     quantity: _int(map['quantity'], 1),
     note: _string(map['note']),
+    options: [
+      if (map['options'] case final List<dynamic> list)
+        for (final raw in list)
+          if (_map(raw) case final o? when o['choiceId'] is String)
+            SelectedChoice(
+              groupId: _string(o['groupId']),
+              groupName: _string(o['groupName']),
+              choiceId: _string(o['choiceId']),
+              name: _string(o['name']),
+              extraVnd: _int(o['extraVnd']),
+            ),
+    ],
   );
 }
 
@@ -133,6 +183,18 @@ Json cartItemToData(CartItem item) => {
   'priceVnd': item.priceVnd,
   'quantity': item.quantity,
   'note': item.note,
+  // Only a dish with options carries the field, so the lines of every other dish look as they always did.
+  if (item.options.isNotEmpty)
+    'options': [
+      for (final o in item.options)
+        {
+          'groupId': o.groupId,
+          'groupName': o.groupName,
+          'choiceId': o.choiceId,
+          'name': o.name,
+          'extraVnd': o.extraVnd,
+        },
+    ],
 };
 
 List<CartItem> _items(Object? value) => value is List ? value.map(cartItemFromData).toList() : const [];

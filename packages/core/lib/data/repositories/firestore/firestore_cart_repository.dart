@@ -29,7 +29,7 @@ class FirestoreCartRepository implements CartRepository {
       if (!cart.isEmpty && cart.kioskId != kioskId) throw const ValidationException(otherKioskMessage);
       final base = cart.isEmpty && cart.kioskId != kioskId ? Cart(kioskId: kioskId) : cart;
       final lines = [...base.items];
-      final index = lines.indexWhere((line) => line.itemId == item.itemId);
+      final index = lines.indexWhere((line) => line.lineKey == item.lineKey);
       if (index == -1) {
         lines.add(item);
       } else {
@@ -40,23 +40,23 @@ class FirestoreCartRepository implements CartRepository {
   }
 
   @override
-  Future<Result<void>> setQuantity(String uid, String itemId, int quantity) => _edit(uid, (cart) {
-    if (!cart.items.any((line) => line.itemId == itemId)) return null;
+  Future<Result<void>> setQuantity(String uid, String lineKey, int quantity) => _edit(uid, (cart) {
+    if (!cart.items.any((line) => line.lineKey == lineKey)) return null;
     return _with(
       cart,
       items: [
         for (final line in cart.items)
-          if (line.itemId != itemId) line else if (quantity > 0) line.copyWith(quantity: quantity),
+          if (line.lineKey != lineKey) line else if (quantity > 0) line.copyWith(quantity: quantity),
       ],
     );
   });
 
   @override
-  Future<Result<void>> setNote(String uid, String itemId, String note) => _edit(uid, (cart) {
-    if (!cart.items.any((line) => line.itemId == itemId)) return null;
+  Future<Result<void>> setNote(String uid, String lineKey, String note) => _edit(uid, (cart) {
+    if (!cart.items.any((line) => line.lineKey == lineKey)) return null;
     return _with(
       cart,
-      items: [for (final line in cart.items) line.itemId == itemId ? line.copyWith(note: note.trim()) : line],
+      items: [for (final line in cart.items) line.lineKey == lineKey ? line.copyWith(note: note.trim()) : line],
     );
   });
 

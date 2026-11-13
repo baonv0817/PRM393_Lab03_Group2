@@ -141,6 +141,8 @@ class FakeMenuRepository implements MenuRepository {
       imageUrl: item.imageUrl,
       availableAgainAt: item.availableAgainAt,
       soldOutReason: item.soldOutReason,
+      archived: item.archived,
+      optionGroups: item.optionGroups,
     );
     final at = list.indexWhere((e) => e.id == id);
     if (at != -1 && item.id.isEmpty) return const Result.error(ValidationException('Món này đã có trong thực đơn.'));

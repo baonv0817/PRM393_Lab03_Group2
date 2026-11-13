@@ -255,6 +255,14 @@ describe('menu_items', () => {
     await assertFails(setDoc(doc(as('s1'), 'menu_items/k1-c'), { ...menuItem({ dishId: 'c', category: 'Tacos' }), ...created() }));
     await assertFails(updateDoc(doc(as('s1'), 'menu_items/k1-tacos'), { soldOutReason: 'lazy', ...touched() }));
   });
+  test('option groups (size, topping): at most five, and only as a list', async () => {
+    const group = (n) => ({ id: `g${n}`, name: `Nhóm ${n}`, required: false, maxChoices: 1, choices: [{ id: 'a', name: 'A', extraVnd: 0 }] });
+    await assertSucceeds(setDoc(doc(as('s1'), 'menu_items/k1-tra-sua'), { ...menuItem({ dishId: 'tra-sua' }), optionGroups: [group(1), group(2)], ...created() }));
+    await assertSucceeds(updateDoc(doc(as('s1'), 'menu_items/k1-tacos'), { optionGroups: [], ...touched() }));
+    await assertFails(setDoc(doc(as('s1'), 'menu_items/k1-d'), { ...menuItem({ dishId: 'd' }), optionGroups: [1, 2, 3, 4, 5, 6].map(group), ...created() }));
+    await assertFails(setDoc(doc(as('s1'), 'menu_items/k1-e'), { ...menuItem({ dishId: 'e' }), optionGroups: 'size', ...created() }));
+    await assertFails(updateDoc(doc(as('u1'), 'menu_items/k1-tacos'), { optionGroups: [group(1)], ...touched() }));
+  });
   test('admins edit items of every kiosk: allowed; nobody deletes items', async () => {
     await assertSucceeds(updateDoc(doc(as('a1'), 'menu_items/k1-tacos'), { priceVnd: 41000, ...touched() }));
     await assertFails(deleteDoc(doc(as('s1'), 'menu_items/k1-tacos')));

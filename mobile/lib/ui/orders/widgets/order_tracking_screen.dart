@@ -241,7 +241,7 @@ class _Body extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    order.items.map((i) => '${i.name} ×${i.quantity}').join(', '),
+                    order.items.map((i) => '${i.displayName} ×${i.quantity}').join(', '),
                     style: text.bodyMedium?.copyWith(color: colors.muted),
                   ),
                   const SizedBox(height: AppSpacing.xs),

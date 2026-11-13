@@ -18,6 +18,13 @@ final class NowSoldOut extends CartLineChange {
   const NowSoldOut(super.line);
 }
 
+/// A choice the customer picked (a size, a topping) is no longer offered on the item.
+final class OptionUnavailable extends CartLineChange {
+  const OptionUnavailable(super.line, {required this.optionName});
+
+  final String optionName;
+}
+
 /// The kiosk no longer sells this item.
 final class NoLongerSold extends CartLineChange {
   const NoLongerSold(super.line);
@@ -44,23 +51,30 @@ RepricedCart repriceCart(List<CartItem> lines, Map<String, MenuItem> currentById
   final changes = <CartLineChange>[];
   for (final line in lines) {
     final current = currentById[line.itemId];
-    if (current == null) {
+    if (current == null || current.archived) {
       changes.add(NoLongerSold(line));
-    } else if (current.archived) {
-      changes.add(NoLongerSold(line));
-    } else if (current.soldOut) {
+      continue;
+    }
+    if (current.soldOut) {
       changes.add(NowSoldOut(line));
-    } else if (current.priceVnd != line.priceVnd) {
-      changes.add(PriceChanged(line, newPriceVnd: current.priceVnd));
-      kept.add(
-        CartItem(
-          itemId: line.itemId,
-          name: line.name,
-          priceVnd: current.priceVnd,
-          quantity: line.quantity,
-          note: line.note,
-        ),
-      );
+      continue;
+    }
+    // The price of one portion today: the dish plus the extras the menu asks now for each picked choice.
+    var unit = current.priceVnd;
+    String? missing;
+    for (final picked in line.options) {
+      final extra = current.optionGroups.where((g) => g.id == picked.groupId).firstOrNull?.choice(picked.choiceId);
+      if (extra == null) {
+        missing = picked.name;
+        break;
+      }
+      unit += extra.extraVnd;
+    }
+    if (missing != null) {
+      changes.add(OptionUnavailable(line, optionName: missing));
+    } else if (unit != line.priceVnd) {
+      changes.add(PriceChanged(line, newPriceVnd: unit));
+      kept.add(line.copyWith(priceVnd: unit));
     } else {
       kept.add(line);
     }

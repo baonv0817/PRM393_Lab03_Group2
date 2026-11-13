@@ -38,7 +38,7 @@ class EditOrderScreen extends StatelessWidget {
       showDragHandle: true,
       builder: (context) => _NoteSheet(item: item),
     );
-    if (note != null) vm.setNote(item.itemId, note);
+    if (note != null) vm.setNote(item.lineKey, note);
   }
 
   @override
@@ -136,8 +136,8 @@ class _Body extends StatelessWidget {
           _EditLine(
             item: item,
             removesAtOne: items.length > 1,
-            onIncrement: vm.canIncrease(item.itemId) ? () => vm.changeQuantity(item.itemId, 1) : null,
-            onDecrement: vm.canDecrease(item.itemId) ? () => vm.changeQuantity(item.itemId, -1) : null,
+            onIncrement: vm.canIncrease(item.lineKey) ? () => vm.changeQuantity(item.lineKey, 1) : null,
+            onDecrement: vm.canDecrease(item.lineKey) ? () => vm.changeQuantity(item.lineKey, -1) : null,
             onEditNote: () => onEditNote(item),
           ),
         ],
@@ -176,7 +176,7 @@ class _EditLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
-    final testId = 's09.item.${item.itemId}';
+    final testId = 's09.item.${item.lineSlug}';
     return TestId(
       testId,
       child: ProfileSection(
@@ -191,6 +191,8 @@ class _EditLine extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (item.options.isNotEmpty)
+                Text(item.optionsSummary, style: text.bodyMedium?.copyWith(color: context.appColors.muted)),
               TestId(
                 '$testId.note',
                 child: InkWell(

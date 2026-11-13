@@ -153,6 +153,6 @@ class FirestoreMenuRepository implements MenuRepository {
     if (dishId.isEmpty) return 'Tên món phải có chữ hoặc số.';
     if (item.priceVnd <= 0) return 'Giá món phải lớn hơn 0.';
     if (item.prepMinutes < 0) return 'Thời gian chuẩn bị không hợp lệ.';
-    return null;
+    return optionGroupsProblem(item.optionGroups);
   }
 }

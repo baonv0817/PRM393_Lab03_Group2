@@ -60,12 +60,63 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   int _quantity = 1;
   String _note = '';
 
+  /// What the customer picked, by group id: the choice ids.
+  final Map<String, Set<String>> _picked = {};
+
   ViewState<MenuItem> get state => _state;
   MenuItem? get item => _state.dataOrNull;
   int get quantity => _quantity;
   String get note => _note;
   int get inCart => _cart.quantityOf(itemId);
-  int get _room => _cart.roomFor(itemId);
+
+  /// The line this opening would add to: the dish with the choices picked now.
+  String get _lineKey => item == null ? itemId : _line(1).lineKey;
+  int get _room => _cart.roomForLine(_lineKey);
+
+  CartItem _line(int quantity) {
+    final i = item!;
+    final options = i.choicesFor(_picked);
+    return CartItem(
+      itemId: i.id,
+      name: i.name,
+      priceVnd: i.priceWith(_picked),
+      quantity: quantity,
+      note: _note.trim(),
+      options: options,
+    );
+  }
+
+  Set<String> pickedIn(String groupId) => _picked[groupId] ?? const {};
+
+  /// What staff still have to be told: the first group that is required and empty, or too full; `null` when the
+  /// dish can be added.
+  String? get optionsProblem => item?.optionsProblem(_picked);
+
+  /// The price of one portion with the choices picked now.
+  int get unitPriceVnd => item?.priceWith(_picked) ?? 0;
+
+  /// Picks or drops a choice. A single-choice group switches to the new choice (and a group that is not required
+  /// lets the customer tap it again to clear it); a multiple-choice group adds up to its maximum.
+  void pick(OptionGroup group, String choiceId) {
+    final now = {...pickedIn(group.id)};
+    if (group.multiple) {
+      if (!now.remove(choiceId)) {
+        if (now.length >= group.maxChoices) return;
+        now.add(choiceId);
+      }
+    } else if (now.contains(choiceId)) {
+      if (group.required) return;
+      now.clear();
+    } else {
+      now
+        ..clear()
+        ..add(choiceId);
+    }
+    _picked[group.id] = now;
+    // The same dish with other choices is another line, so how many fit in the cart changes.
+    _quantity = _quantity.clamp(1, _room < 1 ? 1 : _room);
+    notifyListeners();
+  }
 
   bool get canIncrease => _quantity < _room;
   bool get canDecrease => _quantity > 1;
@@ -117,11 +168,11 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     return null;
   }
 
-  bool get canAdd => item != null && blocker == null && !add.running;
+  bool get canAdd => item != null && blocker == null && optionsProblem == null && !add.running;
 
   String get addLabel {
     final i = item;
-    return i == null ? 'Thêm vào giỏ' : 'Thêm vào giỏ · ${formatVnd(i.priceVnd * _quantity)}';
+    return i == null ? 'Thêm vào giỏ' : 'Thêm vào giỏ · ${formatVnd(unitPriceVnd * _quantity)}';
   }
 
   Future<void> load() async {
@@ -131,6 +182,7 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     switch (result) {
       case Ok(:final value):
         _state = ViewData(value);
+        _preselect(value);
         _logView(value);
       case Err(error: NotFoundException(:final message)):
         _state = ViewEmpty(message);
@@ -139,6 +191,17 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
         _state = ViewError(error.message);
     }
     notifyListeners();
+  }
+
+  /// A group that must have an answer and offers one choice at a time starts on its first choice, as the usual
+  /// default (size M): the customer changes it instead of having to find it. Only on the first load.
+  void _preselect(MenuItem item) {
+    if (_picked.isNotEmpty) return;
+    for (final group in item.optionGroups) {
+      if (group.required && !group.multiple && group.choices.isNotEmpty) {
+        _picked[group.id] = {group.choices.first.id};
+      }
+    }
   }
 
   /// `view_menu_item` once per opening of S04, not again on a retry or refresh.
@@ -169,7 +232,8 @@ class ItemDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     final i = item;
     if (i == null) return const Result.error(NotFoundException(message: 'Không tìm thấy món.'));
     if (blocker case final message?) return Result.error(ValidationException(message));
-    return _cart.add(i, quantity: _quantity, note: _note.trim());
+    if (optionsProblem case final message?) return Result.error(ValidationException(message));
+    return _cart.add(i, quantity: _quantity, note: _note.trim(), options: i.choicesFor(_picked));
   }
 
   @override

@@ -126,6 +126,10 @@ class _Detail extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(item.description, style: text.bodyMedium),
               ],
+              for (final group in item.optionGroups) ...[
+                const SizedBox(height: AppSpacing.md),
+                _OptionGroupCard(vm: vm, group: group),
+              ],
               if (vm.inCart > 0) ...[
                 const SizedBox(height: AppSpacing.sm),
                 TestId(
@@ -158,6 +162,15 @@ class _Detail extends StatelessWidget {
                   child: Semantics(
                     liveRegion: true,
                     child: Text(blocker, style: text.bodyMedium?.copyWith(color: scheme.error)),
+                  ),
+                ),
+              ] else if (vm.optionsProblem case final problem?) ...[
+                const SizedBox(height: AppSpacing.xs),
+                TestId(
+                  's04.optionsProblem',
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(problem, style: text.bodyMedium?.copyWith(color: scheme.error)),
                   ),
                 ),
               ],
@@ -217,6 +230,125 @@ class _Detail extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// One group of options (size, topping): its name and rule on top, then a row per choice with its extra price.
+/// A group that takes one choice shows round buttons, a group that takes several shows boxes.
+class _OptionGroupCard extends StatelessWidget {
+  const _OptionGroupCard({required this.vm, required this.group});
+
+  final ItemDetailViewModel vm;
+  final OptionGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final colors = context.appColors;
+    final picked = vm.pickedIn(group.id);
+    final full = group.multiple && picked.length >= group.maxChoices;
+    return TestId(
+      's04.group.${group.id}',
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: colors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.sm, AppSpacing.sm, AppSpacing.xxs),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(group.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                  if (group.required) const StatusBadge(label: 'Bắt buộc', warning: true),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Text(group.hint, style: text.bodySmall?.copyWith(color: colors.muted)),
+            ),
+            for (final choice in group.choices)
+              _ChoiceRow(
+                id: 's04.opt.${group.id}.${choice.id}',
+                choice: choice,
+                multiple: group.multiple,
+                selected: picked.contains(choice.id),
+                enabled: picked.contains(choice.id) || !full,
+                onTap: () => vm.pick(group, choice.id),
+              ),
+            const SizedBox(height: AppSpacing.xxs),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChoiceRow extends StatelessWidget {
+  const _ChoiceRow({
+    required this.id,
+    required this.choice,
+    required this.multiple,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String id;
+  final OptionChoice choice;
+  final bool multiple;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final icon = multiple
+        ? (selected ? Icons.check_box : Icons.check_box_outline_blank)
+        : (selected ? Icons.radio_button_checked : Icons.radio_button_unchecked);
+    final extra = choice.extraVnd > 0 ? '+${formatVnd(choice.extraVnd)}' : 'Miễn phí';
+    return TestId(
+      id,
+      child: Semantics(
+        inMutuallyExclusiveGroup: !multiple,
+        checked: selected,
+        enabled: enabled,
+        label: '${choice.name}, ${choice.extraVnd > 0 ? 'thêm ${formatVnd(choice.extraVnd)}' : 'không tính thêm'}',
+        excludeSemantics: true,
+        onTap: enabled ? onTap : null,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppA11y.minTouchTarget),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
+              child: Row(
+                children: [
+                  Icon(icon, color: selected ? scheme.primary : (enabled ? colors.muted : colors.border)),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(choice.name, style: text.bodyLarge?.copyWith(color: enabled ? null : colors.muted)),
+                  ),
+                  Text(extra, style: text.bodyMedium?.copyWith(color: colors.muted)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

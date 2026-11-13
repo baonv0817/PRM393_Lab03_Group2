@@ -111,7 +111,7 @@ class OrderCancelledViewModel extends ChangeNotifier with SafeChangeNotifier {
     return 'Hoàn ${formatVnd(o.totalVnd)} về ${paymentMethodLabel(o.paymentMethod)} trong khoảng 30 giây.';
   }
 
-  String get itemsLine => order?.items.map((i) => '${i.name} ×${i.quantity}').join(', ') ?? '';
+  String get itemsLine => order?.items.map((i) => '${i.displayName} ×${i.quantity}').join(', ') ?? '';
 
   String get totalLine {
     final o = order;

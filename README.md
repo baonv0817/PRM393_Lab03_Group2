@@ -42,9 +42,9 @@ Google accounts of the team, one per role (the password is given to the lecturer
 
 | Role | Account | Where |
 |---|---|---|
-| `user` | annguyen310002@gmail.com | Mobile (customer) |
-| `staff`, Kiosk Q9 · Tầng 2 | annguyen310001@gmail.com | Mobile (seller app) and web |
-| `admin` | annguyen382310@gmail.com | Web |
+| `user` | ngoxuandiem1708@gmail.com | Mobile (customer) |
+| `staff`, Kiosk Q9 · Tầng 2 | yexiuandyeqiu@gmail.com | Mobile (seller app) and web |
+| `admin` | babluokei4@gmail.com | Web |
 
 E-mail and password sign-in also works on both clients ("Tạo tài khoản"); such an account is a customer until an admin
 gives it a role on the web ("Người dùng").

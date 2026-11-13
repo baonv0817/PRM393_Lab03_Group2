@@ -8,6 +8,7 @@ export 'fly_to_cart.dart';
 export 'inputs.dart';
 export 'menu_image.dart';
 export 'motion.dart';
+export 'option_groups_editor.dart';
 export 'payment_method_tile.dart';
 export 'pickup_qr_code.dart';
 export 'quantity_stepper.dart';

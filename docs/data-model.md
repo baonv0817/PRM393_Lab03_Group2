@@ -110,7 +110,7 @@ Slots are created per day by staff or by the seed script, which creates the next
 | `soldOut` | bool | staff | Sold out (K09); used instead of deleting |
 | `soldOutReason` | string? | staff | `outOfIngredients`, `machineBroken`, `other` (K09) |
 | `availableAgainAt` | ts? | staff | "Có lại lúc 10:30" (K09, S22). Display only: the item stays sold out until staff switch `soldOut` off |
-| `optionGroups` | list<map>? | staff | At most 5 groups (spice level, toppings — S04). **Not used in Lab 3 (DB-02/04):** the customer writes preferences in the line `note`; the rules still accept the field so the final assignment can add options without a migration |
+| `optionGroups` | list<map>? | staff | What the customer picks before adding the dish (S04): size, toppings, spice level. At most 5 groups; each group is `{id, name, required: bool, maxChoices: int (1 = pick one, more = pick up to N), choices: [{id, name, extraVnd}]}` with at most 10 choices, `extraVnd` added to the price of one portion. Staff edit them in K14/K15 and the web admin (W02); the app checks the shape (`optionGroupsProblem`), the rules bound the list to 5. Absent or empty means the dish is just added. The field was accepted by the rules since Lab 3 (DB-02/04 did not use it), so existing items need no migration |
 | `imageUrl` | string? | staff | A bundled asset (`assets/images/menu/…`, sample data) or an `https://` Cloudinary link `breakbite/menu/{kioskId}/…`, which K14/K15 upload when the item is saved. `MenuItemImage` handles both and falls back to the logo. Removing the photo deletes the field (`FieldValue.delete()`), it is not set to null |
 | `archived` | bool? | staff, admin (web admin W02) | Final assignment. `true` hides the item from the customer menu, search and the seller menu (`MenuRepository.watchMenu` leaves it out unless `includeArchived`) and a cart holding it sees it as no longer sold; the web admin can restore it. Absent means `false`, so **no migration** |
 
@@ -139,13 +139,13 @@ One cart per person, id = uid. A cart is a draft tied to **one kiosk**: switchin
 | Field | Type | Notes |
 |---|---|---|
 | `kioskId` | string | Required |
-| `items` | list<map> | At most 30 lines: `itemId`, `name`, `priceVnd`, `quantity`, `note` |
+| `items` | list<map> | At most 30 lines: `itemId`, `name`, `priceVnd`, `quantity`, `note`, and `options?` (the choices picked: `groupId`, `groupName`, `choiceId`, `name`, `extraVnd`). `priceVnd` is the price of one portion **with** the extras, so totals stay `priceVnd * quantity`. A line is identified by `lineKey` = `itemId` plus the sorted choice ids: the same dish with other choices is another line, the same choices merge. A line of a dish without options has no `options` field |
 | `voucherCode` | string? | The voucher currently applied |
 | `pickupSlotId`, `pickupAt` | string?, ts? | The time chosen in S25, kept through S05 → S06 and app restarts |
 
 `CartRepository` (DB-23): `watchCart(uid)` emits a `Cart` (empty when the document does not exist); `addItem(uid, kioskId:, item:)` merges the same item and refuses an item of another kiosk while the cart has lines; `setQuantity` (0 removes the line), `setNote`, `replaceItems` (after repricing), `setVoucher`, `setPickup(slot)` and `clear`. Every change is a transaction; a cart whose last line is removed is deleted.
 
-Prices in a cart are a snapshot from when the item was added. **Right before placing the order (S06), re-read the items and call `repriceCart()`** (`lib/domain/cart_repricing.dart`): if a price changed, an item sold out or is no longer sold, show the changes, save the new lines and let the customer confirm again.
+Prices in a cart are a snapshot from when the item was added. **Right before placing the order (S06), re-read the items and call `repriceCart()`** (`lib/domain/cart_repricing.dart`): if a price changed (the dish or the extra of a picked choice), an item sold out, is no longer sold, or a picked choice is no longer offered (`OptionUnavailable`), show the changes, save the new lines and let the customer confirm again.
 
 ### 3.6 `orders/{id}`
 
@@ -157,7 +157,7 @@ An auto-generated id. The central collection.
 | `uid` | string | customer on create | Cannot change |
 | `customerName` | string | customer on create | Snapshot, so the counter does not read `users` |
 | `kioskId`, `kioskName` | string | customer on create | `kioskId` cannot change; the kiosk must accept orders (`open` and not paused) |
-| `items` | list<map> | customer (while pending) | Snapshot: `itemId`, `name`, `priceVnd`, `quantity`, `note` |
+| `items` | list<map> | customer (while pending) | Snapshot: `itemId`, `name`, `priceVnd`, `quantity`, `note`, `options?` (as in the cart: the choices stay readable after staff change the item's options) |
 | `subtotalVnd` | int | customer | Total of the items |
 | `discountVnd` | int | customer | **No voucher → 0. With a voucher → exactly what the voucher gives** (rules, section 4) |
 | `totalVnd` | int | customer | **Must equal** `subtotalVnd − discountVnd` |

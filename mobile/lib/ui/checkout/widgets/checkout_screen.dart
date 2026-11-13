@@ -231,7 +231,7 @@ class _KeptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
-    final summary = vm.items.map((i) => '${i.name} ×${i.quantity}').join(', ');
+    final summary = vm.items.map((i) => '${i.displayName} ×${i.quantity}').join(', ');
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: TestId(

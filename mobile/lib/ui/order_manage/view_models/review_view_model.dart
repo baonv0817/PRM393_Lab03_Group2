@@ -74,7 +74,14 @@ class ReviewViewModel extends ChangeNotifier with SafeChangeNotifier {
     return ViewData(o);
   }
 
-  List<CartItem> get items => _order?.items ?? const [];
+  /// One entry per dish: a review is about the dish, so the same dish ordered twice with other options is rated once.
+  List<CartItem> get items {
+    final seen = <String>{};
+    return [
+      for (final line in _order?.items ?? const <CartItem>[])
+        if (seen.add(line.itemId)) line,
+    ];
+  }
 
   void load() {
     unawaited(_orderSub?.cancel());

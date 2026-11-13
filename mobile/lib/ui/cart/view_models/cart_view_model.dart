@@ -53,12 +53,12 @@ class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
   }
 
-  int _storedQuantity(String itemId) =>
-      quote.value.items.where((line) => line.itemId == itemId).firstOrNull?.quantity ?? 0;
+  int _storedQuantity(String lineKey) =>
+      quote.value.items.where((line) => line.lineKey == lineKey).firstOrNull?.quantity ?? 0;
 
   List<CartItem> get items => [
     for (final line in quote.value.items)
-      if ((_quantities.pendingOf(line.itemId) ?? line.quantity) case final quantity when quantity > 0)
+      if ((_quantities.pendingOf(line.lineKey) ?? line.quantity) case final quantity when quantity > 0)
         line.copyWith(quantity: quantity),
   ];
 
@@ -83,22 +83,23 @@ class CartViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   bool get canCheckout => items.isNotEmpty && blocker == null;
 
-  int quantityOf(String itemId) => _quantities.pendingOf(itemId) ?? _storedQuantity(itemId);
+  /// [lineKey] is `CartItem.lineKey`: the dish id for a dish without options.
+  int quantityOf(String lineKey) => _quantities.pendingOf(lineKey) ?? _storedQuantity(lineKey);
 
-  Future<Result<void>> changeQuantity(String itemId, int delta) async {
-    final current = quantityOf(itemId);
+  Future<Result<void>> changeQuantity(String lineKey, int delta) async {
+    final current = quantityOf(lineKey);
     final next = (current + delta).clamp(0, Cart.maxQuantity);
     if (next == current) return const Result.ok(null);
-    final result = await _quantities.set(itemId, next);
+    final result = await _quantities.set(lineKey, next);
     if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'cart.changeQuantity');
     return result;
   }
 
-  Future<Result<void>> setNote(String itemId, String note) async {
+  Future<Result<void>> setNote(String lineKey, String note) async {
     final trimmed = note.trim();
     final result = await cart.setNote(
       uid,
-      itemId,
+      lineKey,
       trimmed.length > maxNoteLength ? trimmed.substring(0, maxNoteLength) : trimmed,
     );
     if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'cart.setNote');
