@@ -1,0 +1,589 @@
+
+> test
+> firebase emulators:exec --config ../firebase.json --only firestore,storage --project demo-breakbite "node --test rules.test.mjs"
+
+i  emulators: Starting emulators: firestore, storage
+i  emulators: Detected demo project ID "demo-breakbite", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+i  firestore: Firestore Emulator logging to firestore-debug.log
++  firestore: Firestore Emulator was started in standard edition.
++  firestore: Firestore Emulator UI websocket is running on 9150.
+i  Running script: node --test rules.test.mjs
+[2026-11-13T02:15:12.904Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc35 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+Property createdAt is undefined on object. for 'create' @ L52, false for 'create' @ L376, evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, Property createdAt is undefined on object. for 'create' @ L52, false for 'create' @ L376
+[2026-11-13T02:15:12.961Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc36 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L52, false for 'create' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+▶ timestamps (DB-16)
+  ✔ a create without server createdAt/updatedAt, or with a device time, is denied (793.4056ms)
+[2026-11-13T02:15:13.208Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:13.262Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc39 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ an update must refresh updatedAt and cannot change createdAt (354.5244ms)
+✔ timestamps (DB-16) (3549.7948ms)
+▶ users
+  ✔ a user creates their own profile with role user: allowed (175.087ms)
+[2026-11-13T02:15:13.651Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc3e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L52:24 for 'create' @ L52, false for 'create' @ L376, evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'create' @ L52, false for 'create' @ L376
+[2026-11-13T02:15:13.687Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc3f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L52:24 for 'create' @ L52, false for 'create' @ L376, evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'create' @ L52, false for 'create' @ L376
+  ✔ a user creates a profile as staff or with a kiosk: denied (194.4817ms)
+[2026-11-13T02:15:13.843Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc41 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:13.879Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc42 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:13.909Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc43 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ a user changes their own role, kiosk or email: denied (222.4093ms)
+[2026-11-13T02:15:14.084Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc46 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ a user edits name, student ID and up to 5 FCM tokens: allowed; 6 tokens: denied (175.0585ms)
+  ✔ a user saves phone, default kiosk and default payment method: allowed (165.4513ms)
+[2026-11-13T02:15:14.379Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc4a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:14.419Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc4b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:14.458Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc4c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:14.487Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc4d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:14.518Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc4e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ a malformed student ID or phone, an unknown kiosk or payment method, a 61-character name: denied (267.7386ms)
+  ✔ a long name from Google does not block other updates such as lastLoginAt (144.7762ms)
+  ✔ users and staff read someone else's profile: denied; owner and admin: allowed (273.985ms)
+[2026-11-13T02:15:15.198Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc59 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ an admin changes role and kiosk: allowed; staff changes someone's role: denied (260.4155ms)
+[2026-11-13T02:15:15.358Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc5c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:15.386Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc5d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:15.415Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc5e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:15.448Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc5f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:15.475Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc60 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+[2026-11-13T02:15:15.499Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc61 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ an admin: a known role only, staff need a kiosk that exists, and nobody changes their own role (301.2967ms)
+[2026-11-13T02:15:15.652Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc64 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L76:26 for 'create' @ L76, false for 'create' @ L376, evaluation error at L77:26 for 'update' @ L77, false for 'update' @ L376, false for 'create' @ L76, false for 'create' @ L376
+[2026-11-13T02:15:15.712Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc66 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L76, false for 'create' @ L376, false for 'update' @ L77, false for 'update' @ L376
+  ✔ favorites are keyed by dishId and notifications are owner-only (235.7015ms)
+✔ users (2418.1011ms)
+▶ K11 shift statistics
+  ✔ staff count, sum and average the delivered orders of their own kiosk, and read the newest ones (372.0785ms)
+  ✔ staff cannot read the statistics of another kiosk, and users cannot read any (163.2238ms)
+✔ K11 shift statistics (535.7215ms)
+▶ kiosks and slots
+  ✔ signed-out users cannot read kiosks; users can (132.9604ms)
+[2026-11-13T02:15:16.559Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc74 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ a user edits a kiosk: denied (154.8032ms)
+[2026-11-13T02:15:16.793Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc77 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ staff edit the operating fields of their own kiosk: allowed; another kiosk: denied (234.3125ms)
+[2026-11-13T02:15:16.958Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc79 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+[2026-11-13T02:15:16.971Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc7a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ K10: staff write the shop settings as the app does, removing the fields they empty (177.8092ms)
+[2026-11-13T02:15:17.084Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc7c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+[2026-11-13T02:15:17.118Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc7d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ staff rename their kiosk or set a negative wait time: denied (admin only, valid values) (180.7576ms)
+[2026-11-13T02:15:17.253Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc80 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ staff without a kiosk cannot edit any kiosk (100.8705ms)
+[2026-11-13T02:15:17.384Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc83 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L101:24 for 'create' @ L101, false for 'create' @ L376, evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'create' @ L101, false for 'create' @ L376
+[2026-11-13T02:15:17.403Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc84 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L109, false for 'delete' @ L376
+  ✔ only admins create kiosks; nobody deletes (149.5108ms)
+[2026-11-13T02:15:17.531Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc87 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L114:26 for 'update' @ L114, evaluation error at L115:26 for 'update' @ L115, false for 'update' @ L376, false for 'update' @ L114, false for 'update' @ L115, false for 'update' @ L376
+  ✔ a customer books a free slot with increment(1): allowed; a full slot: denied (127.693ms)
+[2026-11-13T02:15:17.641Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc89 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L114:26 for 'update' @ L114, evaluation error at L115:26 for 'update' @ L115, false for 'update' @ L376, false for 'update' @ L114, false for 'update' @ L115, false for 'update' @ L376
+[2026-11-13T02:15:17.668Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc8a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L114:26 for 'update' @ L114, evaluation error at L115:26 for 'update' @ L115, false for 'update' @ L376, false for 'update' @ L114, false for 'update' @ L115, false for 'update' @ L376
+  ✔ a customer moves booked by more than one or edits capacity: denied (137.2003ms)
+  ✔ a customer releases a slot (increment(-1)): allowed; staff of the kiosk edit capacity: allowed (134.4499ms)
+✔ kiosks and slots (1531.4896ms)
+▶ menu_items
+  ✔ signed-out users cannot read the menu; users can (143.6192ms)
+[2026-11-13T02:15:18.043Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc92 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ a user edits an item: denied (96.464ms)
+  ✔ staff add and edit items of their kiosk with id {kioskId}-{dishId}: allowed (152.1269ms)
+[2026-11-13T02:15:18.308Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc97 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L139:24 for 'create' @ L139, false for 'create' @ L376, evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'create' @ L139, false for 'create' @ L376
+  ✔ an item whose id does not match {kioskId}-{dishId}: denied (113.3759ms)
+[2026-11-13T02:15:18.387Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc99 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+[2026-11-13T02:15:18.410Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc9a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L139:24 for 'create' @ L139, false for 'create' @ L376, evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'create' @ L139, false for 'create' @ L376
+[2026-11-13T02:15:18.435Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc9b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+[2026-11-13T02:15:18.465Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc9c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ staff edit or add items of another kiosk, or move an item: denied (156.1971ms)
+[2026-11-13T02:15:18.565Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc9e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L139:24 for 'create' @ L139, false for 'create' @ L376, evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'create' @ L139, false for 'create' @ L376
+[2026-11-13T02:15:18.595Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfc9f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L139:24 for 'create' @ L139, false for 'create' @ L376, evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'create' @ L139, false for 'create' @ L376
+[2026-11-13T02:15:18.632Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfca0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L139:24 for 'create' @ L139, false for 'create' @ L376, evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'create' @ L139, false for 'create' @ L376
+[2026-11-13T02:15:18.672Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfca1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ missing name, non-positive price, unknown category or sold-out reason: denied (K14-ERR) (207.8186ms)
+[2026-11-13T02:15:18.864Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfca4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L147, false for 'delete' @ L376
+  ✔ admins edit items of every kiosk: allowed; nobody deletes items (191.2173ms)
+✔ menu_items (1061.7371ms)
+[2026-11-13T02:15:19.030Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfca7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+[2026-11-13T02:15:19.063Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfca8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+▶ vouchers
+  ✔ users read vouchers; users and staff cannot write them (198.8749ms)
+  ✔ an admin creates a fixed or a percentage voucher: allowed (169.6716ms)
+[2026-11-13T02:15:19.327Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcad error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+[2026-11-13T02:15:19.360Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcae error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, Property maxVnd is undefined on object. for 'create' @ L170, false for 'create' @ L376
+[2026-11-13T02:15:19.385Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcaf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+[2026-11-13T02:15:19.424Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcb0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+  ✔ a voucher mixing both shapes, without a cap, over 100% or with a bad code: denied (DB-20) (229.169ms)
+[2026-11-13T02:15:19.462Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcb1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+[2026-11-13T02:15:19.568Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcb3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L173, false for 'delete' @ L376
+  ✔ nobody deletes a voucher (switch active off instead) (105.7358ms)
+✔ vouchers (704.0524ms)
+▶ carts
+  ✔ a user writes their own cart: allowed (101.8514ms)
+[2026-11-13T02:15:19.785Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcb7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L178, false for 'create' @ L376, false for 'update' @ L178, false for 'update' @ L376
+  ✔ a user writes or reads someone else's cart: denied (148.4553ms)
+[2026-11-13T02:15:19.922Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcba error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L178:32 for 'create' @ L178, false for 'create' @ L376, evaluation error at L178:32 for 'update' @ L178, false for 'update' @ L376, false for 'create' @ L178, false for 'create' @ L376
+[2026-11-13T02:15:19.951Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcbb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L178:32 for 'create' @ L178, false for 'create' @ L376, evaluation error at L178:32 for 'update' @ L178, false for 'update' @ L376, Property kioskId is undefined on object. for 'create' @ L178, false for 'create' @ L376
+  ✔ a cart with more than 30 lines or without a kiosk: denied (132.0383ms)
+✔ carts (382.8499ms)
+▶ orders: create
+  ✔ a customer places a valid order at an open kiosk: allowed (94.2564ms)
+[2026-11-13T02:15:20.178Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.205Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ cash must be unpaid, the other methods paid (159.4898ms)
+[2026-11-13T02:15:20.314Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.343Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ ordering at a closed or paused kiosk: denied (137.2125ms)
+[2026-11-13T02:15:20.458Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.487Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ an order created in another status or for someone else: denied (144.1221ms)
+[2026-11-13T02:15:20.567Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcc9 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.598Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcca error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.638Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfccb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ a total that does not match, a discount over the subtotal, or no items: denied (150.8893ms)
+[2026-11-13T02:15:20.765Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfccd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:20.796Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcce error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ missing pickupCode or a device createdAt: denied (157.5526ms)
+[2026-11-13T02:15:20.887Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcd0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L234, false for 'create' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ signed-out users cannot order (91.6354ms)
+✔ orders: create (935.902ms)
+[2026-11-13T02:15:20.966Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcd2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+▶ orders: discounts and vouchers (DB-18)
+  ✔ a discount without a voucher (a free order): denied (79.0106ms)
+  ✔ the exact fixed discount of a valid voucher: allowed (93.1122ms)
+  ✔ the exact percentage discount, rounded down and capped: allowed (109.6542ms)
+[2026-11-13T02:15:21.260Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcd9 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ a discount larger than the voucher gives: denied (90.1839ms)
+[2026-11-13T02:15:21.354Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcdb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, Null value error. for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:21.376Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcdc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:21.396Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcdd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+[2026-11-13T02:15:21.422Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcde error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ an unknown, expired or inactive voucher, or an order under the minimum: denied (162.5015ms)
+[2026-11-13T02:15:21.511Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfce0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ editing a pending order cannot raise the discount past the voucher (S09) (88.6311ms)
+✔ orders: discounts and vouchers (DB-18) (623.6223ms)
+▶ orders: read
+  ✔ customers read their own orders only (136.4559ms)
+  ✔ staff read orders of their kiosk only; admins read all (139.6345ms)
+✔ orders: read (276.4144ms)
+▶ orders: customer edits and cancels
+  ✔ a customer cancels their pending order with the server time: allowed (85.0944ms)
+[2026-11-13T02:15:21.954Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfceb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:21.987Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcec error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, Property cancelledAt is undefined on object. for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.016Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfced error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ cancelling as staff, without cancelledAt, or after preparing started: denied (143.4904ms)
+[2026-11-13T02:15:22.084Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcef error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.101Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ a customer moves their order forward: denied (84.1017ms)
+  ✔ editing items and pickup while pending with a matching total: allowed (S09) (75.7285ms)
+[2026-11-13T02:15:22.260Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.292Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.322Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.369Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.411Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcf8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ a total that does not match, or changing uid, kiosk, pickup code or payment: denied (235.1684ms)
+[2026-11-13T02:15:22.506Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfcfa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ editing someone else's order: denied (94.3795ms)
+✔ orders: customer edits and cancels (718.6214ms)
+▶ orders: staff handling
+  ✔ staff follow pending → preparing → ready → delivered with each step's server time: allowed (157.8073ms)
+[2026-11-13T02:15:22.770Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd00 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, Property acceptedAt is undefined on object. for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.810Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd01 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.842Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd02 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ a step without its server time, or with a device time: denied (R-15) (177.9879ms)
+[2026-11-13T02:15:22.945Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd04 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:22.980Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd05 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:23.003Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd06 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:23.028Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd07 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ skipping or going back a step, or editing a delivered order: denied (185.1904ms)
+[2026-11-13T02:15:23.113Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd09 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ handing over a cash order must record paid (K06-CASH) (112.2067ms)
+[2026-11-13T02:15:23.242Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd0c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ staff mark a non-cash order unpaid: denied (102.4473ms)
+[2026-11-13T02:15:23.337Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd0e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, Property cancelledBy is undefined on object. for 'update' @ L251, false for 'update' @ L376
+  ✔ staff reject with a reason, cancelledBy staff and the server time (K12) (128.7994ms)
+[2026-11-13T02:15:23.444Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd11 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ staff of another kiosk: denied; admin: allowed (94.8826ms)
+[2026-11-13T02:15:23.548Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd14 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:23.574Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd15 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+[2026-11-13T02:15:23.591Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd16 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L264, false for 'delete' @ L376
+[2026-11-13T02:15:23.608Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd17 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L264, false for 'delete' @ L376
+[2026-11-13T02:15:23.629Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd18 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L264, false for 'delete' @ L376
+  ✔ staff edit the content of an order: denied; nobody deletes orders (162.9341ms)
+✔ orders: staff handling (1122.9939ms)
+▶ reviews
+  ✔ a customer reviews an item of their delivered order: allowed (87.9232ms)
+[2026-11-13T02:15:23.806Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd1c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:23.838Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd1d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:23.867Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd1e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+  ✔ reviewing an order that is not delivered, or someone else's: denied (149.6021ms)
+[2026-11-13T02:15:23.935Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd20 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:23.961Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd21 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:23.993Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd22 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:24.024Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd23 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, Property dishId is undefined on object. for 'create' @ L275, false for 'create' @ L376
+[2026-11-13T02:15:24.051Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd24 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+  ✔ a wrong id, a rating outside 1–5, no dishId or a long comment: denied (183.7288ms)
+[2026-11-13T02:15:24.198Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd29 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'update' @ L283, false for 'update' @ L376
+[2026-11-13T02:15:24.220Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd2a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L287, false for 'delete' @ L376
+  ✔ signed-in users read; the owner edits; others cannot; nobody deletes (169.6249ms)
+✔ reviews (591.3587ms)
+▶ incidents
+  ✔ a customer reports an incident on their order, id = orderId: allowed (111.3295ms)
+[2026-11-13T02:15:24.447Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd2e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.478Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd30 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+  ✔ an id other than the order id, or a second incident for the same order: denied (DB-26) (145.1949ms)
+[2026-11-13T02:15:24.556Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd32 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.591Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd33 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.616Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd34 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+  ✔ reporting on someone else's order, the wrong kiosk or as someone else: denied (138.2026ms)
+[2026-11-13T02:15:24.711Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd36 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.743Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd37 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.762Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+[2026-11-13T02:15:24.789Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd39 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L291:24 for 'create' @ L291, false for 'create' @ L376, evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'create' @ L291, false for 'create' @ L376
+  ✔ the old snake_case type, an unknown type, a long text or a resolved start: denied (DB-27) (173.464ms)
+  ✔ the owner and staff of the kiosk read; others are denied (149.6642ms)
+[2026-11-13T02:15:25.017Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd42 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+[2026-11-13T02:15:25.041Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd43 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, Property refundVnd is undefined on object. for 'update' @ L303, false for 'update' @ L376
+  ✔ staff refund up to the order total: allowed; above it or without an amount: denied (130.9453ms)
+[2026-11-13T02:15:25.145Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd47 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, Property resolutionNote is undefined on object. for 'update' @ L303, false for 'update' @ L376
+  ✔ staff reject with an explanation: allowed; without one: denied (92.5021ms)
+[2026-11-13T02:15:25.255Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd4b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+[2026-11-13T02:15:25.274Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd4c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+[2026-11-13T02:15:25.301Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd4d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+  ✔ customers, staff of another kiosk, or editing the customer's text: denied (155.0312ms)
+✔ incidents (1097.062ms)
+▶ reports (R-29)
+  ✔ a customer saves metadata of their own receipt: allowed; reads it back: allowed (101.6145ms)
+[2026-11-13T02:15:25.483Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd53 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L323:24 for 'create' @ L323, false for 'create' @ L376, false for 'update' @ L333, false for 'update' @ L376, false for 'create' @ L323, false for 'create' @ L376
+[2026-11-13T02:15:25.501Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd54 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L323:24 for 'create' @ L323, false for 'create' @ L376, false for 'update' @ L333, false for 'update' @ L376, false for 'create' @ L323, false for 'create' @ L376
+[2026-11-13T02:15:25.534Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd55 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L323:24 for 'create' @ L323, false for 'create' @ L376, false for 'update' @ L333, false for 'update' @ L376, false for 'create' @ L323, false for 'create' @ L376
+  ✔ for someone else's order, as someone else, or a non-https link: denied (114.7815ms)
+[2026-11-13T02:15:25.658Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd59 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L333, false for 'update' @ L376
+[2026-11-13T02:15:25.689Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd5a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L333, false for 'delete' @ L376
+  ✔ others cannot read it; nobody edits or deletes it (154.3695ms)
+  ✔ listing my own reports, newest first: allowed; listing without the uid filter or someone else's: denied (135.6525ms)
+✔ reports (R-29) (506.9803ms)
+[2026-11-13T02:15:25.981Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd64 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L348:24 for 'create' @ L348, false for 'create' @ L376, evaluation error at L352:24 for 'update' @ L352, false for 'update' @ L376, false for 'create' @ L348, false for 'create' @ L376
+▶ announcements (final assignment)
+  ✔ admins publish; users read published ones only; users cannot write (155.9753ms)
+✔ announcements (final assignment) (156.1757ms)
+[2026-11-13T02:15:26.090Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd68 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L372, false for 'update' @ L376
+[2026-11-13T02:15:26.108Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd69 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L372, false for 'delete' @ L376
+▶ audit_logs (admin website)
+  ✔ an admin writes a line under their own uid and reads the log; nobody edits or deletes (126.7024ms)
+[2026-11-13T02:15:26.182Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd6b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L363:24 for 'create' @ L363, false for 'create' @ L376, false for 'update' @ L372, false for 'update' @ L376, false for 'create' @ L363, false for 'create' @ L376
+[2026-11-13T02:15:26.203Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd6c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L363:24 for 'create' @ L363, false for 'create' @ L376, false for 'update' @ L372, false for 'update' @ L376, false for 'create' @ L363, false for 'create' @ L376
+[2026-11-13T02:15:26.233Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd6d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L363, false for 'create' @ L376, false for 'update' @ L372, false for 'update' @ L376
+  ✔ a line in the name of another user, with extra fields or a device time: denied (125.0945ms)
+[2026-11-13T02:15:26.371Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd72 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L363:24 for 'create' @ L363, false for 'create' @ L376, false for 'update' @ L372, false for 'update' @ L376, false for 'create' @ L363, false for 'create' @ L376
+  ✔ users and staff neither read nor write the log (137.5491ms)
+✔ audit_logs (admin website) (389.6082ms)
+[2026-11-13T02:15:26.439Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd74 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L376, false for 'update' @ L376
+▶ unknown collections
+  ✔ a collection not declared in the rules is denied for every role (91.9286ms)
+✔ unknown collections (92.1588ms)
+▶ Cloud Storage (fallback, not used by the app)
+  ✔ reports: the owner uploads a PDF and reads it back; others and signed-out users are denied (273.3575ms)
+  ✔ reports: non-PDF or over 5 MB: denied; unknown paths: denied (193.3231ms)
+  ✔ incidents and menu photos follow owner and kiosk rules (274.594ms)
+✔ Cloud Storage (fallback, not used by the app) (741.7337ms)
+▶ Appendix B matrix (final assignment)
+  ✔ R-01 users · user · read own profile → Allowed (131.9214ms)
+[2026-11-13T02:15:27.447Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd7e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:24 for 'update' @ L56, evaluation error at L64:24 for 'update' @ L64, false for 'update' @ L376, false for 'update' @ L56, false for 'update' @ L64, false for 'update' @ L376
+  ✔ R-02 users · user · update own role to admin → Denied (109.8928ms)
+  ✔ R-03 users · staff · update own display name → Allowed (97.2422ms)
+  ✔ R-04 users · staff · read a customer profile → Denied (104.0617ms)
+  ✔ R-05 users · admin · change a user role to staff → Allowed (99.8107ms)
+[2026-11-13T02:15:27.842Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd8a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L376
+  ✔ R-06 users · admin · delete a user → Denied (93.6582ms)
+  ✔ R-07 notifications · user · read own inbox item → Allowed (117.9739ms)
+  ✔ R-08 notifications · user · read another user inbox → Denied (109.516ms)
+  ✔ R-09 notifications · staff · create own inbox item → Allowed (92.7275ms)
+[2026-11-13T02:15:28.261Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfd96 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L81, false for 'create' @ L376, false for 'update' @ L82, false for 'update' @ L376
+  ✔ R-10 notifications · staff · write into a customer inbox → Denied (98.5577ms)
+  ✔ R-11 notifications · admin · create own inbox item → Allowed (96.6969ms)
+  ✔ R-12 notifications · admin · read a customer inbox → Denied (101.6309ms)
+  ✔ R-13 kiosks · user · read a kiosk → Allowed (79.8739ms)
+[2026-11-13T02:15:28.617Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfda2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ R-14 kiosks · user · close a kiosk → Denied (77.8076ms)
+  ✔ R-15 kiosks · staff · close own kiosk → Allowed (84.3628ms)
+[2026-11-13T02:15:28.794Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfda8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L103:24 for 'update' @ L103, evaluation error at L104:24 for 'update' @ L104, false for 'update' @ L376, false for 'update' @ L103, false for 'update' @ L104, false for 'update' @ L376
+  ✔ R-16 kiosks · staff · close another kiosk → Denied (92.3106ms)
+  ✔ R-17 kiosks · admin · create a kiosk → Allowed (112.5011ms)
+[2026-11-13T02:15:29.023Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdae error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L109, false for 'delete' @ L376
+  ✔ R-18 kiosks · admin · delete a kiosk → Denied (116.3571ms)
+  ✔ R-19 slots · user · book a slot (+1) → Allowed (111.3329ms)
+[2026-11-13T02:15:29.246Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdb4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L113:26 for 'create' @ L113, false for 'create' @ L376, evaluation error at L114:26 for 'update' @ L114, evaluation error at L115:26 for 'update' @ L115, false for 'update' @ L376, false for 'create' @ L113, false for 'create' @ L376
+  ✔ R-20 slots · user · create a slot → Denied (111.6325ms)
+  ✔ R-21 slots · staff · create a slot at own kiosk → Allowed (110.101ms)
+[2026-11-13T02:15:29.449Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdba error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L113:26 for 'create' @ L113, false for 'create' @ L376, evaluation error at L114:26 for 'update' @ L114, evaluation error at L115:26 for 'update' @ L115, false for 'update' @ L376, false for 'create' @ L113, false for 'create' @ L376
+  ✔ R-22 slots · staff · create a slot at another kiosk → Denied (93.0123ms)
+  ✔ R-23 slots · admin · change a slot capacity → Allowed (87.2189ms)
+[2026-11-13T02:15:29.628Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdc0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L376
+  ✔ R-24 slots · admin · delete a slot → Denied (91.3975ms)
+  ✔ R-25 menu_items · user · read the menu → Allowed (100.1397ms)
+[2026-11-13T02:15:29.812Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdc6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ R-26 menu_items · user · change a price → Denied (83.504ms)
+  ✔ R-27 menu_items · staff · archive an item of own kiosk → Allowed (102.095ms)
+[2026-11-13T02:15:29.995Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdcc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ R-28 menu_items · staff · archive an item of another kiosk → Denied (81.0004ms)
+[2026-11-13T02:15:30.083Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdcf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L143:24 for 'update' @ L143, false for 'update' @ L376, false for 'update' @ L143, false for 'update' @ L376
+  ✔ R-29 menu_items · staff · archive with a non-boolean value → Denied (87.5664ms)
+  ✔ R-30 menu_items · admin · create an item → Allowed (78.6901ms)
+[2026-11-13T02:15:30.240Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdd5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L147, false for 'delete' @ L376
+  ✔ R-31 menu_items · admin · delete an item → Denied (78.7628ms)
+  ✔ R-32 vouchers · user · read a voucher → Allowed (88.0905ms)
+[2026-11-13T02:15:30.420Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfddb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L170:24 for 'create' @ L170, false for 'create' @ L376, evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'create' @ L170, false for 'create' @ L376
+  ✔ R-33 vouchers · user · create a voucher → Denied (91.8562ms)
+  ✔ R-34 vouchers · staff · read a voucher → Allowed (102.1167ms)
+[2026-11-13T02:15:30.611Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfde1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L172:24 for 'update' @ L172, false for 'update' @ L376, false for 'update' @ L172, false for 'update' @ L376
+  ✔ R-35 vouchers · staff · switch a voucher off → Denied (88.9714ms)
+  ✔ R-36 vouchers · admin · create a voucher → Allowed (87.4494ms)
+[2026-11-13T02:15:30.803Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfde7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L173, false for 'delete' @ L376
+  ✔ R-37 vouchers · admin · delete a voucher → Denied (103.9125ms)
+  ✔ R-38 carts · user · read own cart → Allowed (94.8225ms)
+  ✔ R-39 carts · user · read another cart → Denied (124.4816ms)
+  ✔ R-40 carts · staff · write own cart → Allowed (79.1089ms)
+  ✔ R-41 carts · staff · read a customer cart → Denied (93.6308ms)
+  ✔ R-42 carts · admin · write own cart → Allowed (80.0581ms)
+  ✔ R-43 carts · admin · read a customer cart → Denied (93.2783ms)
+  ✔ R-44 orders · user · place a pending order → Allowed (100.5124ms)
+[2026-11-13T02:15:31.563Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfdff error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L234:24 for 'create' @ L234, false for 'create' @ L376, evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'create' @ L234, false for 'create' @ L376
+  ✔ R-45 orders · user · place an order already preparing → Denied (93.6666ms)
+[2026-11-13T02:15:31.650Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe02 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ R-46 orders · user · approve own order → Denied (87.0977ms)
+  ✔ R-47 orders · staff · approve pending → preparing → Allowed (116.322ms)
+  ✔ R-48 orders · staff · reject pending → cancelled with a reason → Allowed (120.3848ms)
+[2026-11-13T02:15:32.028Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe0b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, Property cancelReason is undefined on object. for 'update' @ L251, false for 'update' @ L376
+  ✔ R-49 orders · staff · reject without a reason → Denied (141.3529ms)
+[2026-11-13T02:15:32.171Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe0e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L238:24 for 'update' @ L238, evaluation error at L251:24 for 'update' @ L251, false for 'update' @ L376, false for 'update' @ L238, false for 'update' @ L251, false for 'update' @ L376
+  ✔ R-50 orders · staff · approve an order of another kiosk → Denied (142.6037ms)
+  ✔ R-51 orders · admin · read an order of any kiosk → Allowed (139.5552ms)
+[2026-11-13T02:15:32.435Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe14 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L264, false for 'delete' @ L376
+  ✔ R-52 orders · admin · delete an order → Denied (124.2676ms)
+  ✔ R-53 reviews · user · review own delivered order → Allowed (143.1671ms)
+[2026-11-13T02:15:32.693Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe1a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+  ✔ R-54 reviews · user · review a pending order → Denied (114.1467ms)
+  ✔ R-55 reviews · staff · read the reviews (dashboard average) → Allowed (98.6992ms)
+[2026-11-13T02:15:32.910Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe20 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L275:24 for 'create' @ L275, false for 'create' @ L376, evaluation error at L283:24 for 'update' @ L283, false for 'update' @ L376, false for 'create' @ L275, false for 'create' @ L376
+  ✔ R-56 reviews · staff · write a review for a customer → Denied (118.0369ms)
+  ✔ R-57 reviews · admin · read the reviews → Allowed (124.6506ms)
+[2026-11-13T02:15:33.145Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe26 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L287, false for 'delete' @ L376
+  ✔ R-58 reviews · admin · delete a review → Denied (110.4959ms)
+  ✔ R-59 incidents · user · read own incident → Allowed (83.4159ms)
+[2026-11-13T02:15:33.312Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe2c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+  ✔ R-60 incidents · user · resolve own incident → Denied (83.4446ms)
+  ✔ R-61 incidents · staff · take an incident of own kiosk → Allowed (77.7458ms)
+[2026-11-13T02:15:33.479Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe32 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L303:24 for 'update' @ L303, false for 'update' @ L376, false for 'update' @ L303, false for 'update' @ L376
+  ✔ R-62 incidents · staff · take it from another kiosk → Denied (89.6761ms)
+  ✔ R-63 incidents · admin · reject an incident with a note → Allowed (101.3536ms)
+[2026-11-13T02:15:33.660Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L318, false for 'delete' @ L376
+  ✔ R-64 incidents · admin · delete an incident → Denied (79.2514ms)
+  ✔ R-65 reports · user · read own receipt metadata → Allowed (97.6887ms)
+[2026-11-13T02:15:33.838Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe3e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L323:24 for 'create' @ L323, false for 'create' @ L376, false for 'update' @ L333, false for 'update' @ L376, false for 'create' @ L323, false for 'create' @ L376
+  ✔ R-66 reports · user · save metadata as someone else → Denied (80.1458ms)
+  ✔ R-67 reports · staff · save own receipt metadata → Allowed (97.0849ms)
+  ✔ R-68 reports · staff · read a customer receipt → Denied (102.9493ms)
+  ✔ R-69 reports · admin · save own receipt metadata → Allowed (95.9918ms)
+[2026-11-13T02:15:34.236Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe4a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L333, false for 'update' @ L376
+  ✔ R-70 reports · admin · edit a receipt → Denied (101.8081ms)
+  ✔ R-71 announcements · user · list published announcements → Allowed (99.4561ms)
+  ✔ R-72 announcements · user · read a draft → Denied (93.4542ms)
+  ✔ R-73 announcements · staff · read a published announcement → Allowed (92.8389ms)
+[2026-11-13T02:15:34.628Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe56 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L348:24 for 'create' @ L348, false for 'create' @ L376, evaluation error at L352:24 for 'update' @ L352, false for 'update' @ L376, false for 'create' @ L348, false for 'create' @ L376
+  ✔ R-74 announcements · staff · publish an announcement → Denied (105.3767ms)
+  ✔ R-75 announcements · admin · publish an announcement → Allowed (89.4612ms)
+  ✔ R-76 announcements · admin · archive an announcement → Allowed (86.5635ms)
+[2026-11-13T02:15:34.882Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe5f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L348:24 for 'create' @ L348, false for 'create' @ L376, evaluation error at L352:24 for 'update' @ L352, false for 'update' @ L376, false for 'create' @ L348, false for 'create' @ L376
+  ✔ R-77 announcements · admin · publish a 121-character title → Denied (78.5271ms)
+[2026-11-13T02:15:34.959Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe62 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L348:24 for 'create' @ L348, false for 'create' @ L376, evaluation error at L352:24 for 'update' @ L352, false for 'update' @ L376, false for 'create' @ L348, false for 'create' @ L376
+  ✔ R-78 announcements · admin · publish with an unknown field → Denied (76.8487ms)
+[2026-11-13T02:15:35.061Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe65 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L352:24 for 'update' @ L352, false for 'update' @ L376, false for 'update' @ L352, false for 'update' @ L376
+  ✔ R-79 announcements · admin · change the author → Denied (101.8534ms)
+[2026-11-13T02:15:35.158Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x717bfe68 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L356, false for 'delete' @ L376
+  ✔ R-80 announcements · admin · delete an announcement → Denied (96.2045ms)
+✔ Appendix B matrix (final assignment) (7952.9885ms)
+ℹ tests 172
+ℹ suites 20
+ℹ pass 172
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26916.605
++  Script exited successfully (code 0)
+i  emulators: Shutting down emulators.
+i  firestore: Stopping Firestore Emulator
+!  Firestore Emulator has exited upon receiving signal: SIGINT
+i  storage: Stopping Storage Emulator
+i  hub: Stopping emulator hub
+i  logging: Stopping Logging Emulator
