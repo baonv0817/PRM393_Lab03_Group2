@@ -1,0 +1,7 @@
+{
+  "MOMO_PARTNER_CODE": "<partnerCode of the MoMo test merchant, github.com/momo-wallet/payment nodejs/MoMo.js>",
+  "MOMO_ACCESS_KEY": "<accessKey of the MoMo test merchant>",
+  "MOMO_SECRET_KEY": "<secretKey of the MoMo test merchant>",
+  "VNPAY_TMN_CODE": "<vnp_TmnCode from the VNPAY sandbox registration e-mail>",
+  "VNPAY_HASH_SECRET": "<vnp_HashSecret from the same e-mail>"
+}

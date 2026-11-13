@@ -12,7 +12,7 @@ import 'package:breakbite_core/utils/result.dart';
 import 'package:breakbite_core/utils/safe_change_notifier.dart';
 import 'package:flutter/foundation.dart';
 
-enum GatewayOutcome { declined, expired, cancelled }
+export 'package:breakbite_core/data/services/payment_gateway_service.dart' show GatewayCheckout, GatewayOutcome;
 
 class PaymentFailure {
   const PaymentFailure({required this.method, required this.outcome});
@@ -31,6 +31,7 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
     required this.crash,
     required this.uid,
     required this.customerName,
+    this.gateway = const NoPaymentGateway(),
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now {
     quote = CartQuote(
@@ -44,6 +45,7 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
     );
     place = Command0(_place);
     pay = Command0(_pay);
+    complete = Command1(_complete);
     quote.start();
     unawaited(_loadDefaultMethod());
   }
@@ -57,6 +59,9 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
   final CrashService crash;
   final String uid;
   final String customerName;
+
+  /// The sandbox gateways (D41). A method it does not support keeps the simulated screen (D02).
+  final PaymentGatewayService gateway;
   final DateTime Function() _clock;
 
   late final CartQuote quote;
@@ -67,10 +72,16 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// Pays the order created by [place] at the (simulated) gateway.
   late final Command0<String> pay;
 
+  /// Checks the result the sandbox gateway sent back ([PaymentReturn.url]) and pays the order when it is paid. The
+  /// value is the order id when paid, null when the gateway said it was not paid ([failure] is then set).
+  late final Command1<String?, Uri> complete;
+
   PaymentMethod _method = PaymentMethod.momo;
   bool _methodChosen = false;
   PaymentFailure? _failure;
   DateTime? _gatewayDeadline;
+  GatewayCheckout? _checkout;
+  String _gatewayTransaction = '';
 
   /// The gateway order waiting for payment while the gateway is open.
   String? _unpaidOrderId;
@@ -82,6 +93,10 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
   PaymentFailure? get failure => _failure;
   DateTime? get gatewayDeadline => _gatewayDeadline;
   String? get unpaidOrderId => _unpaidOrderId;
+
+  /// The sandbox payment page while it is open; null when the simulated screen is used.
+  GatewayCheckout? get checkout => _checkout;
+  bool get usesSandbox => gateway.supports(_method);
   DateTime get now => _clock();
   bool get needsGateway => _method != PaymentMethod.cash;
   List<CartItem> get items => quote.value.items;
@@ -148,6 +163,7 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
     _failure = PaymentFailure(method: failed, outcome: outcome);
     _gatewayDeadline = null;
     _unpaidOrderId = null;
+    _checkout = null;
     _method = methods.first;
     unawaited(
       analytics.logEvent(AnalyticsEvents.paymentFailed, {'payment_method': failed.name, 'reason': outcome.name}),
@@ -193,15 +209,56 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
     switch (result) {
       case Ok(:final value) when draft.paymentMethod == PaymentMethod.cash:
         _placed(value, total, draft.paymentMethod);
+      case Ok(:final value) when gateway.supports(draft.paymentMethod):
+        final opened = await gateway.start(method: draft.paymentMethod, orderId: value, amountVnd: total);
+        switch (opened) {
+          case Ok(value: final checkout):
+            _openGateway(value, total);
+            _checkout = checkout;
+          case Err(:final error):
+            // The gateway page could not be opened: cancel the unpaid order so its slot is free again; the cart
+            // is still there for another try or another method.
+            crash.recordNonFatal(error, error.stackTrace, 'checkout.gatewayStart');
+            await _cancelUnpaid(value);
+            notifyListeners();
+            return Result.error(error);
+        }
       case Ok(:final value):
-        _unpaidOrderId = value;
-        _paidTotal = total;
-        _gatewayDeadline = _clock().add(gatewayTime);
+        _openGateway(value, total);
       case Err(:final error):
         crash.recordNonFatal(error, error.stackTrace, 'checkout.placeOrder');
     }
     notifyListeners();
     return result;
+  }
+
+  void _openGateway(String orderId, int total) {
+    _unpaidOrderId = orderId;
+    _paidTotal = total;
+    _gatewayDeadline = _clock().add(gatewayTime);
+  }
+
+  Future<Result<String?>> _complete(Uri returnUri) async {
+    final checkout = _checkout;
+    if (checkout == null || _unpaidOrderId == null) {
+      return const Result.error(ValidationException('Giao dịch đã kết thúc. Quay lại để đặt lại.'));
+    }
+    final checked = await gateway.finish(checkout, returnUri);
+    switch (checked) {
+      case Err(:final error):
+        crash.recordNonFatal(error, error.stackTrace, 'checkout.gatewayFinish');
+        return Result.error(error);
+      case Ok(value: GatewayNotPaid(:final outcome)):
+        await failGateway(outcome);
+        return const Result.ok(null);
+      case Ok(value: GatewayPaid(:final transactionId)):
+        _gatewayTransaction = transactionId;
+        final paid = await _pay();
+        return switch (paid) {
+          Ok(:final value) => Result.ok(value),
+          Err(:final error) => Result.error(error),
+        };
+    }
   }
 
   Future<Result<String>> _pay() async {
@@ -226,11 +283,15 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
   void _placed(String orderId, int total, PaymentMethod method) {
     _placedOrderId = orderId;
     _gatewayDeadline = null;
+    final sandbox = _checkout != null;
+    _checkout = null;
     unawaited(
       analytics.logEvent(AnalyticsEvents.purchase, {
         'transaction_id': orderId,
         'value_vnd': total,
         'payment_method': method.name,
+        if (sandbox) 'gateway': 'sandbox',
+        if (_gatewayTransaction.isNotEmpty) 'gateway_txn': _gatewayTransaction,
       }),
     );
   }
@@ -242,6 +303,7 @@ class CheckoutViewModel extends ChangeNotifier with SafeChangeNotifier {
     quote.stop();
     place.dispose();
     pay.dispose();
+    complete.dispose();
     super.dispose();
   }
 }

@@ -1,6 +1,8 @@
 import 'package:breakbite/ui/cart/view_models/cart_view_model.dart';
 import 'package:breakbite/ui/checkout/view_models/checkout_view_model.dart';
 import 'package:breakbite/ui/orders/view_models/order_tracking_view_model.dart';
+import 'package:breakbite_core/data/services/services.dart';
+import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -13,6 +15,43 @@ class _ClosedKiosks extends FakeMenuRepository {
   Stream<List<Kiosk>> watchKiosks() => Stream.value(const [
     Kiosk(id: 'q9-t2', name: 'Kiosk Q9 · Tầng 2', open: false, waitMinutes: 0, openTime: '07:00'),
   ]);
+}
+
+/// MoMo only, with a fixed result, recording what the view model asked.
+class _FakeGateway implements PaymentGatewayService {
+  _FakeGateway({required this.result, this.startError});
+
+  final Result<GatewayResult> result;
+  final AppException? startError;
+  (PaymentMethod, String, int)? started;
+  Uri? finishedWith;
+
+  @override
+  bool supports(PaymentMethod method) => method == PaymentMethod.momo;
+
+  @override
+  Future<Result<GatewayCheckout>> start({
+    required PaymentMethod method,
+    required String orderId,
+    required int amountVnd,
+  }) async {
+    started = (method, orderId, amountVnd);
+    if (startError case final error?) return Result.error(error);
+    return Result.ok(
+      GatewayCheckout(
+        method: method,
+        orderId: orderId,
+        amountVnd: amountVnd,
+        payUrl: Uri.parse('https://test-payment.momo.vn/pay/$orderId'),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<GatewayResult>> finish(GatewayCheckout checkout, Uri returnUri) async {
+    finishedWith = returnUri;
+    return result;
+  }
 }
 
 const _tacos = CartItem(itemId: 'm1', name: 'Combo Tacos Bò Phô Mai', priceVnd: 39000);
@@ -207,6 +246,101 @@ void main() {
       final id = vm.unpaidOrderId!;
       await vm.pay.execute();
       expect(await orders.payOrder(id), isA<Err<void>>());
+      vm.dispose();
+    });
+  });
+
+  group('CheckoutViewModel with a sandbox gateway (D41)', () {
+    final back = Uri.parse('${PaymentReturn.url}?orderId=x');
+
+    Future<(CheckoutViewModel, FakeCartRepository, FakeOrderRepository)> build(_FakeGateway gateway) async {
+      final cart = FakeCartRepository();
+      await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
+      final orders = FakeOrderRepository(cart: cart);
+      final vm = CheckoutViewModel(
+        cart: cart,
+        menu: FakeMenuRepository(),
+        orders: orders,
+        users: FakeUserRepository(),
+        analytics: FakeAnalyticsService(),
+        crash: FakeCrashService(),
+        uid: 'u1',
+        customerName: 'Quân',
+        gateway: gateway,
+        clock: () => _now,
+      );
+      await pumpEventQueue();
+      return (vm, cart, orders);
+    }
+
+    test('MoMo opens the gateway page for the unpaid order; a confirmed payment pays it', () async {
+      final gateway = _FakeGateway(result: const Result.ok(GatewayPaid(transactionId: '4100000001')));
+      final (vm, cart, orders) = await build(gateway);
+      expect(vm.usesSandbox, isTrue);
+      await vm.place.execute();
+      final created = orders.all.single;
+      expect(gateway.started, (PaymentMethod.momo, created.id, 39000));
+      expect(vm.checkout?.orderId, created.id);
+      expect(created.paymentStatus, PaymentStatus.unpaid);
+
+      final done = await vm.complete.execute(back);
+      expect((done! as Ok<String?>).value, created.id);
+      expect(gateway.finishedWith, back);
+      expect(orders.all.single.paymentStatus, PaymentStatus.paid);
+      expect((await cart.watchCart('u1').first).items, isEmpty);
+      expect(vm.checkout, isNull);
+      vm.dispose();
+    });
+
+    test('a payment the gateway refused cancels the order, keeps the cart and shows S06-ERR', () async {
+      final gateway = _FakeGateway(result: const Result.ok(GatewayNotPaid(GatewayOutcome.cancelled, code: '1006')));
+      final (vm, cart, orders) = await build(gateway);
+      await vm.place.execute();
+      final done = await vm.complete.execute(back);
+      expect((done! as Ok<String?>).value, isNull);
+      expect(vm.failure?.outcome, GatewayOutcome.cancelled);
+      expect(vm.failure?.method, PaymentMethod.momo);
+      expect(orders.all.single.status, OrderStatus.cancelled);
+      expect((await cart.watchCart('u1').first).items, isNotEmpty);
+      vm.dispose();
+    });
+
+    test('a result that cannot be checked is an error and leaves the order unpaid for another check', () async {
+      final gateway = _FakeGateway(result: const Result.error(NetworkException()));
+      final (vm, _, orders) = await build(gateway);
+      await vm.place.execute();
+      expect(await vm.complete.execute(back), isA<Err<String?>>());
+      expect(orders.all.single.awaitingPayment, isTrue);
+      expect(vm.unpaidOrderId, orders.all.single.id);
+      expect(vm.failure, isNull);
+      vm.dispose();
+    });
+
+    test('when the gateway page cannot be opened the order is cancelled and the cart kept', () async {
+      final gateway = _FakeGateway(
+        startError: const ServiceException(message: 'MoMo chưa mở được giao dịch.'),
+        result: const Result.ok(GatewayPaid(transactionId: '')),
+      );
+      final (vm, cart, orders) = await build(gateway);
+      final placed = await vm.place.execute();
+      expect((placed! as Err<String>).error.message, 'MoMo chưa mở được giao dịch.');
+      expect(vm.unpaidOrderId, isNull);
+      expect(vm.checkout, isNull);
+      expect(orders.all.single.status, OrderStatus.cancelled);
+      expect((await cart.watchCart('u1').first).items, isNotEmpty);
+      expect(vm.canPlace, isTrue);
+      vm.dispose();
+    });
+
+    test('a method without a sandbox gateway keeps the simulated screen', () async {
+      final gateway = _FakeGateway(result: const Result.ok(GatewayPaid(transactionId: '')));
+      final (vm, _, _) = await build(gateway);
+      vm.choose(PaymentMethod.card);
+      expect(vm.usesSandbox, isFalse);
+      await vm.place.execute();
+      expect(gateway.started, isNull);
+      expect(vm.checkout, isNull);
+      expect(vm.unpaidOrderId, isNotNull);
       vm.dispose();
     });
   });
