@@ -8,6 +8,9 @@ abstract final class RemoteKeys {
   static const aiModel = 'ai_model';
   static const aiPrompt = 'ai_prompt';
 
+  /// The instructions of the web admin's statistics summary; on/off and the model are the keys above.
+  static const aiInsightPrompt = 'ai_insight_prompt';
+
   /// The reasons the web admin's review queue (W03) offers when staff reject an order, separated by `|`.
   static const rejectReasons = 'reject_reasons';
   static const defaultRejectReasons = 'Hết nguyên liệu|Quầy sắp đóng cửa|Quá tải, không kịp làm|Đơn trùng';
@@ -26,6 +29,12 @@ abstract final class RemoteKeys {
       'đồng, làm tròn đến 1.000. Thời gian chuẩn bị tính bằng phút. Mô tả một câu, tối đa 120 ký tự, không '
       'nhắc đến người trong ảnh.';
 
+  static const defaultAiInsightPrompt =
+      'Bạn là trợ lý phân tích bán hàng cho quản trị viên hệ thống căng tin trong trường đại học ở Việt Nam. '
+      'Bạn nhận số liệu của một khoảng thời gian. Viết bằng tiếng Việt, đúng 3 đến 4 gạch đầu dòng ngắn: điều '
+      'đáng chú ý nhất, điều đáng lo (nếu có), và một việc nên làm. Chỉ dùng số trong dữ liệu, không bịa số, '
+      'không nhắc tên khách. Nếu số đơn quá ít để kết luận thì nói rõ.';
+
   static const defaults = <String, Object>{
     quickItemsLimit: 5,
     promoBannerEnabled: true,
@@ -34,6 +43,7 @@ abstract final class RemoteKeys {
     aiEnabled: false,
     aiModel: defaultAiModel,
     aiPrompt: defaultAiPrompt,
+    aiInsightPrompt: defaultAiInsightPrompt,
     rejectReasons: defaultRejectReasons,
   };
 }
