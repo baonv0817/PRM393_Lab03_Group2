@@ -10,9 +10,17 @@ Firebase project. It joins the Lab 2 design and the Lab 3 app into **one system*
 - **Backend** (`firebase/`): Firestore with role-based Security Rules and their tests, Remote Config, Hosting.
 
 - **Topic:** BreakBite, Campus District 9 (unchanged from Lab 2 and Lab 3)
-- **Team:** `[fill in names and student IDs]`
+- **Team:** Group 2 (member details below)
 - **Firebase project:** `breakbite-1315b` (Spark, no-cost plan)
 - **Demo video:** [BreakBite_final_demo.mp4](https://drive.google.com/file/d/1MR06eA-i9kA4BJy-Lrt2cSCq2y_rsltz/view?usp=sharing) · Lab 3 video: [BreakBite_demo.mp4](https://drive.google.com/file/d/1gvb2ZAtyTcqP_V0hP5ttBreNs34HZVws/view?usp=sharing)
+
+## Team contributions
+
+| Member | Student ID | Contribution | AI tools used |
+|---|---|---|---|
+| Nguyễn Thành Danh | SE193274 | Monorepo structure, shared Firebase backend and web admin | Claude Code |
+
+The remaining team members' details are pending.
 
 ## Roles
 
@@ -144,6 +152,7 @@ See [`e2e_test/README.md`](e2e_test/README.md): an ARTEMIS server on the same ma
 
 | Tool | Used for |
 |---|---|
+| Claude Code (Nguyễn Thành Danh, SE193274) | Assistance with the monorepo structure, shared Firebase backend and web admin |
 | Claude Code (Claude Sonnet 5.5) | Lab 3: the code of P2 (S09–S12, S20, S23, S24, K08–K11, K14, K15, PDF export), the ARTEMIS cases TC-18 to TC-29, the screenshots in `evidence/p2/` and the fixes of the Lab 3 code review |
 | Claude Code (Claude Opus 5.5) | Final assignment: the AI feature (#96) and its tests; the web admin on the real project (web app, Hosting, Analytics, Remote Config, App Check, offline state, kiosk switch); the announcement inbox and the admin rejection on mobile; the cross-role runs and their measurements; ARTEMIS TC-40 to TC-43; the gap review, the test report, this README; the fixes of the final AI code review |
 | Claude Code, skill `/code-review` | Lab 3 review ([`docs/code-review.md`](docs/code-review.md)) and the final review of the new code ([`evidence/code-review/final/`](evidence/code-review/final/), decisions in [`docs/test-report.md`](docs/test-report.md) section 5) |
