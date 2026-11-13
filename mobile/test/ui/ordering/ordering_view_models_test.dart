@@ -121,35 +121,92 @@ void main() {
       vm.dispose();
     });
 
-    test('a gateway that expires is a failure that removes that method and suggests the next', () async {
+    test('a gateway that expires cancels the unpaid order, keeps the cart and suggests the next method', () async {
       final cart = FakeCartRepository();
       await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
-      final vm = build(cart, FakeOrderRepository(cart: cart));
+      final orders = FakeOrderRepository(cart: cart);
+      final vm = build(cart, orders);
       await pumpEventQueue();
-      vm.openGateway();
+      await vm.place.execute();
       expect(vm.gatewayDeadline, _now.add(CheckoutViewModel.gatewayTime));
-      vm.failGateway(GatewayOutcome.expired);
+      expect(vm.unpaidOrderId, orders.all.single.id);
+      expect(vm.canPlace, isFalse);
+      await vm.failGateway(GatewayOutcome.expired);
       expect(vm.failure?.method, PaymentMethod.momo);
       expect(vm.failure?.outcome, GatewayOutcome.expired);
       expect(vm.methods, isNot(contains(PaymentMethod.momo)));
       expect(vm.method, PaymentMethod.vnpay);
+      expect(vm.unpaidOrderId, isNull);
+      final cancelled = orders.all.single;
+      expect(cancelled.status, OrderStatus.cancelled);
+      expect(cancelled.cancelledBy, CancelledBy.customer);
+      expect(cancelled.cancelReason, CheckoutViewModel.unpaidCancelReason);
+      expect(cancelled.paymentStatus, PaymentStatus.unpaid);
+      await pumpEventQueue();
+      expect(vm.items.single.itemId, 'm1');
+      expect(vm.canPlace, isTrue);
       vm.dispose();
     });
 
-    test('placing writes an order with the cart, the kiosk and the chosen method', () async {
+    test('D40: a gateway order is created unpaid, hidden from the kiosk, then paid at the gateway', () async {
       final cart = FakeCartRepository();
       await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
       final orders = FakeOrderRepository(cart: cart);
       final vm = build(cart, orders);
       await pumpEventQueue();
       vm.choose(PaymentMethod.card);
-      final result = await vm.place.execute();
+      final placed = await vm.place.execute();
+      final created = orders.all.single;
+      expect((placed! as Ok<String>).value, created.id);
+      expect(created.kioskName, 'Kiosk Q9 · Tầng 2');
+      expect(created.customerName, 'Quân');
+      expect(created.paymentMethod, PaymentMethod.card);
+      expect(created.paymentStatus, PaymentStatus.unpaid);
+      expect(created.awaitingPayment, isTrue);
+      expect(await orders.watchKioskQueue('q9-t2').first, isEmpty);
+      expect(await orders.accept(created, readyIn: const Duration(minutes: 5)), isA<Err<void>>());
+      expect((await cart.watchCart('u1').first).items, isNotEmpty, reason: 'the cart waits for the payment');
+
+      final paid = await vm.pay.execute();
+      expect((paid! as Ok<String>).value, created.id);
       final order = orders.all.single;
-      expect((result! as Ok<String>).value, order.id);
-      expect(order.kioskName, 'Kiosk Q9 · Tầng 2');
-      expect(order.customerName, 'Quân');
-      expect(order.paymentMethod, PaymentMethod.card);
       expect(order.paymentStatus, PaymentStatus.paid);
+      expect(order.status, OrderStatus.pending);
+      expect((await orders.watchKioskQueue('q9-t2').first).single.id, order.id);
+      expect((await cart.watchCart('u1').first).items, isEmpty);
+      expect(vm.unpaidOrderId, isNull);
+      vm.dispose();
+    });
+
+    test('cash is placed unpaid in one step, without the gateway, and empties the cart', () async {
+      final cart = FakeCartRepository();
+      await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
+      final orders = FakeOrderRepository(cart: cart);
+      final vm = build(cart, orders);
+      await pumpEventQueue();
+      vm.choose(PaymentMethod.cash);
+      await vm.place.execute();
+      final order = orders.all.single;
+      expect(order.paymentStatus, PaymentStatus.unpaid);
+      expect(order.awaitingPayment, isFalse);
+      expect(vm.gatewayDeadline, isNull);
+      expect(vm.unpaidOrderId, isNull);
+      expect((await cart.watchCart('u1').first).items, isEmpty);
+      expect((await orders.watchKioskQueue('q9-t2').first).single.id, order.id);
+      vm.dispose();
+    });
+
+    test('paying without a placed order, or twice, fails with a message', () async {
+      final cart = FakeCartRepository();
+      await cart.addItem('u1', kioskId: 'q9-t2', item: _tacos);
+      final orders = FakeOrderRepository(cart: cart);
+      final vm = build(cart, orders);
+      await pumpEventQueue();
+      expect(await vm.pay.execute(), isA<Err<String>>());
+      await vm.place.execute();
+      final id = vm.unpaidOrderId!;
+      await vm.pay.execute();
+      expect(await orders.payOrder(id), isA<Err<void>>());
       vm.dispose();
     });
   });
@@ -167,6 +224,7 @@ void main() {
           paymentMethod: method,
         ),
       ) as Ok<String>).value;
+      if (method != PaymentMethod.cash) await orders.payOrder(id);
       return (orders, orders.all.firstWhere((o) => o.id == id));
     }
 
@@ -192,6 +250,31 @@ void main() {
       await pumpEventQueue();
       expect(vm.timing, 'Món đã sẵn sàng, mời bạn tới quầy');
       expect(vm.badge, 'Sẵn sàng');
+      vm.dispose();
+    });
+
+    test('D40: a gateway order left unpaid says the kiosk has not seen it', () async {
+      final orders = FakeOrderRepository();
+      final id = (await orders.placeOrder(
+        const OrderDraft(
+          uid: 'u1',
+          customerName: 'Quân',
+          kioskId: 'q9-t2',
+          kioskName: 'Kiosk Q9 · Tầng 2',
+          items: [_tacos],
+          paymentMethod: PaymentMethod.vnpay,
+        ),
+      ) as Ok<String>).value;
+      final vm = OrderTrackingViewModel(
+        orders: orders,
+        menu: FakeMenuRepository(),
+        crash: FakeCrashService(),
+        orderId: id,
+        clock: () => _now,
+      );
+      await pumpEventQueue();
+      expect(vm.timing, startsWith('Chưa thanh toán'));
+      expect(vm.canChange, isTrue);
       vm.dispose();
     });
 
