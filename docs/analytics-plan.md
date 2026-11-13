@@ -11,6 +11,7 @@ Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 | `search` | A search runs | `search_term` (string), `result_count` (int) | What do people search for, and which terms return nothing? | S28 |
 | `view_menu_item` | Item detail opens | `item_id` (string), `item_name` (string), `category` (string) | Which items are viewed a lot but rarely added? | S04 |
 | `add_to_cart` | Item added to the cart | `item_id` (string), `quantity` (int), `source` (string: home, menu, detail) | Where is adding fastest from? | S02, S03, S04 |
+| `reorder` | The items of a past order are put back in the cart (S14 quick reorder, "Đặt lại" on S08, S10, S12) | `order_id` (string), `item_count` (int) | Do students reorder a usual meal instead of browsing the menu? | S14 → S05 |
 | `begin_checkout` | Enter the checkout screen | `value_vnd` (int), `item_count` (int) | How many carts reach checkout? | S05 → S06 |
 | `purchase` | Order placed successfully | `transaction_id` (string), `value_vnd` (int), `payment_method` (string) | Is the goal of ≤ 8 taps and < 35 seconds met? | S06-GATEWAY → S07 |
 | `payment_failed` | Payment declined, expired or left at the gateway | `payment_method` (string), `reason` (string: declined, expired, cancelled) | Which method fails most, and how many switch to cash? | S06-ERR |
@@ -53,7 +54,7 @@ Every event needs a DebugView screenshot (Analytics debug mode on) saved in `evi
 | `begin_checkout` | `evidence/analytics/debugview-top-events.png` (row "begin_checkout" of TOP EVENTS) |
 | `purchase` | `evidence/analytics/debugview-top-events.png` (row "purchase" of TOP EVENTS) |
 | `payment_failed` | `evidence/analytics/debugview-top-events.png` (row "payment_failed" of TOP EVENTS) |
-| `reorder` (logged in code, not in the plan table above) | `evidence/analytics/debugview-top-events.png` (row "reorder" of TOP EVENTS) |
+| `reorder` | `evidence/analytics/debugview-top-events.png` (row "reorder" of TOP EVENTS) |
 | `export_report` | `evidence/analytics/debugview-top-events.png` (row "export_report" of TOP EVENTS) |
 | `order_accepted` | `evidence/analytics/debugview-top-events.png` (row "order_accepted" of TOP EVENTS) |
 | `order_delivered` | `evidence/analytics/debugview-top-events.png` (row "order_delivered" of TOP EVENTS) |

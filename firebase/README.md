@@ -23,9 +23,9 @@ Web admin on Hosting (https://breakbite-1315b.web.app). The Firebase CLI only se
 ```powershell
 cd web
 flutter build web --release
-Remove-Item -Recurse -Force ..irebase\web-build -ErrorAction SilentlyContinue
-Copy-Item -Recurse build\web ..irebase\web-build
-cd ..irebase
+Remove-Item -Recurse -Force ..\firebase\web-build -ErrorAction SilentlyContinue
+Copy-Item -Recurse build\web ..\firebase\web-build
+cd ..\firebase
 firebase deploy --only hosting --project breakbite-1315b
 ```
 
@@ -35,7 +35,7 @@ firebase deploy --only hosting --project breakbite-1315b
 
 `firebase/tests/rules.test.mjs` has an allowed case and a denied case for every role (user, staff, admin) and every collection, plus the Storage rules (folder owner, PDF, image, ≤ 5 MB, staff by kiosk).
 
-**Result of the run on 31/10/2026 on the Emulator: 81 tests (each with several allowed and denied assertions), 81 passed, 0 failed.** Covered: server timestamps on every write, users (no self-promotion, no email change, ≤ 5 FCM tokens), kiosks (staff edit operating fields only), slots (`increment(±1)` within capacity), menu items (category, `{kioskId}-{dishId}` id), vouchers (one discount shape, cap required), carts, orders (voucher discount recomputed, paused kiosks, server time of every step), reviews, incidents (one per order, refund ≤ total, explanation when rejected), reports, announcements, plus the fallback Storage rules. The lines `evaluation error …` printed for denied cases, and `Unexpected rules runtime error ... NullPointerException` when the Emulator shuts down, are harmless.
+**Latest run, 13/11/2026 on the Emulator: 172 tests (each with several allowed and denied assertions), 172 passed, 0 failed** (log: `evidence/rules/rules-run-2026-11-13.log`; the Appendix B matrix of 80 cases, an allowed and a denied case for each role on each collection, is listed in `docs/test-report.md` section 1). The first run, on 31/10/2026, had 81 tests. Covered: server timestamps on every write, users (no self-promotion, no email change, ≤ 5 FCM tokens), kiosks (staff edit operating fields only), slots (`increment(±1)` within capacity), menu items (category, `{kioskId}-{dishId}` id), vouchers (one discount shape, cap required), carts, orders (voucher discount recomputed, paused kiosks, server time of every step), reviews, incidents (one per order, refund ≤ total, explanation when rejected), reports, announcements (admins write, everyone signed in reads the published ones), audit logs (admins only, never edited), roles changed only by an admin, plus the fallback Storage rules. The lines `evaluation error …` printed for denied cases, and `Unexpected rules runtime error ... NullPointerException` when the Emulator shuts down, are harmless.
 
 ```bash
 cd firebase/tests
