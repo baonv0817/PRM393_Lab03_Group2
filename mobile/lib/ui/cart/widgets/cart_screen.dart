@@ -27,8 +27,8 @@ class CartScreen extends StatelessWidget {
     if (context.mounted) showResultError(context, result);
   }
 
-  Future<void> _change(BuildContext context, CartViewModel vm, String itemId, int delta) async {
-    final result = await vm.changeQuantity(itemId, delta);
+  Future<void> _change(BuildContext context, CartViewModel vm, String lineKey, int delta) async {
+    final result = await vm.changeQuantity(lineKey, delta);
     if (context.mounted) showResultError(context, result);
   }
 
@@ -40,7 +40,7 @@ class CartScreen extends StatelessWidget {
       builder: (context) => _NoteSheet(item: item),
     );
     if (note == null || !context.mounted) return;
-    final result = await vm.setNote(item.itemId, note);
+    final result = await vm.setNote(item.lineKey, note);
     if (context.mounted) showResultError(context, result);
   }
 
@@ -101,8 +101,10 @@ class CartScreen extends StatelessWidget {
                     _CartLine(
                       item: item,
                       imageUrl: vm.imageOf(item.itemId),
-                      onIncrement: item.quantity < Cart.maxQuantity ? () => _change(context, vm, item.itemId, 1) : null,
-                      onDecrement: () => _change(context, vm, item.itemId, -1),
+                      onIncrement: item.quantity < Cart.maxQuantity
+                          ? () => _change(context, vm, item.lineKey, 1)
+                          : null,
+                      onDecrement: () => _change(context, vm, item.lineKey, -1),
                       onEditNote: () => _editNote(context, vm, item),
                     ),
                   ],
@@ -189,7 +191,7 @@ class _CartLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
-    final testId = 's05.item.${item.itemId}';
+    final testId = 's05.item.${item.lineSlug}';
     return TestId(
       testId,
       child: ProfileSection(
@@ -210,6 +212,16 @@ class _CartLine extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (item.options.isNotEmpty)
+                      TestId(
+                        '$testId.options',
+                        child: Text(
+                          item.optionsSummary,
+                          style: text.bodyMedium?.copyWith(color: colors.muted),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     TestId(
                       '$testId.note',
                       child: InkWell(

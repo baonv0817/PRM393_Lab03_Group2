@@ -103,6 +103,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   String _price = '';
   String _prep = '$defaultPrepMinutes';
   String _description = '';
+  List<OptionGroup> _optionGroups = const [];
   ItemCategory _category = ItemCategory.food;
 
   /// What the "Còn hàng" switch was set to; `null` while it was not touched, so the item keeps the state it has.
@@ -145,6 +146,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         _price = '${value.priceVnd}';
         _prep = '${value.prepMinutes}';
         _description = value.description;
+        _optionGroups = value.optionGroups;
         _category = value.category;
         _state = ViewData(value);
       case Err(error: NotFoundException()):
@@ -345,6 +347,17 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
   }
 
+  List<OptionGroup> get optionGroups => _optionGroups;
+
+  /// What is wrong with the option groups, shown under the editor; `null` when they can be saved. Only once the
+  /// staff member tried to save, so a group they are still typing is not scolded.
+  String? get optionsProblem => _attempted ? optionGroupsProblem(_optionGroups) : null;
+
+  void setOptionGroups(List<OptionGroup> groups) {
+    _optionGroups = groups;
+    notifyListeners();
+  }
+
   void setDescription(String value) {
     _description = value.length > maxDescriptionLength ? value.substring(0, maxDescriptionLength) : value;
     _edited(AiField.description);
@@ -392,7 +405,11 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
   String? get priceError => _attempted ? _priceProblem : null;
   String? get prepError => _attempted ? _prepProblem : null;
 
-  bool get isValid => _nameProblem == null && _priceProblem == null && _prepProblem == null;
+  bool get isValid =>
+      _nameProblem == null &&
+      _priceProblem == null &&
+      _prepProblem == null &&
+      optionGroupsProblem(_optionGroups) == null;
 
   /// Editing: something differs from the saved item. A new item can always be saved (and then checked).
   bool get hasChanges {
@@ -403,9 +420,29 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         saved.prepMinutes != _prepValue ||
         saved.description != _description.trim() ||
         saved.category != _category ||
+        !_sameOptions(saved.optionGroups, _optionGroups) ||
         inStock == saved.soldOut ||
         _picked != null ||
         (_photoRemoved && (saved.imageUrl ?? '').isNotEmpty);
+  }
+
+  static bool _sameOptions(List<OptionGroup> a, List<OptionGroup> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      final x = a[i], y = b[i];
+      if (x.id != y.id ||
+          x.name.trim() != y.name.trim() ||
+          x.required != y.required ||
+          x.maxChoices != y.maxChoices ||
+          x.choices.length != y.choices.length) {
+        return false;
+      }
+      for (var j = 0; j < x.choices.length; j++) {
+        final p = x.choices[j], q = y.choices[j];
+        if (p.id != q.id || p.name.trim() != q.name.trim() || p.extraVnd != q.extraVnd) return false;
+      }
+    }
+    return true;
   }
 
   /// Not while Gemini is still answering: the answer would change the form after the item was saved (CR-F01).
@@ -449,6 +486,7 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         kioskId: kiosk,
         description: description,
         imageUrl: newUrl,
+        optionGroups: _optionGroups,
       ).withSoldOut(!inStock);
     } else {
       // Start from the item as it is now, so a sold-out switch flipped meanwhile in K08 is not undone by this
@@ -469,6 +507,8 @@ class MenuItemFormViewModel extends ChangeNotifier with SafeChangeNotifier {
         imageUrl: _photoRemoved ? null : (newUrl ?? base.imageUrl),
         availableAgainAt: base.availableAgainAt,
         soldOutReason: base.soldOutReason,
+        archived: base.archived,
+        optionGroups: _optionGroups,
       );
       item = choice == null || choice == !base.soldOut ? changed : changed.withSoldOut(!choice);
     }

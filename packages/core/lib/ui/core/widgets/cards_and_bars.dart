@@ -45,6 +45,9 @@ class FoodCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final dim = item.soldOut ? colors.muted : null;
+    // A dish with options cannot be added or stepped from the list: which size or topping would it be? Its "+" opens
+    // the item (S04), where the customer picks, and the stepper is left to the cart.
+    final withOptions = item.hasOptions;
     final Widget action;
     if (item.soldOut) {
       action = Container(
@@ -64,7 +67,7 @@ class FoodCard extends StatelessWidget {
         ),
         child: Text('Quán đóng', style: text.labelLarge?.copyWith(color: colors.primaryText)),
       );
-    } else if (quantity > 0) {
+    } else if (quantity > 0 && !withOptions) {
       action = QuantityStepper(
         key: const ValueKey('stepper'),
         name: item.name,
@@ -79,8 +82,8 @@ class FoodCard extends StatelessWidget {
         AppIconButton(
           key: const ValueKey('add'),
           icon: Icons.add,
-          semanticLabel: 'Thêm ${item.name} vào giỏ',
-          onPressed: onAdd,
+          semanticLabel: withOptions ? 'Chọn tuỳ chọn cho ${item.name}' : 'Thêm ${item.name} vào giỏ',
+          onPressed: withOptions ? onTap : onAdd,
           filled: true,
         ),
       );
@@ -88,6 +91,7 @@ class FoodCard extends StatelessWidget {
     final card = Semantics(
       label:
           '${item.name}, ${formatVnd(item.priceVnd)}${item.soldOut ? ', tạm hết' : ''}'
+          '${withOptions ? ', có tuỳ chọn' : ''}'
           '${item.soldOut && item.availableAgainAt != null ? ', có lại lúc ${formatTime(item.availableAgainAt!)}' : ''}'
           '${!item.soldOut && kioskClosed ? ', quán đóng${reopenLabel == null ? '' : ', ${reopenLabel!.toLowerCase()}'}' : ''}'
           '${quantity > 0 ? ', $quantity trong giỏ' : ''}',
@@ -127,7 +131,14 @@ class FoodCard extends StatelessWidget {
                           children: [
                             Icon(Icons.schedule, size: 16, color: colors.muted),
                             const SizedBox(width: AppSpacing.xxs),
-                            Text('${item.prepMinutes} phút', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                            Flexible(
+                              child: Text(
+                                '${item.prepMinutes} phút${withOptions ? ' · Có tuỳ chọn' : ''}',
+                                style: text.bodyMedium?.copyWith(color: colors.muted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                       Row(

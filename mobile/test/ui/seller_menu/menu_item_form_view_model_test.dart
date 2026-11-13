@@ -187,6 +187,86 @@ void main() {
     );
   });
 
+  group('MenuItemFormViewModel options (size, topping)', () {
+    const size = OptionGroup(
+      id: 'size',
+      name: 'Size',
+      required: true,
+      choices: [
+        OptionChoice(id: 's', name: 'Size S'),
+        OptionChoice(id: 'l', name: 'Size L', extraVnd: 8000),
+      ],
+    );
+
+    test('the option groups are saved with a new item, and read back when it is edited', () async {
+      final menu = FakeMenuRepository();
+      final vm = _vm(menu);
+      await pumpEventQueue();
+      _fill(vm, name: 'Trà sữa', price: '25000');
+      vm.setOptionGroups([size]);
+      final id = ((await vm.save.execute())! as Ok<String>).value;
+      expect((await _stored(menu, id)).optionGroups.single.choices.last.extraVnd, 8000);
+
+      final edit = _vm(menu, itemId: id);
+      await pumpEventQueue();
+      expect(edit.optionGroups.single.name, 'Size');
+      expect(edit.hasChanges, isFalse, reason: 'opening an item with options is not a change');
+      edit.setOptionGroups([
+        const OptionGroup(
+          id: 'size',
+          name: 'Size',
+          required: true,
+          choices: [OptionChoice(id: 's', name: 'Size S')],
+        ),
+      ]);
+      expect(edit.hasChanges, isTrue);
+      await edit.save.execute();
+      expect((await _stored(menu, id)).optionGroups.single.choices, hasLength(1));
+      vm.dispose();
+      edit.dispose();
+    });
+
+    test('saving an edit that does not touch the options keeps them', () async {
+      final menu = FakeMenuRepository();
+      final vm = _vm(menu);
+      await pumpEventQueue();
+      _fill(vm, name: 'Trà sữa', price: '25000');
+      vm.setOptionGroups([size]);
+      final id = ((await vm.save.execute())! as Ok<String>).value;
+      final edit = _vm(menu, itemId: id);
+      await pumpEventQueue();
+      edit.setPrice('27000');
+      await edit.save.execute();
+      final stored = await _stored(menu, id);
+      expect(stored.priceVnd, 27000);
+      expect(stored.optionGroups, hasLength(1));
+      vm.dispose();
+      edit.dispose();
+    });
+
+    test('a group with no name or no choice is refused, and the reason shows once saving was tried', () async {
+      final menu = FakeMenuRepository();
+      final vm = _vm(menu);
+      await pumpEventQueue();
+      _fill(vm);
+      vm.setOptionGroups([
+        const OptionGroup(
+          id: 'g',
+          name: '',
+          choices: [OptionChoice(id: 'c', name: 'A')],
+        ),
+      ]);
+      expect(vm.optionsProblem, isNull, reason: 'not scolded while still typing');
+      final result = await vm.save.execute();
+      expect(result, isA<Err<String>>());
+      expect(vm.optionsProblem, contains('cần có tên'));
+      expect(vm.isValid, isFalse);
+      vm.setOptionGroups([size]);
+      expect(vm.optionsProblem, isNull);
+      vm.dispose();
+    });
+  });
+
   group('MenuItemFormViewModel adding an item (K14)', () {
     test('starts empty with a preparation time already filled, and shows no error before saving is tried', () async {
       final vm = _vm(FakeMenuRepository());

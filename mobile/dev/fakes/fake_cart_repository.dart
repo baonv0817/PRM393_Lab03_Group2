@@ -22,25 +22,25 @@ class FakeCartRepository implements CartRepository {
       return const Result.error(ValidationException('Giỏ hàng đang có món của kiosk khác.'));
     }
     final list = [...cart.value.items];
-    final i = list.indexWhere((e) => e.itemId == item.itemId);
+    final i = list.indexWhere((e) => e.lineKey == item.lineKey);
     i == -1 ? list.add(item) : list[i] = list[i].copyWith(quantity: list[i].quantity + item.quantity);
     cart.set(_copy(cart.value, kioskId: kioskId, items: list));
     return const Result.ok(null);
   }
 
   @override
-  Future<Result<void>> setQuantity(String uid, String itemId, int quantity) async {
+  Future<Result<void>> setQuantity(String uid, String lineKey, int quantity) async {
     final cart = _of(uid);
     _put(uid, [
       for (final e in cart.value.items)
-        if (e.itemId != itemId) e else if (quantity > 0) e.copyWith(quantity: quantity),
+        if (e.lineKey != lineKey) e else if (quantity > 0) e.copyWith(quantity: quantity),
     ]);
     return const Result.ok(null);
   }
 
   @override
-  Future<Result<void>> setNote(String uid, String itemId, String note) async {
-    _put(uid, [for (final e in _of(uid).value.items) e.itemId == itemId ? e.copyWith(note: note) : e]);
+  Future<Result<void>> setNote(String uid, String lineKey, String note) async {
+    _put(uid, [for (final e in _of(uid).value.items) e.lineKey == lineKey ? e.copyWith(note: note) : e]);
     return const Result.ok(null);
   }
 

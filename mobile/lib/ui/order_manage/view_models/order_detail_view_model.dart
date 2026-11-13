@@ -168,7 +168,7 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   List<OrderLineView> get lines => [
     for (final item in order?.items ?? const <CartItem>[])
       OrderLineView(
-        name: item.name,
+        name: item.displayName,
         quantity: '×${item.quantity}',
         price: formatVnd(item.lineTotalVnd),
         note: item.note.trim().isEmpty ? null : item.note.trim(),

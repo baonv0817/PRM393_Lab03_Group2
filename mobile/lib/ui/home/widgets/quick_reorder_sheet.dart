@@ -117,7 +117,7 @@ class QuickReorderSheet extends StatelessWidget {
                               children: [
                                 Text(_title(order), style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                                 Text(
-                                  order.items.map((e) => '${e.name} ×${e.quantity}').join(', '),
+                                  order.items.map((e) => '${e.displayName} ×${e.quantity}').join(', '),
                                   style: text.bodyMedium?.copyWith(color: colors.muted),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,

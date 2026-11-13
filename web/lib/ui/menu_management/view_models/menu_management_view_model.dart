@@ -5,6 +5,7 @@ import 'package:breakbite_core/data/services/analytics_events.dart';
 import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/domain/app_exception.dart';
 import 'package:breakbite_core/domain/models/menu_item.dart';
+import 'package:breakbite_core/domain/models/option_group.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/utils/command.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -24,6 +25,7 @@ class MenuItemInput {
     this.description = '',
     this.imageUrl,
     this.soldOut = false,
+    this.optionGroups = const [],
   });
 
   final String name;
@@ -33,6 +35,9 @@ class MenuItemInput {
   final String description;
   final String? imageUrl;
   final bool soldOut;
+
+  /// The options the customer picks (size, topping); what the dialog shows, so saving an item never drops them.
+  final List<OptionGroup> optionGroups;
 }
 
 /// W02 Management: list, search, create, edit and archive the kiosk's menu items, the entity the mobile menu
@@ -145,6 +150,7 @@ class MenuManagementViewModel extends ChangeNotifier with SafeChangeNotifier {
       soldOutReason: input.soldOut ? existing?.soldOutReason : null,
       availableAgainAt: input.soldOut ? existing?.availableAgainAt : null,
       archived: existing?.archived ?? false,
+      optionGroups: input.optionGroups,
     );
     final result = await _menu.upsertItem(item);
     if (result is Ok) {

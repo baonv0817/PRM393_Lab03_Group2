@@ -1,7 +1,9 @@
 import 'package:breakbite_admin/ui/menu_management/view_models/menu_management_view_model.dart';
 import 'package:breakbite_core/domain/models/menu_item.dart';
+import 'package:breakbite_core/domain/models/option_group.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
 import 'package:breakbite_core/ui/core/widgets/inputs.dart';
+import 'package:breakbite_core/ui/core/widgets/option_groups_editor.dart';
 import 'package:breakbite_core/utils/format.dart';
 import 'package:breakbite_core/utils/result.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +27,7 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
   late final _image = TextEditingController(text: widget.item?.imageUrl);
   late ItemCategory _category = widget.item?.category ?? ItemCategory.food;
   late bool _soldOut = widget.item?.soldOut ?? false;
+  late List<OptionGroup> _options = widget.item?.optionGroups ?? const [];
   String? _error;
 
   @override
@@ -42,6 +45,10 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
       setState(() => _error = 'Giá và thời gian chuẩn bị phải là số.');
       return;
     }
+    if (optionGroupsProblem(_options) case final problem?) {
+      setState(() => _error = problem);
+      return;
+    }
     final input = MenuItemInput(
       name: _name.text,
       priceVnd: price,
@@ -50,6 +57,7 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
       description: _description.text,
       imageUrl: _image.text,
       soldOut: _soldOut,
+      optionGroups: _options,
     );
     final result = await vm.save.execute((widget.item, input));
     if (!mounted || result == null) return;
@@ -113,6 +121,8 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
                 controller: _image,
                 helperText: 'Để trống thì app hiện logo BreakBite',
               ),
+              const SizedBox(height: AppSpacing.md),
+              OptionGroupsEditor(groups: _options, onChanged: (g) => setState(() => _options = g)),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Tạm hết món'),

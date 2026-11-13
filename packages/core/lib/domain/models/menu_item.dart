@@ -1,3 +1,5 @@
+import 'package:breakbite_core/domain/models/option_group.dart';
+
 enum ItemCategory { food, drink, other }
 
 /// Why staff marked an item sold out (K09); stored as the enum name.
@@ -18,6 +20,7 @@ class MenuItem {
     this.availableAgainAt,
     this.soldOutReason,
     this.archived = false,
+    this.optionGroups = const [],
   });
 
   final String id;
@@ -39,6 +42,39 @@ class MenuItem {
   /// Items are never deleted (docs/data-model.md section 3.3).
   final bool archived;
 
+  /// What the customer picks before adding the dish (size, toppings); empty for a dish that is just added.
+  final List<OptionGroup> optionGroups;
+
+  bool get hasOptions => optionGroups.isNotEmpty;
+
+  /// The choices that [picked] (group id to choice ids) stands for, in the order of the groups; choices that are not
+  /// in the groups are left out.
+  List<SelectedChoice> choicesFor(Map<String, Set<String>> picked) => [
+    for (final group in optionGroups)
+      for (final choice in group.choices)
+        if (picked[group.id]?.contains(choice.id) ?? false)
+          SelectedChoice(
+            groupId: group.id,
+            groupName: group.name,
+            choiceId: choice.id,
+            name: choice.name,
+            extraVnd: choice.extraVnd,
+          ),
+  ];
+
+  /// The first thing wrong with [picked] (a required group left empty, too many choices), or `null` when the dish can
+  /// be added with it.
+  String? optionsProblem(Map<String, Set<String>> picked) {
+    for (final group in optionGroups) {
+      final problem = group.problemWith(picked[group.id] ?? const {});
+      if (problem != null) return problem;
+    }
+    return null;
+  }
+
+  /// The price of one portion with the picked choices.
+  int priceWith(Map<String, Set<String>> picked) => priceVnd + choicesFor(picked).fold(0, (sum, c) => sum + c.extraVnd);
+
   /// Customers can order it: on sale and not archived.
   bool get orderable => !soldOut && !archived;
 
@@ -56,6 +92,7 @@ class MenuItem {
     availableAgainAt: (soldOut ?? this.soldOut) ? availableAgainAt : null,
     soldOutReason: (soldOut ?? this.soldOut) ? soldOutReason : null,
     archived: archived,
+    optionGroups: optionGroups,
   );
 
   /// The item as it stands at [now]: a sold-out item whose "có lại lúc" time has passed is on sale again, so
@@ -93,6 +130,7 @@ class MenuItem {
     availableAgainAt: soldOut ? availableAgainAt : null,
     soldOutReason: soldOut ? reason : null,
     archived: archived,
+    optionGroups: optionGroups,
   );
 
   /// The item after the web admin archives it or brings it back; nothing else changes.
@@ -110,5 +148,6 @@ class MenuItem {
     availableAgainAt: availableAgainAt,
     soldOutReason: soldOutReason,
     archived: archived,
+    optionGroups: optionGroups,
   );
 }

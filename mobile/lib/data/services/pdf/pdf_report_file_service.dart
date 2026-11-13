@@ -50,7 +50,7 @@ class PdfReportFileService implements ReportFileService {
                       order.orderCode,
                       formatDateTime(order.createdAt),
                       order.kioskName,
-                      order.items.map((i) => '${i.quantity}× ${i.name}').join(', '),
+                      order.items.map((i) => '${i.quantity}× ${i.displayName}').join(', '),
                       orderStatusLabel(order.status),
                       formatVnd(order.totalVnd),
                     ],

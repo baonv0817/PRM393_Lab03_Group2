@@ -234,6 +234,33 @@ void main() {
       expect(menu.saved.last.archived, isTrue, reason: 'editing an archived item does not bring it back');
     });
 
+    test('save sends the option groups, so editing an item never drops its size and topping', () async {
+      final menu = FakeMenuRepository();
+      final vm = MenuManagementViewModel(menu: menu, kioskId: 'k1');
+      const groups = [
+        OptionGroup(
+          id: 'size',
+          name: 'Size',
+          required: true,
+          choices: [
+            OptionChoice(id: 's', name: 'Size S'),
+            OptionChoice(id: 'l', name: 'Size L', extraVnd: 8000),
+          ],
+        ),
+      ];
+      const input = MenuItemInput(
+        name: 'Trà sữa',
+        priceVnd: 25000,
+        category: ItemCategory.drink,
+        prepMinutes: 3,
+        optionGroups: groups,
+      );
+      await vm.save.execute((null, input));
+      expect(menu.saved.single.optionGroups.single.choices.last.extraVnd, 8000);
+      await vm.save.execute((menu.saved.single, input));
+      expect(menu.saved.last.optionGroups, hasLength(1));
+    });
+
     test('logs menu_item_saved and menu_item_archived only when the write succeeds', () async {
       final analytics = FakeAnalytics();
       final vm = MenuManagementViewModel(menu: FakeMenuRepository(), kioskId: 'k1', analytics: analytics);

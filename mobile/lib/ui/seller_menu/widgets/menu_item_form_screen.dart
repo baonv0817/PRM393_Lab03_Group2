@@ -257,6 +257,8 @@ class _FormState extends State<_Form> {
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+            OptionGroupsEditor(groups: vm.optionGroups, onChanged: vm.setOptionGroups, problem: vm.optionsProblem),
           ],
         ),
       ),

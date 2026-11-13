@@ -112,7 +112,7 @@ String orderPaymentLabel(Order order) {
 }
 
 String orderItemsSummary(Order order) =>
-    '${order.items.map((e) => '${e.name} ×${e.quantity}').join(', ')} · ${formatVnd(order.totalVnd)}';
+    '${order.items.map((e) => '${e.displayName} ×${e.quantity}').join(', ')} · ${formatVnd(order.totalVnd)}';
 
 String kioskStatusLabel(Kiosk kiosk, {required DateTime now}) {
   if (!kiosk.open) return kiosk.openTime == null ? 'Đang đóng cửa' : 'Đóng · mở lại ${kiosk.openTime}';

@@ -93,6 +93,8 @@ class _Line extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('${item.name} ×${item.quantity}', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              if (item.options.isNotEmpty)
+                TestId('$testId.options', child: Text(item.optionsSummary, style: text.bodyLarge)),
               if (item.note.isNotEmpty) Text(item.note, style: text.bodyMedium?.copyWith(color: muted)),
             ],
           ),
@@ -104,7 +106,7 @@ class _Line extends StatelessWidget {
       testId,
       child: Semantics(
         checked: checked,
-        label: '${item.name} ×${item.quantity}',
+        label: '${item.displayName} ×${item.quantity}',
         child: InkWell(
           onTap: onToggle,
           child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 48), child: body),

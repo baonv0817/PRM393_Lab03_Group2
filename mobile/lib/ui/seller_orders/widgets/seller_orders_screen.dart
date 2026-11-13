@@ -205,7 +205,7 @@ class SellerOrderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  order.items.map((e) => '${e.name} ×${e.quantity}').join(', '),
+                  order.items.map((e) => '${e.displayName} ×${e.quantity}').join(', '),
                   style: text.bodyMedium?.copyWith(color: colors.muted),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

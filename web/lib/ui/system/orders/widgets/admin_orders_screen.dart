@@ -230,7 +230,7 @@ class _OrderRow extends StatelessWidget {
                       style: text.bodyMedium,
                     ),
                     Text(
-                      '${order.items.map((e) => '${e.name} ×${e.quantity}').join(', ')} · ${formatDateTime(order.createdAt)}',
+                      '${order.items.map((e) => '${e.displayName} ×${e.quantity}').join(', ')} · ${formatDateTime(order.createdAt)}',
                       style: text.bodySmall?.copyWith(color: colors.muted),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -301,7 +301,7 @@ class _OrderDetail extends StatelessWidget {
                 const Divider(),
                 for (final item in order.items)
                   line(
-                    '${item.name} ×${item.quantity}',
+                    '${item.displayName} ×${item.quantity}',
                     '${formatVnd(item.priceVnd * item.quantity)}${item.note.isEmpty ? '' : ' · ${item.note}'}',
                   ),
                 const Divider(),

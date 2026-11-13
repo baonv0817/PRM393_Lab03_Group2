@@ -194,6 +194,8 @@ class _OrderDetail extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(line.name, style: text.bodyLarge),
+                          if (line.options.isNotEmpty)
+                            Text(line.optionsSummary, style: text.bodyMedium?.copyWith(color: colors.primaryText)),
                           if (line.note.isNotEmpty)
                             Text('Ghi chú: ${line.note}', style: text.bodyMedium?.copyWith(color: colors.muted)),
                         ],

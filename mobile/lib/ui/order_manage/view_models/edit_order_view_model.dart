@@ -103,15 +103,16 @@ class EditOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
   }
 
-  bool canIncrease(String itemId) => _lineOf(itemId).quantity < Cart.maxQuantity;
+  bool canIncrease(String lineKey) => _lineOf(lineKey).quantity < Cart.maxQuantity;
 
   /// The last line cannot be removed: an order without items is a cancellation.
-  bool canDecrease(String itemId) => _lineOf(itemId).quantity > 1 || _draft.length > 1;
+  bool canDecrease(String lineKey) => _lineOf(lineKey).quantity > 1 || _draft.length > 1;
 
-  CartItem _lineOf(String itemId) => _draft.firstWhere((i) => i.itemId == itemId);
+  /// [lineKey] is `CartItem.lineKey`: a dish can be two lines with different options.
+  CartItem _lineOf(String lineKey) => _draft.firstWhere((i) => i.lineKey == lineKey);
 
-  void changeQuantity(String itemId, int delta) {
-    final index = _draft.indexWhere((i) => i.itemId == itemId);
+  void changeQuantity(String lineKey, int delta) {
+    final index = _draft.indexWhere((i) => i.lineKey == lineKey);
     if (index == -1 || locked) return;
     final line = _draft[index];
     final next = line.quantity + delta;
@@ -127,8 +128,8 @@ class EditOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     notifyListeners();
   }
 
-  void setNote(String itemId, String note) {
-    final index = _draft.indexWhere((i) => i.itemId == itemId);
+  void setNote(String lineKey, String note) {
+    final index = _draft.indexWhere((i) => i.lineKey == lineKey);
     if (index == -1 || locked) return;
     final trimmed = note.trim();
     final updated = [..._draft];
@@ -181,7 +182,9 @@ class EditOrderViewModel extends ChangeNotifier with SafeChangeNotifier {
     for (var i = 0; i < _draft.length; i++) {
       final before = o.items[i];
       final after = _draft[i];
-      if (before.itemId != after.itemId || before.quantity != after.quantity || before.note != after.note) return true;
+      if (before.lineKey != after.lineKey || before.quantity != after.quantity || before.note != after.note) {
+        return true;
+      }
     }
     return false;
   }
