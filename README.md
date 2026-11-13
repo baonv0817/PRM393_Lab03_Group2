@@ -69,10 +69,12 @@ Requirements: the versions below, an Android emulator or phone, and for the Fire
 ```powershell
 cd mobile
 flutter pub get
-flutter test                                    # 819 tests, no device needed
+flutter test                                    # 829 tests, no device needed
 # the real project; env/cloudinary.json is committed (cloud name and unsigned preset, not secrets),
 # env/app_check.json is gitignored: copy env/app_check.example.json and put your debug token in it
 flutter run --dart-define-from-file=env/cloudinary.json --dart-define-from-file=env/app_check.json
+# with the MoMo and VNPAY sandbox gateways (D41): env/payment.json is gitignored, copy env/payment.example.json
+flutter run --dart-define-from-file=env/cloudinary.json --dart-define-from-file=env/app_check.json --dart-define-from-file=env/payment.json
 # fake data, no Firebase
 flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=DEV_ROLE=user
 ```
@@ -80,6 +82,13 @@ flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=
 `env/app_check.json` holds an App Check debug token registered in the console (App Check → Apps → Manage debug
 tokens). App Check is **enforced** for Firestore and Firebase AI Logic, so a build without a registered token gets
 no data; the Android app has no Play Integrity registration, so use a debug build with the token.
+
+`env/payment.json` holds the sandbox merchant keys of MoMo (the public test merchant of
+[github.com/momo-wallet/payment](https://github.com/momo-wallet/payment), `nodejs/MoMo.js`) and VNPAY (the e-mail of
+[pay.vnpaytest.vn/dev-registration](https://pay.vnpaytest.vn/dev-registration)). A method without keys keeps the
+simulated gateway screen, and Remote Config `payment_gateway = simulated` sends both back to it without a new build.
+Test payments: VNPAY card NCB `9704198526191432198`, NGUYEN VAN A, 07/15, OTP `123456`; MoMo, a test ATM card from
+the page MoMo shows (see `docs/test-plan.md`, TC-45).
 
 ### Web admin
 
@@ -121,7 +130,7 @@ See [`e2e_test/README.md`](e2e_test/README.md): an ARTEMIS server on the same ma
 |---|---|
 | Flutter (stable), Dart | 3.47.5, 3.13.4 |
 | Firebase SDK (FlutterFire) | firebase_core 5.1.0, firebase_auth 7.0.1, cloud_firestore 7.1.0, firebase_messaging 17.0.1, firebase_analytics 13.0.1, firebase_crashlytics 6.0.1 (mobile), firebase_remote_config 7.0.1, firebase_ai 5.1.0 (mobile), firebase_app_check 0.5.1, google_sign_in 7.2.0 |
-| Other packages | provider 6.1.5+1, go_router 18.1.1, flutter_svg 2.3.2, http 1.6.0, fl_chart 1.3.1 (web), web 1.1.2 (web) |
+| Other packages | provider 6.1.5+1, go_router 18.1.1, flutter_svg 2.3.2, http 1.6.0, crypto 3.0.8, webview_flutter 4.14.1 (mobile), fl_chart 1.3.1 (web), web 1.1.2 (web) |
 | Gemini model (AI feature) | `gemini-3.5-flash-lite` through Firebase AI Logic (Gemini Developer API), name set by Remote Config `ai_model` |
 | Firebase CLI, FlutterFire CLI | 15.34.1, 1.4.1 |
 | Node.js, Java (Emulator) | Node 26, OpenJDK 21 |
@@ -129,6 +138,7 @@ See [`e2e_test/README.md`](e2e_test/README.md): an ARTEMIS server on the same ma
 | Python, uv | Python 3.12, uv 0.13.6 |
 | Android SDK | platforms 36 and 35, build-tools 36.0.0, NDK 28.2.13676358 (see `docs/setup.md`) |
 | File storage | Cloudinary (free plan, unsigned upload preset) |
+| Payment gateways (D41) | MoMo API v2 (`test-payment.momo.vn`), VNPAY 2.1.0 (`sandbox.vnpayment.vn`), sandbox only |
 
 ## AI tools used
 
@@ -149,12 +159,15 @@ See [`e2e_test/README.md`](e2e_test/README.md): an ARTEMIS server on the same ma
 | Handout requirement | What we do | Why | Approval |
 |---|---|---|---|
 | Cloud Storage for Firebase | Files (the PDF receipt, item and incident photos) are stored on Cloudinary through the same `StorageService` interface, with their metadata in Firestore (`reports`) | Cloud Storage now needs the Blaze plan (payment card); the team stays on the free Spark plan | The lecturer confirmed in writing that Cloudinary or S3 is acceptable |
+| Simulated payment (the first plan, D02) | MoMo and VNPAY open their real **sandbox** gateway in a WebView (D41); "Thẻ SV / Ví BreakBite" stays simulated | The lecturer advised adding MoMo and VNPAY payment to complete the product. On Spark there is no server: the sandbox secret keys are in the app and no IPN is received, so the app asks MoMo for the result and checks the VNPAY signature itself. Acceptable only for a sandbox; production needs a server (Cloud Functions, Blaze) | Lecturer advice, 13/11/2026 |
 
 ## Security
 
 Never commit service-account keys, API keys or keystores. Keys and test accounts go in environment variables.
 `mobile/android/app/google-services.json` and the web app's `firebase_options.dart` may be committed (a Firebase web API
 key only names the project; the Security Rules and App Check protect the data). The App Check debug token goes in
-`mobile/env/app_check.json`, which is gitignored (`mobile/env/app_check.example.json` shows the format). The ARTEMIS
+`mobile/env/app_check.json`, which is gitignored (`mobile/env/app_check.example.json` shows the format). The
+MoMo and VNPAY sandbox keys go in `mobile/env/payment.json`, also gitignored (`payment.example.json`); they are compiled
+into a build that uses them, so such a build is for the sandbox only and is never published (D41). The ARTEMIS
 model key lives only in the ARTEMIS server's `.env`. A scan of the whole Git history on 13/11/2026 found no secret:
 [`evidence/security/secret-scan-2026-11-13.md`](evidence/security/secret-scan-2026-11-13.md).

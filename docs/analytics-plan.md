@@ -13,7 +13,7 @@ Lab 2 success goal: finish an order in under 35 seconds with at most 8 taps.
 | `add_to_cart` | Item added to the cart | `item_id` (string), `quantity` (int), `source` (string: home, menu, detail) | Where is adding fastest from? | S02, S03, S04 |
 | `reorder` | The items of a past order are put back in the cart (S14 quick reorder, "Đặt lại" on S08, S10, S12) | `order_id` (string), `item_count` (int) | Do students reorder a usual meal instead of browsing the menu? | S14 → S05 |
 | `begin_checkout` | Enter the checkout screen | `value_vnd` (int), `item_count` (int) | How many carts reach checkout? | S05 → S06 |
-| `purchase` | Order placed successfully | `transaction_id` (string), `value_vnd` (int), `payment_method` (string) | Is the goal of ≤ 8 taps and < 35 seconds met? | S06-GATEWAY → S07 |
+| `purchase` | Order placed successfully | `transaction_id` (string), `value_vnd` (int), `payment_method` (string); with a sandbox gateway (D41) also `gateway` = `sandbox` and `gateway_txn` (string, the MoMo or VNPAY transaction number) | Is the goal of ≤ 8 taps and < 35 seconds met? | S06-GATEWAY → S07 |
 | `payment_failed` | Payment declined, expired or left at the gateway | `payment_method` (string), `reason` (string: declined, expired, cancelled) | Which method fails most, and how many switch to cash? | S06-ERR |
 | `export_report` | A file is generated and uploaded | `file_size_kb` (int), `source` (string: firebase_demo, order_detail), `order_id` (string, only for a single-order receipt) | Which orders get a receipt exported? | Demo area, S12 |
 | `order_accepted` | Seller accepts an order | `order_id` (string), `wait_seconds` (int) | How fast does the counter accept orders? | K03 |
