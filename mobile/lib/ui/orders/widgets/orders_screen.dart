@@ -184,15 +184,18 @@ class _ActiveOrderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Side by side while they fit; at large text the badge moves under the title instead of overflowing.
-                  Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xxs,
-                    children: [
-                      Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                      StatusBadge(label: status),
-                    ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xxs,
+                      children: [
+                        Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                        StatusBadge(label: status),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(orderItemsSummary(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
