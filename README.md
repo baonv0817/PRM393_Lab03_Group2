@@ -78,7 +78,8 @@ flutter run -t dev/main_dev.dart --dart-define=DEV_SIGNED_IN=true --dart-define=
 ```
 
 `env/app_check.json` holds an App Check debug token registered in the console (App Check → Apps → Manage debug
-tokens); a release build uses Play Integrity instead.
+tokens). App Check is **enforced** for Firestore and Firebase AI Logic, so a build without a registered token gets
+no data; the Android app has no Play Integrity registration, so use a debug build with the token.
 
 ### Web admin
 
