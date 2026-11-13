@@ -146,7 +146,7 @@ void main() {
       await pumpEventQueue();
 
       expect(vm.title(_thisWeek), '#O1 · 03/11');
-      expect(vm.ending(_thisWeek), 'Đã nhận lúc 12:30');
+      expect(vm.ending(_thisWeek), 'Đã lấy món lúc 12:30');
       expect(vm.ending(_thisWeekCancelled), 'Đã huỷ');
       vm.dispose();
     });

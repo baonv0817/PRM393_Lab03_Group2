@@ -169,4 +169,35 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('S08 at 200 % text: the tabs scroll instead of cutting "Đang xử lý (1)", and the words agree', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final orders = FakeOrderRepository();
+    await placeTestOrder(orders, uid: 'u1');
+    await pumpScreen(
+      tester,
+      const OrdersScreen(),
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => OrdersViewModel(
+            orders: orders,
+            cart: FakeCartRepository(),
+            session: InMemorySessionRepository(),
+            analytics: FakeAnalyticsService(),
+            crash: FakeCrashService(),
+            uid: 'u1',
+          ),
+        ),
+      ],
+    );
+    expect(tester.widget<TabBar>(find.byType(TabBar)).isScrollable, isTrue);
+    expect(find.text('Đang xử lý (1)'), findsOneWidget);
+    // A placed order waits for the kiosk: the badge no longer says "Đã nhận đơn" above "Chờ kiosk nhận đơn".
+    expect(find.text('Chờ xác nhận'), findsOneWidget);
+    expect(find.text('Chờ kiosk nhận đơn'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

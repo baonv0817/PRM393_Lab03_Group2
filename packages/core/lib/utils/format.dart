@@ -28,7 +28,8 @@ String formatTimeLeft(DateTime target, {required DateTime now}) {
 }
 
 String orderStatusLabel(OrderStatus status) => switch (status) {
-  OrderStatus.pending => 'Đã nhận đơn',
+  // Not "Đã nhận đơn" (Figma): next to "Chờ kiosk nhận đơn" it read as if the kiosk had accepted (D39).
+  OrderStatus.pending => 'Chờ xác nhận',
   OrderStatus.preparing => 'Đang làm',
   OrderStatus.ready => 'Sẵn sàng',
   OrderStatus.delivered => 'Hoàn tất',

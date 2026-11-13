@@ -19,6 +19,8 @@ class OrdersScreen extends StatelessWidget {
     final vm = context.watch<OrdersViewModel>();
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
+    // At about 1.5 times the text size the two labels no longer fit side by side ("Đang xử lý (2)" faded out).
+    final largeText = MediaQuery.textScalerOf(context).scale(16) >= 24;
 
     Widget tabBody(Widget Function(List<Order> all) builder) => switch (vm.state) {
       ViewLoading<List<Order>>() => const LoadingView(),
@@ -45,6 +47,8 @@ class OrdersScreen extends StatelessWidget {
           title: Semantics(header: true, child: const Text('Đơn hàng')),
           centerTitle: false,
           bottom: TabBar(
+            isScrollable: largeText,
+            tabAlignment: largeText ? TabAlignment.start : null,
             labelStyle: text.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             unselectedLabelColor: colors.muted,
             tabs: [
@@ -158,57 +162,64 @@ class _ActiveOrderCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final title = vm.title(order);
     final status = orderStatusLabel(order.status);
+    void open() => context.push(AppRoutes.orderOf(order.id));
+    // The whole card opens S07, as a finished order's card opens S12 (P-02: people tapped the card, not the button).
     return TestId(
       's08.order.${order.id}',
       child: Semantics(
         container: true,
-        label: '$title. $status. ${vm.timing(order)}',
+        label: '$title. $status. ${vm.timing(order)}. Chạm để theo dõi đơn',
         child: Material(
           color: scheme.surface,
+          clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.card),
             side: BorderSide(color: scheme.primary, width: 1.5),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    StatusBadge(label: status),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(orderItemsSummary(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Icon(Icons.schedule, size: 18, color: colors.muted),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Expanded(
-                      child: Text(vm.timing(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                SizedBox(
-                  width: double.infinity,
-                  child: TestId(
-                    's08.order.${order.id}.open',
-                    child: AppButton(
-                      label: 'Xem mã QR nhận món',
-                      variant: AppButtonVariant.secondary,
-                      onPressed: () => context.push(AppRoutes.orderOf(order.id)),
+          child: InkWell(
+            onTap: open,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Side by side while they fit; at large text the badge moves under the title instead of overflowing.
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xxs,
+                    children: [
+                      Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      StatusBadge(label: status),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(orderItemsSummary(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, size: 18, color: colors.muted),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Text(vm.timing(order), style: text.bodyMedium?.copyWith(color: colors.muted)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TestId(
+                      's08.order.${order.id}.open',
+                      child: AppButton(
+                        label: 'Xem mã QR nhận món',
+                        variant: AppButtonVariant.secondary,
+                        onPressed: open,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

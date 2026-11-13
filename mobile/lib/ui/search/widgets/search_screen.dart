@@ -218,7 +218,7 @@ class _NoResults extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Thử từ khoá khác hoặc xem các món bán chạy.',
+          'Thử từ khoá khác hoặc chọn một gợi ý bên dưới.',
           style: text.bodyMedium?.copyWith(color: colors.muted),
           textAlign: TextAlign.center,
         ),

@@ -95,7 +95,7 @@ class OrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
       _ => 'Kiosk đang làm món',
     },
     OrderStatus.ready => 'Đã sẵn sàng, mời bạn tới quầy',
-    OrderStatus.delivered => 'Đã nhận ${formatTime(order.deliveredAt ?? order.updatedAt ?? order.createdAt)}',
+    OrderStatus.delivered => 'Đã lấy món ${formatTime(order.deliveredAt ?? order.updatedAt ?? order.createdAt)}',
     OrderStatus.cancelled => 'Đã huỷ',
   };
 

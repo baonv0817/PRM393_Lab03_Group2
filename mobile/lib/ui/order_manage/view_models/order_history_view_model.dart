@@ -187,7 +187,7 @@ class OrderHistoryViewModel extends ChangeNotifier with SafeChangeNotifier {
   String title(Order order) => '#${order.orderCode} · ${formatDayMonth(order.createdAt)}';
 
   String ending(Order order) => switch (order.status) {
-    OrderStatus.delivered => 'Đã nhận lúc ${formatTime(order.deliveredAt ?? order.updatedAt ?? order.createdAt)}',
+    OrderStatus.delivered => 'Đã lấy món lúc ${formatTime(order.deliveredAt ?? order.updatedAt ?? order.createdAt)}',
     _ => 'Đã huỷ',
   };
 

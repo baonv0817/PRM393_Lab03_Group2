@@ -190,7 +190,8 @@ class _Header extends StatelessWidget {
                                     style: vm.closed
                                         ? text.bodyMedium?.copyWith(color: scheme.error, fontWeight: FontWeight.w700)
                                         : text.bodyMedium?.copyWith(color: colors.muted),
-                                    maxLines: 1,
+                                    // Two lines, so the wait time stays readable at 200 % text (manual session 10/11).
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),

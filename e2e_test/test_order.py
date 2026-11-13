@@ -47,10 +47,10 @@ async def test_tc03_quick_order(artemis):
         "(sau khi chạm, nút + đổi thành bộ đếm hiện số 1; không chạm thêm). Chạm nút giỏ hàng tròn ở góc dưới "
         'bên phải. Chạm tiếp tục để thanh toán, giữ phương thức MoMo, chạm "Xác nhận", rồi xác nhận thanh toán ở '
         'màn cổng thanh toán. Đợi màn "Theo dõi đơn" hiện ra. Trên màn đó: số lớn bắt đầu bằng # ở đầu màn là mã '
-        'đơn; cuộn xuống tới mã QR, dòng "Mã số: …" ngay dưới mã QR là mã nhận món gồm 6 chữ số.',
+        'đơn; cuộn xuống tới mã QR, dòng "Mã nhận món: …" ngay dưới mã QR là mã nhận món gồm 6 chữ số.',
         expected_output=(
             'JSON: {"tracking_screen_visible": true hoặc false, "order_code": mã đơn bắt đầu bằng #, '
-            '"pickup_code": 6 chữ số ở dòng "Mã số", "total": tổng tiền đang hiện}'
+            '"pickup_code": 6 chữ số ở dòng "Mã nhận món", "total": tổng tiền đang hiện}'
         ),
     )
     assert result.succeeded, result.error or result.status

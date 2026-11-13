@@ -128,7 +128,8 @@ class _Header extends StatelessWidget {
                         child: Text(
                           '${kiosk.name} · ${vm.kioskStatus ?? ''}',
                           style: text.bodyMedium?.copyWith(color: colors.muted),
-                          maxLines: 1,
+                          // Two lines, so the status stays readable at 200 % text (manual session 10/11).
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
