@@ -9,4 +9,5 @@
 - Video source: local Downloads/PRM393 - Final Assignment One Complete System on Firebase.pdf, section 10, page 6; rubric pages 7-8. Read directly on 2026-11-13.
 - Verified video requirements: 8-12 minutes live; mobile flows; each web screen; cross-role flow with both screens visible; AI including Remote Config off; a test run.
 - Existing README already links the final video; its contents were not reviewed in this task.
-- Next: verify README diff, commit, push feature branch, open PR. Do not merge.
+- Done: README updated, documentation checks passed, PR 131 opened to main. Video requirements verified from the PDF.
+- Next: team review of PR; other members fill their own details. No merge requested.
