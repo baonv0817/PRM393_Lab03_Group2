@@ -190,6 +190,26 @@ void main() {
     });
 
     group('exporting the receipt', () {
+      test('a cancelled cash order that was never paid has no receipt; a cancelled paid one keeps it', () async {
+        final setup = _Setup();
+        final cashId = await placeTestOrder(setup.orders, uid: 'u1', method: PaymentMethod.cash);
+        await setup.orders.cancelMyOrder(setup.orders.all.firstWhere((o) => o.id == cashId));
+        final cash = setup.viewModel(cashId);
+        await pumpEventQueue();
+        expect(cash.canExportReceipt, isFalse);
+        final refused = await cash.exportReceipt.execute();
+        expect(refused?.errorOrNull?.message, OrderDetailViewModel.noReceiptMessage);
+        expect(setup.storage.uploads, isEmpty, reason: 'nothing is generated or uploaded');
+
+        final paidId = await placeTestOrder(setup.orders, uid: 'u1');
+        await setup.orders.cancelMyOrder(setup.orders.all.firstWhere((o) => o.id == paidId));
+        final paid = setup.viewModel(paidId);
+        await pumpEventQueue();
+        expect(paid.canExportReceipt, isTrue);
+        cash.dispose();
+        paid.dispose();
+      });
+
       test('generates the PDF, uploads it with progress, saves it for this order and logs the export', () async {
         final setup = _Setup();
         final id = await setup.placeDiscounted();

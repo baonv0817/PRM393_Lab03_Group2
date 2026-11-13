@@ -57,6 +57,7 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
   }
 
   static const notFoundMessage = 'Không tìm thấy đơn này.';
+  static const noReceiptMessage = 'Đơn đã huỷ và chưa thanh toán nên không có biên nhận.';
 
   final OrderRepository orders;
   final CartRepository cart;
@@ -138,6 +139,13 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   /// A problem can be reported once the food was received (S24).
   bool get canReportIncident => order?.status == OrderStatus.delivered;
+
+  /// A receipt proves a payment: an order cancelled before anything was paid has none (found by the ARTEMIS Pro
+  /// session, docs/test-plan.md section 4.1). A paid order that was cancelled keeps it, marked "Được hoàn tiền".
+  bool get canExportReceipt {
+    final o = order;
+    return o != null && !(o.status == OrderStatus.cancelled && o.paymentStatus == PaymentStatus.unpaid);
+  }
 
   /// The items can be rated once the food was received (S23).
   bool get canReview => order?.status == OrderStatus.delivered;
@@ -226,6 +234,7 @@ class OrderDetailViewModel extends ChangeNotifier with SafeChangeNotifier {
     final o = order;
     if (o == null) return const Result.error(NotFoundException(message: notFoundMessage));
     if (uid.isEmpty) return const Result.error(PermissionDeniedException(message: 'Đăng nhập để xuất biên nhận.'));
+    if (!canExportReceipt) return const Result.error(ValidationException(noReceiptMessage));
     _stage = ReceiptStage.generating;
     _uploadProgress = 0;
     notifyListeners();
