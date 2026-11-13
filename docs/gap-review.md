@@ -94,7 +94,7 @@ One row per requirement of the Lab 3 handout (section numbers in brackets).
 | L32 | Every AI tool disclosed (§8, §9) | **Still missing** (partly, G11) | [README "AI tools used"][readme-ai] and code-review §1 still say "[the other members add theirs]" |
 | L33 | README: topic, how to run the app and the tests, versions, AI tools, video link, deliverables map (§9) | **Still missing** (partly, G11) | README has the versions, the ARTEMIS commit, the video link and the map; "Team" and "How to run" are placeholders, and the commands predate the `mobile/` move |
 | L34 | Repository layout, `firebase/storage.rules`, `remote-config-defaults.json`, `google-services.json` (§9) | Works (layout changed by the final assignment) | [`firebase/`](../firebase/); `mobile/android/app/google-services.json` (project `breakbite-1315b`) |
-| L35 | No secrets committed (§9) | To verify (V08) | [README "Security"][readme-sec]; `.gitignore` covers `.env*` and `mobile/env/app_check.json`; no secret scan is recorded |
+| L35 | No secrets committed (§9) | Works (V08 done 13/11/2026) | [README "Security"][readme-sec]; `.gitignore` covers `.env*` and `mobile/env/app_check.json`; a scan of the whole history (298 commits) found no secret: [`secret-scan-2026-11-13.md`](../evidence/security/secret-scan-2026-11-13.md) |
 | L36 | Report (8 to 12 pages), slides (12 to 15), video (5 to 10 minutes) (§9) | Works | [`report/Lab03_SE193905.pdf`](../report/Lab03_SE193905.pdf), [`slides/Lab03_SE193905_slides.pdf`](../slides/Lab03_SE193905_slides.pdf), video link in [README](../README.md) (8 min 47 s) |
 | L37 | Git history over time; console evidence from our own project (§11) | Project ID: Works. History: To verify (V09) | [`evidence/README.md`](../evidence/README.md) (project name in console screenshots). `TASKS.md` T00 noted on 01/11/2026 that only 3 of 5 members had commits |
 
@@ -164,7 +164,7 @@ CR-01 is the only accepted finding without a fix. A real fix needs pricing on a 
 | V05 | Announcement and admin rejection on a phone; the phone side of the cross-role flow; `docs/cross-role-flow.md` | — | **Done 13/11/2026**: see "Cross-role flow, phone side" in section 6 and [test-report §4](test-report.md) |
 | V06 | App Check enforcement on Firestore and AI Logic once the web admin sends tokens | Mikan382 | The web URL works (checklist on the deployed site); the web sends App Check tokens since #105. Enforcement is turned on last, after a final check of both clients |
 | V07 | Cloudinary for the PDF against final handout §4 | `#98 baonv0817` | Ask the lecturer; record the answer in [README "Deviations"][readme-dev] |
-| V08 | No secrets in the Git history | `#98 baonv0817` | Run one secret scan (for example gitleaks) and record the result |
+| V08 | No secrets in the Git history | `#98 baonv0817` | **Done 13/11/2026**: pattern scan of every commit of every branch, no secret; what is committed on purpose (Firebase API keys, the unsigned Cloudinary preset) is listed with the reason in [`secret-scan-2026-11-13.md`](../evidence/security/secret-scan-2026-11-13.md) |
 | V09 | Every member's commits are visible | `#98 baonv0817` | Check the contributors page before the deadline |
 
 [dt-s]: design-traceability.md#1-customer-app-s01s30
