@@ -12,7 +12,7 @@ Firebase project. It joins the Lab 2 design and the Lab 3 app into **one system*
 - **Topic:** BreakBite, Campus District 9 (unchanged from Lab 2 and Lab 3)
 - **Team:** `[fill in names and student IDs]`
 - **Firebase project:** `breakbite-1315b` (Spark, no-cost plan)
-- **Demo video:** `[final assignment video: to add]` · Lab 3 video: [BreakBite_demo.mp4](https://drive.google.com/file/d/1gvb2ZAtyTcqP_V0hP5ttBreNs34HZVws/view?usp=sharing)
+- **Demo video:** [BreakBite_final_demo.mp4](https://drive.google.com/file/d/1MR06eA-i9kA4BJy-Lrt2cSCq2y_rsltz/view?usp=sharing) · Lab 3 video: [BreakBite_demo.mp4](https://drive.google.com/file/d/1gvb2ZAtyTcqP_V0hP5ttBreNs34HZVws/view?usp=sharing)
 
 ## Roles
 
