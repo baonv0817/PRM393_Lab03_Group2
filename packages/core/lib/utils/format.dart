@@ -108,7 +108,8 @@ String orderPaymentLabel(Order order) {
   final paid = order.paymentStatus == PaymentStatus.paid;
   final cancelled = order.status == OrderStatus.cancelled;
   if (paid) return cancelled ? 'Được hoàn tiền' : 'Đã thanh toán';
-  return cancelled ? 'Chưa thanh toán' : 'Trả tại quầy khi nhận';
+  if (order.awaitingPayment) return 'Chờ thanh toán';
+  return cancelled || order.paymentMethod != PaymentMethod.cash ? 'Chưa thanh toán' : 'Trả tại quầy khi nhận';
 }
 
 String orderItemsSummary(Order order) =>

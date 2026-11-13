@@ -21,6 +21,7 @@ class FirestoreOrderRepository implements OrderRepository {
 
   /// K11 draws its chart from this many of the newest orders; the figures above it are counted on the server.
   static const statsChartLimit = 500;
+  static const paidOrClosedMessage = 'Đơn này đã được thanh toán hoặc đã huỷ.';
   static const handledMessage = 'Đơn này vừa được xử lý ở nơi khác. Danh sách đã cập nhật lại.';
 
   final FirebaseFirestore _db;
@@ -62,9 +63,7 @@ class FirestoreOrderRepository implements OrderRepository {
         'totalVnd': pricing.totalVnd,
         if (voucher != null) 'voucherCode': voucher.code,
         'paymentMethod': draft.paymentMethod.name,
-        'paymentStatus': draft.paymentMethod == PaymentMethod.cash
-            ? PaymentStatus.unpaid.name
-            : PaymentStatus.paid.name,
+        'paymentStatus': PaymentStatus.unpaid.name,
         'status': OrderStatus.pending.name,
         if (slot != null) 'pickupSlotId': slot.id,
         if (slot != null) 'pickupAt': Timestamp.fromDate(slot.startAt),
@@ -72,9 +71,22 @@ class FirestoreOrderRepository implements OrderRepository {
         if (draft.note.trim().isNotEmpty) 'note': draft.note.trim(),
         ...Stamp.created(),
       });
-      tx.delete(_db.collection('carts').doc(draft.uid));
+      if (draft.paymentMethod == PaymentMethod.cash) tx.delete(_db.collection('carts').doc(draft.uid));
       if (slotRef != null) tx.update(slotRef, _bookedBy(1));
       return ref.id;
+    });
+  }
+
+  @override
+  Future<Result<void>> payOrder(String orderId) {
+    final ref = _orders.doc(orderId);
+    return runGuardedTransaction<void>(_db, (tx) async {
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) throw const NotFoundException(message: 'Không tìm thấy đơn hàng.');
+      final current = _fromDoc(snapshot);
+      if (!current.awaitingPayment) throw const ValidationException(paidOrClosedMessage);
+      tx.update(ref, {'paymentStatus': PaymentStatus.paid.name, ...Stamp.updated()});
+      tx.delete(_db.collection('carts').doc(current.uid));
     });
   }
 
@@ -160,12 +172,18 @@ class FirestoreOrderRepository implements OrderRepository {
   }, releaseSlot: true);
 
   @override
-  Stream<List<Order>> watchKioskQueue(String kioskId) => _watch(
-    _orders
-        .where('kioskId', isEqualTo: kioskId)
-        .where('status', whereIn: _activeNames)
-        .orderBy('createdAt', descending: true),
-  );
+  Stream<List<Order>> watchKioskQueue(String kioskId) =>
+      _watch(
+        _orders
+            .where('kioskId', isEqualTo: kioskId)
+            .where('status', whereIn: _activeNames)
+            .orderBy('createdAt', descending: true),
+      ).map(
+        (orders) => [
+          for (final o in orders)
+            if (!o.awaitingPayment) o,
+        ],
+      );
 
   @override
   Future<Result<List<Order>>> findReadyByPickupCode(String kioskId, String pickupCode) => guard(() async {
@@ -184,6 +202,7 @@ class FirestoreOrderRepository implements OrderRepository {
     }
     return _step(order, (current) {
       _expect(current, OrderStatus.pending);
+      if (current.awaitingPayment) throw const ValidationException('Khách chưa thanh toán đơn này.');
       return {
         'status': OrderStatus.preparing.name,
         'acceptedAt': FieldValue.serverTimestamp(),

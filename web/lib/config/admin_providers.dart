@@ -7,6 +7,7 @@ import 'package:breakbite_core/data/services/analytics_service.dart';
 import 'package:breakbite_core/data/services/auth_service.dart';
 import 'package:breakbite_core/data/services/connectivity_service.dart';
 import 'package:breakbite_core/data/services/remote_config_service.dart';
+import 'package:breakbite_core/data/services/stats_insight_service.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -44,6 +45,7 @@ List<SingleChildWidget> adminProviders({
   required RemoteConfigService remoteConfig,
   required ConnectivityService connectivity,
   SystemRepositories? system,
+  StatsInsightService? insight,
 }) => [
   Provider<AuthService>.value(value: auth),
   Provider<OrderRepository>.value(value: orders),
@@ -51,6 +53,8 @@ List<SingleChildWidget> adminProviders({
   Provider<AnnouncementRepository>.value(value: announcements),
   Provider<AnalyticsService>.value(value: analytics),
   Provider<RemoteConfigService>.value(value: remoteConfig),
+  // `null` in a build without the AI summary: the statistics page then does not offer it.
+  Provider<StatsInsightService?>.value(value: insight),
   if (system != null) ...[
     Provider<AdminUserRepository>.value(value: system.users),
     Provider<AdminKioskRepository>.value(value: system.kiosks),

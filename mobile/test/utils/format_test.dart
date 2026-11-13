@@ -51,7 +51,11 @@ void main() {
   });
 
   group('order money', () {
-    Order order({PaymentStatus payment = PaymentStatus.paid, OrderStatus status = OrderStatus.delivered}) => Order(
+    Order order({
+      PaymentStatus payment = PaymentStatus.paid,
+      OrderStatus status = OrderStatus.delivered,
+      PaymentMethod method = PaymentMethod.momo,
+    }) => Order(
       id: 'a1',
       uid: 'u1',
       kioskId: 'q9-t2',
@@ -60,7 +64,7 @@ void main() {
         CartItem(itemId: 'm2', name: 'Trà đào', priceVnd: 25000),
       ],
       totalVnd: 93000,
-      paymentMethod: PaymentMethod.momo,
+      paymentMethod: method,
       paymentStatus: payment,
       status: status,
       createdAt: at,
@@ -75,6 +79,13 @@ void main() {
       expect(orderPaymentLabel(order(status: OrderStatus.cancelled)), 'Được hoàn tiền');
       expect(
         orderPaymentLabel(order(payment: PaymentStatus.unpaid, status: OrderStatus.pending)),
+        'Chờ thanh toán',
+        reason: 'D40: a gateway order created but not paid yet',
+      );
+      expect(
+        orderPaymentLabel(
+          order(payment: PaymentStatus.unpaid, status: OrderStatus.pending, method: PaymentMethod.cash),
+        ),
         'Trả tại quầy khi nhận',
       );
       expect(orderPaymentLabel(order(payment: PaymentStatus.unpaid, status: OrderStatus.cancelled)), 'Chưa thanh toán');

@@ -30,6 +30,7 @@ class AppDependencies {
     required this.favorites,
     required this.notifications,
     required this.announcements,
+    this.payments = const NoPaymentGateway(),
   });
 
   final AuthService auth;
@@ -62,6 +63,9 @@ class AppDependencies {
   final NotificationRepository notifications;
   final AnnouncementRepository announcements;
 
+  /// The MoMo and VNPAY sandbox gateways this build has keys for (D41); none in the fake build and the tests.
+  final PaymentGatewayService payments;
+
   List<SingleChildWidget> get providers => [
     Provider<AuthService>.value(value: auth),
     Provider<AnalyticsService>.value(value: analytics),
@@ -75,6 +79,7 @@ class AppDependencies {
     Provider<StorageService>.value(value: storage),
     Provider<RemoteConfigService>.value(value: remoteConfig),
     Provider<ReportFileService>.value(value: reportFiles),
+    Provider<PaymentGatewayService>.value(value: payments),
     Provider<MenuRepository>.value(value: menu),
     Provider<CartRepository>.value(value: cart),
     Provider<OrderRepository>.value(value: orders),

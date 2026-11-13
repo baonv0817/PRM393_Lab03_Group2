@@ -5,7 +5,8 @@ enum OrderStatus { pending, preparing, ready, delivered, cancelled }
 
 enum PaymentMethod { momo, vnpay, card, cash }
 
-/// The simulated gateway records `paid` immediately; cash stays `unpaid` until staff collect the money.
+/// Every order is created `unpaid` (D40). The simulated gateway then records `paid` while the order is
+/// still pending; cash stays `unpaid` until staff collect the money at handover.
 enum PaymentStatus { unpaid, paid }
 
 enum CancelledBy { customer, staff }
@@ -80,6 +81,10 @@ class Order {
   final DateTime? deliveredAt;
   final DateTime? cancelledAt;
   final DateTime? updatedAt;
+
+  /// A gateway order (MoMo, VNPay, card) that is not paid yet: the kiosk does not see it and cannot accept it.
+  bool get awaitingPayment =>
+      status == OrderStatus.pending && paymentMethod != PaymentMethod.cash && paymentStatus == PaymentStatus.unpaid;
 
   /// Customers can only edit or cancel while the order is still pending.
   bool get customerCanEdit => status == OrderStatus.pending;

@@ -51,7 +51,9 @@ Future<String> _place(FakeOrderRepository orders, {String? voucher = 'BBSTUDENT'
       note: 'Gói riêng',
     ),
   );
-  return result.valueOrNull!;
+  final id = result.valueOrNull!;
+  await orders.payOrder(id); // D40: paid at the gateway
+  return id;
 }
 
 EditOrderViewModel _vm(OrderRepository orders, {MenuRepository? menu, FakeCrashService? crash, String id = 'A-204'}) =>

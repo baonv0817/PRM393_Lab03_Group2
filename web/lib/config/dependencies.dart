@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:breakbite_admin/config/admin_providers.dart';
 import 'package:breakbite_admin/config/browser_connectivity.dart';
 import 'package:breakbite_admin/config/firebase_setup.dart';
+import 'package:breakbite_admin/config/firebase_stats_insight_service.dart';
 import 'package:breakbite_core/data/repositories/firestore/admin/audit_writer.dart';
 import 'package:breakbite_core/data/repositories/firestore/admin/firestore_admin_incident_repository.dart';
 import 'package:breakbite_core/data/repositories/firestore/admin/firestore_admin_kiosk_repository.dart';
@@ -60,5 +61,6 @@ Future<List<SingleChildWidget>> firebaseProviders() async {
     analytics: FirebaseAnalyticsService(FirebaseAnalytics.instance),
     remoteConfig: remoteConfig,
     connectivity: BrowserConnectivityService(),
+    insight: FirebaseStatsInsightService(),
   );
 }

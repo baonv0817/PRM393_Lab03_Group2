@@ -27,6 +27,7 @@ import 'package:breakbite_core/data/services/cloudinary/cloudinary_storage_servi
 import 'package:breakbite_core/data/services/firebase/firebase_analytics_service.dart';
 import 'package:breakbite_core/data/services/firebase/firebase_auth_service.dart';
 import 'package:breakbite_core/data/services/firebase/firebase_remote_config_service.dart';
+import 'package:breakbite_core/data/services/payment/sandbox_payment_gateway.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -76,5 +77,6 @@ Future<AppDependencies> createFirebaseDependencies() async {
     favorites: FirestoreFavoriteRepository(db),
     notifications: FirestoreNotificationRepository(db),
     announcements: FirestoreAnnouncementRepository(db),
+    payments: SandboxPaymentGateway.fromEnvironment(),
   );
 }

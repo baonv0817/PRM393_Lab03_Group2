@@ -22,18 +22,17 @@ class CheckoutScreen extends StatelessWidget {
   };
 
   Future<void> _confirm(BuildContext context, CheckoutViewModel vm) async {
-    if (vm.needsGateway) {
-      vm.openGateway();
-      await context.push(AppRoutes.checkoutGateway, extra: vm);
-      return;
-    }
     // Read the router before awaiting: once the order exists the app must open it even if this
     // screen's context was rebuilt or unmounted meanwhile (ARTEMIS TC-05: the order was created and
     // the cart emptied, but the screen stayed on "Thanh toán chưa thành công").
     final router = GoRouter.of(context);
+    final gateway = vm.needsGateway;
     final result = await vm.place.execute();
     if (result == null) return;
     switch (result) {
+      // D40: the order now exists unpaid; the gateway pays it or, when left, cancels it.
+      case Ok() when gateway:
+        await router.push(AppRoutes.checkoutGateway, extra: vm);
       case Ok(:final value):
         router.go(AppRoutes.orderOf(value));
       case Err(:final error):

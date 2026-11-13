@@ -149,6 +149,9 @@ void main() {
   late String cashOrderId;
   late String voucherOrderId;
 
+  /// A VNPay order left at the gateway (D40): the kiosk must not see or accept it.
+  late String unpaidOrderId;
+
   Future<Order> orderWhere(String id, bool Function(Order order) test) => orders
       .watchOrder(id)
       .where((o) => o != null && test(o))
@@ -258,11 +261,16 @@ void main() {
         ),
       ),
     );
-    final order = (await orders.watchOrder(voucherOrderId).firstWhere((o) => o != null))!;
+    // D40: a MoMo order is created unpaid and keeps the cart until the (simulated) gateway pays it.
+    final unpaid = (await orders.watchOrder(voucherOrderId).firstWhere((o) => o != null))!;
+    expect(unpaid.paymentStatus, PaymentStatus.unpaid);
+    expect((await db.doc('carts/$customerUid').get()).exists, isTrue);
+    ok(await orders.payOrder(voucherOrderId));
+    expect(err(await orders.payOrder(voucherOrderId)), isA<ValidationException>());
+    final order = await orderWhere(voucherOrderId, (o) => o.paymentStatus == PaymentStatus.paid);
     expect(order.subtotalVnd, 59000);
     expect(order.discountVnd, 10000);
     expect(order.totalVnd, 49000);
-    expect(order.paymentStatus, PaymentStatus.paid);
     expect(order.pickupCode, hasLength(6));
     expect(order.orderCode, voucherOrderId.substring(0, 6).toUpperCase());
     expect((await db.doc('carts/$customerUid').get()).exists, isFalse);
@@ -395,14 +403,16 @@ void main() {
         ),
       ),
     );
-    await orders.placeOrder(
-      OrderDraft(
-        uid: customerUid,
-        customerName: 'Quân N.',
-        kioskId: 'q9-t2',
-        kioskName: 'Kiosk Q9 · Tầng 2',
-        items: const [CartItem(itemId: 'q9-t2-tra-dao', name: 'Trà Đào Chanh Sả', priceVnd: 20000)],
-        paymentMethod: PaymentMethod.vnpay,
+    unpaidOrderId = ok(
+      await orders.placeOrder(
+        OrderDraft(
+          uid: customerUid,
+          customerName: 'Quân N.',
+          kioskId: 'q9-t2',
+          kioskName: 'Kiosk Q9 · Tầng 2',
+          items: const [CartItem(itemId: 'q9-t2-tra-dao', name: 'Trà Đào Chanh Sả', priceVnd: 20000)],
+          paymentMethod: PaymentMethod.vnpay,
+        ),
       ),
     );
     expect(ok(await orders.countMyOrders(customerUid)), 3);
@@ -530,6 +540,9 @@ void main() {
 
     final queue = await orders.watchKioskQueue('q9-t2').first;
     expect(queue.map((o) => o.id), contains(cashOrderId));
+    expect(queue.map((o) => o.id), isNot(contains(unpaidOrderId)));
+    final unpaid = (await orders.watchOrder(unpaidOrderId).first)!;
+    expect(err(await orders.accept(unpaid, readyIn: const Duration(minutes: 5))), isA<ValidationException>());
     final pending = queue.firstWhere((o) => o.id == cashOrderId);
     expect(err(await orders.markReady(pending)), isA<ValidationException>());
 

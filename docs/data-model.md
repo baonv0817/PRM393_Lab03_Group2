@@ -163,7 +163,7 @@ An auto-generated id. The central collection.
 | `totalVnd` | int | customer | **Must equal** `subtotalVnd − discountVnd` |
 | `voucherCode` | string? | customer | Document id in `vouchers` |
 | `paymentMethod` | string | customer on create | `momo`, `vnpay`, `card`, `cash`; never changes |
-| `paymentStatus` | string | customer on create; staff only `unpaid → paid` | Simulated gateways: `paid`. Cash: `unpaid` until collected |
+| `paymentStatus` | string | customer on create (always `unpaid`); `unpaid → paid` by the customer for a pending gateway order, by staff for cash | D40: a gateway order (`momo`, `vnpay`, `card`) is paid at the simulated gateway right after it is created; until then the kiosk does not list it and cannot accept it. Cash: `unpaid` until collected |
 | `status` | string | see section 4 | `pending`, `preparing`, `ready`, `delivered`, `cancelled` |
 | `pickupSlotId`, `pickupAt` | string?, ts? | customer | The slot booked and its start |
 | `pickupCode` | string | customer on create | 6 random digits; **QR** = `bb:<id>:<pickupCode>`; never changes. Two ready orders of a kiosk may share a code (1 in a million): K05 then lists both |
@@ -244,10 +244,11 @@ stateDiagram-v2
 
 | Who | May do | Condition (checked by the rules) |
 |---|---|---|
-| Customer | Create a `pending` order | Kiosk `open` and not paused; total matches; discount is exactly the voucher's (or 0); cash means `unpaid`; `createdAt`, `updatedAt` are the server time |
+| Customer | Create a `pending` order | Kiosk `open` and not paused; total matches; discount is exactly the voucher's (or 0); every method starts `unpaid` (D40); `createdAt`, `updatedAt` are the server time |
+| Customer | Pay a gateway order (S06-GATEWAY, D40) | Only their own `pending` order with `paymentMethod` other than `cash`; only `paymentStatus: unpaid → paid` and `updatedAt` change |
 | Customer | Edit items, pickup time, note (S09) | Only while `pending`; total and discount checked again |
 | Customer | Cancel (S07-DIALOG) | Only while `pending`; `cancelledBy = customer`, `cancelledAt` = server time |
-| Staff | Move to exactly the next step | No skipping, no going back, only their own kiosk; the step's time field (`acceptedAt`, `readyAt`, `deliveredAt`, `cancelledAt`) = server time; `readyBy` in the future; `prepSeconds ≥ 0` |
+| Staff | Move to exactly the next step | No skipping, no going back, only their own kiosk; a gateway order must be `paid` before it is accepted (D40); the step's time field (`acceptedAt`, `readyAt`, `deliveredAt`, `cancelledAt`) = server time; `readyBy` in the future; `prepSeconds ≥ 0` |
 | Staff | Deliver a cash order | Must set `paymentStatus = paid` at the same time (K06-CASH) |
 | Staff | Reject | `cancelledBy = staff` and a `cancelReason` |
 | Admin | Same as staff, every kiosk | |
@@ -255,7 +256,7 @@ stateDiagram-v2
 
 ### Placing an order in one transaction
 
-When the customer confirms (S06), after `repriceCart()` found no change, `OrderRepository.placeOrder` runs **one transaction**: it reads the kiosk (open, not paused), the voucher and the slot (exists, not full, not over), computes the discount with the same formula as the rules, then creates `orders/{id}` + deletes `carts/{uid}` + `slots/{slotId}.booked: FieldValue.increment(1)`. A problem stops the transaction before anything is written and comes back as a readable `ValidationException` ("Đơn tối thiểu 40.000đ để dùng mã BBSTUDENT.") instead of a rules rejection. Editing (S09), cancelling and every staff step also read the order inside a transaction first, so a step on an order that changed meanwhile fails with "Đơn này vừa được xử lý ở nơi khác"; cancelling or rejecting an order with a slot releases it with `increment(-1)` in the same transaction. Placing an order needs a connection (a transaction cannot be queued offline).
+When the customer confirms (S06), after `repriceCart()` found no change, `OrderRepository.placeOrder` runs **one transaction**: it reads the kiosk (open, not paused), the voucher and the slot (exists, not full, not over), computes the discount with the same formula as the rules, then creates `orders/{id}` (`unpaid`) + `slots/{slotId}.booked: FieldValue.increment(1)`, and for cash also deletes `carts/{uid}`. For a gateway method (D40) the gateway then calls `payOrder`, a second transaction that checks the order is still pending and unpaid, sets `paymentStatus = paid` and deletes the cart; leaving the gateway cancels the order instead (`cancelMyOrder`, which releases the slot). `watchKioskQueue` leaves unpaid gateway orders out of K02. A problem stops the transaction before anything is written and comes back as a readable `ValidationException` ("Đơn tối thiểu 40.000đ để dùng mã BBSTUDENT.") instead of a rules rejection. Editing (S09), cancelling and every staff step also read the order inside a transaction first, so a step on an order that changed meanwhile fails with "Đơn này vừa được xử lý ở nơi khác"; cancelling or rejecting an order with a slot releases it with `increment(-1)` in the same transaction. Placing an order needs a connection (a transaction cannot be queued offline).
 
 ## 5. Queries per screen and indexes
 
@@ -329,7 +330,7 @@ Limitations because there is **no dedicated server** (Spark, no Cloud Functions)
 | Limitation | Consequence | Mitigation |
 |---|---|---|
 | The rules cannot loop over `items[]`, so they **cannot check that line prices match `menu_items`** | A customer with a hacked app could write a lower price, also when editing a pending order (S09 lets the app change only time, quantity and note, but the rules cannot tell) | The rules force `total = subtotal − discount` and the voucher's exact discount; the app reprices the cart before ordering (`repriceCart`); staff see each line at handover. In production, Cloud Functions would recompute it |
-| Payment is **simulated** (D02) | `paymentStatus = paid` is written by the app | Say so clearly in the documents; for cash, staff confirm |
+| Payment is **simulated** (D02, D40) | `paymentStatus = paid` is written by the app, on a pending gateway order only; real MoMo/VNPay sandbox needs a server for the secret key and the IPN signature (Cloud Functions, Blaze) | Say so clearly in the documents; for cash, staff confirm |
 | Customers adjust `slots.booked` themselves | A fake reservation or release is possible | Only ±1 per change and within capacity; `increment` keeps concurrent bookings correct |
 | A voucher's daily window (`activeFrom`/`activeTo`) is checked by the app only | A hacked app could use GIOVANG outside 10:15–10:30 | Small amount, capped; the rules still check expiry, `active`, minimum and the amount |
 | In-app notifications are **written by the client** | No message when the app is closed | Push messages while the app is in the background are sent from the FCM console (matches the Lab 3 test requirement) |

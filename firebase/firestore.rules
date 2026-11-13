@@ -213,7 +213,7 @@ service cloud.firestore {
           && d.totalVnd == d.subtotalVnd - d.discountVnd
           && validDiscountOf(d)
           && d.paymentMethod in ['momo', 'vnpay', 'card', 'cash']
-          && ((d.paymentMethod == 'cash') == (d.paymentStatus == 'unpaid'))
+          && d.paymentStatus == 'unpaid'
           && stampedOnCreate();
     }
     function validTransition(from, to) {
@@ -248,12 +248,23 @@ service cloud.firestore {
                            && request.resource.data.cancelledAt == request.time))
                     && stampedOnUpdate();
 
+      // D40: the customer pays a pending gateway order after creating it (the gateway is simulated, D02).
+      allow update: if isOwner(resource.data.uid)
+                    && resource.data.status == 'pending'
+                    && resource.data.paymentMethod != 'cash'
+                    && resource.data.paymentStatus == 'unpaid'
+                    && request.resource.data.paymentStatus == 'paid'
+                    && changedKeys().hasOnly(['paymentStatus', 'updatedAt'])
+                    && stampedOnUpdate();
+
       allow update: if staffOf(resource.data.kioskId)
                     && changedKeys().hasOnly(['status', 'acceptedAt', 'readyAt', 'deliveredAt', 'cancelledAt',
                          'readyBy', 'prepSeconds', 'cancelReason', 'cancelledBy', 'paymentStatus', 'updatedAt'])
                     && (request.resource.data.status == resource.data.status
                         || validTransition(resource.data.status, request.resource.data.status))
                     && stepTimeOk(resource.data.status, request.resource.data)
+                    && (request.resource.data.status != 'preparing' || resource.data.status != 'pending'
+                        || resource.data.paymentMethod == 'cash' || resource.data.paymentStatus == 'paid')
                     && (request.resource.data.status != 'cancelled'
                         || (request.resource.data.cancelledBy == 'staff' && request.resource.data.cancelReason is string))
                     && (request.resource.data.status != 'delivered' || resource.data.paymentMethod != 'cash'
