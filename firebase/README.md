@@ -67,6 +67,7 @@ Install once: `cd firebase/seed && npm install`.
 | Load into the real project | `node seed.mjs --project=breakbite-1315b --yes` |
 | Clean reload (deletes kiosks and slots, menu_items, vouchers, then loads again; does not touch users or orders) | `node seed.mjs --project=breakbite-1315b --yes --reset` |
 | Demo data: two weeks of orders (statistics and "Mọi đơn hàng" get real numbers), a few orders running today, reviews, incidents, announcements, and size/topping/spice options on the dishes | `node backup.mjs --project=breakbite-1315b --yes`, then `node demo.mjs --project=breakbite-1315b --yes --customer-email=<demo customer> --admin-email=<admin>` |
+| Bring the three sample drinks (Trà Đào, Trà Sữa, Cà Phê Sữa) back on sale when the real menu archived them | add `--restore-drinks` to the `demo.mjs` command; to undo, archive them again in the web admin (Thực đơn) |
 | Remove the demo data again (every document with an id starting `demo-`; the options on the dishes stay) | `node demo.mjs --project=breakbite-1315b --yes --clean` |
 | Try the demo data on the Emulator | `npm run demo:emulator` (needs port 8080 free), or with an Emulator already running: `FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=demo-breakbite node demo.mjs --verify` |
 | Assign a role | `node set-role.mjs <email> <user\|staff\|admin> [kioskId] --project=breakbite-1315b --yes` |
