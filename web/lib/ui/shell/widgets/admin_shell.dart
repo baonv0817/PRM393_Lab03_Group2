@@ -33,9 +33,9 @@ class _AdminShellState extends State<AdminShell> {
   bool? _isExtended;
 
   static const _destinations = [
-    _NavDestination(icon: Icons.inbox_outlined, selected: Icons.inbox, label: 'Duyệt đơn'),
+    _NavDestination(icon: Icons.fact_check_outlined, selected: Icons.fact_check, label: 'Duyệt đơn'),
     _NavDestination(icon: Icons.restaurant_menu_outlined, selected: Icons.restaurant_menu, label: 'Thực đơn'),
-    _NavDestination(icon: Icons.bar_chart_outlined, selected: Icons.bar_chart, label: 'Thống kê'),
+    _NavDestination(icon: Icons.insights_outlined, selected: Icons.insights, label: 'Thống kê'),
     _NavDestination(icon: Icons.campaign_outlined, selected: Icons.campaign, label: 'Thông báo'),
   ];
 
@@ -44,10 +44,10 @@ class _AdminShellState extends State<AdminShell> {
     _NavDestination(icon: Icons.people_outline, selected: Icons.people, label: 'Người dùng'),
     _NavDestination(icon: Icons.storefront_outlined, selected: Icons.storefront, label: 'Kiosk'),
     _NavDestination(icon: Icons.schedule_outlined, selected: Icons.schedule, label: 'Khung giờ'),
-    _NavDestination(icon: Icons.confirmation_number_outlined, selected: Icons.confirmation_number, label: 'Voucher'),
+    _NavDestination(icon: Icons.local_offer_outlined, selected: Icons.local_offer, label: 'Voucher'),
     _NavDestination(icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Mọi đơn hàng'),
-    _NavDestination(icon: Icons.warning_amber_outlined, selected: Icons.warning, label: 'Sự cố'),
-    _NavDestination(icon: Icons.trending_up, selected: Icons.insights, label: 'Thống kê hệ thống'),
+    _NavDestination(icon: Icons.report_problem_outlined, selected: Icons.report_problem, label: 'Sự cố'),
+    _NavDestination(icon: Icons.bar_chart_outlined, selected: Icons.bar_chart, label: 'Thống kê hệ thống'),
     _NavDestination(icon: Icons.history, selected: Icons.history, label: 'Nhật ký'),
   ];
 
@@ -75,12 +75,8 @@ class _AdminShellState extends State<AdminShell> {
                   Semantics(label: 'BreakBite quản trị', child: BreakBiteLogo(size: extended ? 44 : 36)),
                   const SizedBox(height: AppSpacing.xs),
                   IconButton(
-                    icon: Icon(
-                      extended ? Icons.menu_open_rounded : Icons.menu_rounded,
-                      size: 20,
-                      color: colors.primaryText,
-                    ),
-                    tooltip: extended ? 'Thu gọn menu' : 'Mở rộng menu',
+                    icon: _SidebarToggleIcon(collapsed: !extended, color: colors.primaryText),
+                    tooltip: extended ? 'Thu gọn thanh bên' : 'Mở rộng thanh bên',
                     onPressed: () => setState(() => _isExtended = !extended),
                   ),
                 ],
@@ -250,4 +246,62 @@ class _TopBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Novel Studio style panel-left toggle icon drawn directly on canvas so it never depends on icon font caching.
+class _SidebarToggleIcon extends StatelessWidget {
+  const _SidebarToggleIcon({required this.collapsed, required this.color});
+
+  final bool collapsed;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 20,
+    height: 20,
+    child: CustomPaint(painter: _SidebarTogglePainter(collapsed: collapsed, color: color)),
+  );
+}
+
+class _SidebarTogglePainter extends CustomPainter {
+  const _SidebarTogglePainter({required this.collapsed, required this.color});
+
+  final bool collapsed;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(2, 3, size.width - 4, size.height - 6),
+      const Radius.circular(3.5),
+    );
+    canvas.drawRRect(rect, paint);
+
+    // Left sidebar divider line
+    canvas.drawLine(const Offset(7.5, 3.5), Offset(7.5, size.height - 3.5), paint);
+
+    // Small chevron inside the main panel area
+    final path = Path();
+    if (collapsed) {
+      path.moveTo(11, 8);
+      path.lineTo(13.5, 10);
+      path.lineTo(11, 12);
+    } else {
+      path.moveTo(13.5, 8);
+      path.lineTo(11, 10);
+      path.lineTo(13.5, 12);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SidebarTogglePainter oldDelegate) =>
+      oldDelegate.collapsed != collapsed || oldDelegate.color != color;
 }
