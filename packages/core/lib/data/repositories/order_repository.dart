@@ -40,6 +40,11 @@ abstract interface class OrderRepository {
 
   Future<Result<List<Order>>> findReadyByPickupCode(String kioskId, String pickupCode);
 
+  /// The orders of a kiosk with this [pickupCode] or this [orderCode] (the number printed as "#A-204"), in any state,
+  /// newest first. The counter (K05) uses it to say what state a code is in when the order is not ready, instead of
+  /// calling every such code invalid.
+  Future<Result<List<Order>>> findAtKiosk(String kioskId, {String? pickupCode, String? orderCode});
+
   Future<Result<void>> accept(Order order, {required Duration readyIn});
 
   Future<Result<void>> markReady(Order order);

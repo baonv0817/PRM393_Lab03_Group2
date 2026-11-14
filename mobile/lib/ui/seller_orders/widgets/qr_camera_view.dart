@@ -27,6 +27,11 @@ class QrCameraView extends StatefulWidget {
 class _QrCameraViewState extends State<QrCameraView> {
   final _controller = MobileScannerController(formats: const [BarcodeFormat.qrCode]);
   String? _last;
+  DateTime? _lastAt;
+
+  /// A code held in front of the camera is read once; after this long the same code counts again, so staff who fix
+  /// what the first answer said (the order was not ready yet) can show it a second time without moving to another.
+  static const _again = Duration(seconds: 3);
 
   @override
   void dispose() {
@@ -36,8 +41,11 @@ class _QrCameraViewState extends State<QrCameraView> {
 
   void _onDetect(BarcodeCapture capture) {
     final value = capture.barcodes.map((b) => b.rawValue).whereType<String>().firstOrNull?.trim();
-    if (value == null || value.isEmpty || value == _last) return;
+    if (value == null || value.isEmpty) return;
+    final now = DateTime.now();
+    if (value == _last && _lastAt != null && now.difference(_lastAt!) < _again) return;
     _last = value;
+    _lastAt = now;
     widget.onCode(value);
   }
 

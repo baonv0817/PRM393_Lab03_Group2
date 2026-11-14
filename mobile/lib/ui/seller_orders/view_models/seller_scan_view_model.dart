@@ -6,13 +6,16 @@ import 'package:breakbite_core/utils/result.dart';
 import 'package:breakbite_core/utils/safe_change_notifier.dart';
 import 'package:flutter/foundation.dart';
 
-/// K05 and K05-ERR: finding the order a customer shows at the counter. The camera is not used (no scanner
-/// package, D30); staff type what is under the QR code: the 6-digit pickup code, the order number "#A-204",
-/// or the text of the QR code itself.
+/// K05 and K05-ERR: finding the order a customer shows at the counter. The input is what the camera reads from the QR
+/// code or what staff type: the 6-digit pickup code, the order number "#A-204", or the text of the QR code itself.
+///
+/// Only a ready order can be handed over. A code of an order in another state is not "invalid": the message names the
+/// state ("đang làm, bấm Sẵn sàng trước"), so staff know what to do.
 class SellerScanViewModel extends ChangeNotifier with SafeChangeNotifier {
   SellerScanViewModel({required this.orders, required this.crash, required this.kioskId});
 
-  static const invalidMessage = 'Mã không hợp lệ hoặc đã hết hạn';
+  /// No order at this kiosk has this code. A pickup code does not expire, so the message does not say it can.
+  static const invalidMessage = 'Không tìm thấy đơn nào với mã này ở kiosk của bạn. Kiểm tra lại mã 6 số hoặc số đơn.';
   static const emptyMessage = 'Nhập mã nhận món hoặc số đơn.';
   static const noKioskMessage = 'Tài khoản này chưa được gán kiosk.';
 
@@ -63,21 +66,18 @@ class SellerScanViewModel extends ChangeNotifier with SafeChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final Result<Order> result;
-      if (parsed.pickupCode != null) {
-        final found = await orders.findReadyByPickupCode(id, parsed.pickupCode!);
-        result = switch (found) {
-          Ok(:final value) => _pick(value, parsed.orderId),
-          Err(:final error) => Result.error(error),
-        };
-      } else {
-        final queue = await orders.watchKioskQueue(id).first;
-        final ready = queue.where((o) => o.status == OrderStatus.ready && _isNumber(o, parsed.orderNumber!)).toList();
-        result = _pick(ready, null);
-      }
+      final found = await orders.findAtKiosk(id, pickupCode: parsed.pickupCode, orderCode: parsed.orderNumber);
+      final Result<Order> result = switch (found) {
+        Ok(:final value) => _pick(value, parsed.orderId),
+        Err(:final error) => Result.error(error),
+      };
       if (result case Err(:final error)) {
-        _error = error is NotFoundException ? invalidMessage : error.message;
-        if (error is! NotFoundException) crash.recordNonFatal(error, error.stackTrace, 'sellerScan.find');
+        _error = error.message;
+        // A code with no order, or an order that is not ready, is what the counter expects now and then; anything
+        // else (network, rules) is worth a look.
+        if (error is! NotFoundException && error is! ValidationException) {
+          crash.recordNonFatal(error, error.stackTrace, 'sellerScan.find');
+        }
       }
       return result;
     } catch (error, stack) {
@@ -90,14 +90,26 @@ class SellerScanViewModel extends ChangeNotifier with SafeChangeNotifier {
     }
   }
 
-  static bool _isNumber(Order order, String number) {
-    final code = (order.orderCode.isEmpty ? order.id : order.orderCode).toUpperCase().replaceAll('#', '');
-    return code == number;
-  }
-
+  /// The ready order of [orders] (newest first), or the reason the code cannot be handed over: no order, or an order
+  /// in another state, named so that staff know what to do ("đang làm: bấm Sẵn sàng trước").
   static Result<Order> _pick(List<Order> orders, String? orderId) {
     final list = orderId == null ? orders : orders.where((o) => o.id == orderId).toList();
     if (list.isEmpty) return const Result.error(NotFoundException(message: invalidMessage));
-    return Result.ok(list.first);
+    final ready = list.where((o) => o.status == OrderStatus.ready);
+    if (ready.isNotEmpty) return Result.ok(ready.first);
+    return Result.error(ValidationException(notReadyMessage(list.first)));
+  }
+
+  /// Why [order], found by its code, cannot be handed over.
+  static String notReadyMessage(Order order) {
+    final number = '#${order.orderCode.isEmpty ? order.id : order.orderCode}';
+    return switch (order.status) {
+      OrderStatus.pending when order.awaitingPayment => 'Đơn $number khách chưa thanh toán xong nên chưa giao được.',
+      OrderStatus.pending => 'Đơn $number chưa được nhận. Nhận đơn và làm xong rồi mới giao.',
+      OrderStatus.preparing => 'Đơn $number đang làm, chưa sẵn sàng. Bấm "Sẵn sàng" khi xong rồi quét lại.',
+      OrderStatus.delivered => 'Đơn $number đã giao xong.',
+      OrderStatus.cancelled => 'Đơn $number đã huỷ, không giao được.',
+      OrderStatus.ready => 'Đơn $number đã sẵn sàng.',
+    };
   }
 }

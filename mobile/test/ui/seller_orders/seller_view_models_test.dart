@@ -306,19 +306,61 @@ void main() {
       expect(vm.error, isNull);
     });
 
-    test('a wrong, spent or other-kiosk code gives the invalid message (K05-ERR) until the next edit', () async {
+    test('a code nobody has, or one of another kiosk, says no order was found (K05-ERR) until the next edit', () async {
       final (repo, vm, order) = await ready();
       expect(await vm.find('#A-999'), isA<Err<Order>>());
       expect(vm.error, SellerScanViewModel.invalidMessage);
+      expect(vm.error, isNot(contains('hết hạn')), reason: 'a pickup code does not expire');
       vm.clearError();
       expect(vm.error, isNull);
 
-      await repo.deliver(order);
-      expect(await vm.find(order.pickupCode), isA<Err<Order>>());
-      expect(vm.error, SellerScanViewModel.invalidMessage);
-
       final other = SellerScanViewModel(orders: repo, crash: FakeCrashService(), kioskId: 'q9-t4');
       expect(await other.find(order.pickupCode), isA<Err<Order>>());
+      expect(other.error, SellerScanViewModel.invalidMessage);
+    });
+
+    test('a code of an order that is not ready says what state it is in, instead of "invalid"', () async {
+      final repo = FakeOrderRepository();
+      final id = await placeTestOrder(repo, uid: 'u1');
+      final vm = SellerScanViewModel(orders: repo, crash: FakeCrashService(), kioskId: 'q9-t2');
+      final order = repo.all.firstWhere((o) => o.id == id);
+      final number = '#${order.orderCode}';
+
+      // Not accepted yet.
+      expect(await vm.find(order.pickupCode), isA<Err<Order>>());
+      expect(vm.error, contains('chưa được nhận'));
+      expect(vm.error, contains(number));
+
+      // Being made: the message says to press "Sẵn sàng" first, for the QR text and the number as well.
+      await repo.accept(order, readyIn: const Duration(minutes: 3));
+      for (final input in [order.pickupCode, order.qrPayload, number]) {
+        expect(await vm.find(input), isA<Err<Order>>(), reason: input);
+        expect(vm.error, contains('đang làm'), reason: input);
+        expect(vm.error, contains('Sẵn sàng'), reason: input);
+      }
+
+      // Ready: it is found now, and the same code that failed a moment ago opens the order.
+      await repo.markReady(repo.all.firstWhere((o) => o.id == id));
+      expect((await vm.find(order.pickupCode)).valueOrNull?.id, id);
+      expect(vm.error, isNull);
+
+      // Handed over: it is not found as ready any more, and it says it was handed over.
+      await repo.deliver(repo.all.firstWhere((o) => o.id == id));
+      expect(await vm.find(order.pickupCode), isA<Err<Order>>());
+      expect(vm.error, contains('đã giao'));
+    });
+
+    test('a cancelled order, and a gateway order the customer has not paid, are named as such', () async {
+      final repo = FakeOrderRepository();
+      final cancelled = await placeTestOrder(repo, uid: 'u1');
+      await repo.reject(repo.all.firstWhere((o) => o.id == cancelled), reason: 'Hết nguyên liệu');
+      final unpaid = await placeTestOrder(repo, uid: 'u2', pay: false);
+      final vm = SellerScanViewModel(orders: repo, crash: FakeCrashService(), kioskId: 'q9-t2');
+
+      await vm.find(repo.all.firstWhere((o) => o.id == cancelled).pickupCode);
+      expect(vm.error, contains('đã huỷ'));
+      await vm.find(repo.all.firstWhere((o) => o.id == unpaid).pickupCode);
+      expect(vm.error, contains('chưa thanh toán'));
     });
 
     test('an empty input and a kiosk-less account are refused', () async {
