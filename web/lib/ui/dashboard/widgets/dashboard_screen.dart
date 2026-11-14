@@ -36,7 +36,7 @@ class _DashboardView extends StatelessWidget {
     final vm = context.watch<DashboardViewModel>();
     return AdminPage(
       title: 'Thống kê',
-      subtitle: 'Tính trên máy chủ Firestore bằng truy vấn tổng hợp (count, sum, average), từ ${formatDate(vm.since)}.',
+      subtitle: 'Số liệu của quầy từ ngày ${formatDate(vm.since)} đến nay.',
       actions: [
         AppChip(
           label: 'Hôm nay',
@@ -62,31 +62,15 @@ class _DashboardView extends StatelessWidget {
               spacing: AppSpacing.md,
               runSpacing: AppSpacing.md,
               children: [
-                _Figure(label: 'Đơn đã giao', value: '${stats.deliveredCount}', query: 'count()', icon: Icons.task_alt),
-                _Figure(
-                  label: 'Doanh thu',
-                  value: formatVnd(stats.revenueVnd),
-                  query: "sum('totalVnd')",
-                  icon: Icons.payments_outlined,
-                ),
+                _Figure(label: 'Đơn đã giao', value: '${stats.deliveredCount}', icon: Icons.task_alt),
+                _Figure(label: 'Doanh thu', value: formatVnd(stats.revenueVnd), icon: Icons.payments_outlined),
                 _Figure(
                   label: 'Thời gian làm trung bình',
                   value: prepTimeLabel(stats.averagePrepSeconds),
-                  query: "average('prepSeconds')",
                   icon: Icons.timer_outlined,
                 ),
-                _Figure(
-                  label: 'Đơn bị huỷ',
-                  value: '${stats.cancelledCount}',
-                  query: 'count()',
-                  icon: Icons.cancel_outlined,
-                ),
-                _Figure(
-                  label: 'Đang xử lý',
-                  value: '${stats.activeCount}',
-                  query: 'count()',
-                  icon: Icons.soup_kitchen_outlined,
-                ),
+                _Figure(label: 'Đơn bị huỷ', value: '${stats.cancelledCount}', icon: Icons.cancel_outlined),
+                _Figure(label: 'Đang xử lý', value: '${stats.activeCount}', icon: Icons.soup_kitchen_outlined),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -102,11 +86,10 @@ class _DashboardView extends StatelessWidget {
 }
 
 class _Figure extends StatelessWidget {
-  const _Figure({required this.label, required this.value, required this.query, required this.icon});
+  const _Figure({required this.label, required this.value, required this.icon});
 
   final String label;
   final String value;
-  final String query;
   final IconData icon;
 
   @override
@@ -129,7 +112,6 @@ class _Figure extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(value, style: text.headlineMedium),
                 Text(label, style: text.bodyMedium),
-                Text(query, style: text.bodyMedium?.copyWith(color: colors.muted)),
               ],
             ),
           ),
