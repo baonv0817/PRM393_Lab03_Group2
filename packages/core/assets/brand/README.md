@@ -1,6 +1,6 @@
-# PRMTacos logo
+# BreakBite logo
 
-A round tortilla medallion with a bite taken out of it, framing a folded taco shell (`⌓`) with herb and salsa toppings and a bold **T** monogram in the middle. Brand orange background.
+A round cookie-like bun with a bite taken out of it (**Bite**) and a **B** in the middle; "Break" is the 15-minute class break. Brand orange background.
 
 | File | Where it is used |
 |---|---|
@@ -8,18 +8,16 @@ A round tortilla medallion with a bite taken out of it, framing a folded taco sh
 | `breakbite_logo_soft.svg` | Placeholder image on item cards when an item has no photo (`BreakBiteLogo(variant: LogoVariant.soft)`) |
 | `breakbite_logo.png` (1024 px) | Report, slides, Figma. Not bundled into the app |
 
-The Android app icon (`mobile/android/app/src/main/res/mipmap-*/ic_launcher.png`, plus the adaptive icon `ic_launcher_foreground.png`) and Web Admin icons (`web/web/favicon.png`, `web/web/icons/Icon-*.png`) are generated from the same parameters.
+The Android app icon (`android/app/src/main/res/mipmap-*/ic_launcher.png`, plus the adaptive icon `ic_launcher_foreground.png`) is generated from the same parameters.
 
 ## Colors (Lab 2 tokens)
 
 | Part | Color |
 |---|---|
 | Background | orange `#F69D39` |
-| Tortilla medallion | cream `#FFF5E5` |
-| Taco shell | golden tortilla `#F8C67A` |
-| Letter T & outline | cocoa brown `#622B14` |
-| Salsa / herb toppings | `#D94E1F` / `#2E7D32` |
-| The name "PRM" / "Tacos" | brown `#622B14` / orange-brown `#B45309` (widget `BreakBiteWordmark`, Nunito ExtraBold) |
+| Bun | cream `#FFF5E5` |
+| Letter B | cocoa brown `#622B14` |
+| The name "Break" / "Bite" | brown `#622B14` / orange-brown `#B45309` (widget `BreakBiteWordmark`, Nunito ExtraBold) |
 
 ## Editing the logo
 

@@ -149,7 +149,7 @@ class _RouterHostState extends State<_RouterHost> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'PRMTacos',
+      title: 'BreakBite',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _messenger,
       theme: AppTheme.light(),

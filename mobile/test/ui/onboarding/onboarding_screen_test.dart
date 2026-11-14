@@ -33,10 +33,10 @@ void main() {
     }
   });
 
-  testWidgets('shows only the logo, PRMTacos name, one tagline and the entry buttons', (tester) async {
+  testWidgets('shows only the logo, BreakBite name, one tagline and the entry buttons', (tester) async {
     await pumpOnboarding(tester);
     expect(find.byType(BreakBiteLogo), findsOneWidget);
-    expect(find.bySemanticsLabel('PRMTacos'), findsOneWidget);
+    expect(find.bySemanticsLabel('BreakBite'), findsOneWidget);
     expect(find.text('Nạp năng lượng nhanh trong 15 phút giải lao'), findsOneWidget);
     expect(find.text('Bỏ qua'), findsOneWidget);
     expect(find.text('Bắt đầu đặt món'), findsOneWidget);
