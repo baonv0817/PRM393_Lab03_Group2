@@ -1,11 +1,11 @@
 {
-    "name": "BreakBite · Quản trị",
-    "short_name": "BreakBite Admin",
+    "name": "PRMTacos · Quản trị",
+    "short_name": "PRMTacos Admin",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FAF8F5",
     "theme_color": "#F69D39",
-    "description": "BreakBite · Quản trị cho nhân viên kiosk và quản trị viên",
+    "description": "PRMTacos · Quản trị cho nhân viên kiosk và quản trị viên",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

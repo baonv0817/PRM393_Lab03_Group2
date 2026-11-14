@@ -23,7 +23,7 @@ class _AdminAppState extends State<AdminApp> {
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-    title: 'BreakBite · Quản trị',
+    title: 'PRMTacos · Quản trị',
     debugShowCheckedModeBanner: false,
     theme: AdminTheme.light(),
     routerConfig: _router,
