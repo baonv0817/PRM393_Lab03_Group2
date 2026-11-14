@@ -55,8 +55,8 @@ class AppSearchField extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadius.input),
-      borderSide: BorderSide(color: colors.borderInput, width: 1.5),
+      borderRadius: BorderRadius.circular(AppRadius.chip),
+      borderSide: BorderSide(color: colors.border),
     );
     if (controller case final controller?) {
       return Semantics(
@@ -68,10 +68,12 @@ class AppSearchField extends StatelessWidget {
           onChanged: onChanged,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
+            isDense: true,
             hintText: hint,
+            hintStyle: text.bodyMedium?.copyWith(color: colors.muted),
             filled: true,
-            fillColor: scheme.surface,
-            prefixIcon: Icon(Icons.search, color: scheme.onSurface),
+            fillColor: colors.surfaceVariant,
+            prefixIcon: Icon(Icons.search, size: 20, color: colors.muted),
             suffixIcon: ValueListenableBuilder(
               valueListenable: controller,
               builder: (context, value, _) => value.text.isEmpty
@@ -85,9 +87,10 @@ class AppSearchField extends StatelessWidget {
                       },
                     ),
             ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
             border: border,
             enabledBorder: border,
-            focusedBorder: border.copyWith(borderSide: BorderSide(color: scheme.primary, width: 2)),
+            focusedBorder: border.copyWith(borderSide: BorderSide(color: scheme.primary, width: 1.5)),
           ),
         ),
       );
@@ -98,19 +101,19 @@ class AppSearchField extends StatelessWidget {
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderRadius: BorderRadius.circular(AppRadius.chip),
         child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.input),
-            border: Border.all(color: colors.borderInput, width: 1.5),
+            color: colors.surfaceVariant,
+            borderRadius: BorderRadius.circular(AppRadius.chip),
+            border: Border.all(color: colors.border),
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: scheme.onSurface),
-              const SizedBox(width: AppSpacing.sm),
+              Icon(Icons.search, size: 20, color: colors.muted),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   hint,

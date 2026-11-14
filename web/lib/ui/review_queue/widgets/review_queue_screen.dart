@@ -117,16 +117,18 @@ class _ReviewQueueViewState extends State<_ReviewQueueView> {
     return AdminPage(
       title: 'Duyệt đơn',
       subtitle: 'Đơn khách vừa đặt trên ứng dụng · $waiting chờ duyệt · $inProgress đang làm',
-      child: ViewStateView<List<Order>>(
-        state: vm.state,
-        onRetry: vm.retry,
-        builder: (context, pendingOrders) {
-          final activeOrders = _activeTab == 'pending' ? pendingOrders : vm.inProgressOrders;
-          final displayedOrders = _filterAndSort(activeOrders);
+      child: switch (vm.state) {
+        ViewLoading() => const LoadingView(),
+        ViewError(:final message) => ErrorView(message: message, onRetry: vm.retry),
+        _ => Builder(
+          builder: (context) {
+            final pendingOrders = vm.state.dataOrNull ?? const <Order>[];
+            final activeOrders = _activeTab == 'pending' ? pendingOrders : vm.inProgressOrders;
+            final displayedOrders = _filterAndSort(activeOrders);
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Left Column: Studio Queue List
               Expanded(
                 flex: 5,
@@ -300,9 +302,10 @@ class _ReviewQueueViewState extends State<_ReviewQueueView> {
                     : _StudioOrderDetail(order: vm.selected!),
               ),
             ],
-          );
-        },
-      ),
+            );
+          },
+        ),
+      },
     );
   }
 }

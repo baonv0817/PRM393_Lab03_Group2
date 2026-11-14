@@ -124,40 +124,93 @@ class _TopBar extends StatelessWidget {
             if (session.isAdmin && session.kiosks.isNotEmpty)
               Semantics(
                 label: 'Chọn kiosk',
-                child: DropdownButton<String>(
-                  value: session.kioskId,
-                  underline: const SizedBox.shrink(),
-                  items: [
+                child: PopupMenuButton<String>(
+                  initialValue: session.kioskId,
+                  tooltip: 'Chọn kiosk',
+                  onSelected: session.selectKiosk,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    side: BorderSide(color: colors.border),
+                  ),
+                  color: Theme.of(context).colorScheme.surface,
+                  elevation: 4,
+                  itemBuilder: (context) => [
                     for (final k in session.kiosks)
-                      DropdownMenuItem(
+                      PopupMenuItem(
                         value: k.id,
-                        child: Text(k.name, style: text.titleMedium),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.storefront_outlined,
+                              size: 18,
+                              color: k.id == session.kioskId ? colors.primaryText : colors.muted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                k.name,
+                                style: text.bodyMedium?.copyWith(
+                                  fontWeight: k.id == session.kioskId ? FontWeight.w700 : FontWeight.w500,
+                                  color: k.id == session.kioskId ? colors.primaryText : Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (k.id == session.kioskId) ...[
+                              const SizedBox(width: AppSpacing.xs),
+                              Icon(Icons.check_rounded, size: 16, color: colors.primaryText),
+                            ],
+                          ],
+                        ),
                       ),
                   ],
-                  onChanged: (id) => id == null ? null : session.selectKiosk(id),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.storefront_outlined, size: 18, color: colors.primaryText),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(session.kioskName, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: colors.muted),
+                      ],
+                    ),
+                  ),
                 ),
               )
             else
-              Text(session.kioskName, style: text.titleMedium),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.storefront_outlined, color: colors.primaryText),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(session.kioskName, style: text.titleMedium),
+                ],
+              ),
             const Spacer(),
             if (user != null) ...[
-              UserAvatar(name: user.displayName, photoUrl: user.photoUrl, size: 32),
+              UserAvatar(name: user.displayName, photoUrl: user.photoUrl, size: 34),
               const SizedBox(width: AppSpacing.xs),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.displayName, style: text.labelLarge),
+                  Text(user.displayName, style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
                   Text(
                     session.isAdmin ? 'Quản trị viên' : 'Nhân viên kiosk',
-                    style: text.bodyMedium?.copyWith(color: colors.muted),
+                    style: text.bodySmall?.copyWith(color: colors.muted),
                   ),
                 ],
               ),
               const SizedBox(width: AppSpacing.md),
-              TextButton.icon(
+              OutlinedButton.icon(
                 onPressed: session.signOut,
-                icon: const Icon(Icons.logout),
+                icon: const Icon(Icons.logout, size: 16),
                 label: const Text('Đăng xuất'),
               ),
             ],
