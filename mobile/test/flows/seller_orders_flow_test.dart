@@ -1,5 +1,6 @@
 import 'package:breakbite/app.dart';
 import 'package:breakbite/config/dependencies.dart';
+import 'package:breakbite/ui/seller_orders/view_models/seller_scan_view_model.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -169,7 +170,7 @@ void main() {
     await tester.enterText(find.descendant(of: byId('k05.input'), matching: find.byType(TextField)), '#A-999');
     await tapId(tester, 'k05.find');
     expect(byId('k05.error'), findsOneWidget);
-    expect(find.text('Mã không hợp lệ hoặc đã hết hạn'), findsOneWidget);
+    expect(find.text(SellerScanViewModel.invalidMessage), findsOneWidget);
 
     await tester.enterText(find.descendant(of: byId('k05.input'), matching: find.byType(TextField)), code);
     await tester.pump();

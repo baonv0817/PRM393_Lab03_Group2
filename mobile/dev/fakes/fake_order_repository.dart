@@ -156,6 +156,19 @@ class FakeOrderRepository implements OrderRepository {
   );
 
   @override
+  Future<Result<List<Order>>> findAtKiosk(String kioskId, {String? pickupCode, String? orderCode}) async {
+    final number = orderCode?.trim().toUpperCase();
+    final found = _orders.value.where((o) {
+      if (o.kioskId != kioskId) return false;
+      if (pickupCode != null && pickupCode.isNotEmpty) return o.pickupCode == pickupCode.trim();
+      return number != null &&
+          number.isNotEmpty &&
+          (o.orderCode.isEmpty ? o.id : o.orderCode).toUpperCase().replaceAll('#', '') == number;
+    }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return Result.ok(found);
+  }
+
+  @override
   Future<Result<void>> accept(Order order, {required Duration readyIn}) async {
     if (_find(order.id)?.awaitingPayment ?? false) {
       return const Result.error(ValidationException('Khách chưa thanh toán đơn này.'));

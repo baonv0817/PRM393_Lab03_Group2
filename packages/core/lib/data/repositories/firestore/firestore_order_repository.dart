@@ -196,6 +196,19 @@ class FirestoreOrderRepository implements OrderRepository {
   });
 
   @override
+  Future<Result<List<Order>>> findAtKiosk(String kioskId, {String? pickupCode, String? orderCode}) => guard(() async {
+    final code = pickupCode?.trim();
+    final number = orderCode?.trim().toUpperCase();
+    if ((code == null || code.isEmpty) && (number == null || number.isEmpty)) return const <Order>[];
+    var query = _orders.where('kioskId', isEqualTo: kioskId);
+    query = code != null && code.isNotEmpty
+        ? query.where('pickupCode', isEqualTo: code)
+        : query.where('orderCode', isEqualTo: number);
+    final snapshot = await query.get();
+    return [for (final doc in snapshot.docs) _fromDoc(doc)]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  });
+
+  @override
   Future<Result<void>> accept(Order order, {required Duration readyIn}) {
     if (readyIn < OrderRepository.minReadyIn) {
       return Future.value(const Result.error(ValidationException('Thời gian chuẩn bị tối thiểu 1 phút.')));
