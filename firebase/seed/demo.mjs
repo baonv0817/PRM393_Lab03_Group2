@@ -7,6 +7,8 @@
 //
 // An toàn để chạy lại: mọi tài liệu demo có id bắt đầu bằng `demo-` và ghi lại cùng id (không nhân đôi). Món chỉ bị
 // đụng ở trường `optionGroups` (soldOut, giá, ảnh… do staff sửa vẫn giữ). Không đụng users, kiosks, slots, vouchers.
+//   --restore-drinks  bỏ lưu trữ và đặt còn hàng cho 3 đồ uống mẫu (Trà Đào, Trà Sữa, Cà Phê Sữa) ở các kiosk đang mở, vì
+//             menu thật có thể đã lưu trữ hết món mẫu. Muốn trả lại: lưu trữ lại các món đó ở web admin (Thực đơn).
 //   --clean   xoá mọi tài liệu `demo-*` của orders, reviews, incidents, announcements (tuỳ chọn món giữ nguyên).
 // Chạy `node backup.mjs` trước khi ghi vào project thật.
 import { connect } from './admin.mjs';
@@ -15,6 +17,7 @@ import { KIOSKS, OPTIONS, menuItemsFor } from './data.mjs';
 const argv = process.argv.slice(2);
 const arg = (name) => argv.find((a) => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
 const clean = argv.includes('--clean');
+const restoreDrinks = argv.includes('--restore-drinks');
 const verify = argv.includes('--verify');
 const days = Number(arg('days') ?? 14);
 const { admin, db, projectId, emulator } = connect(argv);
@@ -93,6 +96,25 @@ async function applyOptions() {
     }
   }
   return touched;
+}
+
+const DRINKS = ['tra-dao', 'tra-sua', 'cafe-sua'];
+
+// Đồ uống mẫu về lại thực đơn: bỏ lưu trữ, còn hàng; không đổi giá, ảnh, tên.
+async function restoreSampleDrinks() {
+  const restored = [];
+  for (const kiosk of KIOSKS.filter((k) => k.open)) {
+    for (const dishId of DRINKS) {
+      const ref = db.doc(`menu_items/${kiosk.id}-${dishId}`);
+      const snap = await ref.get();
+      if (!snap.exists) continue;
+      const m = snap.data();
+      if (!m.archived && !m.soldOut) continue;
+      await ref.update({ archived: false, soldOut: false, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+      restored.push(`${kiosk.id}: ${m.name}`);
+    }
+  }
+  return restored;
 }
 
 // ---- 2. Đơn hàng ----
@@ -305,6 +327,10 @@ async function writeAll(collection, entries) {
 // ---- Chạy ----
 const now = Date.now();
 const touched = await applyOptions();
+if (restoreDrinks) {
+  const restored = await restoreSampleDrinks();
+  console.log(`Đồ uống đã bỏ lưu trữ (${restored.length}):`, restored.join('; ') || 'không có gì cần đổi');
+}
 const orders = buildOrders(now);
 const reviews = buildReviews(orders);
 const incidents = buildIncidents(orders);

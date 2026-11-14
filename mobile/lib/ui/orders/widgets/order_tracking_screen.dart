@@ -6,6 +6,7 @@ import 'package:breakbite/ui/profile/widgets/profile_section.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/theme/order_stage.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/ui/core/widgets/widgets.dart';
 import 'package:breakbite_core/utils/result.dart';
@@ -143,6 +144,7 @@ class _Body extends StatelessWidget {
     final colors = context.appColors;
     final text = Theme.of(context).textTheme;
     final cancelled = order.status == OrderStatus.cancelled;
+    final stage = OrderStage.of(order.status);
     final showCode = !cancelled && order.status != OrderStatus.delivered;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -172,21 +174,38 @@ class _Body extends StatelessWidget {
                       ),
                       TestId(
                         's07.status',
-                        child: StatusBadge(label: vm.badge, warning: cancelled),
+                        child: StatusBadge(label: vm.badge, stage: stage),
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      Icon(Icons.schedule, size: 18, color: colors.muted),
-                      const SizedBox(width: AppSpacing.xxs),
-                      Expanded(
-                        child: Semantics(
-                          liveRegion: true,
-                          child: Text(vm.timing, style: text.bodyMedium?.copyWith(color: colors.muted)),
-                        ),
+                  const SizedBox(height: AppSpacing.xs),
+                  // The line that says what is happening now, in the colour of the stage.
+                  TestId(
+                    's07.banner',
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                      decoration: BoxDecoration(
+                        color: stage.tint,
+                        borderRadius: BorderRadius.circular(AppRadius.input),
+                        border: Border.all(color: stage.color),
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          Icon(stage.icon, size: 20, color: stage.color),
+                          const SizedBox(width: AppSpacing.xs),
+                          Expanded(
+                            child: Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                vm.timing,
+                                style: text.bodyMedium?.copyWith(color: stage.color, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -326,6 +345,8 @@ class _Body extends StatelessWidget {
   }
 }
 
+/// The four steps of an order, each in the colour of its stage: the ones done are filled, the one now has a ring and
+/// a tinted centre, the ones to come are grey. The line behind a done step takes that step's colour.
 class _Steps extends StatelessWidget {
   const _Steps({required this.current});
 
@@ -351,34 +372,38 @@ class _Steps extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Container(
-                          height: 2,
-                          color: i == 0 ? Colors.transparent : (i <= current ? scheme.primary : colors.border),
+                          height: 3,
+                          color: i == 0
+                              ? Colors.transparent
+                              : (i <= current ? OrderStage.steps[i].color : colors.border),
                         ),
                       ),
                       Container(
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: i < current ? scheme.primary : scheme.surface,
-                          border: Border.all(color: i <= current ? scheme.primary : colors.borderInput, width: 2),
+                          color: i < current
+                              ? OrderStage.steps[i].color
+                              : (i == current ? OrderStage.steps[i].tint : scheme.surface),
+                          border: Border.all(
+                            color: i <= current ? OrderStage.steps[i].color : colors.borderInput,
+                            width: 2,
+                          ),
                         ),
                         child: i < current
-                            ? Icon(Icons.check, size: 16, color: scheme.onPrimary)
-                            : Text(
-                                '${i + 1}',
-                                style: text.labelLarge?.copyWith(
-                                  color: i == current ? colors.primaryText : colors.muted,
-                                ),
-                              ),
+                            ? Icon(Icons.check, size: 18, color: scheme.surface)
+                            : (i == current
+                                  ? Icon(OrderStage.steps[i].icon, size: 18, color: OrderStage.steps[i].color)
+                                  : Text('${i + 1}', style: text.labelLarge?.copyWith(color: colors.muted))),
                       ),
                       Expanded(
                         child: Container(
-                          height: 2,
+                          height: 3,
                           color: i == steps.length - 1
                               ? Colors.transparent
-                              : (i < current ? scheme.primary : colors.border),
+                              : (i < current ? OrderStage.steps[i + 1].color : colors.border),
                         ),
                       ),
                     ],
@@ -389,7 +414,7 @@ class _Steps extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: text.bodyMedium?.copyWith(
                       fontWeight: i == current ? FontWeight.w800 : FontWeight.w400,
-                      color: i == current ? colors.primaryText : colors.muted,
+                      color: i == current ? OrderStage.steps[i].color : colors.muted,
                     ),
                   ),
                 ],

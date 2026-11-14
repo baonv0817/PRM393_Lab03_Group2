@@ -4,6 +4,7 @@ import 'package:breakbite/ui/profile/widgets/profile_section.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/theme/order_stage.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/ui/core/widgets/widgets.dart';
 import 'package:breakbite_core/utils/format.dart';
@@ -131,7 +132,11 @@ class _Body extends StatelessWidget {
                       ),
                       TestId(
                         's12.status',
-                        child: StatusBadge(label: vm.statusLabel, warning: vm.isCancelled),
+                        child: StatusBadge(
+                          label: vm.statusLabel,
+                          stage: vm.order == null ? null : OrderStage.of(vm.order!.status),
+                          warning: vm.isCancelled,
+                        ),
                       ),
                     ],
                   ),
