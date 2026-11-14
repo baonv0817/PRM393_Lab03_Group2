@@ -112,11 +112,22 @@ void main() {
     }
   });
 
-  testWidgets('has a search field; no category chips and no extra banner button (D06)', (tester) async {
+  testWidgets('has a search field, category filter chips and a promo banner with CTA aligned with Figma', (
+    tester,
+  ) async {
     await pumpHome(tester);
     expect(find.text('Tìm Tacos, Mì trộn, Đồ uống...'), findsOneWidget);
-    expect(find.byType(AppChip), findsNothing);
-    expect(find.text('Đặt ngay'), findsNothing);
+    expect(find.byType(AppChip), findsNWidgets(HomeFilter.values.length));
+    for (final filter in HomeFilter.values) {
+      expect(find.bySemanticsIdentifier('s02.filter.${filter.name}'), findsOneWidget);
+    }
+    expect(find.text('Đặt ngay →'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsIdentifier('s02.filter.tacos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Combo Tacos Bò Phô Mai'), findsOneWidget);
+    expect(find.text('Mì Trộn Gà Cay Hàn Quốc'), findsNothing);
+    expect(find.text('Trà Đào Chanh Sả'), findsNothing);
   });
 
   testWidgets('the Golden Hour Combo banner follows Remote Config', (tester) async {

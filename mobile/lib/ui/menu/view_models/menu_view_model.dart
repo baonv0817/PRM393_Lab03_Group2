@@ -13,6 +13,8 @@ import 'package:flutter/foundation.dart';
 
 enum MenuFilter {
   all('Tất cả'),
+  tacos('Tacos & Bánh'),
+  noodles('Mì trộn'),
   quick('Dưới 5 phút'),
   food('Món ăn'),
   drink('Đồ uống');
@@ -76,12 +78,24 @@ class MenuViewModel extends ChangeNotifier with SafeChangeNotifier {
   ViewState<List<MenuItem>> get state =>
       _menu.stateOf(_pick, emptyMessage: filtering ? noMatchMessage : emptyMenuMessage);
 
+  static bool _isNoodleItem(MenuItem item) {
+    final key = searchKey(item.name);
+    final dish = item.dishId.toLowerCase();
+    if (key.contains('banh mi') || dish.contains('banh-mi')) return false;
+    return key.startsWith('mi ') ||
+        key.contains('mi tron') ||
+        dish.startsWith('ftacode-mi') ||
+        dish.contains('mi-tron');
+  }
+
   List<MenuItem> _pick(List<MenuItem> items) {
     final key = searchKey(_query.trim());
     final matches = items.where((item) {
       if (key.isNotEmpty && !searchKey(item.name).contains(key)) return false;
       return switch (_filter) {
         MenuFilter.all => true,
+        MenuFilter.tacos => item.category == ItemCategory.food && !_isNoodleItem(item),
+        MenuFilter.noodles => item.category == ItemCategory.food && _isNoodleItem(item),
         MenuFilter.quick => item.prepMinutes <= quickMaxMinutes,
         MenuFilter.food => item.category == ItemCategory.food,
         MenuFilter.drink => item.category == ItemCategory.drink,

@@ -1,0 +1,166 @@
+{
+  "source": "https://ftacode.com/menu",
+  "observed": "2026-11-14",
+  "items": [
+    {
+      "code": "SPECIAL",
+      "description": "Full topping cao cấp",
+      "imageUrl": "https://ftacode.com/api/product-images/combo-special.webp?v=2026-10-22T09%3A36%3A50.626477%2B00%3A00",
+      "name": "Combo Đặc Biệt",
+      "priceVnd": 50000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "BANHTRANG-SATE-HANHPHI",
+      "description": "Bánh tráng + muỗi nhuyễn + sate + hành phi",
+      "imageUrl": "https://ftacode.com/api/product-images/banhtrang-sate-hanhphi.webp?v=2026-11-04T08%3A03%3A45.410434%2B00%3A00",
+      "name": "Bánh tráng muối nhuyễn sate hành phi",
+      "priceVnd": 12000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "BANH-TRANG-MUOI-TAC",
+      "description": "×5 Bánh tráng + muối + dầu + tắc",
+      "imageUrl": "https://ftacode.com/api/product-images/banh-trang-muoi-tac.webp?v=2026-11-04T08%3A03%3A27.645096%2B00%3A00",
+      "name": "Combo 5 Bánh tráng vò muối tắc",
+      "priceVnd": 15000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "C01",
+      "description": "Trứng + xúc xích",
+      "imageUrl": "https://ftacode.com/api/product-images/combo-1.webp?v=2026-10-22T09%3A36%3A54.565932%2B00%3A00",
+      "name": "Trứng + xúc xích",
+      "priceVnd": 29000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "C05",
+      "description": "Gà + xúc xích",
+      "imageUrl": "https://ftacode.com/api/product-images/combo-5.webp?v=2026-10-22T09%3A36%3A59.943873%2B00%3A00",
+      "name": "Gà + xúc xích",
+      "priceVnd": 34000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "C06",
+      "description": "Gà + trứng",
+      "imageUrl": "https://ftacode.com/api/product-images/combo-6.webp?v=2026-10-22T09%3A37%3A01.048034%2B00%3A00",
+      "name": "Gà + trứng",
+      "priceVnd": 34000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "C10",
+      "description": "Gà + xúc xích + trứng",
+      "imageUrl": "https://ftacode.com/api/product-images/combo-10.webp?v=2026-10-22T09%3A37%3A06.009976%2B00%3A00",
+      "name": "Gà + xúc xích + trứng",
+      "priceVnd": 39000,
+      "sourceCategory": "Tacos"
+    },
+    {
+      "code": "MI-1",
+      "description": "Trứng + xúc xích + rau",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-1.webp?v=2026-10-30T09%3A41%3A15.087405%2B00%3A00",
+      "name": "Mì 1 vắt đặc biệt",
+      "priceVnd": 31000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI1",
+      "description": "Mì 3 vắt",
+      "imageUrl": "https://ftacode.com/api/product-images/mi1.webp?v=2026-10-30T09%3A54%3A48.347458%2B00%3A00",
+      "name": "Mì 3 vắt",
+      "priceVnd": 29000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-2",
+      "description": "Trứng + xúc xích + rau",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-2.webp?v=2026-10-30T09%3A41%3A17.868818%2B00%3A00",
+      "name": "Mì 2 vắt + trứng xúc xích",
+      "priceVnd": 38000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-3",
+      "description": "Trứng + rau",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-3.webp?v=2026-10-30T09%3A41%3A13.258599%2B00%3A00",
+      "name": "Mì 1 vắt + trứng",
+      "priceVnd": 22000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-4",
+      "description": "Xúc xích + rau",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-4.webp?v=2026-10-30T09%3A41%3A14.115148%2B00%3A00",
+      "name": "Mì 1 vắt + xúc xích",
+      "priceVnd": 24000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-5",
+      "description": "Xúc xích + rau + mì",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-5.webp?v=2026-10-30T09%3A41%3A18.666472%2B00%3A00",
+      "name": "Mì 2 vắt + xúc xích",
+      "priceVnd": 31000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-6",
+      "description": "Trứng + rau",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-6.webp?v=2026-10-30T09%3A41%3A16.985094%2B00%3A00",
+      "name": "Mì 2 vắt + trứng",
+      "priceVnd": 29000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-7",
+      "description": "Mì rau 2 vắt",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-7.webp?v=2026-10-30T09%3A41%3A22.834712%2B00%3A00",
+      "name": "Mì rau 2 vắt",
+      "priceVnd": 22000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-9",
+      "description": "Mì 1 vắt + Gà + Trứng",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-9.webp?v=2026-11-02T09%3A10%3A24.959232%2B00%3A00",
+      "name": "Mì 1 vắt + Gà + Trứng",
+      "priceVnd": 32000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-10",
+      "description": "Mì rau 1 vắt",
+      "imageUrl": "https://ftacode.com/api/product-images/mi-10.webp?v=2026-10-30T09%3A41%3A15.964216%2B00%3A00",
+      "name": "Mì rau 1 vắt",
+      "priceVnd": 15000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI-12",
+      "description": "Trứng thêm",
+      "imageUrl": "",
+      "name": "Trứng thêm",
+      "priceVnd": 7000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MI30",
+      "description": "Mì 2 vắt Gà Trứng",
+      "imageUrl": "",
+      "name": "Mì 2 vắt Gà Trứng",
+      "priceVnd": 39000,
+      "sourceCategory": "Mì trộn"
+    },
+    {
+      "code": "MIGA",
+      "description": "Mì Gà 2 vắt",
+      "imageUrl": "https://ftacode.com/api/product-images/miga.webp?v=2026-11-05T04%3A50%3A00.611592%2B00%3A00",
+      "name": "Mì Gà 2 vắt",
+      "priceVnd": 32000,
+      "sourceCategory": "Mì trộn"
+    }
+  ]
+}

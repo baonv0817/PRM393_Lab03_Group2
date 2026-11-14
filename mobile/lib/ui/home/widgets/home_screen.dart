@@ -69,6 +69,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: AppSpacing.md),
                       TestId('s02.promo', child: _PromoBanner(onTap: () => context.go(AppRoutes.menu))),
                     ],
+                    const SizedBox(height: AppSpacing.md),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final filter in HomeFilter.values)
+                            Padding(
+                              padding: const EdgeInsets.only(right: AppSpacing.xs),
+                              child: TestId(
+                                's02.filter.${filter.name}',
+                                child: AppChip(
+                                  label: filter.label,
+                                  selected: vm.filter == filter,
+                                  onSelected: (_) => vm.chooseFilter(filter),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                   const SizedBox(height: AppSpacing.lg),
                   Semantics(
@@ -228,13 +248,14 @@ class _PromoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
       label: 'Combo Giờ Vàng, giảm 15 phần trăm. Giờ nghỉ giải lao 10 giờ 15 đến 10 giờ 30. Chạm để xem thực đơn',
       excludeSemantics: true,
       child: Material(
-        color: colors.selected,
+        color: scheme.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(color: colors.selectedBorder),
@@ -243,20 +264,44 @@ class _PromoBanner extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Combo Giờ Vàng –15%', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      Text(
+                        'Combo Giờ Vàng –15%',
+                        style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: scheme.onPrimary),
+                      ),
                       const SizedBox(height: AppSpacing.xxs),
-                      Text('Giờ nghỉ giải lao 10:15–10:30', style: text.bodyMedium?.copyWith(color: colors.muted)),
+                      Text(
+                        'Giờ nghỉ giải lao 10:15–10:30',
+                        style: text.bodyMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Text(
+                          'Đặt ngay →',
+                          style: text.labelLarge?.copyWith(color: colors.primaryText, fontWeight: FontWeight.w800),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: colors.primaryText),
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(color: colors.selected, shape: BoxShape.circle),
+                  child: Icon(Icons.fastfood_rounded, color: colors.primaryText, size: 28),
+                ),
               ],
             ),
           ),

@@ -16,41 +16,8 @@ export const KIOSKS = [
   },
 ];
 
-// Tuỳ chọn mẫu (docs/data-model.md, `optionGroups`): khách chọn trước khi thêm món (size, topping, mức cay…).
-// Mỗi nhóm: id, name, required, maxChoices (1 = chọn một, >1 = chọn tối đa N), choices[{id, name, extraVnd}].
-const group = (id, name, required, maxChoices, choices) => ({
-  id, name, required, maxChoices, choices: choices.map(([cid, cname, extraVnd = 0]) => ({ id: cid, name: cname, extraVnd })),
-});
-const SIZE = group('size', 'Size', true, 1, [['s', 'Size S'], ['m', 'Size M', 5000], ['l', 'Size L', 10000]]);
-const SUGAR = group('sugar', 'Mức đường', true, 1, [['100', '100% đường'], ['70', '70% đường'], ['50', '50% đường'], ['30', '30% đường']]);
-const SPICE = group('spice', 'Mức cay', true, 1, [['none', 'Không cay'], ['mild', 'Cay vừa'], ['hot', 'Cay nhiều'], ['xhot', 'Siêu cay', 0]]);
-
-const OPTIONS = {
-  'tra-dao': [SIZE, SUGAR, group('topping', 'Topping', false, 2, [['thach', 'Thạch dừa', 5000], ['chia', 'Hạt chia', 4000], ['dao', 'Thêm đào miếng', 7000]])],
-  'tra-sua': [SIZE, SUGAR, group('topping', 'Topping', false, 3, [['tc', 'Trân châu đen', 5000], ['thach', 'Thạch', 5000], ['pudding', 'Pudding', 7000], ['kem', 'Kem cheese', 10000]])],
-  'cafe-sua': [SIZE, SUGAR, group('extra', 'Thêm', false, 2, [['shot', 'Thêm 1 shot cà phê', 8000], ['sua', 'Thêm sữa đặc', 3000]])],
-  'mi-tron-ga': [SPICE, group('extra', 'Thêm', false, 2, [['trung', 'Thêm trứng', 6000], ['ga', 'Thêm gà', 15000], ['pho-mai', 'Thêm phô mai', 7000]])],
-  'mi-tron-bo': [SPICE, group('extra', 'Thêm', false, 2, [['trung', 'Thêm trứng', 6000], ['bo', 'Thêm bò', 15000]])],
-  'com-ga': [group('rice', 'Phần cơm', true, 1, [['thuong', 'Cơm thường'], ['them', 'Thêm cơm', 5000]]), group('extra', 'Thêm', false, 2, [['trung', 'Trứng ốp la', 6000], ['rau', 'Thêm rau củ', 4000]])],
-  'tacos-bo': [group('extra', 'Thêm', false, 2, [['pho-mai', 'Thêm phô mai', 7000], ['sot', 'Thêm sốt cay', 0]])],
-  'banh-mi': [group('extra', 'Thêm', false, 3, [['trung', 'Thêm trứng', 5000], ['cha', 'Thêm chả lụa', 6000], ['pate', 'Thêm pate', 4000]])],
-  'khoai-chien': [group('size', 'Size', true, 1, [['s', 'Phần nhỏ'], ['l', 'Phần lớn', 8000]]), group('sauce', 'Sốt', false, 1, [['cheese', 'Phô mai bột', 3000], ['bbq', 'BBQ', 0]])],
-};
-
-// Mỗi kiosk bán các món dưới đây (kiosk đóng cửa chỉ bán một phần). `soldOut` để thử S22, K09.
-const MENU = [
-  { slug: 'tacos-bo', name: 'Combo Tacos Bò Phô Mai', category: 'food', priceVnd: 39000, prepMinutes: 4, description: 'Hai bánh tacos bò, phô mai, kèm nước ngọt.' },
-  { slug: 'tacos-ga', name: 'Tacos Gà Giòn Sốt Cay', category: 'food', priceVnd: 35000, prepMinutes: 4, description: 'Gà giòn, sốt cay, rau tươi.', soldOutAt: ['q9-t2'] },
-  { slug: 'mi-tron-ga', name: 'Mì Trộn Gà Cay Hàn Quốc', category: 'food', priceVnd: 35000, prepMinutes: 5, description: 'Mì trộn sốt cay, gà xé, trứng.' },
-  { slug: 'mi-tron-bo', name: 'Mì Trộn Bò Xào', category: 'food', priceVnd: 38000, prepMinutes: 6, description: 'Mì trộn, bò xào hành.' },
-  { slug: 'com-ga', name: 'Cơm Gà Teriyaki', category: 'food', priceVnd: 42000, prepMinutes: 8, description: 'Cơm trắng, gà sốt teriyaki, rau củ.' },
-  { slug: 'banh-mi', name: 'Bánh Mì Chả Lụa Trứng', category: 'food', priceVnd: 22000, prepMinutes: 3, description: 'Bánh mì nóng, chả lụa, trứng ốp la.' },
-  { slug: 'tra-dao', name: 'Trà Đào Chanh Sả', category: 'drink', priceVnd: 20000, prepMinutes: 2, description: 'Trà đào, chanh, sả, đá.' },
-  { slug: 'tra-sua', name: 'Trà Sữa Trân Châu', category: 'drink', priceVnd: 25000, prepMinutes: 3, description: 'Trà sữa, trân châu đen.' },
-  { slug: 'cafe-sua', name: 'Cà Phê Sữa Đá', category: 'drink', priceVnd: 18000, prepMinutes: 2, description: 'Cà phê phin, sữa đặc.' },
-  { slug: 'khoai-chien', name: 'Khoai Tây Chiên', category: 'food', priceVnd: 22000, prepMinutes: 4, description: 'Khoai tây chiên giòn, sốt tương cà.' },
-];
-const CLOSED_KIOSK_MENU = ['tacos-bo', 'tra-dao', 'cafe-sua', 'banh-mi', 'khoai-chien'];
+import { MENU, OPTIONS } from './ftacode-catalog.mjs';
+const CLOSED_KIOSK_MENU = MENU.slice(0, 5).map(m => m.slug);
 
 // Bỏ dấu, chữ thường: dùng cho tìm kiếm theo đầu chuỗi (S28).
 export function searchName(name) {
@@ -69,9 +36,8 @@ export function menuItemsFor(kiosk) {
     category: m.category,
     prepMinutes: m.prepMinutes,
     soldOut: Boolean(m.soldOutAt?.includes(kiosk.id)),
-    // Ảnh minh hoạ đóng gói trong app (nguồn: assets/images/menu/CREDITS.md). Khi seller tải ảnh
-    // lên Cloud Storage thì thay bằng link https của ảnh đó.
-    imageUrl: `assets/images/menu/${m.slug}.jpg`,
+    // Source product photos; an empty URL means the source has no photo.
+    imageUrl: m.imageUrl,
     ...(OPTIONS[m.slug] ? { optionGroups: OPTIONS[m.slug] } : {}),
   }));
 }

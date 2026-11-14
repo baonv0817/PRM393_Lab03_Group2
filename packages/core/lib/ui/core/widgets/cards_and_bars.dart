@@ -129,11 +129,15 @@ class FoodCard extends StatelessWidget {
                       else
                         Row(
                           children: [
-                            Icon(Icons.schedule, size: 16, color: colors.muted),
+                            Icon(
+                              item.prepMinutes <= 5 ? Icons.bolt_rounded : Icons.schedule,
+                              size: 16,
+                              color: item.prepMinutes <= 5 ? colors.primaryText : colors.muted,
+                            ),
                             const SizedBox(width: AppSpacing.xxs),
                             Flexible(
                               child: Text(
-                                '${item.prepMinutes} phút${withOptions ? ' · Có tuỳ chọn' : ''}',
+                                _subtitleOf(item, withOptions: withOptions),
                                 style: text.bodyMedium?.copyWith(color: colors.muted),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -146,7 +150,10 @@ class FoodCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               formatVnd(item.priceVnd),
-                              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: dim),
+                              style: text.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: dim ?? colors.primaryText,
+                              ),
                             ),
                           ),
                           AnimatedSwitcher(
@@ -173,6 +180,16 @@ class FoodCard extends StatelessWidget {
       ),
     );
     return _withTestId(testId, card);
+  }
+
+  static String _subtitleOf(MenuItem item, {required bool withOptions}) {
+    final desc = item.description.trim();
+    final showDesc = desc.isNotEmpty && desc.toLowerCase() != item.name.trim().toLowerCase();
+    return [
+      '${item.prepMinutes} phút',
+      if (withOptions) 'Có tuỳ chọn',
+      if (showDesc) desc,
+    ].join(' · ');
   }
 
   static Widget _withTestId(String? id, Widget child) => id == null ? child : TestId(id, child: child);

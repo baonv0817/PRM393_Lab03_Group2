@@ -12,10 +12,22 @@ class MenuItemImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isThumbnail = height == null;
     return ExcludeSemantics(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.input),
-        child: SizedBox(width: size, height: height ?? size, child: _image(context)),
+      child: Container(
+        width: size,
+        height: height ?? size,
+        padding: isThumbnail ? const EdgeInsets.all(3) : EdgeInsets.zero,
+        decoration: BoxDecoration(
+          color: colors.selected,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: isThumbnail ? Border.all(color: colors.selectedBorder, width: 1.5) : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(isThumbnail ? AppRadius.input - 3 : AppRadius.input),
+          child: _image(context),
+        ),
       ),
     );
   }
