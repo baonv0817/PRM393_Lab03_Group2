@@ -3,6 +3,7 @@ import 'package:breakbite/ui/orders/view_models/orders_view_model.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/theme/order_stage.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/ui/core/widgets/widgets.dart';
 import 'package:breakbite_core/utils/format.dart';
@@ -174,7 +175,7 @@ class _ActiveOrderCard extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.card),
-            side: BorderSide(color: scheme.primary, width: 1.5),
+            side: BorderSide(color: OrderStage.of(order.status).color, width: 1.5),
           ),
           child: InkWell(
             onTap: open,
@@ -193,7 +194,7 @@ class _ActiveOrderCard extends StatelessWidget {
                       runSpacing: AppSpacing.xxs,
                       children: [
                         Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                        StatusBadge(label: status),
+                        StatusBadge(label: status, stage: OrderStage.of(order.status)),
                       ],
                     ),
                   ),
@@ -257,10 +258,9 @@ class _FinishedOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
-    final delivered = order.status == OrderStatus.delivered;
     final title = vm.title(order);
-    final statusColor = delivered ? colors.success : scheme.error;
+    final stage = OrderStage.of(order.status);
+    final statusColor = stage.color;
     return TestId(
       's08.order.${order.id}',
       child: Card(
@@ -283,7 +283,7 @@ class _FinishedOrderCard extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xxs),
                       Row(
                         children: [
-                          Icon(delivered ? Icons.check : Icons.close, size: 18, color: statusColor),
+                          Icon(stage.icon, size: 18, color: statusColor),
                           const SizedBox(width: AppSpacing.xxs),
                           Text(
                             vm.timing(order),

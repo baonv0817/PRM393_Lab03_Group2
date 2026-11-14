@@ -3,6 +3,7 @@ import 'package:breakbite_admin/ui/system/orders/view_models/admin_orders_view_m
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/theme/order_stage.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/ui/core/widgets/widgets.dart';
 import 'package:breakbite_core/utils/format.dart';
@@ -248,7 +249,9 @@ class _OrderRow extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: StatusBadge(
                     label: stuck ? 'Kẹt · ${orderStatusText(order.status)}' : orderStatusText(order.status),
-                    warning: stuck || order.status == OrderStatus.cancelled,
+                    // A stuck order is a problem whatever its stage, so it keeps the warning look.
+                    warning: stuck,
+                    stage: stuck ? null : OrderStage.of(order.status),
                   ),
                 ),
               ),

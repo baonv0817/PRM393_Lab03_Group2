@@ -125,6 +125,8 @@ void main() {
         expect(find.text('#A-204'), findsOneWidget);
         expect(find.text('Chờ kiosk nhận đơn'), findsOneWidget);
         expect(byId('s07.qr'), findsOneWidget);
+        // The stage banner pushes the order's lines below the fold of a 360 dp phone: scroll to them, as a customer would.
+        await tester.scrollUntilVisible(find.text('Tổng 39.000đ · Đã thanh toán Ví MoMo'), 200);
         expect(find.text('Tổng 39.000đ · Đã thanh toán Ví MoMo'), findsOneWidget);
 
         final order = (deps.orders as FakeOrderRepository).all.single;
@@ -161,6 +163,7 @@ void main() {
 
         expect(byId('s07.header'), findsOneWidget);
         expect(find.text('Trả tại quầy'), findsOneWidget);
+        await tester.scrollUntilVisible(find.text('Trả tại quầy khi nhận: 39.000đ'), 200);
         expect(find.text('Trả tại quầy khi nhận: 39.000đ'), findsOneWidget);
         expect((deps.orders as FakeOrderRepository).all.last.paymentStatus, PaymentStatus.unpaid);
 

@@ -5,6 +5,7 @@ import 'package:breakbite/ui/seller_orders/widgets/seller_order_parts.dart';
 import 'package:breakbite_core/domain/models/models.dart';
 import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
+import 'package:breakbite_core/ui/core/theme/order_stage.dart';
 import 'package:breakbite_core/ui/core/view_state.dart';
 import 'package:breakbite_core/ui/core/widgets/widgets.dart';
 import 'package:breakbite_core/utils/format.dart';
@@ -66,10 +67,7 @@ class SellerOrderScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: AppSpacing.md),
               child: Center(
-                child: StatusBadge(
-                  label: sellerOrderStatusLabel(order),
-                  warning: order.status == OrderStatus.cancelled,
-                ),
+                child: StatusBadge(label: sellerOrderStatusLabel(order), stage: OrderStage.of(order.status)),
               ),
             ),
         ],
