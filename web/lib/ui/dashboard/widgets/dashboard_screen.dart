@@ -100,20 +100,32 @@ class _Figure extends StatelessWidget {
       label: '$label: $value',
       excludeSemantics: true,
       child: SizedBox(
-        width: 200,
-        child: Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: colors.primaryText),
-                const SizedBox(height: AppSpacing.xs),
-                Text(value, style: text.headlineMedium),
-                Text(label, style: text.bodyMedium),
-              ],
-            ),
+        width: 210,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Icon(icon, color: colors.primaryText, size: 18),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(value, style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(label, style: text.bodySmall?.copyWith(color: colors.muted, fontWeight: FontWeight.w500)),
+            ],
           ),
         ),
       ),
@@ -144,7 +156,14 @@ class _HourlyChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Số đơn theo giờ', style: text.titleMedium),
+        Row(
+          children: [
+            Icon(Icons.bar_chart_rounded, size: 20, color: colors.primaryText),
+            const SizedBox(width: AppSpacing.xs),
+            Text('Số đơn theo giờ', style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
           peak == null
               ? 'Chưa có đơn.'

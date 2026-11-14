@@ -215,9 +215,57 @@ class _ReviewQueueViewState extends State<_ReviewQueueView> {
                               tooltip: 'Sắp xếp danh sách',
                               onSelected: (value) => setState(() => _sortBy = value),
                               itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'fifo', child: Text('Cũ nhất trước (FIFO)')),
-                                const PopupMenuItem(value: 'newest', child: Text('Mới nhất trước')),
-                                const PopupMenuItem(value: 'total', child: Text('Giá trị đơn cao nhất')),
+                                PopupMenuItem(
+                                  value: 'fifo',
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Cũ nhất (FIFO)',
+                                          style: text.bodyMedium?.copyWith(
+                                            fontWeight: _sortBy == 'fifo' ? FontWeight.w700 : FontWeight.w500,
+                                            color: _sortBy == 'fifo' ? colors.primaryText : scheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_sortBy == 'fifo') Icon(Icons.check_rounded, size: 16, color: colors.primaryText),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'newest',
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Mới nhất',
+                                          style: text.bodyMedium?.copyWith(
+                                            fontWeight: _sortBy == 'newest' ? FontWeight.w700 : FontWeight.w500,
+                                            color: _sortBy == 'newest' ? colors.primaryText : scheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_sortBy == 'newest') Icon(Icons.check_rounded, size: 16, color: colors.primaryText),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'total',
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Giá trị cao',
+                                          style: text.bodyMedium?.copyWith(
+                                            fontWeight: _sortBy == 'total' ? FontWeight.w700 : FontWeight.w500,
+                                            color: _sortBy == 'total' ? colors.primaryText : scheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_sortBy == 'total') Icon(Icons.check_rounded, size: 16, color: colors.primaryText),
+                                    ],
+                                  ),
+                                ),
                               ],
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
@@ -229,9 +277,21 @@ class _ReviewQueueViewState extends State<_ReviewQueueView> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.sort_rounded, size: 18, color: colors.muted),
+                                    Icon(Icons.sort_rounded, size: 16, color: colors.primaryText),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Text(
+                                      switch (_sortBy) {
+                                        'newest' => 'Mới nhất',
+                                        'total' => 'Giá trị cao',
+                                        _ => 'Cũ nhất (FIFO)',
+                                      },
+                                      style: text.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.onSurface,
+                                      ),
+                                    ),
                                     const SizedBox(width: AppSpacing.xxs),
-                                    Icon(Icons.arrow_drop_down, size: 16, color: colors.muted),
+                                    Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: colors.muted),
                                   ],
                                 ),
                               ),

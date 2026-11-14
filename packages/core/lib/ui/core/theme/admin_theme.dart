@@ -13,12 +13,12 @@ abstract final class AdminTheme {
     return base.copyWith(
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: _FadeRiseTransitions(),
-          TargetPlatform.iOS: _FadeRiseTransitions(),
-          TargetPlatform.windows: _FadeRiseTransitions(),
-          TargetPlatform.macOS: _FadeRiseTransitions(),
-          TargetPlatform.linux: _FadeRiseTransitions(),
-          TargetPlatform.fuchsia: _FadeRiseTransitions(),
+          TargetPlatform.android: _InstantPageTransitionsBuilder(),
+          TargetPlatform.iOS: _InstantPageTransitionsBuilder(),
+          TargetPlatform.windows: _InstantPageTransitionsBuilder(),
+          TargetPlatform.macOS: _InstantPageTransitionsBuilder(),
+          TargetPlatform.linux: _InstantPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: _InstantPageTransitionsBuilder(),
         },
       ),
       navigationRailTheme: NavigationRailThemeData(
@@ -128,10 +128,9 @@ abstract final class AdminTheme {
   }
 }
 
-/// A page comes in with a fade and a short rise (8 px), and the page it replaces stays where it is. It tells the
-/// person that the content changed without moving the frame of the site, and is quick enough not to be waited for.
-class _FadeRiseTransitions extends PageTransitionsBuilder {
-  const _FadeRiseTransitions();
+/// Web admin transitions are instantaneous to match desktop studio responsiveness.
+class _InstantPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _InstantPageTransitionsBuilder();
 
   @override
   Widget buildTransitions<T>(
@@ -140,15 +139,5 @@ class _FadeRiseTransitions extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(curved),
-        child: child,
-      ),
-    );
-  }
+  ) => child;
 }

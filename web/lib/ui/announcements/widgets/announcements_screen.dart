@@ -115,43 +115,48 @@ class _AnnouncementTile extends StatelessWidget {
         ? 'Mọi kiosk'
         : kiosks.where((k) => k.id == item.kioskId).firstOrNull?.name ?? item.kioskId!;
     final when = item.publishedAt ?? item.createdAt;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(item.title, style: text.titleMedium)),
-                StatusBadge(label: _status[item.status]!, warning: item.status != AnnouncementStatus.published),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(item.body, style: text.bodyMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$scope${when == null ? '' : ' · ${formatDateTime(when)}'}',
-                    style: text.bodyMedium?.copyWith(color: colors.muted),
-                  ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: colors.border),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(item.title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+              StatusBadge(label: _status[item.status]!, warning: item.status != AnnouncementStatus.published),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(item.body, style: text.bodyMedium),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$scope${when == null ? '' : ' · ${formatDateTime(when)}'}',
+                  style: text.bodySmall?.copyWith(color: colors.muted),
                 ),
-                if (vm.canWrite && item.status == AnnouncementStatus.draft)
-                  TextButton(
-                    onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.published),
-                    child: const Text('Đăng'),
-                  ),
-                if (vm.canWrite && item.status == AnnouncementStatus.published)
-                  TextButton(
-                    onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.archived),
-                    child: const Text('Lưu trữ'),
-                  ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              if (vm.canWrite && item.status == AnnouncementStatus.draft)
+                OutlinedButton(
+                  onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.published),
+                  child: const Text('Đăng'),
+                ),
+              if (vm.canWrite && item.status == AnnouncementStatus.published)
+                TextButton(
+                  onPressed: busy ? null : () => _change(context, vm, AnnouncementStatus.archived),
+                  child: const Text('Lưu trữ'),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

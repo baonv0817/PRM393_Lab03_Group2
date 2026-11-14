@@ -153,44 +153,58 @@ class _ItemRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final colors = context.appColors;
     final status = item.archived ? 'Đã lưu trữ' : (item.soldOut ? 'Tạm hết' : 'Đang bán');
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              child: Opacity(
-                opacity: item.archived ? 0.4 : 1,
-                child: MenuItemImage(imageUrl: item.imageUrl, size: 56),
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: colors.border),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.input),
+            child: Opacity(
+              opacity: item.archived ? 0.4 : 1,
+              child: MenuItemImage(imageUrl: item.imageUrl, size: 56),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name, style: text.titleMedium),
-                  Text(
-                    '${itemCategoryLabel(item.category)} · ${item.prepMinutes} phút · mã ${item.dishId}',
-                    style: text.bodyMedium?.copyWith(color: colors.muted),
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  '${itemCategoryLabel(item.category)} · ${item.prepMinutes} phút · mã ${item.dishId}',
+                  style: text.bodyMedium?.copyWith(color: colors.muted),
+                ),
+              ],
             ),
-            SizedBox(width: 120, child: Text(formatVnd(item.priceVnd), style: text.titleMedium)),
-            SizedBox(
-              width: 120,
-              child: StatusBadge(label: status, warning: item.soldOut || item.archived),
+          ),
+          SizedBox(
+            width: 120,
+            child: Text(formatVnd(item.priceVnd), style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          ),
+          SizedBox(
+            width: 120,
+            child: StatusBadge(label: status, warning: item.soldOut || item.archived),
+          ),
+          IconButton(
+            tooltip: 'Sửa ${item.name}',
+            onPressed: onEdit,
+            icon: Icon(Icons.edit_rounded, size: 20, color: colors.primaryText),
+          ),
+          IconButton(
+            tooltip: item.archived ? 'Khôi phục ${item.name}' : 'Lưu trữ ${item.name}',
+            onPressed: vm.toggleArchived.running ? null : () => vm.toggleArchived.execute(item),
+            icon: Icon(
+              item.archived ? Icons.unarchive_rounded : Icons.archive_rounded,
+              size: 20,
+              color: colors.muted,
             ),
-            IconButton(tooltip: 'Sửa ${item.name}', onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
-            IconButton(
-              tooltip: item.archived ? 'Khôi phục ${item.name}' : 'Lưu trữ ${item.name}',
-              onPressed: vm.toggleArchived.running ? null : () => vm.toggleArchived.execute(item),
-              icon: Icon(item.archived ? Icons.unarchive_outlined : Icons.archive_outlined),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
