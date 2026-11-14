@@ -53,7 +53,7 @@ class AdminShell extends StatelessWidget {
             labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              child: Semantics(label: 'PRMTacos quản trị', child: const BreakBiteLogo(size: 48)),
+              child: Semantics(label: 'BreakBite quản trị', child: const BreakBiteLogo(size: 48)),
             ),
             destinations: [
               for (final d in [..._destinations, if (session.isAdmin) ..._system])
