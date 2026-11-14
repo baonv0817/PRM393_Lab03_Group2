@@ -66,7 +66,7 @@ gives it a role on the web ("Người dùng").
 | Lab 3 AI code review | [`docs/code-review.md`](docs/code-review.md) |
 | Environment setup | [`docs/setup.md`](docs/setup.md) |
 | Evidence (screenshots, recordings, logs) | [`evidence/`](evidence/) |
-| Final report (PDF, 10 pages), slides (PPTX and PDF, 15 slides) | [`report/Final_SE193905.pdf`](report/Final_SE193905.pdf), [`slides/Final_SE193905_slides.pptx`](slides/Final_SE193905_slides.pptx), [`slides/Final_SE193905_slides.pdf`](slides/Final_SE193905_slides.pdf); built by `scripts/build_final_report.py` and `scripts/build_final_slides.js` from the repository's evidence |
+| Final report (PDF in English, 11 pages), slides (PPTX and PDF, 15 slides) | [`report/Final_SE193905.pdf`](report/Final_SE193905.pdf), [`slides/Final_SE193905_slides.pptx`](slides/Final_SE193905_slides.pptx), [`slides/Final_SE193905_slides.pdf`](slides/Final_SE193905_slides.pdf); built by `scripts/build_final_report.py` and `scripts/build_final_slides.js` from the repository's evidence |
 
 ## How to run
 
