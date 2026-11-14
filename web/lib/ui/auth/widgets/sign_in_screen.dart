@@ -35,7 +35,7 @@ class SignInScreen extends StatelessWidget {
                     children: [
                       const BreakBiteLogo(size: 88),
                       const SizedBox(height: AppSpacing.md),
-                      Text('BreakBite · Quản trị', style: text.headlineMedium, textAlign: TextAlign.center),
+                      Text('PRMTacos · Quản trị', style: text.headlineMedium, textAlign: TextAlign.center),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Dành cho nhân viên kiosk và quản trị viên. Đăng nhập bằng email hoặc tài khoản Google đã được cấp quyền.',

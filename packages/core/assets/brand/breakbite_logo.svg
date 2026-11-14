@@ -1,9 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <title>BreakBite</title>
+  <title>PRMTacos</title>
   <rect width="512" height="512" rx="112" fill="#F69D39"/>
-  <circle cx="256" cy="268" r="168" fill="#FFF5E5"/>
-  <circle cx="313.5" cy="110.1" r="40" fill="#F69D39"/>
-  <circle cx="374.8" cy="149.2" r="52" fill="#F69D39"/>
-  <circle cx="413.9" cy="210.5" r="40" fill="#F69D39"/>
-  <path d="M205 185 V361 M205 185 H255 A42 42 0 0 1 255 269 H205 M205 269 H265 A46 46 0 0 1 265 361 H205" fill="none" stroke="#622B14" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="266" r="172" fill="#FFF5E5"/>
+  <circle cx="320.4" cy="106.5" r="38" fill="#F69D39"/>
+  <circle cx="379.7" cy="146.5" r="50" fill="#F69D39"/>
+  <circle cx="417.6" cy="207.2" r="38" fill="#F69D39"/>
+  <circle cx="162.4" cy="282.2" r="24" fill="#2E7D32" stroke="#622B14" stroke-width="12"/>
+  <circle cx="188.3" cy="245.3" r="26" fill="#D94E1F" stroke="#622B14" stroke-width="12"/>
+  <circle cx="228.9" cy="223.3" r="27" fill="#2E7D32" stroke="#622B14" stroke-width="12"/>
+  <circle cx="283.1" cy="223.3" r="27" fill="#D94E1F" stroke="#622B14" stroke-width="12"/>
+  <circle cx="323.7" cy="245.3" r="26" fill="#2E7D32" stroke="#622B14" stroke-width="12"/>
+  <circle cx="349.6" cy="282.2" r="24" fill="#D94E1F" stroke="#622B14" stroke-width="12"/>
+  <path d="M 148 332 A 108 108 0 0 1 364 332 Z" fill="#F8C67A" stroke="#622B14" stroke-width="20" stroke-linejoin="round"/>
+  <circle cx="188" cy="296" r="6.5" fill="#D94E1F"/>
+  <circle cx="324" cy="296" r="6.5" fill="#D94E1F"/>
+  <circle cx="216" cy="310" r="5.5" fill="#D94E1F"/>
+  <circle cx="296" cy="310" r="5.5" fill="#D94E1F"/>
+  <path d="M 226 262 H 286 M 256 262 V 314" fill="none" stroke="#622B14" stroke-width="22" stroke-linecap="round"/>
 </svg>

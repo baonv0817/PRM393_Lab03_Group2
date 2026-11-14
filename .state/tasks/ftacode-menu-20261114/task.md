@@ -1,0 +1,24 @@
+# FtaCode menu alignment
+
+- Workspace: breakbite; repo PRM393_Lab03_Group2.
+- Working copy: D:/Coding_learning/PRM393-menu-ftacode, branch docs/F30-ftacode-menu, base origin/main b5927fd.
+- User authorized replacing demo data with reasonable data based on the supplied FtaCode original.
+- Scope: catalog, seed, reversible menu migration, source evidence and checks. Preserve users and historical orders.
+- Source snapshot: firebase/seed/ftacode-source.json, 20 visible source products, 2026-11-14.
+- Live state (2026-11-14): APPLIED & VERIFIED on `breakbite-1315b`.
+  - Backup saved outside repo at `C:/Users/danhn/breakbite-backups/before-ftacode-20261114.json` (494,436 bytes).
+  - Dry-run & apply of `2026-11-t32-ftacode-menu` succeeded: 85 changes (`{ upsert: 60, archive: 25 }` across 3 kiosks), `Verify: 0 problems. A second run would change 0 documents.`
+  - Verified live on Android emulator (`emulator-5554`): FtaCode menu items (`Bánh tráng muối nhuyễn sate hành phi`, `Combo 5 Bánh tráng vò muối tắc`, `Combo Đặc Biệt`, `Gà + trứng`, `Gà + xúc xích`, etc.) and images render immediately in the app.
+- Figma UI/UX Alignment (Option 2, 2026-11-14):
+  - Updated `MenuItemImage` (`packages/core/lib/ui/core/widgets/menu_image.dart`) with a warm tinted frame (`selected` `#FFF1DE` + `selectedBorder` `#FFE8CC`) for square card thumbnails so white-background FtaCode product photos stand out cleanly.
+  - Updated `FoodCard` (`packages/core/lib/ui/core/widgets/cards_and_bars.dart`) to show `Icons.bolt_rounded` for quick items (<= 5 min), display `item.description` alongside prep time and options indicator, and render the price in WCAG AA accent orange (`colors.primaryText` `#B45309`).
+  - Updated `HomeViewModel` & `HomeScreen` (`S02`) with `HomeFilter` chips (`Tất cả`, `Tacos & Bánh`, `Mì trộn`, `Đồ uống`, `s02.filter.*`) and the Figma-style orange `_PromoBanner` with `"Đặt ngay →"` pill and food badge.
+  - Updated `MenuViewModel` & `MenuScreen` (`S03`) with full `MenuFilter` chips (`Tất cả`, `Tacos & Bánh`, `Mì trộn`, `Dưới 5 phút`, `Món ăn`, `Đồ uống`, `s03.filter.*`).
+  - Updated `docs/design-traceability.md` (`D06`, `D15`) and verified 128/128 UI, WCAG AA contrast, widget catalog, and ordering flow tests pass.
+  - Built and installed `app-debug.apk` on `emulator-5554` (including `mobile/env/payment.json` gitignored with VNPAY Sandbox `8DSRZ4UW` enabled and MoMo kept on simulated gateway `S06-GATEWAY`) and visually verified `S02` (Home), `S03` (Menu All), and `S03` filtered by `Mì trộn` (`home-option2.png`, `menu-option2.png`, `menu-noodles-option2.png`).
+- PRMTacos Brand, Logo & Launcher Icon (2026-11-14):
+  - Updated `scripts/make_logo.py` to generate a folded Taco dome emblem (`⌓`) with herb & salsa toppings and a bold `T` monogram (`packages/core/assets/brand/breakbite_logo.svg`, `breakbite_logo_soft.svg`, `breakbite_logo.png`), Android launcher icons (`mobile/android/app/src/main/res/mipmap-*/ic_launcher*.png`), and Web Admin icons (`web/web/favicon.png`, `web/web/icons/Icon-*.png`).
+  - Updated app label and wordmark to `PRMTacos` (`mobile/android/app/src/main/AndroidManifest.xml`, `mobile/lib/app.dart`, `packages/core/lib/ui/core/widgets/brand.dart`, `packages/core/assets/brand/README.md`) and updated tests (`mobile/test/ui/core/brand_test.dart`, `mobile/test/ui/onboarding/onboarding_screen_test.dart`).
+  - Synced rebuilt 30-slide final presentation deck (`slides/Final_SE193905_slides.pptx`, `slides/Final_SE193905_slides.pdf`, `scripts/build_final_slides.js`).
+  - Verified `flutter analyze` (0 issues) and tests pass; built and installed `app-debug.apk` on `emulator-5554` (`Success`).
+- Next: commit and push to `origin` (`docs/F30-ftacode-menu` and `main`); keep Admin key (`C:\Users\danhn\.breakbite-private\firebase-admin.json`) and env files (`mobile/env/app_check.json`, `mobile/env/payment.json`) outside git.

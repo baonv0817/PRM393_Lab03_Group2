@@ -59,7 +59,7 @@ void main() {
       expect(find.text('Thực đơn'), findsOneWidget);
       expect(find.text('Kiosk Q9 · Tầng 2 · Mở · chờ 5–7 phút'), findsOneWidget);
       expect(byId('s03.search'), findsOneWidget);
-      for (final filter in ['quick', 'food', 'drink']) {
+      for (final filter in ['all', 'tacos', 'noodles', 'quick', 'food', 'drink']) {
         expect(byId('s03.filter.$filter'), findsOneWidget);
       }
       for (final id in ['m1', 'm2', 'm3', 'm4']) {

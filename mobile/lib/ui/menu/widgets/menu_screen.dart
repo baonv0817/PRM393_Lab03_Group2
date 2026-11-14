@@ -66,7 +66,7 @@ class _MenuScreenState extends State<MenuScreen> {
               padding: gutter,
               child: Row(
                 children: [
-                  for (final filter in MenuFilter.values.skip(1))
+                  for (final filter in MenuFilter.values)
                     Padding(
                       padding: const EdgeInsets.only(right: AppSpacing.xs),
                       child: TestId(

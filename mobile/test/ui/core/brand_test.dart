@@ -17,7 +17,7 @@ void main() {
     await tester.pump();
     expect(find.byType(SvgPicture), findsOneWidget);
     expect(tester.getSize(find.byType(SvgPicture)), const Size(120, 120));
-    expect(find.bySemanticsLabel('Logo BreakBite'), findsOneWidget);
+    expect(find.bySemanticsLabel('Logo PRMTacos'), findsOneWidget);
   });
 
   testWidgets('both logo variants load', (tester) async {
@@ -28,11 +28,11 @@ void main() {
     }
   });
 
-  testWidgets('BreakBiteWordmark shows the BreakBite name with "Bite" in the accent color', (tester) async {
+  testWidgets('BreakBiteWordmark shows the PRMTacos name with "Tacos" in the accent color', (tester) async {
     await tester.pumpWidget(host(const BreakBiteWordmark()));
-    expect(find.bySemanticsLabel('BreakBite'), findsOneWidget);
+    expect(find.bySemanticsLabel('PRMTacos'), findsOneWidget);
     final rich = tester.widget<RichText>(find.byType(RichText).first);
-    expect(rich.text.toPlainText(), 'BreakBite');
+    expect(rich.text.toPlainText(), 'PRMTacos');
   });
 
   test('Android app icon replaces the default Flutter icon', () {
@@ -48,6 +48,6 @@ void main() {
     expect(adaptive, contains('@color/ic_launcher_background'));
     expect(adaptive, contains('@mipmap/ic_launcher_foreground'));
     expect(File('android/app/src/main/res/values/ic_launcher_background.xml').readAsStringSync(), contains('#F69D39'));
-    expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(), contains('android:label="BreakBite"'));
+    expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(), contains('android:label="PRMTacos"'));
   });
 }

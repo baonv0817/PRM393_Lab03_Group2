@@ -45,6 +45,10 @@ void main() {
       vm.search('');
       vm.choose(MenuFilter.drink);
       expect(vm.state.dataOrNull!.map((e) => e.id), ['m3']);
+      vm.choose(MenuFilter.tacos);
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm4']);
+      vm.choose(MenuFilter.noodles);
+      expect(vm.state.dataOrNull!.map((e) => e.id), ['m2']);
       vm.choose(MenuFilter.quick);
       expect(vm.state.dataOrNull!.map((e) => e.id), ['m1', 'm2', 'm3', 'm4']);
       vm.choose(MenuFilter.quick);

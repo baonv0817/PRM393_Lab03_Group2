@@ -10,7 +10,19 @@ import 'package:breakbite_core/utils/command.dart';
 import 'package:breakbite_core/utils/format.dart';
 import 'package:breakbite_core/utils/result.dart';
 import 'package:breakbite_core/utils/safe_change_notifier.dart';
+import 'package:breakbite_core/utils/text.dart';
 import 'package:flutter/foundation.dart';
+
+enum HomeFilter {
+  all('Tất cả'),
+  tacos('Tacos & Bánh'),
+  noodles('Mì trộn'),
+  drink('Đồ uống');
+
+  const HomeFilter(this.label);
+
+  final String label;
+}
 
 class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   HomeViewModel({
@@ -69,6 +81,31 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
   late final StreamSubscription<Set<String>> _configSub;
   Timer? _pauseEnd;
   Order? _lastOrder;
+  HomeFilter _filter = HomeFilter.all;
+
+  HomeFilter get filter => _filter;
+
+  void chooseFilter(HomeFilter value) {
+    _filter = value == _filter ? HomeFilter.all : value;
+    notifyListeners();
+  }
+
+  static bool _isNoodleItem(MenuItem item) {
+    final key = searchKey(item.name);
+    final dish = item.dishId.toLowerCase();
+    if (key.contains('banh mi') || dish.contains('banh-mi')) return false;
+    return key.startsWith('mi ') ||
+        key.contains('mi tron') ||
+        dish.startsWith('ftacode-mi') ||
+        dish.contains('mi-tron');
+  }
+
+  bool _matchesFilter(MenuItem item) => switch (_filter) {
+    HomeFilter.all => true,
+    HomeFilter.tacos => item.category == ItemCategory.food && !_isNoodleItem(item),
+    HomeFilter.noodles => item.category == ItemCategory.food && _isNoodleItem(item),
+    HomeFilter.drink => item.category == ItemCategory.drink,
+  };
 
   /// The quick items, or while the kiosk takes no orders (S21) a preview of its menu.
   ViewState<List<MenuItem>> get state {
@@ -80,7 +117,10 @@ class HomeViewModel extends ChangeNotifier with SafeChangeNotifier {
       );
     }
     return _menu.stateOf(
-      (items) => items.where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes).take(limit).toList(),
+      (items) => items
+          .where((e) => !e.soldOut && e.prepMinutes <= quickMaxMinutes && _matchesFilter(e))
+          .take(limit)
+          .toList(),
       emptyMessage: quickEmptyMessage,
     );
   }

@@ -10,7 +10,7 @@ const String corePackage = 'breakbite_core';
 /// background, used as the placeholder image on menu item cards until a real photo exists).
 enum LogoVariant { brand, soft }
 
-/// BreakBite logo: a bun with one bite taken out (Bite) and a B in the middle. Source: `assets/brand/`.
+/// PRMTacos logo: a tortilla medallion with one bite taken out and a folded taco shell with a 'T' monogram. Source: `assets/brand/`.
 class BreakBiteLogo extends StatelessWidget {
   const BreakBiteLogo({super.key, this.size = 96, this.variant = LogoVariant.brand});
 
@@ -26,7 +26,7 @@ class BreakBiteLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       image: true,
-      label: 'Logo BreakBite',
+      label: 'Logo PRMTacos',
       child: ExcludeSemantics(
         child: SvgPicture.asset(_assets[variant]!, package: corePackage, width: size, height: size),
       ),
@@ -34,7 +34,7 @@ class BreakBiteLogo extends StatelessWidget {
   }
 }
 
-/// "BreakBite" brand name: "Break" in the primary brown, "Bite" in the orange accent.
+/// "PRMTacos" brand name: "PRM" in the primary brown, "Tacos" in the orange accent.
 class BreakBiteWordmark extends StatelessWidget {
   const BreakBiteWordmark({super.key, this.fontSize = 36});
 
@@ -46,15 +46,15 @@ class BreakBiteWordmark extends StatelessWidget {
         ?.copyWith(fontSize: fontSize, fontWeight: FontWeight.w800, height: 1.2);
     return Semantics(
       header: true,
-      label: 'BreakBite',
+      label: 'PRMTacos',
       child: ExcludeSemantics(
         child: Text.rich(
           TextSpan(
             style: style,
             children: [
-              const TextSpan(text: 'Break'),
+              const TextSpan(text: 'PRM'),
               TextSpan(
-                text: 'Bite',
+                text: 'Tacos',
                 style: TextStyle(color: context.appColors.primaryText),
               ),
             ],
