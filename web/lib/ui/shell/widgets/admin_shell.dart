@@ -12,6 +12,13 @@ import 'package:provider/provider.dart';
 
 /// The wide-screen frame of the Lab 2 handoff (section 3): the bottom bar becomes a Navigation Rail pinned on
 /// the left, and the content sits on the cream page background.
+class _NavDestination {
+  const _NavDestination({required this.icon, required this.selected, required this.label});
+  final IconData icon;
+  final IconData selected;
+  final String label;
+}
+
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key, required this.location, required this.child});
 
@@ -26,22 +33,22 @@ class _AdminShellState extends State<AdminShell> {
   bool? _isExtended;
 
   static const _destinations = [
-    (icon: Icons.inbox_outlined, selected: Icons.inbox_rounded, label: 'Duyệt đơn'),
-    (icon: Icons.restaurant_menu_rounded, selected: Icons.restaurant_rounded, label: 'Thực đơn'),
-    (icon: Icons.bar_chart_rounded, selected: Icons.analytics_rounded, label: 'Thống kê'),
-    (icon: Icons.campaign_outlined, selected: Icons.campaign_rounded, label: 'Thông báo'),
+    _NavDestination(icon: Icons.inbox_outlined, selected: Icons.inbox, label: 'Duyệt đơn'),
+    _NavDestination(icon: Icons.restaurant_menu_outlined, selected: Icons.restaurant_menu, label: 'Thực đơn'),
+    _NavDestination(icon: Icons.bar_chart_outlined, selected: Icons.bar_chart, label: 'Thống kê'),
+    _NavDestination(icon: Icons.campaign_outlined, selected: Icons.campaign, label: 'Thông báo'),
   ];
 
   /// What only an admin sees, in the order of [SystemRoutes.tabs].
   static const _system = [
-    (icon: Icons.people_outline_rounded, selected: Icons.people_rounded, label: 'Người dùng'),
-    (icon: Icons.storefront_outlined, selected: Icons.storefront_rounded, label: 'Kiosk'),
-    (icon: Icons.schedule_rounded, selected: Icons.access_time_filled_rounded, label: 'Khung giờ'),
-    (icon: Icons.confirmation_number_outlined, selected: Icons.confirmation_number_rounded, label: 'Voucher'),
-    (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long_rounded, label: 'Mọi đơn hàng'),
-    (icon: Icons.warning_amber_rounded, selected: Icons.warning_rounded, label: 'Sự cố'),
-    (icon: Icons.trending_up_rounded, selected: Icons.insights_rounded, label: 'Thống kê hệ thống'),
-    (icon: Icons.history_rounded, selected: Icons.history_toggle_off_rounded, label: 'Nhật ký'),
+    _NavDestination(icon: Icons.people_outline, selected: Icons.people, label: 'Người dùng'),
+    _NavDestination(icon: Icons.storefront_outlined, selected: Icons.storefront, label: 'Kiosk'),
+    _NavDestination(icon: Icons.schedule_outlined, selected: Icons.schedule, label: 'Khung giờ'),
+    _NavDestination(icon: Icons.confirmation_number_outlined, selected: Icons.confirmation_number, label: 'Voucher'),
+    _NavDestination(icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Mọi đơn hàng'),
+    _NavDestination(icon: Icons.warning_amber_outlined, selected: Icons.warning, label: 'Sự cố'),
+    _NavDestination(icon: Icons.trending_up, selected: Icons.insights, label: 'Thống kê hệ thống'),
+    _NavDestination(icon: Icons.history, selected: Icons.history, label: 'Nhật ký'),
   ];
 
   @override
