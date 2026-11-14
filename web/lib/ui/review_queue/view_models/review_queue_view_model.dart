@@ -46,6 +46,7 @@ class ReviewQueueViewModel extends ChangeNotifier with SafeChangeNotifier {
 
   ViewState<List<Order>> _state = const ViewLoading();
   int _inProgress = 0;
+  List<Order> _inProgressOrders = const [];
   String? _selectedId;
 
   /// Pending orders, oldest first: the customer who waited longest is served first.
@@ -54,9 +55,13 @@ class ReviewQueueViewModel extends ChangeNotifier with SafeChangeNotifier {
   /// Orders already approved and not handed over yet (preparing or ready), for the header.
   int get inProgressCount => _inProgress;
 
+  /// Active orders currently being prepared or ready for customer pickup.
+  List<Order> get inProgressOrders => _inProgressOrders;
+
   Order? get selected {
-    final orders = _state.dataOrNull ?? const <Order>[];
-    return orders.where((o) => o.id == _selectedId).firstOrNull ?? orders.firstOrNull;
+    final pending = _state.dataOrNull ?? const <Order>[];
+    final all = [...pending, ..._inProgressOrders];
+    return all.where((o) => o.id == _selectedId).firstOrNull ?? pending.firstOrNull ?? all.firstOrNull;
   }
 
   void select(Order order) {
@@ -81,7 +86,10 @@ class ReviewQueueViewModel extends ChangeNotifier with SafeChangeNotifier {
           (orders) {
             final pending = orders.where((o) => o.status == OrderStatus.pending).toList()
               ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+            final inProgress = orders.where((o) => o.status != OrderStatus.pending).toList()
+              ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
             _inProgress = orders.length - pending.length;
+            _inProgressOrders = inProgress;
             _state = ViewStateX.fromList(pending, emptyMessage: 'Không có đơn nào chờ duyệt.');
             notifyListeners();
           },
