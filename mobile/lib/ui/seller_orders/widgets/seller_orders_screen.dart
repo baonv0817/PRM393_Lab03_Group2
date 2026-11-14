@@ -12,7 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 /// K02 and K02-EMPTY: the queue of the kiosk in three tabs. A card opens the order (K03, K04 or K06 depending
-/// on where it is); "Nhận đơn" starts a new order from the list.
+/// on where it is); "Nhận đơn" starts a new order from the list, and "Đã làm xong" on an order being made tells the
+/// customer it is ready, so the common path takes one tap per step.
 class SellerOrdersScreen extends StatelessWidget {
   const SellerOrdersScreen({super.key});
 
@@ -20,6 +21,17 @@ class SellerOrdersScreen extends StatelessWidget {
     final result = await vm.accept(order);
     if (!context.mounted) return;
     if (result case Err(:final error)) showAppMessage(context, error.message);
+  }
+
+  Future<void> _ready(BuildContext context, SellerOrdersViewModel vm, Order order) async {
+    final result = await vm.markReady(order);
+    if (!context.mounted) return;
+    switch (result) {
+      case Ok():
+        showAppMessage(context, 'Đã báo khách: món sẵn sàng.');
+      case Err(:final error):
+        showAppMessage(context, error.message);
+    }
   }
 
   @override
@@ -127,6 +139,7 @@ class SellerOrdersScreen extends StatelessWidget {
                                   tab: vm.tab,
                                   busy: vm.busyOrderId == order.id,
                                   onAccept: () => _accept(context, vm, order),
+                                  onReady: () => _ready(context, vm, order),
                                 ),
                               ),
                           ],
@@ -150,12 +163,14 @@ class SellerOrderCard extends StatelessWidget {
     required this.tab,
     required this.busy,
     required this.onAccept,
+    required this.onReady,
   });
 
   final Order order;
   final SellerOrderTab tab;
   final bool busy;
   final VoidCallback onAccept;
+  final VoidCallback onReady;
 
   String get _code => order.orderCode.isEmpty ? order.id : order.orderCode;
 
@@ -247,10 +262,21 @@ class SellerOrderCard extends StatelessWidget {
                             onPressed: onAccept,
                           ),
                         )
+                      : tab == SellerOrderTab.preparing
+                      ? TestId(
+                          'k02.ready.${order.id}',
+                          child: AppButton(
+                            label: 'Đã làm xong',
+                            icon: Icons.check,
+                            large: true,
+                            loading: busy,
+                            onPressed: onReady,
+                          ),
+                        )
                       : TestId(
                           'k02.open.${order.id}',
                           child: AppButton(
-                            label: tab == SellerOrderTab.preparing ? 'Xem đơn đang làm' : 'Giao món',
+                            label: 'Giao món',
                             variant: AppButtonVariant.secondary,
                             large: true,
                             onPressed: () => context.push(_route),

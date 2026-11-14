@@ -182,6 +182,21 @@ class SellerOrdersViewModel extends ChangeNotifier with SafeChangeNotifier {
     }
   }
 
+  /// "Đã làm xong" on a card of the "Đang làm" tab: the order is ready and the customer is told, without opening it.
+  Future<Result<void>> markReady(Order order) async {
+    if (_busyOrderId != null) return const Result.ok(null);
+    _busyOrderId = order.id;
+    notifyListeners();
+    try {
+      final result = await orders.markReady(order);
+      if (result case Err(:final error)) crash.recordNonFatal(error, error.stackTrace, 'sellerOrders.markReady');
+      return result;
+    } finally {
+      _busyOrderId = null;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     unawaited(_ordersSub?.cancel());

@@ -139,6 +139,26 @@ void main() {
     );
   });
 
+  testWidgets('K02 "Đã làm xong" on the Đang làm tab tells the customer the order is ready, in one tap', (
+    tester,
+  ) async {
+    final deps = await openAsStaff(tester);
+    final orders = deps.orders as FakeOrderRepository;
+    final id = await placeTestOrder(orders, uid: 'u1');
+    await orders.accept(_find(deps, id), readyIn: const Duration(minutes: 5));
+    await start(tester, deps);
+
+    await tapId(tester, 'k02.tab.preparing');
+    expect(byId('k02.open.$id'), findsNothing, reason: 'the "view" button is gone');
+    expect(find.text('Đã làm xong'), findsOneWidget);
+    await tapId(tester, 'k02.ready.$id');
+
+    expect(_find(deps, id).status, OrderStatus.ready);
+    expect(find.text('Đã báo khách: món sẵn sàng.'), findsOneWidget);
+    expect(find.text('Sẵn sàng (1)'), findsOneWidget);
+    expect(find.text('Đang làm (0)'), findsOneWidget);
+  });
+
   testWidgets('K04 "Báo thiếu nguyên liệu" turns the order down with the reason "Hết món"', (tester) async {
     final deps = await openAsStaff(tester);
     final orders = deps.orders as FakeOrderRepository;
@@ -147,7 +167,9 @@ void main() {
     await start(tester, deps);
 
     await tapId(tester, 'k02.tab.preparing');
-    await tapId(tester, 'k02.open.$id');
+    // The card still opens the order, where the kitchen can turn it down.
+    await tester.tap(find.descendant(of: byId('k02.order.$id'), matching: find.textContaining('×')));
+    await tester.pumpAndSettle();
     await tapId(tester, 'k04.shortage');
     await tapId(tester, 'k12.reject');
 
