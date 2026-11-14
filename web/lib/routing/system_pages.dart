@@ -41,22 +41,10 @@ abstract final class SystemRoutes {
   static const tabs = [users, kiosks, slots, vouchers, orders, incidents, stats, audit];
 }
 
-/// A page that comes in with a short fade, the way the rest of the admin site moves.
-Page<void> _fade(GoRouterState state, Widget child) => CustomTransitionPage<void>(
+/// Instant page transition for snappy web performance.
+Page<void> _fade(GoRouterState state, Widget child) => NoTransitionPage<void>(
   key: state.pageKey,
   child: child,
-  transitionDuration: const Duration(milliseconds: 240),
-  transitionsBuilder: (context, animation, _, child) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(curved),
-        child: child,
-      ),
-    );
-  },
 );
 
 /// The system pages, to be placed inside the shell route.

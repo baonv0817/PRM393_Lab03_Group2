@@ -13,12 +13,12 @@ abstract final class AdminTheme {
     return base.copyWith(
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: _FadeRiseTransitions(),
-          TargetPlatform.iOS: _FadeRiseTransitions(),
-          TargetPlatform.windows: _FadeRiseTransitions(),
-          TargetPlatform.macOS: _FadeRiseTransitions(),
-          TargetPlatform.linux: _FadeRiseTransitions(),
-          TargetPlatform.fuchsia: _FadeRiseTransitions(),
+          TargetPlatform.android: _InstantPageTransitionsBuilder(),
+          TargetPlatform.iOS: _InstantPageTransitionsBuilder(),
+          TargetPlatform.windows: _InstantPageTransitionsBuilder(),
+          TargetPlatform.macOS: _InstantPageTransitionsBuilder(),
+          TargetPlatform.linux: _InstantPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: _InstantPageTransitionsBuilder(),
         },
       ),
       navigationRailTheme: NavigationRailThemeData(
@@ -45,6 +45,79 @@ abstract final class AdminTheme {
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.input)),
       ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: const BorderSide(color: AppPalette.border),
+        ),
+        backgroundColor: AppPalette.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 6,
+        titleTextStyle: text.titleLarge?.copyWith(fontWeight: FontWeight.w700, color: AppPalette.onPrimary),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          side: const BorderSide(color: AppPalette.border),
+        ),
+        color: AppPalette.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        textStyle: text.bodyMedium?.copyWith(color: AppPalette.onPrimary),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppPalette.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          borderSide: const BorderSide(color: AppPalette.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          borderSide: const BorderSide(color: AppPalette.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          borderSide: const BorderSide(color: AppPalette.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          borderSide: const BorderSide(color: AppPalette.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          borderSide: const BorderSide(color: AppPalette.error, width: 1.5),
+        ),
+        labelStyle: text.bodyMedium?.copyWith(color: AppPalette.muted),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.chip)),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          ),
+          textStyle: WidgetStatePropertyAll(
+            text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.chip)),
+          ),
+          side: const WidgetStatePropertyAll(BorderSide(color: AppPalette.border)),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          ),
+          textStyle: WidgetStatePropertyAll(
+            text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
           shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.chip))),
@@ -55,10 +128,9 @@ abstract final class AdminTheme {
   }
 }
 
-/// A page comes in with a fade and a short rise (8 px), and the page it replaces stays where it is. It tells the
-/// person that the content changed without moving the frame of the site, and is quick enough not to be waited for.
-class _FadeRiseTransitions extends PageTransitionsBuilder {
-  const _FadeRiseTransitions();
+/// Web admin transitions are instantaneous to match desktop studio responsiveness.
+class _InstantPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _InstantPageTransitionsBuilder();
 
   @override
   Widget buildTransitions<T>(
@@ -67,15 +139,5 @@ class _FadeRiseTransitions extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(curved),
-        child: child,
-      ),
-    );
-  }
+  ) => child;
 }

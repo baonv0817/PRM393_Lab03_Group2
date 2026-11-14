@@ -12,37 +12,46 @@ import 'package:provider/provider.dart';
 
 /// The wide-screen frame of the Lab 2 handoff (section 3): the bottom bar becomes a Navigation Rail pinned on
 /// the left, and the content sits on the cream page background.
-class AdminShell extends StatelessWidget {
+class AdminShell extends StatefulWidget {
   const AdminShell({super.key, required this.location, required this.child});
 
   final String location;
   final Widget child;
 
+  @override
+  State<AdminShell> createState() => _AdminShellState();
+}
+
+class _AdminShellState extends State<AdminShell> {
+  bool? _isExtended;
+
   static const _destinations = [
-    (icon: Icons.fact_check_outlined, selected: Icons.fact_check, label: 'Duyệt đơn'),
-    (icon: Icons.restaurant_menu_outlined, selected: Icons.restaurant_menu, label: 'Thực đơn'),
-    (icon: Icons.insights_outlined, selected: Icons.insights, label: 'Thống kê'),
-    (icon: Icons.campaign_outlined, selected: Icons.campaign, label: 'Thông báo'),
+    (icon: Icons.inbox_outlined, selected: Icons.inbox_rounded, label: 'Duyệt đơn'),
+    (icon: Icons.restaurant_menu_rounded, selected: Icons.restaurant_rounded, label: 'Thực đơn'),
+    (icon: Icons.bar_chart_rounded, selected: Icons.analytics_rounded, label: 'Thống kê'),
+    (icon: Icons.campaign_outlined, selected: Icons.campaign_rounded, label: 'Thông báo'),
   ];
 
   /// What only an admin sees, in the order of [SystemRoutes.tabs].
   static const _system = [
-    (icon: Icons.people_outline, selected: Icons.people, label: 'Người dùng'),
-    (icon: Icons.storefront_outlined, selected: Icons.storefront, label: 'Kiosk'),
-    (icon: Icons.schedule_outlined, selected: Icons.schedule, label: 'Khung giờ'),
-    (icon: Icons.local_offer_outlined, selected: Icons.local_offer, label: 'Voucher'),
-    (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Mọi đơn hàng'),
-    (icon: Icons.report_problem_outlined, selected: Icons.report_problem, label: 'Sự cố'),
-    (icon: Icons.bar_chart_outlined, selected: Icons.bar_chart, label: 'Thống kê hệ thống'),
-    (icon: Icons.history, selected: Icons.history, label: 'Nhật ký'),
+    (icon: Icons.people_outline_rounded, selected: Icons.people_rounded, label: 'Người dùng'),
+    (icon: Icons.storefront_outlined, selected: Icons.storefront_rounded, label: 'Kiosk'),
+    (icon: Icons.schedule_rounded, selected: Icons.access_time_filled_rounded, label: 'Khung giờ'),
+    (icon: Icons.confirmation_number_outlined, selected: Icons.confirmation_number_rounded, label: 'Voucher'),
+    (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long_rounded, label: 'Mọi đơn hàng'),
+    (icon: Icons.warning_amber_rounded, selected: Icons.warning_rounded, label: 'Sự cố'),
+    (icon: Icons.trending_up_rounded, selected: Icons.insights_rounded, label: 'Thống kê hệ thống'),
+    (icon: Icons.history_rounded, selected: Icons.history_toggle_off_rounded, label: 'Nhật ký'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final session = context.watch<AdminSession>();
     final tabs = AdminRoutes.tabsFor(admin: session.isAdmin);
-    final index = tabs.indexOf(location);
-    final extended = MediaQuery.sizeOf(context).width >= 1200;
+    final index = tabs.indexOf(widget.location);
+    final colors = context.appColors;
+    final autoExtended = MediaQuery.sizeOf(context).width >= 1200;
+    final extended = _isExtended ?? autoExtended;
     return Scaffold(
       body: Row(
         children: [
@@ -52,8 +61,23 @@ class AdminShell extends StatelessWidget {
             onDestinationSelected: (i) => context.go(tabs[i]),
             labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
             leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              child: Semantics(label: 'BreakBite quản trị', child: const BreakBiteLogo(size: 48)),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Semantics(label: 'BreakBite quản trị', child: BreakBiteLogo(size: extended ? 44 : 36)),
+                  const SizedBox(height: AppSpacing.xs),
+                  IconButton(
+                    icon: Icon(
+                      extended ? Icons.menu_open_rounded : Icons.menu_rounded,
+                      size: 20,
+                      color: colors.primaryText,
+                    ),
+                    tooltip: extended ? 'Thu gọn menu' : 'Mở rộng menu',
+                    onPressed: () => setState(() => _isExtended = !extended),
+                  ),
+                ],
+              ),
             ),
             destinations: [
               for (final d in [..._destinations, if (session.isAdmin) ..._system])
@@ -71,9 +95,9 @@ class AdminShell extends StatelessWidget {
                           liveRegion: true,
                           child: ErrorView(message: AdminSession.offlineMessage, onRetry: session.checkConnection),
                         )
-                      : session.kioskId == null && !location.startsWith(SystemRoutes.prefix)
+                      : session.kioskId == null && !widget.location.startsWith(SystemRoutes.prefix)
                       ? _NoKiosk(session: session)
-                      : child,
+                      : widget.child,
                 ),
               ],
             ),
@@ -124,40 +148,93 @@ class _TopBar extends StatelessWidget {
             if (session.isAdmin && session.kiosks.isNotEmpty)
               Semantics(
                 label: 'Chọn kiosk',
-                child: DropdownButton<String>(
-                  value: session.kioskId,
-                  underline: const SizedBox.shrink(),
-                  items: [
+                child: PopupMenuButton<String>(
+                  initialValue: session.kioskId,
+                  tooltip: 'Chọn kiosk',
+                  onSelected: session.selectKiosk,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    side: BorderSide(color: colors.border),
+                  ),
+                  color: Theme.of(context).colorScheme.surface,
+                  elevation: 4,
+                  itemBuilder: (context) => [
                     for (final k in session.kiosks)
-                      DropdownMenuItem(
+                      PopupMenuItem(
                         value: k.id,
-                        child: Text(k.name, style: text.titleMedium),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.storefront_outlined,
+                              size: 18,
+                              color: k.id == session.kioskId ? colors.primaryText : colors.muted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                k.name,
+                                style: text.bodyMedium?.copyWith(
+                                  fontWeight: k.id == session.kioskId ? FontWeight.w700 : FontWeight.w500,
+                                  color: k.id == session.kioskId ? colors.primaryText : Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (k.id == session.kioskId) ...[
+                              const SizedBox(width: AppSpacing.xs),
+                              Icon(Icons.check_rounded, size: 16, color: colors.primaryText),
+                            ],
+                          ],
+                        ),
                       ),
                   ],
-                  onChanged: (id) => id == null ? null : session.selectKiosk(id),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.storefront_outlined, size: 18, color: colors.primaryText),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(session.kioskName, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: colors.muted),
+                      ],
+                    ),
+                  ),
                 ),
               )
             else
-              Text(session.kioskName, style: text.titleMedium),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.storefront_outlined, color: colors.primaryText),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(session.kioskName, style: text.titleMedium),
+                ],
+              ),
             const Spacer(),
             if (user != null) ...[
-              UserAvatar(name: user.displayName, photoUrl: user.photoUrl, size: 32),
+              UserAvatar(name: user.displayName, photoUrl: user.photoUrl, size: 34),
               const SizedBox(width: AppSpacing.xs),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.displayName, style: text.labelLarge),
+                  Text(user.displayName, style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
                   Text(
                     session.isAdmin ? 'Quản trị viên' : 'Nhân viên kiosk',
-                    style: text.bodyMedium?.copyWith(color: colors.muted),
+                    style: text.bodySmall?.copyWith(color: colors.muted),
                   ),
                 ],
               ),
               const SizedBox(width: AppSpacing.md),
-              TextButton.icon(
+              OutlinedButton.icon(
                 onPressed: session.signOut,
-                icon: const Icon(Icons.logout),
+                icon: const Icon(Icons.logout, size: 16),
                 label: const Text('Đăng xuất'),
               ),
             ],

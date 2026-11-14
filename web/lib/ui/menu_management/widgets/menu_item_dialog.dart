@@ -1,6 +1,7 @@
 import 'package:breakbite_admin/ui/menu_management/view_models/menu_management_view_model.dart';
 import 'package:breakbite_core/domain/models/menu_item.dart';
 import 'package:breakbite_core/domain/models/option_group.dart';
+import 'package:breakbite_core/ui/core/theme/app_colors.dart';
 import 'package:breakbite_core/ui/core/theme/app_dimens.dart';
 import 'package:breakbite_core/ui/core/widgets/inputs.dart';
 import 'package:breakbite_core/ui/core/widgets/option_groups_editor.dart';
@@ -73,8 +74,17 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
   Widget build(BuildContext context) {
     final vm = context.watch<MenuManagementViewModel>();
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final text = Theme.of(context).textTheme;
+
     return AlertDialog(
-      title: Text(widget.item == null ? 'Thêm món' : 'Sửa ${widget.item!.name}'),
+      title: Row(
+        children: [
+          Icon(Icons.restaurant_menu_rounded, color: colors.primaryText, size: 22),
+          const SizedBox(width: AppSpacing.xs),
+          Text(widget.item == null ? 'Thêm món mới' : 'Sửa ${widget.item!.name}'),
+        ],
+      ),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -107,14 +117,17 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<ItemCategory>(
                 initialValue: _category,
-                decoration: const InputDecoration(labelText: 'Loại'),
+                decoration: const InputDecoration(
+                  labelText: 'Loại món',
+                  prefixIcon: Icon(Icons.category_outlined, size: 18),
+                ),
                 items: [
                   for (final c in ItemCategory.values) DropdownMenuItem(value: c, child: Text(itemCategoryLabel(c))),
                 ],
                 onChanged: (c) => setState(() => _category = c ?? _category),
               ),
               const SizedBox(height: AppSpacing.sm),
-              AppTextField(label: 'Mô tả', controller: _description),
+              AppTextField(label: 'Mô tả ngắn', controller: _description),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
                 label: 'Ảnh (đường dẫn https hoặc assets/images/menu/…)',
@@ -123,8 +136,10 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
               ),
               const SizedBox(height: AppSpacing.md),
               OptionGroupsEditor(groups: _options, onChanged: (g) => setState(() => _options = g)),
+              const SizedBox(height: AppSpacing.xs),
               SwitchListTile(
-                contentPadding: EdgeInsets.zero,
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.chip)),
                 title: const Text('Tạm hết món'),
                 value: _soldOut,
                 onChanged: (v) => setState(() => _soldOut = v),
@@ -132,17 +147,21 @@ class _MenuItemDialogState extends State<MenuItemDialog> {
               if (_error != null)
                 Semantics(
                   liveRegion: true,
-                  child: Text(_error!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.error)),
+                  child: Text(_error!, style: text.bodyMedium?.copyWith(color: scheme.error)),
                 ),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: vm.save.running ? null : () => Navigator.pop(context), child: const Text('Huỷ')),
-        FilledButton(
+        OutlinedButton(
+          onPressed: vm.save.running ? null : () => Navigator.pop(context),
+          child: const Text('Huỷ'),
+        ),
+        FilledButton.icon(
           onPressed: vm.save.running ? null : () => _save(vm),
-          child: Text(vm.save.running ? 'Đang lưu…' : 'Lưu món'),
+          icon: const Icon(Icons.save_outlined, size: 16),
+          label: Text(vm.save.running ? 'Đang lưu…' : 'Lưu món'),
         ),
       ],
     );
